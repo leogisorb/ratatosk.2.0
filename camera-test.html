@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Kamera Test</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      text-align: center;
+      padding: 20px;
+      background-color: #f0f0f0;
+    }
+    .container {
+      max-width: 600px;
+      margin: 0 auto;
+      background: white;
+      padding: 20px;
+      border-radius: 10px;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+    }
+    button {
+      background: #007AFF;
+      color: white;
+      border: none;
+      padding: 15px 30px;
+      border-radius: 8px;
+      font-size: 16px;
+      margin: 10px;
+      cursor: pointer;
+    }
+    button:hover {
+      background: #0056CC;
+    }
+    button:disabled {
+      background: #ccc;
+      cursor: not-allowed;
+    }
+    video {
+      width: 100%;
+      max-width: 400px;
+      border-radius: 8px;
+      margin: 20px 0;
+    }
+    .status {
+      padding: 10px;
+      margin: 10px 0;
+      border-radius: 5px;
+    }
+    .success {
+      background: #d4edda;
+      color: #155724;
+      border: 1px solid #c3e6cb;
+    }
+    .error {
+      background: #f8d7da;
+      color: #721c24;
+      border: 1px solid #f5c6cb;
+    }
+    .info {
+      background: #d1ecf1;
+      color: #0c5460;
+      border: 1px solid #bee5eb;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>📱 Kamera Test</h1>
+    <p>Teste die Kamera-Funktionalität auf deinem iPhone</p>
+    
+    <div id="status" class="status info">
+      Bereit für Kamera-Test
+    </div>
+    
+    <button id="startCamera">🎥 Kamera starten</button>
+    <button id="stopCamera" disabled>⏹️ Kamera stoppen</button>
+    
+    <video id="video" autoplay playsinline muted></video>
+    
+    <div id="info">
+      <p><strong>Anweisungen:</strong></p>
+      <ol>
+        <li>Klicke "Kamera starten"</li>
+        <li>Erlaube Kamera-Zugriff wenn gefragt wird</li>
+        <li>Das Video sollte angezeigt werden</li>
+      </ol>
+    </div>
+  </div>
+
+  <script>
+    const video = document.getElementById('video');
+    const startButton = document.getElementById('startCamera');
+    const stopButton = document.getElementById('stopCamera');
+    const status = document.getElementById('status');
+    let stream = null;
+
+    function updateStatus(message, type = 'info') {
+      status.textContent = message;
+      status.className = `status ${type}`;
+    }
+
+    function log(message) {
+      console.log(message);
+      updateStatus(message, 'info');
+    }
+
+    function error(message) {
+      console.error(message);
+      updateStatus(message, 'error');
+    }
+
+    function success(message) {
+      console.log(message);
+      updateStatus(message, 'success');
+    }
+
+    // Kamera starten
+    startButton.addEventListener('click', async () => {
+      try {
+        log('Starte Kamera...');
+        
+        // Kamera-Stream anfordern
+        stream = await navigator.mediaDevices.getUserMedia({
+          video: {
+            facingMode: 'user', // Frontkamera
+            width: { ideal: 640 },
+            height: { ideal: 480 }
+          },
+          audio: false
+        });
+        
+        // Video-Element mit Stream verbinden
+        video.srcObject = stream;
+        
+        // Warten bis Video geladen ist
+        video.onloadedmetadata = () => {
+          success('Kamera erfolgreich gestartet!');
+          startButton.disabled = true;
+          stopButton.disabled = false;
+        };
+        
+      } catch (err) {
+        error(`Kamera-Fehler: ${err.message}`);
+        console.error('Kamera-Fehler Details:', err);
+      }
+    });
+
+    // Kamera stoppen
+    stopButton.addEventListener('click', () => {
+      if (stream) {
+        stream.getTracks().forEach(track => track.stop());
+        video.srcObject = null;
+        stream = null;
+        log('Kamera gestoppt');
+        startButton.disabled = false;
+        stopButton.disabled = true;
+      }
+    });
+
+    // Seite laden
+    window.addEventListener('load', () => {
+      log('Seite geladen. HTTPS: ' + (location.protocol === 'https:'));
+      
+      // Prüfe ob getUserMedia verfügbar ist
+      if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+        error('getUserMedia ist nicht verfügbar');
+        startButton.disabled = true;
+      } else {
+        log('getUserMedia ist verfügbar');
+      }
+      
+      // Prüfe HTTPS
+      if (location.protocol !== 'https:' && location.hostname !== 'localhost') {
+        error('HTTPS erforderlich für Kamera-Zugriff');
+        startButton.disabled = true;
+      }
+    });
+  </script>
+</body>
+</html> 
