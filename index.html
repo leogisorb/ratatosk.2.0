@@ -1200,9 +1200,7 @@ Bearbeitet von Barbara Kammerl
         // Einfachere Constraints für bessere Kompatibilität
         const constraints = {
           video: {
-            facingMode: "user",
-            width: { ideal: 640 },
-            height: { ideal: 480 }
+            facingMode: "user"
           },
           audio: false
         };
@@ -1332,10 +1330,10 @@ Bearbeitet von Barbara Kammerl
             </div>
 
            <!-- Pfeil für "zurück zum Schnellbaustein-Menü Ich/Umgebung" --> 
-            <div class="smallContainer" v-If="((showMenu>500)&&(showMenu<600))||((showMenu>5000)&&(showMenu<6000))">
+            <div class="smallContainer" v-if="((showMenu>500)&&(showMenu<600))||((showMenu>5000)&&(showMenu<6000))">
               <img id="GoBackIch" class="smallPicture"  src="./Goback.svg" alt="Zurück" @click="showMenu=5"/>
             </div>
-            <div class="smallContainer" v-If="((showMenu>400)&&(showMenu<500))||((showMenu>4000)&&(showMenu<5000))">
+            <div class="smallContainer" v-if="((showMenu>400)&&(showMenu<500))||((showMenu>4000)&&(showMenu<5000))">
               <img id="GoBackUmgebung" class="smallPicture"  src="./Goback.svg" alt="Zurück" @click="showMenu=4"/>
             </div>
 
