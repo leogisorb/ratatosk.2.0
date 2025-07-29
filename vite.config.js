@@ -19,5 +19,12 @@ export default defineConfig({
       key: fs.readFileSync(path.resolve(__dirname, 'key.pem')),
       cert: fs.readFileSync(path.resolve(__dirname, 'cert.pem')),
     }
+  },
+  build: {
+    rollupOptions: {
+      input: {
+        main: 'index.html'
+      }
+    }
   }
 })
