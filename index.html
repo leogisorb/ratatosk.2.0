@@ -63,6 +63,44 @@ Bearbeitet von Barbara Kammerl
 <body>
   <script type="module">  
     const videoElement = document.getElementById("input_video"); 
+    
+    // Einfache Kamera-Initialisierung für iPhone-Kompatibilität
+    async function initCamera() {
+      try {
+        console.log('Initialisiere Kamera...');
+        
+        if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+          console.error('getUserMedia nicht verfügbar');
+          return false;
+        }
+        
+        const stream = await navigator.mediaDevices.getUserMedia({
+          video: {
+            facingMode: 'user',
+            width: { ideal: 640 },
+            height: { ideal: 480 }
+          },
+          audio: false
+        });
+        
+        if (videoElement) {
+          videoElement.srcObject = stream;
+          console.log('Kamera erfolgreich initialisiert');
+          return true;
+        }
+        
+      } catch (error) {
+        console.error('Kamera-Initialisierung fehlgeschlagen:', error);
+        return false;
+      }
+    }
+    
+    // Kamera beim Laden initialisieren
+    window.addEventListener('load', () => {
+      console.log('Seite geladen, initialisiere Kamera...');
+      initCamera();
+    });
+    
     // facefactor bestimmt ab welchem Großenfaktor ein geschlossenes Auge erkannt wird.
     // Die Höhe des Gesichtes wird hiermit multipliziert um einen Grenzwert festzulegen.
     // Aus Selbstets ergab sich ein Faktor von 35 bis 60 als ideal für niedrigen und hohen Abstand zwischen Gesicht und Kamera.
@@ -761,7 +799,8 @@ Bearbeitet von Barbara Kammerl
                 //falls man sich auf der Startseite befindet: 
                 // nach einstellung auf hauptmenü wechseln
               if(this.showMenu == (-1)){ 
-                this.showMenu=0;
+                // Nur zur Haupt-App wechseln, wenn Kamera funktioniert
+                // this.showMenu=0; // Entfernt - automatischer Wechsel deaktiviert
               }
             }
             this.eyes_closed = false;
@@ -1149,73 +1188,111 @@ Bearbeitet von Barbara Kammerl
     // Verbesserte Kamera-Initialisierung für mobile Geräte (iPhone-kompatibel)
     async function initializeCamera() {
       try {
-        console.log("Starte Kamera-Initialisierung...");
+        console.log("=== KAMERA-INITIALISIERUNG STARTET ===");
         
         // Prüfe ob getUserMedia verfügbar ist
         if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
-          throw new Error("getUserMedia nicht verfügbar");
+          throw new Error("getUserMedia nicht verfügbar - Browser unterstützt keine Kamera-API");
         }
         
+        console.log("✅ getUserMedia verfügbar");
+        
+        // Einfachere Constraints für bessere Kompatibilität
         const constraints = {
           video: {
-            width: { ideal: 640, max: 1280 },
-            height: { ideal: 480, max: 720 },
             facingMode: "user",
-            frameRate: { ideal: 30, max: 60 }
-          }
+            width: { ideal: 640 },
+            height: { ideal: 480 }
+          },
+          audio: false
         };
         
-        console.log("Fordere Kamera-Berechtigung an...");
+        console.log("📷 Fordere Kamera-Berechtigung an...");
         const stream = await navigator.mediaDevices.getUserMedia(constraints);
         
-        console.log("Kamera-Stream erhalten, initialisiere Video-Element...");
+        console.log("✅ Kamera-Stream erhalten");
+        
+        if (!videoElement) {
+          throw new Error("Video-Element nicht gefunden");
+        }
+        
+        console.log("🎥 Setze Video-Stream...");
         videoElement.srcObject = stream;
         
         // Warte bis Video geladen ist
+        console.log("⏳ Warte auf Video-Loading...");
         await new Promise((resolve, reject) => {
-          videoElement.onloadedmetadata = resolve;
-          videoElement.onerror = reject;
-          // Timeout nach 10 Sekunden
-          setTimeout(() => reject(new Error("Video-Loading Timeout")), 10000);
+          videoElement.onloadedmetadata = () => {
+            console.log("✅ Video-Metadaten geladen");
+            resolve();
+          };
+          videoElement.onerror = (error) => {
+            console.error("❌ Video-Loading Fehler:", error);
+            reject(new Error("Video-Loading fehlgeschlagen"));
+          };
+          // Timeout nach 5 Sekunden
+          setTimeout(() => {
+            console.log("⏰ Video-Loading Timeout");
+            reject(new Error("Video-Loading Timeout"));
+          }, 5000);
         });
         
-        console.log("Starte Video-Wiedergabe...");
+        console.log("▶️ Starte Video-Wiedergabe...");
         await videoElement.play();
         
-        console.log("Starte Camera-Utils...");
-        camera.start();
+        console.log("✅ Video läuft erfolgreich");
         
-        console.log("Kamera erfolgreich initialisiert!");
+        // Prüfe ob Camera-Utils verfügbar ist
+        if (typeof camera !== 'undefined' && camera && camera.start) {
+          console.log("🎯 Starte Camera-Utils...");
+          camera.start();
+          console.log("✅ Camera-Utils gestartet");
+        } else {
+          console.warn("⚠️ Camera-Utils nicht verfügbar");
+        }
+        
+        console.log("🎉 KAMERA ERFOLGREICH INITIALISIERT!");
+        
+        // Nur wenn Kamera funktioniert, zur Haupt-App wechseln
+        if (element_click && element_click.$data) {
+          element_click.$data.showMenu = 0;
+          console.log("🔄 Wechsle zur Haupt-App - Kamera funktioniert");
+        } else {
+          console.warn("⚠️ Vue-App nicht verfügbar für Menü-Wechsel");
+        }
         
       } catch (error) {
-        console.error("Kamera-Initialisierung fehlgeschlagen:", error);
+        console.error("❌ KAMERA-INITIALISIERUNG FEHLGESCHLAGEN:", error);
         
         // Benutzerfreundliche Fehlermeldung
         let errorMessage = "Kamera konnte nicht initialisiert werden.\n\n";
         
         if (error.name === 'NotAllowedError') {
-          errorMessage += "Bitte erlauben Sie den Zugriff auf die Kamera in den Browser-Einstellungen.\n\n";
+          errorMessage += "🔒 Kamera-Zugriff verweigert\n\n";
           errorMessage += "Auf iPhone:\n";
           errorMessage += "1. Einstellungen → Safari → Kamera → Erlauben\n";
-          errorMessage += "2. Oder in Safari: Adressleiste → Kamera-Symbol → Erlauben";
+          errorMessage += "2. Oder in Safari: Adressleiste → Kamera-Symbol → Erlauben\n";
+          errorMessage += "3. Seite neu laden und erneut versuchen";
         } else if (error.name === 'NotFoundError') {
-          errorMessage += "Keine Kamera gefunden. Bitte überprüfen Sie, ob eine Kamera verfügbar ist.";
+          errorMessage += "📱 Keine Kamera gefunden\n\n";
+          errorMessage += "Bitte überprüfen Sie, ob eine Kamera verfügbar ist.";
         } else if (error.name === 'NotReadableError') {
-          errorMessage += "Kamera wird bereits von einer anderen Anwendung verwendet.";
+          errorMessage += "📹 Kamera wird bereits verwendet\n\n";
+          errorMessage += "Schließen Sie andere Apps, die die Kamera verwenden.";
         } else {
-          errorMessage += "Technischer Fehler: " + error.message;
+          errorMessage += "🔧 Technischer Fehler: " + error.message;
         }
         
+        console.log("📢 Zeige Fehlermeldung an...");
         alert(errorMessage);
         
-        // Versuche es später nochmal (nach Benutzerinteraktion)
-        setTimeout(() => {
-          console.log("Versuche Kamera-Initialisierung erneut...");
-          initializeCamera();
-        }, 2000);
+        // Bleibe auf Startseite
+        console.log("🏠 Bleibe auf Startseite, Kamera nicht verfügbar");
       }
     }
 
+    // Kamera beim Laden initialisieren
+    console.log("🚀 Starte automatische Kamera-Initialisierung...");
     initializeCamera();
 
     //Array mit allen Bildern, die vorgeladen werden müssen
@@ -1293,7 +1370,7 @@ Bearbeitet von Barbara Kammerl
     <!-- Startseite -->
       <div class="site_name" v-if="showMenu==(-1)" style="text-align: center; display:block; margin: auto;">
         <div>Blinzeln Sie zum Starten</div>
-          <img id="Start" class="startimage" src="./Ratatosk.svg" alt="Logo" @click="cngTime_closed=true; showMenu=0" style="color:white"/>
+          <img id="Start" class="startimage" src="./Ratatosk.svg" alt="Logo" @click="cngTime_closed=true; initializeCamera()" style="color:white"/>
           <div style="margin-top: 20px;">
             <button @click="initializeCamera()" style="background-color: var(--maincolor); color: white; border: none; padding: 10px 20px; border-radius: 8px; font-size: 1.2em; margin-right: 10px;">
               📷 Kamera aktivieren
