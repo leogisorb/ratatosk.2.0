@@ -1,0 +1,219 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Brave Browser Audio Fix</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 50px auto;
+            padding: 20px;
+            background-color: #f0f0f0;
+        }
+        .container {
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+        .step {
+            background: #e3f2fd;
+            padding: 20px;
+            margin: 15px 0;
+            border-radius: 8px;
+            border-left: 4px solid #2196f3;
+        }
+        .warning {
+            background: #fff3e0;
+            padding: 20px;
+            margin: 15px 0;
+            border-radius: 8px;
+            border-left: 4px solid #ff9800;
+        }
+        .success {
+            background: #e8f5e8;
+            padding: 20px;
+            margin: 15px 0;
+            border-radius: 8px;
+            border-left: 4px solid #4caf50;
+        }
+        .test-button {
+            background: #007bff;
+            color: white;
+            border: none;
+            padding: 15px 25px;
+            margin: 10px 5px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+        }
+        .test-button:hover {
+            background: #0056b3;
+        }
+        .fix-button {
+            background: #28a745;
+            color: white;
+            border: none;
+            padding: 15px 25px;
+            margin: 10px 5px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+        }
+        .fix-button:hover {
+            background: #218838;
+        }
+        .log {
+            background: #f8f9fa;
+            border: 1px solid #dee2e6;
+            padding: 15px;
+            border-radius: 5px;
+            max-height: 300px;
+            overflow-y: auto;
+            font-family: monospace;
+            font-size: 14px;
+            margin-top: 20px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🦁 Brave Browser Audio Fix</h1>
+        
+        <div class="warning">
+            <h3>⚠️ Brave-spezifisches Problem:</h3>
+            <p>Brave Browser blockiert Audio aufgrund seiner strengen Datenschutz-Einstellungen. Safari funktioniert, aber Brave nicht.</p>
+        </div>
+
+        <div class="step">
+            <h3>Schritt 1: Brave Shields deaktivieren</h3>
+            <p>Brave's Shields blockieren oft Audio. Klicken Sie auf das Schild-Symbol in der Adressleiste:</p>
+            <ul>
+                <li>Deaktivieren Sie "Shields Down" für diese Website</li>
+                <li>Oder setzen Sie "Shields" auf "Down"</li>
+                <li>Prüfen Sie "Site and Shield Settings"</li>
+            </ul>
+            <button class="fix-button" onclick="checkBraveShields()">Brave Shields Status prüfen</button>
+        </div>
+
+        <div class="step">
+            <h3>Schritt 2: Brave Einstellungen</h3>
+            <p>Öffnen Sie Brave's Audio-Einstellungen:</p>
+            <code>brave://settings/content/sound</code>
+            <br><br>
+            <button class="fix-button" onclick="openBraveSettings()">Brave Einstellungen öffnen</button>
+            <p><strong>Prüfen Sie:</strong></p>
+            <ul>
+                <li>Ist "Sites can play sound" aktiviert?</li>
+                <li>Ist Ihre Website nicht blockiert?</li>
+                <li>Entfernen Sie sie aus der Blockierliste</li>
+            </ul>
+        </div>
+
+        <div class="step">
+            <h3>Schritt 3: Brave Flags (wie Chrome)</h3>
+            <p>Brave verwendet Chrome's Engine, daher funktionieren Chrome-Flags:</p>
+            <ol>
+                <li>Öffnen Sie <code>brave://flags/</code></li>
+                <li>Suchen Sie nach "Autoplay"</li>
+                <li>Setzen Sie "Autoplay policy" auf "No user gesture required"</li>
+                <li>Starten Sie Brave neu</li>
+            </ol>
+            <button class="fix-button" onclick="openBraveFlags()">Brave Flags öffnen</button>
+        </div>
+
+        <div class="step">
+            <h3>Schritt 4: Alternative: Safari verwenden</h3>
+            <p>Da Safari bereits funktioniert, können Sie es als primären Browser verwenden:</p>
+            <ul>
+                <li>✅ Safari: TTS funktioniert (doppelte Wiedergabe behoben)</li>
+                <li>❌ Brave: TTS blockiert (Datenschutz-Einstellungen)</li>
+            </ul>
+            <button class="test-button" onclick="testSafariRecommendation()">Safari-Empfehlung anzeigen</button>
+        </div>
+
+        <div class="success">
+            <h3>✅ Doppelte TTS in Safari behoben</h3>
+            <p>Das Problem mit der doppelten Wiedergabe in Safari wurde behoben:</p>
+            <ul>
+                <li>Vorherige Wiedergabe wird automatisch gestoppt</li>
+                <li>Nur eine TTS-Instanz läuft gleichzeitig</li>
+                <li>Bessere Fehlerbehandlung</li>
+            </ul>
+        </div>
+
+        <h2>Debug-Log:</h2>
+        <div id="debug-log" class="log"></div>
+    </div>
+
+    <script>
+        function log(message, type = 'info') {
+            const logDiv = document.getElementById('debug-log');
+            const timestamp = new Date().toLocaleTimeString();
+            const logEntry = `[${timestamp}] ${type.toUpperCase()}: ${message}`;
+            logDiv.innerHTML += logEntry + '<br>';
+            logDiv.scrollTop = logDiv.scrollHeight;
+            console.log(logEntry);
+        }
+
+        function openBraveSettings() {
+            log('Öffne Brave Audio-Einstellungen...');
+            window.open('brave://settings/content/sound', '_blank');
+        }
+
+        function openBraveFlags() {
+            log('Öffne Brave Flags...');
+            window.open('brave://flags/', '_blank');
+        }
+
+        function checkBraveShields() {
+            log('Prüfe Brave Shields Status...');
+            
+            // Prüfe ob Brave erkannt wird
+            const isBrave = navigator.userAgent.includes('Brave') || 
+                           window.navigator.brave || 
+                           window.chrome?.webstore;
+            
+            log(`Brave Browser erkannt: ${isBrave ? 'Ja' : 'Nein'}`);
+            
+            if (isBrave) {
+                log('Brave-spezifische Empfehlungen:');
+                log('1. Deaktivieren Sie Shields für diese Website');
+                log('2. Prüfen Sie brave://settings/content/sound');
+                log('3. Verwenden Sie brave://flags/ für Autoplay-Einstellungen');
+            } else {
+                log('Nicht Brave - andere Chrome-basierte Browser-Einstellungen verwenden');
+            }
+        }
+
+        function testSafariRecommendation() {
+            log('Safari-Empfehlung:');
+            log('✅ Safari funktioniert bereits mit TTS');
+            log('✅ Doppelte Wiedergabe wurde behoben');
+            log('✅ Keine zusätzlichen Einstellungen nötig');
+            log('');
+            log('Für mobile Geräte:');
+            log('📱 Safari auf iPhone/iPad funktioniert ebenfalls');
+            log('🌐 Verwenden Sie https://192.168.2.113:5173');
+        }
+
+        // Beim Laden
+        window.addEventListener('load', function() {
+            log('Brave Audio Fix Test geladen');
+            checkBraveShields();
+            
+            // Prüfe Browser
+            const userAgent = navigator.userAgent;
+            if (userAgent.includes('Brave')) {
+                log('Brave Browser erkannt - spezielle Einstellungen erforderlich');
+            } else if (userAgent.includes('Safari') && !userAgent.includes('Chrome')) {
+                log('Safari erkannt - TTS sollte funktionieren');
+            } else if (userAgent.includes('Chrome')) {
+                log('Chrome erkannt - Chrome-spezifische Einstellungen verwenden');
+            }
+        });
+    </script>
+</body>
+</html> 

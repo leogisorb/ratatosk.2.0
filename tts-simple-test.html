@@ -1,0 +1,537 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Einfacher TTS Test</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 600px;
+            margin: 50px auto;
+            padding: 20px;
+            background-color: #f0f0f0;
+        }
+        .container {
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+        .test-button {
+            background: #007bff;
+            color: white;
+            border: none;
+            padding: 15px 25px;
+            margin: 10px 5px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+        }
+        .test-button:hover {
+            background: #0056b3;
+        }
+        .status {
+            padding: 15px;
+            margin: 15px 0;
+            border-radius: 5px;
+            font-weight: bold;
+        }
+        .success {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+        .error {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+        .info {
+            background: #d1ecf1;
+            color: #0c5460;
+            border: 1px solid #bee5eb;
+        }
+        .log {
+            background: #f8f9fa;
+            border: 1px solid #dee2e6;
+            padding: 15px;
+            border-radius: 5px;
+            max-height: 300px;
+            overflow-y: auto;
+            font-family: monospace;
+            font-size: 14px;
+            margin-top: 20px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🎤 Einfacher TTS Test</h1>
+        
+        <div class="status info">
+            <strong>Status:</strong> <span id="status-text">Lade TTS...</span>
+        </div>
+        
+        <h2>Test-Buttons:</h2>
+        <button class="test-button" onclick="testWord('Hallo')">Hallo</button>
+        <button class="test-button" onclick="testWord('Test')">Test</button>
+        <button class="test-button" onclick="testWord('a')">Buchstabe a</button>
+        <button class="test-button" onclick="testWord('Leerzeichen')">Leerzeichen</button>
+        <button class="test-button" onclick="testWord('Löschen')">Löschen</button>
+        <button class="test-button" onclick="testWord('Alles Löschen')">Alles Löschen</button>
+        
+        <h2>Deutsche Wörter:</h2>
+        <button class="test-button" onclick="testWord('Guten Tag')">Guten Tag</button>
+        <button class="test-button" onclick="testWord('Danke')">Danke</button>
+        <button class="test-button" onclick="testWord('Bitte')">Bitte</button>
+        <button class="test-button" onclick="testWord('Auf Wiedersehen')">Auf Wiedersehen</button>
+        
+        <h2>Audio-Tests:</h2>
+        <button class="test-button" onclick="testAudioContext()">Audio Context Test</button>
+        <button class="test-button" onclick="testSystemAudio()">System Audio Test</button>
+        <button class="test-button" onclick="testVolume()">Lautstärke Test</button>
+        <button class="test-button" onclick="testBrowserAudio()">Browser Audio Test</button>
+        <button class="test-button" onclick="runFullAudioDiagnostic()" style="background: #dc3545;">🔍 Vollständige Audio-Diagnose</button>
+        
+        <h2>Browser-spezifische Tests:</h2>
+        <button class="test-button" onclick="testSafariAudio()">Safari Audio Test</button>
+        <button class="test-button" onclick="testChromeAudio()">Chrome Audio Test</button>
+        <button class="test-button" onclick="testFirefoxAudio()">Firefox Audio Test</button>
+        <button class="test-button" onclick="testMobileAudio()">Mobile Audio Test</button>
+        
+        <h2>Lautstärke-Einstellungen:</h2>
+        <div style="margin: 10px 0;">
+            <label for="volume-slider">Lautstärke: <span id="volume-value">90%</span></label>
+            <input type="range" id="volume-slider" min="0" max="100" value="90" style="width: 200px;">
+        </div>
+        
+        <h2>Debug-Log:</h2>
+        <div id="debug-log" class="log"></div>
+    </div>
+
+    <!-- TTS-Scripts laden -->
+    <script src="./speech.js"></script>
+    <script src="./tts-fallback.js"></script>
+    
+    <script>
+        let currentTTS = null;
+        
+        // Debug-Logging
+        function log(message, type = 'info') {
+            const logDiv = document.getElementById('debug-log');
+            const timestamp = new Date().toLocaleTimeString();
+            const logEntry = `[${timestamp}] ${type.toUpperCase()}: ${message}`;
+            logDiv.innerHTML += logEntry + '<br>';
+            logDiv.scrollTop = logDiv.scrollHeight;
+            console.log(logEntry);
+        }
+
+        // TTS testen
+        function testWord(word) {
+            log(`Teste Wort: "${word}"`);
+            
+            if (currentTTS) {
+                try {
+                    // Setze Lautstärke basierend auf Slider
+                    const volume = document.getElementById('volume-slider').value / 100;
+                    if (currentTTS.setVolume) {
+                        currentTTS.setVolume(volume);
+                    }
+                    
+                    currentTTS.speak(word);
+                    log(`TTS-Aufruf erfolgreich für: "${word}" (Lautstärke: ${Math.round(volume * 100)}%)`);
+                } catch (error) {
+                    log(`TTS-Fehler: ${error.message}`, 'error');
+                }
+            } else {
+                log('Keine TTS-Implementierung verfügbar!', 'error');
+            }
+        }
+
+        // Status aktualisieren
+        function updateStatus(message, type = 'info') {
+            const statusDiv = document.getElementById('status-text');
+            statusDiv.textContent = message;
+            statusDiv.parentElement.className = `status ${type}`;
+        }
+
+        // TTS initialisieren
+        function initTTS() {
+            log('Initialisiere TTS...');
+            
+            // Warte auf beide TTS-Implementierungen
+            setTimeout(() => {
+                if (window.advancedTTS && window.advancedTTS.isInitialized) {
+                    currentTTS = window.advancedTTS;
+                    updateStatus('AdvancedTTS bereit', 'success');
+                    log('AdvancedTTS als primäre TTS verwendet');
+                } else if (window.speechManager && window.speechManager.isInitialized) {
+                    currentTTS = window.speechManager;
+                    updateStatus('SpeechManager bereit', 'success');
+                    log('SpeechManager als primäre TTS verwendet');
+                } else {
+                    updateStatus('Keine TTS verfügbar', 'error');
+                    log('Keine TTS-Implementierung verfügbar!', 'error');
+                }
+                
+                // Zeige Status-Informationen
+                if (window.speechManager) {
+                    const status = window.speechManager.getStatus();
+                    log(`SpeechManager Status: ${JSON.stringify(status)}`);
+                }
+                if (window.advancedTTS) {
+                    const status = window.advancedTTS.getStatus();
+                    log(`AdvancedTTS Status: ${JSON.stringify(status)}`);
+                }
+                
+            }, 3000);
+        }
+
+        // Beim Laden starten
+        window.addEventListener('load', function() {
+            log('TTS-Test-Seite geladen');
+            initTTS();
+        });
+
+        // Audio Context Test
+        function testAudioContext() {
+            log('Teste Audio Context...');
+            
+            try {
+                const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+                log('Audio Context verfügbar');
+                
+                // Erstelle einen einfachen Ton
+                const oscillator = audioContext.createOscillator();
+                const gainNode = audioContext.createGain();
+                
+                oscillator.connect(gainNode);
+                gainNode.connect(audioContext.destination);
+                
+                oscillator.frequency.setValueAtTime(440, audioContext.currentTime); // A4 Note
+                gainNode.gain.setValueAtTime(0.1, audioContext.currentTime);
+                
+                oscillator.start(audioContext.currentTime);
+                oscillator.stop(audioContext.currentTime + 1);
+                
+                log('Audio Context Test erfolgreich - Sie sollten einen Ton hören');
+            } catch (error) {
+                log(`Audio Context Fehler: ${error.message}`, 'error');
+            }
+        }
+
+        // System Audio Test
+        function testSystemAudio() {
+            log('Teste System Audio...');
+            
+            try {
+                const audio = new Audio();
+                audio.src = 'data:audio/wav;base64,UklGRnoGAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQoGAACBhYqFbF1fdJivrJBhNjVgodDbq2EcBj+a2/LDciUFLIHO8tiJNwgZaLvt559NEAxQp+PwtmMcBjiR1/LMeSwFJHfH8N2QQAoUXrTp66hVFApGn+DyvmwhBSuBzvLZiTYIG2m98OScTgwOUarm7blmGgU7k9n1unEiBC13yO/eizEIHWq+8+OWT';
+                audio.volume = 0.5;
+                
+                audio.oncanplay = () => {
+                    log('System Audio Test - Ton wird abgespielt');
+                    audio.play();
+                };
+                
+                audio.onerror = (error) => {
+                    log(`System Audio Fehler: ${error}`, 'error');
+                };
+                
+            } catch (error) {
+                log(`System Audio Fehler: ${error.message}`, 'error');
+            }
+        }
+
+        // Lautstärke Test
+        function testVolume() {
+            log('Teste verschiedene Lautstärken...');
+            
+            const testWords = ['Test', 'Laut', 'Leise'];
+            const volumes = [0.3, 0.7, 1.0];
+            
+            testWords.forEach((word, index) => {
+                setTimeout(() => {
+                    if (currentTTS) {
+                        try {
+                            if (currentTTS.setVolume) {
+                                currentTTS.setVolume(volumes[index]);
+                            }
+                            currentTTS.speak(word);
+                            log(`Lautstärke Test: "${word}" (${Math.round(volumes[index] * 100)}%)`);
+                        } catch (error) {
+                            log(`Lautstärke Test Fehler: ${error.message}`, 'error');
+                        }
+                    }
+                }, index * 2000);
+            });
+        }
+
+        // Browser Audio Test
+        function testBrowserAudio() {
+            log('Teste Browser Audio-Unterstützung...');
+            
+            const tests = [
+                { name: 'Audio API', test: () => 'Audio' in window },
+                { name: 'AudioContext', test: () => 'AudioContext' in window || 'webkitAudioContext' in window },
+                { name: 'SpeechSynthesis', test: () => 'speechSynthesis' in window },
+                { name: 'getUserMedia', test: () => 'getUserMedia' in navigator.mediaDevices || 'getUserMedia' in navigator }
+            ];
+            
+            tests.forEach(test => {
+                const result = test.test();
+                log(`${test.name}: ${result ? '✅ Verfügbar' : '❌ Nicht verfügbar'}`);
+            });
+            
+            // Teste Browser-spezifische Einstellungen
+            if ('speechSynthesis' in window) {
+                const synth = window.speechSynthesis;
+                log(`SpeechSynthesis Status: ${synth.speaking ? 'Sprechend' : 'Nicht sprechend'}`);
+                log(`SpeechSynthesis Paused: ${synth.paused ? 'Pausiert' : 'Nicht pausiert'}`);
+            }
+        }
+
+        // Lautstärke-Slider Event
+        document.getElementById('volume-slider').addEventListener('input', function() {
+            const volume = this.value;
+            document.getElementById('volume-value').textContent = volume + '%';
+            log(`Lautstärke auf ${volume}% gesetzt`);
+        });
+
+        // Vollständige Audio-Diagnose
+        async function runFullAudioDiagnostic() {
+            log('🔍 Starte vollständige Audio-Diagnose...', 'info');
+            
+            // 1. Browser-Informationen
+            log(`Browser: ${navigator.userAgent}`);
+            log(`Betriebssystem: ${navigator.platform}`);
+            
+            // 2. Audio-APIs testen
+            await testAllAudioAPIs();
+            
+            // 3. TTS-spezifische Tests
+            await testTTSSpecific();
+            
+            // 4. System-Audio testen
+            await testSystemAudioComprehensive();
+            
+            // 5. Empfehlungen
+            provideAudioRecommendations();
+        }
+
+        // Alle Audio-APIs testen
+        async function testAllAudioAPIs() {
+            log('📡 Teste alle Audio-APIs...');
+            
+            const apis = [
+                { name: 'Web Audio API', test: () => 'AudioContext' in window || 'webkitAudioContext' in window },
+                { name: 'HTML5 Audio', test: () => 'Audio' in window },
+                { name: 'SpeechSynthesis', test: () => 'speechSynthesis' in window },
+                { name: 'MediaDevices', test: () => 'mediaDevices' in navigator },
+                { name: 'getUserMedia', test: () => 'getUserMedia' in navigator.mediaDevices || 'getUserMedia' in navigator }
+            ];
+            
+            for (const api of apis) {
+                const available = api.test();
+                log(`${api.name}: ${available ? '✅' : '❌'} ${available ? 'Verfügbar' : 'Nicht verfügbar'}`);
+            }
+        }
+
+        // TTS-spezifische Tests
+        async function testTTSSpecific() {
+            log('🎤 Teste TTS-spezifische Funktionen...');
+            
+            if ('speechSynthesis' in window) {
+                const synth = window.speechSynthesis;
+                
+                // Verfügbare Stimmen
+                const voices = synth.getVoices();
+                log(`Verfügbare Stimmen: ${voices.length}`);
+                
+                // Deutsche Stimmen
+                const germanVoices = voices.filter(v => v.lang.startsWith('de'));
+                log(`Deutsche Stimmen: ${germanVoices.length}`);
+                
+                // Aktuelle Stimme
+                if (currentTTS && currentTTS.getStatus) {
+                    const status = currentTTS.getStatus();
+                    log(`Aktuelle TTS-Stimme: ${status.voice || 'Unbekannt'}`);
+                    log(`TTS-Status: ${JSON.stringify(status)}`);
+                }
+                
+                // Teste direkten SpeechSynthesis-Aufruf
+                try {
+                    const utterance = new SpeechSynthesisUtterance('Test Direktaufruf');
+                    utterance.lang = 'de-DE';
+                    utterance.volume = 1.0;
+                    utterance.rate = 1.0;
+                    utterance.pitch = 1.0;
+                    
+                    utterance.onstart = () => log('Direkter SpeechSynthesis gestartet');
+                    utterance.onend = () => log('Direkter SpeechSynthesis beendet');
+                    utterance.onerror = (e) => log(`Direkter SpeechSynthesis Fehler: ${e.error}`, 'error');
+                    
+                    synth.speak(utterance);
+                    log('Direkter SpeechSynthesis-Aufruf gesendet');
+                } catch (error) {
+                    log(`Direkter SpeechSynthesis Fehler: ${error.message}`, 'error');
+                }
+            }
+        }
+
+        // Umfassender System-Audio-Test
+        async function testSystemAudioComprehensive() {
+            log('🔊 Teste System-Audio umfassend...');
+            
+            // Test 1: Einfacher Audio-Ton
+            try {
+                const audio = new Audio();
+                audio.src = 'data:audio/wav;base64,UklGRnoGAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQoGAACBhYqFbF1fdJivrJBhNjVgodDbq2EcBj+a2/LDciUFLIHO8tiJNwgZaLvt559NEAxQp+PwtmMcBjiR1/LMeSwFJHfH8N2QQAoUXrTp66hVFApGn+DyvmwhBSuBzvLZiTYIG2m98OScTgwOUarm7blmGgU7k9n1unEiBC13yO/eizEIHWq+8+OWT';
+                audio.volume = 1.0;
+                
+                audio.oncanplay = () => {
+                    log('System-Audio Test 1: Ton wird abgespielt');
+                    audio.play().then(() => {
+                        log('System-Audio Test 1: Ton erfolgreich gestartet');
+                    }).catch(e => {
+                        log(`System-Audio Test 1 Fehler: ${e.message}`, 'error');
+                    });
+                };
+                
+                audio.onerror = (e) => {
+                    log(`System-Audio Test 1 Fehler: ${e}`, 'error');
+                };
+                
+            } catch (error) {
+                log(`System-Audio Test 1 Fehler: ${error.message}`, 'error');
+            }
+            
+            // Test 2: AudioContext mit verschiedenen Frequenzen
+            setTimeout(() => {
+                try {
+                    const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+                    const oscillator = audioContext.createOscillator();
+                    const gainNode = audioContext.createGain();
+                    
+                    oscillator.connect(gainNode);
+                    gainNode.connect(audioContext.destination);
+                    
+                    // Verschiedene Frequenzen testen
+                    oscillator.frequency.setValueAtTime(440, audioContext.currentTime); // A4
+                    gainNode.gain.setValueAtTime(0.3, audioContext.currentTime);
+                    
+                    oscillator.start(audioContext.currentTime);
+                    oscillator.stop(audioContext.currentTime + 2);
+                    
+                    log('System-Audio Test 2: AudioContext-Ton (2 Sekunden)');
+                } catch (error) {
+                    log(`System-Audio Test 2 Fehler: ${error.message}`, 'error');
+                }
+            }, 3000);
+        }
+
+        // Audio-Empfehlungen
+        function provideAudioRecommendations() {
+            log('💡 Audio-Empfehlungen:', 'info');
+            
+            const userAgent = navigator.userAgent.toLowerCase();
+            
+            if (userAgent.includes('safari') && !userAgent.includes('chrome')) {
+                log('Safari erkannt - mögliche Lösungen:');
+                log('1. Überprüfen Sie Safari > Einstellungen > Websites > Mikrofon');
+                log('2. Stellen Sie sicher, dass "Automatisch erlauben" aktiviert ist');
+                log('3. Testen Sie in einem privaten Fenster');
+            } else if (userAgent.includes('chrome')) {
+                log('Chrome erkannt - mögliche Lösungen:');
+                log('1. Überprüfen Sie chrome://settings/content/sound');
+                log('2. Stellen Sie sicher, dass die Website nicht stummgeschaltet ist');
+                log('3. Testen Sie mit deaktivierten Erweiterungen');
+            } else if (userAgent.includes('firefox')) {
+                log('Firefox erkannt - mögliche Lösungen:');
+                log('1. Überprüfen Sie about:preferences#privacy > Berechtigungen');
+                log('2. Stellen Sie sicher, dass Audio-Wiedergabe erlaubt ist');
+            }
+            
+            log('Allgemeine Empfehlungen:');
+            log('1. Überprüfen Sie die System-Lautstärke');
+            log('2. Testen Sie andere Websites mit Audio');
+            log('3. Starten Sie den Browser neu');
+            log('4. Überprüfen Sie die Audio-Treiber');
+        }
+
+        // Browser-spezifische Tests
+        function testSafariAudio() {
+            log('🍎 Safari-spezifischer Audio-Test...');
+            
+            if (navigator.userAgent.includes('Safari') && !navigator.userAgent.includes('Chrome')) {
+                log('Safari erkannt - führe Safari-spezifische Tests durch');
+                
+                // Safari benötigt oft eine Benutzerinteraktion für Audio
+                log('Safari-Tipp: Audio benötigt oft eine Benutzerinteraktion');
+                log('Versuchen Sie, nach dem Klick auf einen Test-Button zu warten');
+                
+                // Teste Safari-spezifische Audio-Eigenschaften
+                if ('webkitAudioContext' in window) {
+                    log('WebKit AudioContext verfügbar (Safari-spezifisch)');
+                }
+            } else {
+                log('Nicht Safari - Test übersprungen');
+            }
+        }
+
+        function testChromeAudio() {
+            log('🌐 Chrome-spezifischer Audio-Test...');
+            
+            if (navigator.userAgent.includes('Chrome')) {
+                log('Chrome erkannt - führe Chrome-spezifische Tests durch');
+                
+                // Chrome-spezifische Audio-Tests
+                if ('AudioContext' in window) {
+                    log('Standard AudioContext verfügbar (Chrome)');
+                }
+                
+                // Teste Chrome's Audio-Policies
+                log('Chrome-Tipp: Überprüfen Sie chrome://settings/content/sound');
+            } else {
+                log('Nicht Chrome - Test übersprungen');
+            }
+        }
+
+        function testFirefoxAudio() {
+            log('🦊 Firefox-spezifischer Audio-Test...');
+            
+            if (navigator.userAgent.includes('Firefox')) {
+                log('Firefox erkannt - führe Firefox-spezifische Tests durch');
+                
+                // Firefox-spezifische Audio-Tests
+                log('Firefox-Tipp: Überprüfen Sie about:preferences#privacy > Berechtigungen');
+            } else {
+                log('Nicht Firefox - Test übersprungen');
+            }
+        }
+
+        function testMobileAudio() {
+            log('📱 Mobile-spezifischer Audio-Test...');
+            
+            const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+            
+            if (isMobile) {
+                log('Mobile Gerät erkannt - führe mobile-spezifische Tests durch');
+                
+                // Mobile-spezifische Audio-Tests
+                log('Mobile-Tipp: Stellen Sie sicher, dass das Gerät nicht stummgeschaltet ist');
+                log('Mobile-Tipp: Überprüfen Sie die Medien-Lautstärke (nicht Klingelton)');
+                
+                // Teste Touch-Events für Audio-Aktivierung
+                document.addEventListener('touchstart', function() {
+                    log('Touch-Event erkannt - Audio sollte jetzt funktionieren');
+                }, { once: true });
+                
+            } else {
+                log('Nicht mobile - Test übersprungen');
+            }
+        }
+    </script>
+</body>
+</html> 
