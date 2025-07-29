@@ -74,6 +74,7 @@ Bearbeitet von Barbara Kammerl
           return false;
         }
         
+        // Einfachere Constraints für bessere Kompatibilität
         const stream = await navigator.mediaDevices.getUserMedia({
           video: {
             facingMode: 'user',
@@ -85,12 +86,50 @@ Bearbeitet von Barbara Kammerl
         
         if (videoElement) {
           videoElement.srcObject = stream;
+          
+          // Warten bis Video geladen ist
+          await new Promise((resolve, reject) => {
+            videoElement.onloadedmetadata = () => {
+              console.log('Video-Metadaten geladen');
+              resolve();
+            };
+            videoElement.onerror = (error) => {
+              console.error('Video-Loading Fehler:', error);
+              reject(error);
+            };
+            // Timeout nach 5 Sekunden
+            setTimeout(() => {
+              reject(new Error('Video-Loading Timeout'));
+            }, 5000);
+          });
+          
           console.log('Kamera erfolgreich initialisiert');
           return true;
         }
         
       } catch (error) {
         console.error('Kamera-Initialisierung fehlgeschlagen:', error);
+        
+        // Benutzerfreundliche Fehlermeldung
+        let errorMessage = "Kamera konnte nicht initialisiert werden.\n\n";
+        
+        if (error.name === 'NotAllowedError') {
+          errorMessage += "🔒 Kamera-Zugriff verweigert\n\n";
+          errorMessage += "Auf iPhone:\n";
+          errorMessage += "1. Einstellungen → Safari → Kamera → Erlauben\n";
+          errorMessage += "2. Oder in Safari: Adressleiste → Kamera-Symbol → Erlauben\n";
+          errorMessage += "3. Seite neu laden und erneut versuchen";
+        } else if (error.name === 'NotFoundError') {
+          errorMessage += "📱 Keine Kamera gefunden\n\n";
+          errorMessage += "Bitte überprüfen Sie, ob eine Kamera verfügbar ist.";
+        } else if (error.name === 'NotReadableError') {
+          errorMessage += "📹 Kamera wird bereits verwendet\n\n";
+          errorMessage += "Schließen Sie andere Apps, die die Kamera verwenden.";
+        } else {
+          errorMessage += "🔧 Technischer Fehler: " + error.message;
+        }
+        
+        alert(errorMessage);
         return false;
       }
     }
@@ -230,12 +269,15 @@ Bearbeitet von Barbara Kammerl
     
     const element_click = createApp({
       el:"#element_click",
-      data: () => {return { 
+              data: () => {return { 
         auswahl: "Nichts Ausgewählt", //Auswahl des schmerzenden Körperteiles (Menü 2)
         nachricht: "",                //Auswahl der gedrückten Buchstaben (Menü 3)
         selectedElement: "Start",    //Auswahl des momentan aufleuchtenden Symboles (überall)
         element: "Start",
         selectedKeyboard : 0,
+        isPaused: false,             // Pause-Status
+        pauseRequested: false,       // Pause wurde angefordert
+        currentPauseElement: null,   // Element bei dem pausiert wurde
 
         Keyboards: [
           //Alphabetisch:
@@ -874,7 +916,13 @@ Bearbeitet von Barbara Kammerl
             }
             
             // Normale Aktion ausführen
-            document.getElementById(this.element).click();
+            const element = document.getElementById(this.element);
+            if (element) {
+              element.click();
+              console.log("Aktion ausgeführt:", this.element);
+            } else {
+              console.warn("Element nicht gefunden:", this.element);
+            }
             this.eyes_closed = true; 
             // Sobald die Aktion ausgeführt wurde darf nicht sofort eine neue erfolgen
             // Dies verhindert auch ständiges auswählen beim schlafen (test erforderlich)
@@ -1190,99 +1238,36 @@ Bearbeitet von Barbara Kammerl
       try {
         console.log("=== KAMERA-INITIALISIERUNG STARTET ===");
         
-        // Prüfe ob getUserMedia verfügbar ist
-        if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
-          throw new Error("getUserMedia nicht verfügbar - Browser unterstützt keine Kamera-API");
-        }
+        // Verwende die verbesserte initCamera Funktion
+        const success = await initCamera();
         
-        console.log("✅ getUserMedia verfügbar");
-        
-        // Einfachere Constraints für bessere Kompatibilität
-        const constraints = {
-          video: {
-            facingMode: "user"
-          },
-          audio: false
-        };
-        
-        console.log("📷 Fordere Kamera-Berechtigung an...");
-        const stream = await navigator.mediaDevices.getUserMedia(constraints);
-        
-        console.log("✅ Kamera-Stream erhalten");
-        
-        if (!videoElement) {
-          throw new Error("Video-Element nicht gefunden");
-        }
-        
-        console.log("🎥 Setze Video-Stream...");
-        videoElement.srcObject = stream;
-        
-        // Warte bis Video geladen ist
-        console.log("⏳ Warte auf Video-Loading...");
-        await new Promise((resolve, reject) => {
-          videoElement.onloadedmetadata = () => {
-            console.log("✅ Video-Metadaten geladen");
-            resolve();
-          };
-          videoElement.onerror = (error) => {
-            console.error("❌ Video-Loading Fehler:", error);
-            reject(new Error("Video-Loading fehlgeschlagen"));
-          };
-          // Timeout nach 5 Sekunden
-          setTimeout(() => {
-            console.log("⏰ Video-Loading Timeout");
-            reject(new Error("Video-Loading Timeout"));
-          }, 5000);
-        });
-        
-        console.log("▶️ Starte Video-Wiedergabe...");
-        await videoElement.play();
-        
-        console.log("✅ Video läuft erfolgreich");
-        
-        // Prüfe ob Camera-Utils verfügbar ist
-        if (typeof camera !== 'undefined' && camera && camera.start) {
-          console.log("🎯 Starte Camera-Utils...");
-          camera.start();
-          console.log("✅ Camera-Utils gestartet");
+        if (success) {
+          console.log("✅ Kamera erfolgreich initialisiert");
+          
+          // Prüfe ob Camera-Utils verfügbar ist
+          if (typeof camera !== 'undefined' && camera && camera.start) {
+            console.log("🎯 Starte Camera-Utils...");
+            camera.start();
+            console.log("✅ Camera-Utils gestartet");
+          } else {
+            console.warn("⚠️ Camera-Utils nicht verfügbar");
+          }
+          
+          console.log("🎉 KAMERA ERFOLGREICH INITIALISIERT!");
+          
+          // Nur wenn Kamera funktioniert, zur Haupt-App wechseln
+          if (element_click && element_click.$data) {
+            element_click.$data.showMenu = 0;
+            console.log("🔄 Wechsle zur Haupt-App - Kamera funktioniert");
+          } else {
+            console.warn("⚠️ Vue-App nicht verfügbar für Menü-Wechsel");
+          }
         } else {
-          console.warn("⚠️ Camera-Utils nicht verfügbar");
-        }
-        
-        console.log("🎉 KAMERA ERFOLGREICH INITIALISIERT!");
-        
-        // Nur wenn Kamera funktioniert, zur Haupt-App wechseln
-        if (element_click && element_click.$data) {
-          element_click.$data.showMenu = 0;
-          console.log("🔄 Wechsle zur Haupt-App - Kamera funktioniert");
-        } else {
-          console.warn("⚠️ Vue-App nicht verfügbar für Menü-Wechsel");
+          throw new Error("Kamera-Initialisierung fehlgeschlagen");
         }
         
       } catch (error) {
         console.error("❌ KAMERA-INITIALISIERUNG FEHLGESCHLAGEN:", error);
-        
-        // Benutzerfreundliche Fehlermeldung
-        let errorMessage = "Kamera konnte nicht initialisiert werden.\n\n";
-        
-        if (error.name === 'NotAllowedError') {
-          errorMessage += "🔒 Kamera-Zugriff verweigert\n\n";
-          errorMessage += "Auf iPhone:\n";
-          errorMessage += "1. Einstellungen → Safari → Kamera → Erlauben\n";
-          errorMessage += "2. Oder in Safari: Adressleiste → Kamera-Symbol → Erlauben\n";
-          errorMessage += "3. Seite neu laden und erneut versuchen";
-        } else if (error.name === 'NotFoundError') {
-          errorMessage += "📱 Keine Kamera gefunden\n\n";
-          errorMessage += "Bitte überprüfen Sie, ob eine Kamera verfügbar ist.";
-        } else if (error.name === 'NotReadableError') {
-          errorMessage += "📹 Kamera wird bereits verwendet\n\n";
-          errorMessage += "Schließen Sie andere Apps, die die Kamera verwenden.";
-        } else {
-          errorMessage += "🔧 Technischer Fehler: " + error.message;
-        }
-        
-        console.log("📢 Zeige Fehlermeldung an...");
-        alert(errorMessage);
         
         // Bleibe auf Startseite
         console.log("🏠 Bleibe auf Startseite, Kamera nicht verfügbar");
@@ -1373,8 +1358,11 @@ Bearbeitet von Barbara Kammerl
             <button @click="initializeCamera()" style="background-color: var(--maincolor); color: white; border: none; padding: 10px 20px; border-radius: 8px; font-size: 1.2em; margin-right: 10px;">
               📷 Kamera aktivieren
             </button>
-            <button @click="enableAudio()" style="background-color: #4CAF50; color: white; border: none; padding: 10px 20px; border-radius: 8px; font-size: 1.2em;">
+            <button @click="enableAudio()" style="background-color: #4CAF50; color: white; border: none; padding: 10px 20px; border-radius: 8px; font-size: 1.2em; margin-right: 10px;">
               🔊 Audio aktivieren
+            </button>
+            <button id="PauseButton" @click="pauseRequested = true; isPaused = !isPaused;" style="background-color: #e7e7e7; color: black; border: none; padding: 10px 20px; border-radius: 8px; font-size: 1.2em;">
+              ⏸️ Pause
             </button>
           </div>
         </div>
