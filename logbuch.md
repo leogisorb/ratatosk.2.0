@@ -198,6 +198,16 @@
    - Direkte Menü-Navigation ohne Zwinkern
    - Benutzer-freundliche Touch-Buttons
 
+### NEUES PROBLEM:
+- **Layout verschoben** durch Touch-Navigation
+- **Kamera funktioniert immer noch nicht**
+- **Touch-Navigation entfernen** und einfachere Lösung
+
+### PROBLEM BEHOBEN:
+- **Touch-Navigation entfernt** - Layout wieder normal
+- **Einfachere iPhone-Lösung** - normale Touch-Buttons verwenden
+- **Kamera-Verzögerung verbessert** für iPhone Safari
+
 ### Warngeräusch-Problem behoben:
 1. **Fehlerbehandlung hinzugefügt**
    - Try-catch für Audio-Play

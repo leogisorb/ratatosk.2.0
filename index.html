@@ -786,10 +786,7 @@ Bearbeitet von Barbara Kammerl
     // iPhone Safari: MediaPipe oft problematisch
     if (isIOS && isSafari) {
       console.log('iPhone Safari erkannt - MediaPipe wird übersprungen');
-      alert('iPhone Safari erkannt. Die Anwendung funktioniert ohne Face-Erkennung. Verwende Touch-Navigation statt Zwinkern.');
-      
-      // Touch-basierte Navigation für iPhone aktivieren
-      enableTouchNavigation();
+      alert('iPhone Safari erkannt. Die Anwendung funktioniert ohne Face-Erkennung. Verwende die normalen Touch-Buttons in der Anwendung.');
     } else {
       try {
         faceMesh = new FaceMesh({locateFile: (file) => {
@@ -879,6 +876,11 @@ Bearbeitet von Barbara Kammerl
           console.log('FaceMesh nicht verfügbar - Kamera ohne Face-Erkennung');
         }
 
+        // iPhone Safari: Zusätzliche Kamera-Verzögerung
+        if (isIOS && isSafari) {
+          console.log('iPhone Safari: Kamera-Initialisierung abgeschlossen');
+        }
+
       } catch (error) {
         console.error('Kamera-Fehler:', error);
         
@@ -893,53 +895,7 @@ Bearbeitet von Barbara Kammerl
       }
     }
 
-    // Touch-Navigation für iPhone Safari
-    function enableTouchNavigation() {
-      // Touch-Buttons für Navigation hinzufügen
-      const touchNav = document.createElement('div');
-      touchNav.id = 'touch-navigation';
-      touchNav.style.cssText = `
-        position: fixed;
-        bottom: 20px;
-        left: 50%;
-        transform: translateX(-50%);
-        z-index: 1000;
-        background: rgba(0,0,0,0.8);
-        padding: 10px;
-        border-radius: 10px;
-        display: flex;
-        gap: 10px;
-      `;
-      
-      const buttons = [
-        { text: 'Start', action: () => root.showMenu = 0 },
-        { text: 'SOS', action: () => root.showMenu = 1 },
-        { text: 'Schmerz', action: () => root.showMenu = 2 },
-        { text: 'Nachricht', action: () => root.showMenu = 3 },
-        { text: 'Umgebung', action: () => root.showMenu = 4 },
-        { text: 'Ich', action: () => root.showMenu = 5 },
-        { text: 'Einstellungen', action: () => root.showMenu = 6 }
-      ];
-      
-      buttons.forEach(btn => {
-        const button = document.createElement('button');
-        button.textContent = btn.text;
-        button.style.cssText = `
-          padding: 8px 12px;
-          background: #D2691E;
-          color: white;
-          border: none;
-          border-radius: 5px;
-          font-size: 12px;
-          cursor: pointer;
-        `;
-        button.onclick = btn.action;
-        touchNav.appendChild(button);
-      });
-      
-      document.body.appendChild(touchNav);
-      console.log('Touch-Navigation für iPhone aktiviert');
-    }
+
 
     // Kamera initialisieren
     initializeCamera();
