@@ -227,3 +227,40 @@
    - Try-catch für Audio-Kontext
    - Try-catch für Audio-Datei laden
    - Null-Checks für Audio-Objekte 
+
+## 2024-12-19 - Mainpage Neugestaltung
+
+### Problem
+- User wollte die Mainpage komplett neu gestalten
+- Spezifisches Layout mit 6 Buttons in 2x3 Grid gewünscht
+- Header mit RATATOSK Logo und grauer Hintergrund
+- Buttons mit teal/dark green Icons (#00796B) und schwarzem Text
+
+### Lösung
+- **Komplett neues Design** implementiert entsprechend User-Vorlage
+- **Layout**: 1512x982px Container mit 2x3 Button-Grid
+- **Header**: 86px Höhe, grauer Hintergrund (#D9D9D9), RATATOSK Text
+- **Buttons**: 
+  - WARNGERÄUSCH (SOS) - links oben
+  - UNTERHALTEN (NAC) - mitte oben  
+  - ICH (SEL) - rechts oben
+  - SCHMERZEN (AUA) - links unten
+  - UMGEBUNG (UMG) - mitte unten
+  - EINSTELLUNGEN (EIN) - rechts unten
+- **Styling**: 
+  - 422px breite Buttons mit 1.5px schwarzer Umrandung
+  - 10px Abstand zwischen Buttons
+  - 26px Abstand zwischen Icon und Text
+  - Source Code Pro Font, 40px Textgröße
+  - Cursor pointer für bessere UX
+- **Funktionalität**: Alle Vue.js Click-Events beibehalten
+- **Responsive**: Fixed positioning für präzises Layout
+
+### Technische Details
+- Alle Buttons haben korrekte IDs (SOS, NAC, SEL, AUA, UMG, EIN)
+- Click-Events funktionieren weiterhin (showMenu=1,2,3,4,5,6)
+- Blink-Erkennung funktioniert weiterhin
+- Touch-Navigation für iPhone bleibt erhalten
+
+### Status
+✅ **Abgeschlossen** - Neues Design implementiert und funktionsfähig 

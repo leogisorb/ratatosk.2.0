@@ -1015,33 +1015,77 @@ Bearbeitet von Barbara Kammerl
           <img id="Start" class="startimage" src="./public/Ratatosk.svg" alt="Logo" @click="cngTime_closed=true; showMenu=0" style="color:white"/>
         </div>
 
-    <!-- Haupt Menü -->
-    <div class="container" v-if="showMenu==0">
-        <div class="group">
-          <img id="SOS" src="./public/Glocke.svg" alt=" Warnton " @click="showMenu=1"/>
-          <p> Warngeräusch </p>
+    <!-- Haupt Menü - Neues Design -->
+    <div v-if="showMenu==0" style="width: 1512px; height: 982px; position: relative; background: white; overflow: hidden">
+      <div style="width: 1512px; height: 896px; left: 0px; top: 86px; position: absolute">
+        <div style="width: 1512px; height: 896px; left: 0px; top: 0px; position: absolute"></div>
+        
+        <!-- WARNGERÄUSCH Button -->
+        <div style="width: 422px; left: 83px; top: 151px; position: absolute; flex-direction: column; justify-content: flex-start; align-items: flex-start; gap: 10px; display: inline-flex">
+          <div id="SOS" style="align-self: stretch; padding-left: 67px; padding-right: 67px; padding-top: 35px; padding-bottom: 35px; background: rgba(217, 217, 217, 0.10); border-radius: 10px; outline: 1.50px black solid; outline-offset: -1.50px; flex-direction: column; justify-content: flex-start; align-items: center; gap: 26px; display: flex; cursor: pointer;" @click="showMenu=1">
+            <div style="width: 119.09px; height: 125px; background: #00796B"></div>
+            <div style="color: black; font-size: 40px; font-family: Source Code Pro; font-weight: 400; word-wrap: break-word">WARNGERÄUSCH</div>
+          </div>
         </div>
-        <div class="group">
-          <img id="AUA" src="./public/Schmerz.svg" alt=" Schmerz " @click="showMenu=2"/>
-          <p> Schmerzen </p>
+        
+        <!-- UNTERHALTEN Button -->
+        <div style="width: 422px; left: 545px; top: 151px; position: absolute; flex-direction: column; justify-content: flex-start; align-items: flex-start; gap: 10px; display: inline-flex">
+          <div id="NAC" style="align-self: stretch; padding-left: 67px; padding-right: 67px; padding-top: 35px; padding-bottom: 35px; background: rgba(217, 217, 217, 0.10); border-radius: 10px; outline: 1.50px black solid; outline-offset: -1.50px; flex-direction: column; justify-content: flex-start; align-items: center; gap: 26px; display: flex; cursor: pointer;" @click="showMenu=3">
+            <div style="width: 125px; height: 125px; position: relative; overflow: hidden">
+              <div style="width: 125px; height: 125px; left: 0px; top: 0px; position: absolute; background: #00796B"></div>
+            </div>
+            <div style="color: black; font-size: 40px; font-family: Source Code Pro; font-weight: 400; word-wrap: break-word">UNTERHALTEN</div>
+          </div>
         </div>
-        <div  class="group">
-          <img id="NAC" src="./public/Nachricht.svg" alt=" Nachricht " @click="showMenu=3"/>
-          <p> Nachricht </p>
+        
+        <!-- ICH Button -->
+        <div style="width: 422px; left: 1007px; top: 151px; position: absolute; flex-direction: column; justify-content: flex-start; align-items: flex-start; gap: 10px; display: inline-flex">
+          <div id="SEL" style="align-self: stretch; padding-left: 67px; padding-right: 67px; padding-top: 35px; padding-bottom: 35px; background: rgba(217, 217, 217, 0.10); border-radius: 10px; outline: 1.50px black solid; outline-offset: -1.50px; flex-direction: column; justify-content: flex-start; align-items: center; gap: 26px; display: flex; cursor: pointer;" @click="showMenu=5">
+            <div style="width: 62.50px; height: 62.50px; background: #00796B"></div>
+            <div style="width: 93.75px; height: 52.08px; background: #00796B"></div>
+            <div style="color: black; font-size: 40px; font-family: Source Code Pro; font-weight: 400; word-wrap: break-word">ICH</div>
+          </div>
         </div>
-        <div class="group">
-        <img id="UMG" src="./public/Umgebung.svg" alt=" Schnellbausteine Umgebung " @click="showMenu=4"/>
-          <p> Umgebung </p>
+        
+        <!-- SCHMERZEN Button -->
+        <div style="width: 422px; left: 83px; top: 474px; position: absolute; flex-direction: column; justify-content: flex-start; align-items: flex-start; gap: 10px; display: inline-flex">
+          <div id="AUA" style="align-self: stretch; padding-left: 67px; padding-right: 67px; padding-top: 35px; padding-bottom: 35px; background: rgba(217, 217, 217, 0.10); border-radius: 10px; outline: 1.50px black solid; outline-offset: -1.50px; flex-direction: column; justify-content: flex-start; align-items: center; gap: 26px; display: flex; cursor: pointer;" @click="showMenu=2">
+            <div style="width: 125.07px; height: 124.99px; background: #00796B"></div>
+            <div style="color: black; font-size: 40px; font-family: Source Code Pro; font-weight: 400; word-wrap: break-word">SCHMERZEN</div>
+          </div>
         </div>
-        <div class="group">
-          <img id="SEL" src="./public/Ich.svg" alt=" Schnellbausteine Selbst " @click="showMenu=5"/>
-          <p> Ich </p>
+        
+        <!-- UMGEBUNG Button -->
+        <div style="width: 422px; left: 545px; top: 474px; position: absolute; flex-direction: column; justify-content: flex-start; align-items: flex-start; gap: 10px; display: inline-flex">
+          <div id="UMG" style="align-self: stretch; padding-left: 67px; padding-right: 67px; padding-top: 35px; padding-bottom: 35px; background: rgba(217, 217, 217, 0.10); border-radius: 10px; outline: 1.50px black solid; outline-offset: -1.50px; flex-direction: column; justify-content: flex-start; align-items: center; gap: 26px; display: flex; cursor: pointer;" @click="showMenu=4">
+            <div style="width: 125px; height: 125px; position: relative; overflow: hidden">
+              <div style="width: 125px; height: 125.01px; left: 0px; top: -0.01px; position: absolute; background: #00796B"></div>
+            </div>
+            <div style="color: black; font-size: 40px; font-family: Source Code Pro; font-weight: 400; word-wrap: break-word">UMGEBUNG</div>
+          </div>
         </div>
-        <div class="group">
-                  <img id="EIN" src="./public/Einstellungen.svg" alt=" Einstellungen " @click="showMenu=6"/>
-          <p> Einstellung </p>
+        
+        <!-- EINSTELLUNGEN Button -->
+        <div style="width: 422px; left: 1007px; top: 474px; position: absolute; flex-direction: column; justify-content: flex-start; align-items: flex-start; gap: 10px; display: inline-flex">
+          <div id="EIN" style="align-self: stretch; padding-left: 67px; padding-right: 67px; padding-top: 35px; padding-bottom: 35px; background: rgba(217, 217, 217, 0.10); border-radius: 10px; outline: 1.50px black solid; outline-offset: -1.50px; flex-direction: column; justify-content: flex-start; align-items: center; gap: 26px; display: flex; cursor: pointer;" @click="showMenu=6">
+            <div style="width: 125px; height: 125px; position: relative; overflow: hidden">
+              <div style="width: 114.59px; height: 33.38px; left: 5.21px; top: 13.14px; position: absolute; background: #00796B"></div>
+              <div style="width: 114.59px; height: 33.38px; left: 5.21px; top: 45.81px; position: absolute; background: #00796B"></div>
+              <div style="width: 114.59px; height: 33.37px; left: 5.21px; top: 78.48px; position: absolute; background: #00796B"></div>
+            </div>
+            <div style="color: black; font-size: 40px; font-family: Source Code Pro; font-weight: 400; word-wrap: break-word">EINSTELLUNGEN</div>
+          </div>
         </div>
       </div>
+      
+      <!-- Header -->
+      <div style="width: 1512px; height: 86px; left: 0px; top: 0px; position: absolute">
+        <div style="width: 1512px; height: 86px; left: 0px; top: 0px; position: absolute; background: #D9D9D9; box-shadow: 0px 4px 4px rgba(0, 0, 0, 0.25)"></div>
+        <div style="left: 83px; top: 18px; position: absolute; color: black; font-size: 40px; font-family: Source Code Pro; font-weight: 300; word-wrap: break-word">RATATOSK </div>
+        <div style="width: 48.07px; height: 50px; left: 294px; top: 18px; position: absolute; background: #00796B"></div>
+        <div style="width: 10.50px; height: 6.70px; left: 319.42px; top: 44.48px; position: absolute; background: #00796B"></div>
+      </div>
+    </div>
 
     <!-- Schwesternruf Menü -->
     <div v-if="(showMenu==1)||(showMenu==101)" class="container" style="columns: 100px 1;">
