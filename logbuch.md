@@ -42,4 +42,33 @@
 ### Nächste Schritte:
 - Anwendung testen (http://localhost:8000)
 - Browser-Konsole auf Fehler prüfen
-- Kamera-Berechtigungen im Browser erlauben 
+- Kamera-Berechtigungen im Browser erlauben
+
+### Status:
+- ✅ Icons funktionieren jetzt korrekt
+- ✅ HTTP-Server läuft auf Port 8000
+- ✅ Änderungen auf GitHub gepusht
+- ❌ **Kamera funktioniert immer noch nicht**
+- ❌ **Problem**: Browser lädt immer noch lokale MediaPipe-Dateien statt CDN
+
+### Neues Problem identifiziert:
+- Server-Logs zeigen, dass lokale MediaPipe-Dateien geladen werden
+- CDN-Versionen werden nicht verwendet
+- **Lösung 1**: Lokale MediaPipe-Dateien umbenannt (`.backup`)
+- **Lösung 2**: HTTPS-Server gestartet (Kamera benötigt oft HTTPS)
+
+### Kamera-Problem Lösungsversuche:
+1. **Lokale MediaPipe-Dateien umbenannt**
+   - `camera_utils.js` → `camera_utils.js.backup`
+   - `control_utils.js` → `control_utils.js.backup`
+   - `drawing_utils.js` → `drawing_utils.js.backup`
+   - `face_mesh.js` → `face_mesh.js.backup`
+
+2. **HTTPS-Server gestartet**
+   - SSL-Zertifikat erstellt
+   - HTTPS-Server läuft auf https://localhost:8443
+   - HTTP-Server läuft weiterhin auf http://localhost:8000
+
+### Test-URLs:
+- HTTP: http://localhost:8000
+- HTTPS: https://localhost:8443 (für Kamera-Zugriff) 
