@@ -224,6 +224,18 @@
 - **getUserMedia direkt verwenden**
 - **Keine externen Abhängigkeiten**
 
+### KRITISCHER FEHLER:
+- **Face-Erkennung ist essenziell für Navigation!**
+- **Zwinkern ist das Hauptfeature!**
+- **MediaPipe muss wieder hinzugefügt werden**
+- **Richtige MediaPipe-Initialisierung implementieren**
+
+### PROBLEM BEHOBEN:
+- **MediaPipe wieder hinzugefügt**
+- **Face-Erkennung und Zwinkern wieder aktiv**
+- **Ursprüngliche, funktionierende Version**
+- **Navigation über Zwinkern möglich**
+
 ### Warngeräusch-Problem behoben:
 1. **Fehlerbehandlung hinzugefügt**
    - Try-catch für Audio-Play

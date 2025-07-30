@@ -44,7 +44,11 @@ Bearbeitet von Barbara Kammerl
    <meta content="width=device-width, height=device-height, initial-scale=1.0">
 
   <title>Ratatosk-Testseite</title>
-      <!-- MediaPipe-Imports entfernt - verwende nur einfache Kamera -->
+      <!-- Import für facemesh im Web -->
+    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/camera_utils/camera_utils.js" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/control_utils/control_utils.js" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/drawing_utils/drawing_utils.js" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/face_mesh/face_mesh.js" crossorigin="anonymous"></script>
 </head>
 
 <body>
@@ -766,21 +770,49 @@ Bearbeitet von Barbara Kammerl
 
     const root = element_click.mount('#element_click'); 
 
-    // Einfache Kamera-Initialisierung ohne MediaPipe
+    // MediaPipe FaceMesh initialisieren
+    let faceMesh = null;
+    
     try {
-      // Nur Video-Stream starten, ohne MediaPipe
-      navigator.mediaDevices.getUserMedia({ video: true })
-        .then(function(stream) {
-          videoElement.srcObject = stream;
-          videoElement.play();
-          console.log('Kamera erfolgreich gestartet (ohne MediaPipe)');
-        })
-        .catch(function(error) {
-          console.error('Kamera-Fehler:', error);
-          alert('Kamera konnte nicht gestartet werden: ' + error.message);
-        });
+      faceMesh = new FaceMesh({locateFile: (file) => {
+        return `https://cdn.jsdelivr.net/npm/@mediapipe/face_mesh/${file}`;
+      }});
+      faceMesh.setOptions({
+        maxNumFaces: 1,               //nur ein Gesicht erkennen
+        refineLandmarks: true,
+        minDetectionConfidence: 0.5,  //zu 50% ein gesicht? Zählt als Gesicht
+        minTrackingConfidence: 0.5    //zu 50% ein Teil des Gesichtes? Zählt als Landmark
+      });
+
+      function handle_result(landmarks) {
+        root.Frame_Abhandlung(landmarks);  //rufe Funkion in vue auf
+      }
+
+      //sobald ein Gesicht erkannt wird, beginne mit Analyse
+      faceMesh.onResults(handle_result);
+      
+      console.log('MediaPipe FaceMesh erfolgreich initialisiert');
     } catch (error) {
-      console.error('Kamera-Initialisierung fehlgeschlagen:', error);
+      console.error('MediaPipe FaceMesh Fehler:', error);
+      alert('Face-Erkennung nicht verfügbar. Die Anwendung funktioniert ohne Kamera-Features.');
+    }
+
+    // Kamera-Initialisierung
+    const camera = new Camera(videoElement, {
+      onFrame: async () => {
+        try {
+          await faceMesh.send({image: videoElement});
+        } catch (error) {
+          console.error('FaceMesh error:', error);
+        }
+      }
+    });
+    
+    try {
+      camera.start();
+      console.log('Kamera erfolgreich gestartet');
+    } catch (error) {
+      console.error('Kamera-Fehler:', error);
     }
 
     //Array mit allen Bildern, die vorgeladen werden müssen
