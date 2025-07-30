@@ -228,6 +228,35 @@
    - Try-catch für Audio-Datei laden
    - Null-Checks für Audio-Objekte 
 
+## 2024-12-19 - Kamera-Problembehebung
+
+### Problem
+- User meldet: "kamera springt nicht an"
+- Kamera-Initialisierung funktioniert nicht
+- Video-Element möglicherweise nicht verfügbar beim Start
+
+### Lösung
+- **Video-Element dynamisch erstellen**: Statt statisches HTML-Element wird Video-Element per JavaScript erstellt
+- **DOM-Reihenfolge behoben**: Video-Element wird vor der Kamera-Initialisierung erstellt
+- **Verbesserte Fehlerbehandlung**: Detaillierte Console-Logs für Debugging
+- **Video-Loading**: Warten auf `onloadedmetadata` Event vor `play()`
+- **Verzögerung hinzugefügt**: 1 Sekunde Verzögerung für vollständigen DOM-Load
+
+### Technische Details
+- **Video-Element**: Dynamisch erstellt mit `display: none` (nur für MediaPipe)
+- **Kamera-Stream**: Verbesserte Fehlerbehandlung für `getUserMedia`
+- **Console-Logs**: Schrittweise Logging für bessere Diagnose
+- **Browser-Kompatibilität**: iPhone Safari-spezifische Konfiguration beibehalten
+
+### Debugging-Features
+- Console-Logs für jeden Schritt der Kamera-Initialisierung
+- Detaillierte Fehlermeldungen für verschiedene Browser-Probleme
+- Video-Metadaten-Loading überwacht
+- FaceMesh-Verfügbarkeit geprüft
+
+### Status
+✅ **Abgeschlossen** - Kamera-Initialisierung verbessert und getestet
+
 ## 2024-12-19 - Mainpage Neugestaltung
 
 ### Problem

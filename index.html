@@ -59,7 +59,14 @@ Bearbeitet von Barbara Kammerl
 
 <body>
   <script type="module">  
-    const videoElement = document.getElementById("input_video"); 
+    // Video-Element erstellen und zum DOM hinzufügen
+    const videoElement = document.createElement('video');
+    videoElement.id = 'input_video';
+    videoElement.setAttribute('facingMode', 'user');
+    videoElement.style.margin = 'auto';
+    videoElement.style.display = 'none'; // Verstecken, da es nur für MediaPipe verwendet wird
+    document.body.appendChild(videoElement);
+    
     // facefactor bestimmt ab welchem Großenfaktor ein geschlossenes Auge erkannt wird.
     // Die Höhe des Gesichtes wird hiermit multipliziert um einen Grenzwert festzulegen.
     // Aus Selbstets ergab sich ein Faktor von 35 bis 60 als ideal für niedrigen und hohen Abstand zwischen Gesicht und Kamera.
@@ -819,10 +826,14 @@ Bearbeitet von Barbara Kammerl
     // Kamera-Initialisierung mit Browser-Kompatibilität
     async function initializeCamera() {
       try {
+        console.log('Kamera-Initialisierung gestartet...');
+        
         // Erst prüfen ob getUserMedia unterstützt wird
         if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
           throw new Error('Kamera-API nicht unterstützt');
         }
+
+        console.log('getUserMedia API verfügbar');
 
         // iPhone Safari-spezifische Konfiguration
         const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
@@ -844,14 +855,26 @@ Bearbeitet von Barbara Kammerl
           console.log('iPhone Safari erkannt - kleinere Auflösung verwendet');
         }
 
+        console.log('Kamera-Berechtigung anfordern...');
+        
         // Kamera-Berechtigung anfordern
         const stream = await navigator.mediaDevices.getUserMedia({
           video: videoConstraints
         });
 
+        console.log('Kamera-Stream erhalten:', stream);
+
         // Video-Element mit Stream verbinden
         videoElement.srcObject = stream;
-        videoElement.play();
+        
+        // Warten bis Video geladen ist
+        await new Promise((resolve, reject) => {
+          videoElement.onloadedmetadata = () => {
+            console.log('Video-Metadaten geladen');
+            videoElement.play().then(resolve).catch(reject);
+          };
+          videoElement.onerror = reject;
+        });
 
         console.log('Kamera erfolgreich gestartet');
 
@@ -863,6 +886,7 @@ Bearbeitet von Barbara Kammerl
 
         // MediaPipe-Kamera starten (nur wenn FaceMesh verfügbar)
         if (faceMesh) {
+          console.log('FaceMesh verfügbar - MediaPipe-Kamera starten...');
           const camera = new Camera(videoElement, {
             onFrame: async () => {
               try {
@@ -941,8 +965,11 @@ Bearbeitet von Barbara Kammerl
       console.log('Touch-Navigation für iPhone aktiviert');
     }
 
-    // Kamera initialisieren
-    initializeCamera();
+    // Kamera initialisieren (mit Verzögerung für DOM-Load)
+    setTimeout(() => {
+      console.log('Starte Kamera-Initialisierung...');
+      initializeCamera();
+    }, 1000);
 
     //Array mit allen Bildern, die vorgeladen werden müssen
     vorladen("./public/Ratatosk.svg","./public/GoHome.svg","./public/Goback.svg", // Sonstiges
@@ -1295,7 +1322,6 @@ Bearbeitet von Barbara Kammerl
       <p>Aktuelles Menü:{{ this.showMenu }}</p>
     </div>
     </div>
-  <!-- hiervon kommt der Video-Input. Nicht auskommentieren! -->
-  <video id="input_video" facingMode='user' style="margin:auto;"></video>
+  <!-- Video-Element wird jetzt dynamisch erstellt -->
 </body>
 </html>
