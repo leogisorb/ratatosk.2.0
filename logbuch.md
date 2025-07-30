@@ -142,4 +142,23 @@
 2. **Audio-Datei vorladen**
    - Event-Listener für erfolgreiches Laden
    - Event-Listener für Fehler
-   - Bessere Diagnose von Audio-Problemen 
+   - Bessere Diagnose von Audio-Problemen
+
+### NEUES PROBLEM:
+- **Audio funktioniert immer noch nicht** - "kein Ton"
+- **Mögliche Ursachen:**
+  1. Audio-Datei ist korrupt oder nicht kompatibel
+  2. Browser-Audio-API blockiert
+  3. Audio-Format (.wav) wird nicht unterstützt
+  4. HTTPS erforderlich für Audio
+
+### Audio-Problem Lösungsversuche:
+1. **Web Audio API Fallback hinzugefügt**
+   - Audio-Kontext für bessere Kompatibilität
+   - Fallback Beep-Ton wenn Audio-Datei fehlschlägt
+   - Bessere Fehlerbehandlung
+
+2. **Audio-Initialisierung verbessert**
+   - Try-catch für Audio-Kontext
+   - Try-catch für Audio-Datei laden
+   - Null-Checks für Audio-Objekte 

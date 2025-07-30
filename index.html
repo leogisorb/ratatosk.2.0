@@ -76,16 +76,30 @@ Bearbeitet von Barbara Kammerl
       }
     }
 
-    const serviceBell = new Audio('./public/ServiceGlocke.wav');
+    // Audio-Initialisierung
+    let serviceBell = null;
+    let audioContext = null;
     
-    // Audio-Datei vorladen
-    serviceBell.addEventListener('canplaythrough', () => {
-      console.log('Audio-Datei erfolgreich geladen');
-    });
+    // Audio-Kontext erstellen
+    try {
+      audioContext = new (window.AudioContext || window.webkitAudioContext)();
+      console.log('Audio-Kontext erstellt');
+    } catch (error) {
+      console.error('Audio-Kontext Fehler:', error);
+    }
     
-    serviceBell.addEventListener('error', (error) => {
-      console.error('Audio-Datei Fehler:', error);
-    });
+    // Audio-Datei laden
+    try {
+      serviceBell = new Audio('./public/ServiceGlocke.wav');
+      serviceBell.addEventListener('canplaythrough', () => {
+        console.log('Audio-Datei erfolgreich geladen');
+      });
+      serviceBell.addEventListener('error', (error) => {
+        console.error('Audio-Datei Fehler:', error);
+      });
+    } catch (error) {
+      console.error('Audio-Initialisierung Fehler:', error);
+    }
     import { createApp } from 'vue/dist/vue.esm-bundler.js';
     
     const element_click = createApp({
@@ -209,15 +223,51 @@ Bearbeitet von Barbara Kammerl
         playBell(){
           //spielt das Geräusch der Schwesternglocke
           try {
+            // Audio-Kontext erstellen (falls nötig)
+            if (!window.audioContext) {
+              window.audioContext = new (window.AudioContext || window.webkitAudioContext)();
+            }
+            
             serviceBell.volume = 0.9;
             serviceBell.loop = true;
+            
+            // Audio-Kontext resume (falls suspended)
+            if (window.audioContext.state === 'suspended') {
+              window.audioContext.resume();
+            }
+            
             serviceBell.play().catch(error => {
               console.error('Audio play error:', error);
-              alert('Audio konnte nicht abgespielt werden. Bitte erlauben Sie Audio im Browser.');
+              // Fallback: Einfacher Beep-Ton
+              this.playFallbackBeep();
             });
           } catch (error) {
             console.error('Audio error:', error);
-            alert('Audio-Fehler: ' + error.message);
+            // Fallback: Einfacher Beep-Ton
+            this.playFallbackBeep();
+          }
+        },
+        
+        playFallbackBeep() {
+          // Fallback: Einfacher Beep-Ton mit Web Audio API
+          try {
+            const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+            const oscillator = audioContext.createOscillator();
+            const gainNode = audioContext.createGain();
+            
+            oscillator.connect(gainNode);
+            gainNode.connect(audioContext.destination);
+            
+            oscillator.frequency.setValueAtTime(800, audioContext.currentTime);
+            gainNode.gain.setValueAtTime(0.3, audioContext.currentTime);
+            
+            oscillator.start();
+            oscillator.stop(audioContext.currentTime + 0.5);
+            
+            console.log('Fallback Beep-Ton abgespielt');
+          } catch (error) {
+            console.error('Fallback Beep error:', error);
+            alert('Audio konnte nicht abgespielt werden.');
           }
         },
         stopBell(){
