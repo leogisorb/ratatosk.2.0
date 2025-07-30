@@ -213,11 +213,16 @@
 - **iPhone und Mac betroffen**
 - **Zurück zur funktionierenden Version**
 
-### PROBLEM BEHOBEN:
-- **Komplexe Kamera-Initialisierung entfernt**
-- **Zurück zur einfachen Camera-Klasse**
-- **iPhone Safari-Erkennung vereinfacht**
-- **Anwendung sollte wieder funktionieren**
+ ### NEUES PROBLEM:
+- **Anwendung funktioniert immer noch nicht**
+- **Systematische Fehlersuche nötig**
+- **MediaPipe-Initialisierung könnte das Problem sein**
+
+### LÖSUNG VERSUCHT:
+- **MediaPipe komplett entfernt**
+- **Nur einfache Kamera ohne Face-Erkennung**
+- **getUserMedia direkt verwenden**
+- **Keine externen Abhängigkeiten**
 
 ### Warngeräusch-Problem behoben:
 1. **Fehlerbehandlung hinzugefügt**

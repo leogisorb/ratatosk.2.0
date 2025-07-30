@@ -44,17 +44,7 @@ Bearbeitet von Barbara Kammerl
    <meta content="width=device-width, height=device-height, initial-scale=1.0">
 
   <title>Ratatosk-Testseite</title>
-  <!-- Import für facemesh im Web -->
-  <script src="https://cdn.jsdelivr.net/npm/@mediapipe/camera_utils/camera_utils.js" crossorigin="anonymous"></script>
-  <script src="https://cdn.jsdelivr.net/npm/@mediapipe/control_utils/control_utils.js" crossorigin="anonymous"></script>
-  <script src="https://cdn.jsdelivr.net/npm/@mediapipe/drawing_utils/drawing_utils.js" crossorigin="anonymous"></script>
-  <script src="https://cdn.jsdelivr.net/npm/@mediapipe/face_mesh/face_mesh.js" crossorigin="anonymous"></script>
-
-  <!-- Import für facemesh ohne Web (auskommentiert) -->
-  <!-- <script src="./public/camera_utils.js" crossorigin="anonymous"></script>
-  <script src="./public/control_utils.js" crossorigin="anonymous"></script>
-  <script src="./public/drawing_utils.js" crossorigin="anonymous"></script>
-  <script src="./public/face_mesh.js" crossorigin="anonymous"></script> -->
+      <!-- MediaPipe-Imports entfernt - verwende nur einfache Kamera -->
 </head>
 
 <body>
@@ -776,59 +766,21 @@ Bearbeitet von Barbara Kammerl
 
     const root = element_click.mount('#element_click'); 
 
-    // MediaPipe FaceMesh initialisieren
-    let faceMesh = null;
-    
-    // iPhone Safari-Erkennung
-    const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
-    const isSafari = /Safari/.test(navigator.userAgent) && !/Chrome/.test(navigator.userAgent);
-    
-    // iPhone Safari: MediaPipe oft problematisch
-    if (isIOS && isSafari) {
-      console.log('iPhone Safari erkannt - MediaPipe wird übersprungen');
-      alert('iPhone Safari erkannt. Die Anwendung funktioniert ohne Face-Erkennung.');
-    } else {
-      try {
-        faceMesh = new FaceMesh({locateFile: (file) => {
-          return `https://cdn.jsdelivr.net/npm/@mediapipe/face_mesh/${file}`;
-        }});
-        faceMesh.setOptions({
-          maxNumFaces: 1,               //nur ein Gesicht erkennen
-          refineLandmarks: true,
-          minDetectionConfidence: 0.5,  //zu 50% ein gesicht? Zählt als Gesicht
-          minTrackingConfidence: 0.5    //zu 50% ein Teil des Gesichtes? Zählt als Landmark
-        });
-
-        function handle_result(landmarks) {
-          root.Frame_Abhandlung(landmarks);  //rufe Funkion in vue auf
-        }
-
-        //sobald ein Gesicht erkannt wird, beginne mit Analyse
-        faceMesh.onResults(handle_result);
-        
-        console.log('MediaPipe FaceMesh erfolgreich initialisiert');
-      } catch (error) {
-        console.error('MediaPipe FaceMesh Fehler:', error);
-        alert('Face-Erkennung nicht verfügbar. Die Anwendung funktioniert ohne Kamera-Features.');
-      }
-    } 
-
-    // Einfache Kamera-Initialisierung
-    const camera = new Camera(videoElement, {
-      onFrame: async () => {
-        try {
-          await faceMesh.send({image: videoElement});
-        } catch (error) {
-          console.error('FaceMesh error:', error);
-        }
-      }
-    });
-    
+    // Einfache Kamera-Initialisierung ohne MediaPipe
     try {
-      camera.start();
-      console.log('Kamera erfolgreich gestartet');
+      // Nur Video-Stream starten, ohne MediaPipe
+      navigator.mediaDevices.getUserMedia({ video: true })
+        .then(function(stream) {
+          videoElement.srcObject = stream;
+          videoElement.play();
+          console.log('Kamera erfolgreich gestartet (ohne MediaPipe)');
+        })
+        .catch(function(error) {
+          console.error('Kamera-Fehler:', error);
+          alert('Kamera konnte nicht gestartet werden: ' + error.message);
+        });
     } catch (error) {
-      console.error('Kamera-Fehler:', error);
+      console.error('Kamera-Initialisierung fehlgeschlagen:', error);
     }
 
     //Array mit allen Bildern, die vorgeladen werden müssen
