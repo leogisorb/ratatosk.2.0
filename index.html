@@ -798,133 +798,73 @@ Bearbeitet von Barbara Kammerl
       enableTouchNavigation();
     } 
 
-    // Kamera-Initialisierung mit Browser-Kompatibilität
+    // Einfache Kamera-Initialisierung
     async function initializeCamera() {
       try {
         console.log('Kamera-Initialisierung gestartet...');
         
-        // Video-Element erstellen und zum DOM hinzufügen
+        // Video-Element erstellen
         videoElement = document.createElement('video');
         videoElement.id = 'input_video';
-        videoElement.setAttribute('facingMode', 'user');
-        videoElement.style.margin = 'auto';
-        videoElement.style.display = 'none'; // Verstecken, da es nur für MediaPipe verwendet wird
+        videoElement.style.display = 'none';
         document.body.appendChild(videoElement);
         
-        console.log('Video-Element erstellt und zum DOM hinzugefügt');
+        console.log('Video-Element erstellt');
         
-        // Erst prüfen ob getUserMedia unterstützt wird
-        if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
-          throw new Error('Kamera-API nicht unterstützt');
-        }
-
-        console.log('getUserMedia API verfügbar');
-
-        // iPhone Safari-spezifische Konfiguration
+        // Einfache Kamera-Anfrage
+        const stream = await navigator.mediaDevices.getUserMedia({ 
+          video: { facingMode: 'user' } 
+        });
+        
+        console.log('Kamera-Stream erhalten');
+        
+        // Video mit Stream verbinden
+        videoElement.srcObject = stream;
+        await videoElement.play();
+        
+        console.log('Kamera erfolgreich gestartet');
+        
+        // MediaPipe nur für Desktop starten
         const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
         const isSafari = /Safari/.test(navigator.userAgent) && !/Chrome/.test(navigator.userAgent);
         
-        let videoConstraints = {
-          facingMode: 'user',
-          width: { ideal: 640 },
-          height: { ideal: 480 }
-        };
-
-        // iPhone Safari: Kleinere Auflösung für bessere Performance
-        if (isIOS && isSafari) {
-          videoConstraints = {
-            facingMode: 'user',
-            width: { ideal: 320, max: 640 },
-            height: { ideal: 240, max: 480 }
-          };
-          console.log('iPhone Safari erkannt - kleinere Auflösung verwendet');
-        }
-
-        console.log('Kamera-Berechtigung anfordern...');
-        
-        // Kamera-Berechtigung anfordern
-        const stream = await navigator.mediaDevices.getUserMedia({
-          video: videoConstraints
-        });
-
-        console.log('Kamera-Stream erhalten:', stream);
-
-        // Video-Element mit Stream verbinden
-        videoElement.srcObject = stream;
-        
-        // Warten bis Video geladen ist
-        await new Promise((resolve, reject) => {
-          videoElement.onloadedmetadata = () => {
-            console.log('Video-Metadaten geladen');
-            videoElement.play().then(resolve).catch(reject);
-          };
-          videoElement.onerror = reject;
-        });
-
-        console.log('Kamera erfolgreich gestartet');
-
-        // iPhone Safari: Verzögerung für MediaPipe
-        if (isIOS && isSafari) {
-          console.log('iPhone Safari: Warte auf MediaPipe-Initialisierung...');
-          await new Promise(resolve => setTimeout(resolve, 2000));
-        }
-
-        // MediaPipe-Initialisierung (nur wenn nicht iPhone Safari)
         if (!(isIOS && isSafari)) {
           try {
-            console.log('MediaPipe FaceMesh initialisieren...');
-            faceMesh = new FaceMesh({locateFile: (file) => {
+            console.log('MediaPipe starten...');
+            const faceMesh = new FaceMesh({locateFile: (file) => {
               return `https://cdn.jsdelivr.net/npm/@mediapipe/face_mesh/${file}`;
             }});
+            
             faceMesh.setOptions({
-              maxNumFaces: 1,               //nur ein Gesicht erkennen
+              maxNumFaces: 1,
               refineLandmarks: true,
-              minDetectionConfidence: 0.5,  //zu 50% ein gesicht? Zählt als Gesicht
-              minTrackingConfidence: 0.5    //zu 50% ein Teil des Gesichtes? Zählt als Landmark
+              minDetectionConfidence: 0.5,
+              minTrackingConfidence: 0.5
             });
 
-            function handle_result(landmarks) {
-              root.Frame_Abhandlung(landmarks);  //rufe Funkion in vue auf
-            }
-
-            //sobald ein Gesicht erkannt wird, beginne mit Analyse
-            faceMesh.onResults(handle_result);
+            faceMesh.onResults((results) => {
+              root.Frame_Abhandlung(results);
+            });
             
-            console.log('MediaPipe FaceMesh erfolgreich initialisiert');
-            
-            // MediaPipe-Kamera starten
-            console.log('FaceMesh verfügbar - MediaPipe-Kamera starten...');
             const camera = new Camera(videoElement, {
               onFrame: async () => {
-                try {
-                  await faceMesh.send({image: videoElement});
-                } catch (error) {
-                  console.error('FaceMesh error:', error);
-                }
+                await faceMesh.send({image: videoElement});
               }
             });
             
             camera.start();
-            console.log('MediaPipe-Kamera gestartet');
+            console.log('MediaPipe gestartet');
           } catch (error) {
-            console.error('MediaPipe FaceMesh Fehler:', error);
-            console.log('FaceMesh nicht verfügbar - Kamera ohne Face-Erkennung');
+            console.error('MediaPipe Fehler:', error);
           }
         } else {
-          console.log('iPhone Safari - FaceMesh übersprungen');
+          console.log('iPhone Safari - MediaPipe übersprungen');
+          enableTouchNavigation();
         }
 
       } catch (error) {
         console.error('Kamera-Fehler:', error);
-        
-        // Benutzer-freundliche Fehlermeldung
-        if (error.name === 'NotAllowedError') {
-          alert('Kamera-Zugriff verweigert. Bitte erlauben Sie den Zugriff auf die Kamera in den Browser-Einstellungen.');
-        } else if (error.name === 'NotFoundError') {
-          alert('Keine Kamera gefunden. Bitte überprüfen Sie, ob eine Kamera angeschlossen ist.');
-        } else {
-          alert('Kamera-Fehler: ' + error.message);
-        }
+        alert('Kamera-Fehler: ' + error.message);
       }
     }
 

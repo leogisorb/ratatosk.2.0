@@ -228,6 +228,33 @@
    - Try-catch für Audio-Datei laden
    - Null-Checks für Audio-Objekte 
 
+## 2024-12-19 - Grundlegende Kamera-Problembehebung
+
+### Problem
+- User meldet: "es geht nicht nur um iphone die kamera geht bei keinem laptop"
+- Kamera funktioniert auf keinem Gerät (weder iPhone noch Laptop)
+- Zu komplexe Kamera-Initialisierung verursacht Probleme
+
+### Lösung
+- **Vereinfachte Kamera-Initialisierung**: Komplexe Logik entfernt, einfache `getUserMedia` Anfrage
+- **Minimale Video-Constraints**: Nur `facingMode: 'user'` ohne Auflösungsbeschränkungen
+- **Direkte Video-Verbindung**: `videoElement.play()` ohne komplexe Promise-Ketten
+- **Saubere MediaPipe-Integration**: FaceMesh wird nur für Desktop initialisiert
+
+### Technische Details
+- **Video-Element**: Einfach erstellt mit `display: none`
+- **Kamera-Stream**: Minimale Constraints für maximale Kompatibilität
+- **MediaPipe**: Nur für Desktop (nicht iPhone Safari)
+- **Fehlerbehandlung**: Vereinfachte Fehlermeldungen
+
+### Debugging-Features
+- Console-Logs für jeden Schritt
+- Einfache Fehlerbehandlung
+- Klare Trennung zwischen Kamera und MediaPipe
+
+### Status
+✅ **Abgeschlossen** - Vereinfachte Kamera-Initialisierung für alle Geräte
+
 ## 2024-12-19 - Kamera-Problem nach Header-Änderung
 
 ### Problem
