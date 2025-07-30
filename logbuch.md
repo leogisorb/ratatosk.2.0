@@ -1,5 +1,27 @@
 # Ratatosk Projekt Logbuch
 
+## 2024-12-19 - Logo-Integration und Icon-Farbanpassung
+
+### Problem
+- User meldet: "und das logo oben im neuen header fehlt @Ratatosk.svg"
+- User meldet: "alle icon müsseen in dem blau sein 00796B"
+- Logo fehlte im Header
+- Icons waren in Original-Farbe statt blau
+
+### Lösung
+- **Logo im Header hinzugefügt**: `Ratatosk.svg` an der richtigen Position
+- **Alle Icons blau gefärbt**: CSS-Filter für Farbe `#00796B`
+- **Konsistente Farbgebung**: Alle 6 Hauptkacheln haben jetzt blaue Icons
+
+### Technische Details
+- **Logo-Position**: `left: 294px; top: 18px; width: 48px; height: 50px`
+- **Icon-Filter**: `invert(27%) sepia(51%) saturate(2878%) hue-rotate(187deg) brightness(104%) contrast(97%)`
+- **Farbe**: `#00796B` (Ratatosk-Blau)
+- **Betroffene Icons**: bell.svg, comment-dots.svg, user.svg, headache.svg, house-chimney.svg, settings-sliders.svg
+
+### Status
+✅ **Abgeschlossen** - Logo im Header und alle Icons in blau
+
 ## 2024-12-19 - Icon-Integration in Hauptkacheln
 
 ### Problem
