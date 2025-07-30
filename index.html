@@ -710,7 +710,9 @@ Bearbeitet von Barbara Kammerl
     const root = element_click.mount('#element_click'); 
 
     //neues Facemesh öffnen
-    const faceMesh = new FaceMesh();
+    const faceMesh = new FaceMesh({locateFile: (file) => {
+      return `https://cdn.jsdelivr.net/npm/@mediapipe/face_mesh/${file}`;
+    }});
     faceMesh.setOptions({
       maxNumFaces: 1,               //nur ein Gesicht erkennen
       refineLandmarks: true,
@@ -725,29 +727,22 @@ Bearbeitet von Barbara Kammerl
     //sobald ein Gesicht erkannt wird, beginne mit Analyse
     faceMesh.onResults(handle_result); 
 
-    // Kamera-Initialisierung mit Fehlerbehandlung
-    async function startCamera() {
-      try {
-        const camera = new Camera(videoElement, {
-          onFrame: async () => {
-            try {
-              await faceMesh.send({image: videoElement});
-            } catch (error) {
-              console.error('FaceMesh error:', error);
-            }
-          }
-        });
-        
-        await camera.start();
-        console.log('Kamera erfolgreich gestartet');
-      } catch (error) {
-        console.error('Kamera-Fehler:', error);
-        alert('Kamera konnte nicht gestartet werden. Bitte überprüfen Sie die Berechtigungen.');
+    const camera = new Camera(videoElement, {
+      onFrame: async () => {
+        try {
+          await faceMesh.send({image: videoElement});
+        } catch (error) {
+          console.error('FaceMesh error:', error);
+        }
       }
+    });
+    
+    try {
+      camera.start();
+      console.log('Kamera erfolgreich gestartet');
+    } catch (error) {
+      console.error('Kamera-Fehler:', error);
     }
-
-    // Kamera starten
-    startCamera();
 
     //Array mit allen Bildern, die vorgeladen werden müssen
     vorladen("./public/Ratatosk.svg","./public/GoHome.svg","./public/Goback.svg", // Sonstiges
