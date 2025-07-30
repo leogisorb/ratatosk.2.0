@@ -39,7 +39,7 @@ Bearbeitet von Barbara Kammerl
 <html>
 <head>
   <meta charset="utf-8">
-   <link rel="shortcut icon" type="image/svg" href="Ratatosk_smol.svg"/>
+   <link rel="shortcut icon" type="image/svg" href="public/Ratatosk_smol.svg"/>
    <link rel="stylesheet" type="text/css" href="pageStyle.css"/>
    <meta content="width=device-width, height=device-height, initial-scale=1.0">
 
@@ -51,10 +51,10 @@ Bearbeitet von Barbara Kammerl
   <script src="https://cdn.jsdelivr.net/npm/@mediapipe/face_mesh/face_mesh.js" crossorigin="anonymous"></script> -->
 
   <!-- Import für facemesh ohne Web -->
-  <script src="./camera_utils.js" crossorigin="anonymous"></script>
-  <script src="./control_utils.js" crossorigin="anonymous"></script>
-  <script src="./drawing_utils.js" crossorigin="anonymous"></script>
-  <script src="./face_mesh.js" crossorigin="anonymous"></script>
+  <script src="./public/camera_utils.js" crossorigin="anonymous"></script>
+  <script src="./public/control_utils.js" crossorigin="anonymous"></script>
+  <script src="./public/drawing_utils.js" crossorigin="anonymous"></script>
+  <script src="./public/face_mesh.js" crossorigin="anonymous"></script>
 </head>
 
 <body>
@@ -76,7 +76,7 @@ Bearbeitet von Barbara Kammerl
       }
     }
 
-    const serviceBell = new Audio('./ServiceGlocke.wav');
+    const serviceBell = new Audio('./public/ServiceGlocke.wav');
     import { createApp } from 'vue/dist/vue.esm-bundler.js';
     
     const element_click = createApp({
@@ -737,10 +737,10 @@ Bearbeitet von Barbara Kammerl
     camera.start();
 
     //Array mit allen Bildern, die vorgeladen werden müssen
-    vorladen("./Ratatosk.svg","./GoHome.svg","./Goback.svg", // Sonstiges
-      "./Glocke.svg","./Glockenschlag.svg",   //SOS Menü
-      "./Arme.svg","./Beine.svg","./Kopf.svg","./Torso.svg", //Schmerz-Menü
-      "./Einstellungen.svg","./Ich.svg","./Nachricht.svg","./Schmerz.svg","./Umgebung.svg"  //Mainmenü
+    vorladen("./public/Ratatosk.svg","./public/GoHome.svg","./public/Goback.svg", // Sonstiges
+      "./public/Glocke.svg","./public/Glockenschlag.svg",   //SOS Menü
+      "./public/Arme.svg","./public/Beine.svg","./public/Kopf.svg","./public/Torso.svg", //Schmerz-Menü
+      "./public/Einstellungen.svg","./public/Ich.svg","./public/Nachricht.svg","./public/Schmerz.svg","./public/Umgebung.svg"  //Mainmenü
       );
   </script>
 
@@ -748,7 +748,7 @@ Bearbeitet von Barbara Kammerl
 
     <!-- Oberer Teil der Seite -->
       <header >
-        <img src="./Ratatosk.svg" width="80vw" height="20vh" alt="Logo" filter='none' style="color:white"></img> 
+        <img src="./public/Ratatosk.svg" width="80vw" height="20vh" alt="Logo" filter='none' style="color:white"></img> 
         <!-- <span class="site_name">Ratatosk</span> -->
         <p id="orientierung" class="site_name" style="margin:auto; font-size: 5.5vmin;">Ratatosk</p>
         <hr style="color:var(--maincolor);margin-left:0;width:80%;margin:auto;">
@@ -759,25 +759,25 @@ Bearbeitet von Barbara Kammerl
       <div>
           <!-- Haus für "Zurück zum Hauptmenü" -->
             <div class="smallContainer" v-if="(showMenu >= 1 && showMenu < 200) ||((showMenu>300)&&(showMenu<400)) || ((showMenu>600)&&(showMenu<700))">
-              <img id="GoHome" class= "smallPicture" src="./GoHome.svg" alt="Hauptmenü" @click="showMenu=0; stopBell()"/>
+              <img id="GoHome" class= "smallPicture" src="./public/GoHome.svg" alt="Hauptmenü" @click="showMenu=0; stopBell()"/>
             </div>
 
           <!-- Pfeil für "zurück zum Schmerzmenü / Körper-Untermenü" -->
             <div class="smallContainer" v-if="((showMenu > 200) && (showMenu < 300))||((showMenu>=2010)&&(showMenu<=2050))||(showMenu==20001)">
-              <img id="GoBackAUA" class= "smallPicture"  src="./Goback.svg" alt="Zurück" @click="showMenu=2"/>
+              <img id="GoBackAUA" class= "smallPicture"  src="./public/Goback.svg" alt="Zurück" @click="showMenu=2"/>
             </div>
 
             <!-- Pfeil für "zurück zum Nachrichten-Menü" --> 
             <div class="smallContainer" v-if="((showMenu>30710)&&(showMenu<30720))||((showMenu==3071))">
-              <img id="GoBackNachricht" class="smallPicture"  src="./Goback.svg" alt="Zurück" @click="showMenu=3"/>
+              <img id="GoBackNachricht" class="smallPicture"  src="./public/Goback.svg" alt="Zurück" @click="showMenu=3"/>
             </div>
 
            <!-- Pfeil für "zurück zum Schnellbaustein-Menü Ich/Umgebung" --> 
             <div class="smallContainer" v-If="((showMenu>500)&&(showMenu<600))||((showMenu>5000)&&(showMenu<6000))">
-              <img id="GoBackIch" class="smallPicture"  src="./Goback.svg" alt="Zurück" @click="showMenu=5"/>
+              <img id="GoBackIch" class="smallPicture"  src="./public/Goback.svg" alt="Zurück" @click="showMenu=5"/>
             </div>
             <div class="smallContainer" v-If="((showMenu>400)&&(showMenu<500))||((showMenu>4000)&&(showMenu<5000))">
-              <img id="GoBackUmgebung" class="smallPicture"  src="./Goback.svg" alt="Zurück" @click="showMenu=4"/>
+              <img id="GoBackUmgebung" class="smallPicture"  src="./public/Goback.svg" alt="Zurück" @click="showMenu=4"/>
             </div>
 
 
@@ -804,33 +804,33 @@ Bearbeitet von Barbara Kammerl
     <!-- Startseite -->
       <div class="site_name" v-if="showMenu==(-1)" style="text-align: center; display:block; margin: auto;">
         <div>Blinzeln Sie zum Starten</div>
-          <img id="Start" class="startimage" src="./Ratatosk.svg" alt="Logo" @click="cngTime_closed=true; showMenu=0" style="color:white"/>
+          <img id="Start" class="startimage" src="./public/Ratatosk.svg" alt="Logo" @click="cngTime_closed=true; showMenu=0" style="color:white"/>
         </div>
 
     <!-- Haupt Menü -->
     <div class="container" v-if="showMenu==0">
         <div class="group">
-          <img id="SOS" src="./Glocke.svg" alt=" Warnton " @click="showMenu=1"/>
+          <img id="SOS" src="./public/Glocke.svg" alt=" Warnton " @click="showMenu=1"/>
           <p> Warngeräusch </p>
         </div>
         <div class="group">
-          <img id="AUA" src="./Schmerz.svg" alt=" Schmerz " @click="showMenu=2"/>
+          <img id="AUA" src="./public/Schmerz.svg" alt=" Schmerz " @click="showMenu=2"/>
           <p> Schmerzen </p>
         </div>
         <div  class="group">
-          <img id="NAC" src="./Nachricht.svg" alt=" Nachricht " @click="showMenu=3"/>
+          <img id="NAC" src="./public/Nachricht.svg" alt=" Nachricht " @click="showMenu=3"/>
           <p> Nachricht </p>
         </div>
         <div class="group">
-        <img id="UMG" src="./Umgebung.svg" alt=" Schnellbausteine Umgebung " @click="showMenu=4"/>
+        <img id="UMG" src="./public/Umgebung.svg" alt=" Schnellbausteine Umgebung " @click="showMenu=4"/>
           <p> Umgebung </p>
         </div>
         <div class="group">
-          <img id="SEL" src="./Ich.svg" alt=" Schnellbausteine Selbst " @click="showMenu=5"/>
+          <img id="SEL" src="./public/Ich.svg" alt=" Schnellbausteine Selbst " @click="showMenu=5"/>
           <p> Ich </p>
         </div>
         <div class="group">
-        <img id="EIN" src="./Einstellungen.svg" alt=" Einstellungen " @click="showMenu=6"/>
+                  <img id="EIN" src="./public/Einstellungen.svg" alt=" Einstellungen " @click="showMenu=6"/>
           <p> Einstellung </p>
         </div>
       </div>
@@ -838,27 +838,27 @@ Bearbeitet von Barbara Kammerl
     <!-- Schwesternruf Menü -->
     <div v-if="(showMenu==1)||(showMenu==101)" class="container" style="columns: 100px 1;">
       <div style="display:flex; width:80%;margin: auto;" class="group">
-        <img id="Bell_silent" v-if="showMenu==1" style="width: 20%;margin: auto;align-self: center;" src="./Glocke.svg" alt="Lautsprecher" @click="playBell(); showMenu=101"/>
-        <img id="Bell_active" v-if="showMenu==101" v-if="showMenu==1" style="width: 20%;margin: auto;align-self: center;" src="./Glockenschlag.svg" alt="aktiver Lautsprecher" @click="showMenu=1; stopBell()"/>
+                      <img id="Bell_silent" v-if="showMenu==1" style="width: 20%;margin: auto;align-self: center;" src="./public/Glocke.svg" alt="Lautsprecher" @click="playBell(); showMenu=101"/>
+                  <img id="Bell_active" v-if="showMenu==101" v-if="showMenu==1" style="width: 20%;margin: auto;align-self: center;" src="./public/Glockenschlag.svg" alt="aktiver Lautsprecher" @click="showMenu=1; stopBell()"/>
       </div>
     </div>
 
     <!-- Schmerz Menü -->
      <div v-if="showMenu==2" class="container" style="display:flex;flex-flow: row wrap;">
         <div class="group" style="width:40vw; height:35vh">
-          <img id="Kopf" src="./Kopf.svg" alt=" Kopf " @click="showMenu=201"/>
+          <img id="Kopf" src="./public/Kopf.svg" alt=" Kopf " @click="showMenu=201"/>
           <p> Kopf </p>
         </div>
         <div class="group" style="width:40vw; height:35vh">
-          <img id="Torso" src="./Torso.svg" alt=" Torso " @click="showMenu=202"/>
+          <img id="Torso" src="./public/Torso.svg" alt=" Torso " @click="showMenu=202"/>
           <p> Torso </p>
         </div>
         <div class="group" style="width:40vw; height:35vh">
-          <img id="Arme" src="./Arme.svg" alt=" Arme " @click="showMenu=203"/>
+          <img id="Arme" src="./public/Arme.svg" alt=" Arme " @click="showMenu=203"/>
           <p> Arme </p>
         </div>
         <div class="group" style="width:40vw; height:35vh">
-          <img id="Beine" src="./Beine.svg" alt=" Beine " @click="showMenu=204"/>
+          <img id="Beine" src="./public/Beine.svg" alt=" Beine " @click="showMenu=204"/>
           <p> Beine </p>
         </div>
       </div>
