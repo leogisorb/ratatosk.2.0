@@ -71,4 +71,41 @@
 
 ### Test-URLs:
 - HTTP: http://localhost:8000
-- HTTPS: https://localhost:8443 (für Kamera-Zugriff) 
+- HTTPS: https://localhost:8443 (für Kamera-Zugriff) - **FEHLGESCHLAGEN**
+
+### Wichtige Erkenntnis:
+- **Lokales Testen macht keinen Sinn** - wir sollten über GitHub Pages deployen
+- GitHub Pages bietet automatisch HTTPS
+- Kamera-Zugriff funktioniert besser über echte Domain
+
+### Nächste Schritte:
+- GitHub Pages aktivieren
+- Anwendung über GitHub Pages deployen
+- Lokale Server gestoppt
+
+### GitHub Pages Setup:
+- ✅ `index.html` ist im Root-Verzeichnis (korrekt für GitHub Pages)
+- ✅ Alle Assets sind korrekt verlinkt
+- ✅ Anwendung wird korrekt angezeigt
+- ❌ **Kamera funktioniert immer noch nicht**
+
+### Kamera-Problem Analyse:
+- Anwendung läuft über GitHub Pages
+- Icons werden korrekt angezeigt
+- MediaPipe-Bibliotheken werden von CDN geladen
+- **Mögliche Ursachen für Kamera-Problem:**
+  1. Browser-Berechtigungen für Kamera
+  2. HTTPS-Zertifikat von GitHub Pages
+  3. MediaPipe-Version oder Konfiguration
+  4. Browser-Kompatibilität
+
+### Kamera-Problem Lösungsversuche:
+1. **Fehlerbehandlung hinzugefügt**
+   - Try-catch Blöcke für Kamera-Start
+   - Console-Logging für Debugging
+   - Alert bei Kamera-Fehlern
+
+2. **MediaPipe-Konfiguration vereinfacht**
+   - `locateFile` Funktion entfernt
+   - Standard-Konfiguration verwendet
+   - Weniger anfällig für CDN-Probleme 
