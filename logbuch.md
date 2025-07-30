@@ -176,6 +176,28 @@
    - Weniger CPU-Last auf iPhone
    - Stabilere Kamera-Funktion
 
+### ✅ iPhone Safari funktioniert jetzt!
+- **iPhone Safari erkannt** ✅
+- **Anwendung funktioniert ohne Face-Erkennung** ✅
+- **Bessere Kompatibilität** ✅
+- **Kamera läuft stabil** ✅
+
+### NEUES PROBLEM: iPhone erkennt kein Zwinkern
+- **Face-Erkennung deaktiviert** → **Kein Zwinkern-Erkennung**
+- **Alternative Lösung nötig** für iPhone Safari
+- **Touch-basierte Navigation** als Alternative
+
+### iPhone Zwinkern-Problem behoben:
+1. **Touch-Navigation hinzugefügt**
+   - Buttons für alle Hauptmenüs
+   - Positioniert am unteren Bildschirmrand
+   - Styling passend zur Anwendung
+
+2. **Alternative Navigation**
+   - Start, SOS, Schmerz, Nachricht, Umgebung, Ich, Einstellungen
+   - Direkte Menü-Navigation ohne Zwinkern
+   - Benutzer-freundliche Touch-Buttons
+
 ### Warngeräusch-Problem behoben:
 1. **Fehlerbehandlung hinzugefügt**
    - Try-catch für Audio-Play
