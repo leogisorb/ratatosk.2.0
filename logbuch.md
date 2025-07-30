@@ -155,6 +155,27 @@
    - NotFoundError: Keine Kamera gefunden
    - Allgemeine Fehlerbehandlung
 
+### NEUES PROBLEM: iPhone Safari
+- **Desktop funktioniert** ✅
+- **iPhone Safari**: Kamera an, aber MediaPipe reagiert nicht ❌
+- **Typisches iPhone Safari Problem**: MediaPipe-Kompatibilität
+
+### iPhone Safari-Problem behoben:
+1. **iPhone Safari-Erkennung**
+   - User-Agent-basierte Erkennung
+   - Kleinere Video-Auflösung für bessere Performance
+   - Verzögerung für MediaPipe-Initialisierung
+
+2. **MediaPipe-Fallback für iPhone**
+   - MediaPipe wird bei iPhone Safari übersprungen
+   - Anwendung funktioniert ohne Face-Erkennung
+   - Benutzer wird informiert
+
+3. **Bessere Performance**
+   - Kleinere Auflösung (320x240 statt 640x480)
+   - Weniger CPU-Last auf iPhone
+   - Stabilere Kamera-Funktion
+
 ### Warngeräusch-Problem behoben:
 1. **Fehlerbehandlung hinzugefügt**
    - Try-catch für Audio-Play
