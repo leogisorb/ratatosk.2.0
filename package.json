@@ -9,7 +9,6 @@
   },
   "dependencies": {
     "@mediapipe/tasks-vision": "^0.10.4",
-    "esbuild": "^0.25.8",
     "vue": "^3.2.47"
   },
   "devDependencies": {
