@@ -77,6 +77,15 @@ Bearbeitet von Barbara Kammerl
     }
 
     const serviceBell = new Audio('./public/ServiceGlocke.wav');
+    
+    // Audio-Datei vorladen
+    serviceBell.addEventListener('canplaythrough', () => {
+      console.log('Audio-Datei erfolgreich geladen');
+    });
+    
+    serviceBell.addEventListener('error', (error) => {
+      console.error('Audio-Datei Fehler:', error);
+    });
     import { createApp } from 'vue/dist/vue.esm-bundler.js';
     
     const element_click = createApp({
@@ -199,9 +208,17 @@ Bearbeitet von Barbara Kammerl
       methods: {
         playBell(){
           //spielt das Geräusch der Schwesternglocke
-          serviceBell.volume = 0.9;
-          serviceBell.loop= true;
-          serviceBell.play();
+          try {
+            serviceBell.volume = 0.9;
+            serviceBell.loop = true;
+            serviceBell.play().catch(error => {
+              console.error('Audio play error:', error);
+              alert('Audio konnte nicht abgespielt werden. Bitte erlauben Sie Audio im Browser.');
+            });
+          } catch (error) {
+            console.error('Audio error:', error);
+            alert('Audio-Fehler: ' + error.message);
+          }
         },
         stopBell(){
           //stoppt das abspielen des Geräusches
