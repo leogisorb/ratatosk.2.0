@@ -263,4 +263,27 @@
 - Touch-Navigation für iPhone bleibt erhalten
 
 ### Status
-✅ **Abgeschlossen** - Neues Design implementiert und funktionsfähig 
+✅ **Abgeschlossen** - Neues Design implementiert und funktionsfähig
+
+## 2024-12-19 - Header-Bereinigung
+
+### Problem
+- Nach der Mainpage-Neugestaltung gab es zwei Header
+- Alter Header mit Logo und Orientierung-Text
+- Neuer Header im neuen Design
+- Doppelte Header-Anzeige verursachte Layout-Probleme
+
+### Lösung
+- **Alten Header entfernt**: Komplett den alten `<header>` Block gelöscht
+- **Orientierung-Integration**: `id="orientierung"` in den neuen Header integriert
+- **Funktionalität erhalten**: Menü-Navigation funktioniert weiterhin
+- **Sauberes Layout**: Nur noch ein Header im neuen Design
+
+### Technische Details
+- Entfernt: `<header>` Block mit Logo und Orientierung-Text
+- Integriert: `id="orientierung"` in den neuen Header-Text
+- Beibehalten: Alle Vue.js Funktionalitäten für Menü-Navigation
+- Ergebnis: Sauberes, einheitliches Design ohne Duplikate
+
+### Status
+✅ **Abgeschlossen** - Header-Bereinigung erfolgreich, nur noch ein Header 
