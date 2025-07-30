@@ -776,40 +776,86 @@ Bearbeitet von Barbara Kammerl
 
     const root = element_click.mount('#element_click'); 
 
-    //neues Facemesh öffnen
-    const faceMesh = new FaceMesh({locateFile: (file) => {
-      return `https://cdn.jsdelivr.net/npm/@mediapipe/face_mesh/${file}`;
-    }});
-    faceMesh.setOptions({
-      maxNumFaces: 1,               //nur ein Gesicht erkennen
-      refineLandmarks: true,
-      minDetectionConfidence: 0.5,  //zu 50% ein gesicht? Zählt als Gesicht
-      minTrackingConfidence: 0.5    //zu 50% ein Teil des Gesichtes? Zählt als Landmark
-    });
-
-    function handle_result(landmarks) {
-      root.Frame_Abhandlung(landmarks);  //rufe Funkion in vue auf
-    }
-
-    //sobald ein Gesicht erkannt wird, beginne mit Analyse
-    faceMesh.onResults(handle_result); 
-
-    const camera = new Camera(videoElement, {
-      onFrame: async () => {
-        try {
-          await faceMesh.send({image: videoElement});
-        } catch (error) {
-          console.error('FaceMesh error:', error);
-        }
-      }
-    });
+    // MediaPipe FaceMesh initialisieren
+    let faceMesh = null;
     
     try {
-      camera.start();
-      console.log('Kamera erfolgreich gestartet');
+      faceMesh = new FaceMesh({locateFile: (file) => {
+        return `https://cdn.jsdelivr.net/npm/@mediapipe/face_mesh/${file}`;
+      }});
+      faceMesh.setOptions({
+        maxNumFaces: 1,               //nur ein Gesicht erkennen
+        refineLandmarks: true,
+        minDetectionConfidence: 0.5,  //zu 50% ein gesicht? Zählt als Gesicht
+        minTrackingConfidence: 0.5    //zu 50% ein Teil des Gesichtes? Zählt als Landmark
+      });
+
+      function handle_result(landmarks) {
+        root.Frame_Abhandlung(landmarks);  //rufe Funkion in vue auf
+      }
+
+      //sobald ein Gesicht erkannt wird, beginne mit Analyse
+      faceMesh.onResults(handle_result);
+      
+      console.log('MediaPipe FaceMesh erfolgreich initialisiert');
     } catch (error) {
-      console.error('Kamera-Fehler:', error);
+      console.error('MediaPipe FaceMesh Fehler:', error);
+      alert('Face-Erkennung nicht verfügbar. Die Anwendung funktioniert ohne Kamera-Features.');
+    } 
+
+    // Kamera-Initialisierung mit Browser-Kompatibilität
+    async function initializeCamera() {
+      try {
+        // Erst prüfen ob getUserMedia unterstützt wird
+        if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+          throw new Error('Kamera-API nicht unterstützt');
+        }
+
+        // Kamera-Berechtigung anfordern
+        const stream = await navigator.mediaDevices.getUserMedia({
+          video: {
+            facingMode: 'user',
+            width: { ideal: 640 },
+            height: { ideal: 480 }
+          }
+        });
+
+        // Video-Element mit Stream verbinden
+        videoElement.srcObject = stream;
+        videoElement.play();
+
+        console.log('Kamera erfolgreich gestartet');
+
+        // MediaPipe-Kamera starten
+        const camera = new Camera(videoElement, {
+          onFrame: async () => {
+            try {
+              await faceMesh.send({image: videoElement});
+            } catch (error) {
+              console.error('FaceMesh error:', error);
+            }
+          }
+        });
+        
+        camera.start();
+        console.log('MediaPipe-Kamera gestartet');
+
+      } catch (error) {
+        console.error('Kamera-Fehler:', error);
+        
+        // Benutzer-freundliche Fehlermeldung
+        if (error.name === 'NotAllowedError') {
+          alert('Kamera-Zugriff verweigert. Bitte erlauben Sie den Zugriff auf die Kamera in den Browser-Einstellungen.');
+        } else if (error.name === 'NotFoundError') {
+          alert('Keine Kamera gefunden. Bitte überprüfen Sie, ob eine Kamera angeschlossen ist.');
+        } else {
+          alert('Kamera-Fehler: ' + error.message);
+        }
+      }
     }
+
+    // Kamera initialisieren
+    initializeCamera();
 
     //Array mit allen Bildern, die vorgeladen werden müssen
     vorladen("./public/Ratatosk.svg","./public/GoHome.svg","./public/Goback.svg", // Sonstiges

@@ -130,8 +130,30 @@
 - ✅ **Layout funktioniert wieder**
 - ✅ **Icons werden korrekt angezeigt**
 - ✅ **Anwendung läuft über GitHub Pages**
-- ❌ **Kamera funktioniert immer noch nicht** (separates Problem)
+- ❌ **Kamera funktioniert nicht** (Safari + Brave Browser)
 - ❌ **Warngeräusch funktioniert nicht** (neues Problem)
+
+### Kamera-Problem Analyse:
+- **Safari**: Oft restriktiver bei Kamera-Zugriff
+- **Brave**: Privacy-Features blockieren oft Kamera
+- **GitHub Pages**: HTTPS sollte funktionieren
+- **MediaPipe**: Möglicherweise Browser-Kompatibilitätsproblem
+
+### Kamera-Problem Lösungsversuche:
+1. **Native getUserMedia API verwenden**
+   - Direkte Kamera-Berechtigung anfordern
+   - Video-Stream manuell verbinden
+   - Bessere Browser-Kompatibilität
+
+2. **MediaPipe-Fehlerbehandlung**
+   - Try-catch für FaceMesh-Initialisierung
+   - Graceful Fallback wenn MediaPipe nicht funktioniert
+   - Benutzer-freundliche Fehlermeldungen
+
+3. **Browser-spezifische Fehlermeldungen**
+   - NotAllowedError: Kamera-Zugriff verweigert
+   - NotFoundError: Keine Kamera gefunden
+   - Allgemeine Fehlerbehandlung
 
 ### Warngeräusch-Problem behoben:
 1. **Fehlerbehandlung hinzugefügt**
