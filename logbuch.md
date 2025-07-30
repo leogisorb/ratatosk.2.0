@@ -228,6 +228,34 @@
    - Try-catch für Audio-Datei laden
    - Null-Checks für Audio-Objekte 
 
+## 2024-12-19 - Kamera-Problem nach Header-Änderung
+
+### Problem
+- User meldet: "kamera geht wieder nicht an beim aufrufen der seite headeränderung nicht mehr aktiviert"
+- Kamera funktioniert nicht mehr nach der Header-Bereinigung
+- Video-Element wird zu früh erstellt, bevor DOM vollständig geladen ist
+
+### Lösung
+- **Video-Element-Erstellung verschoben**: Video-Element wird jetzt in der `initializeCamera()` Funktion erstellt
+- **DOM-Reihenfolge korrigiert**: Video-Element wird erst nach DOM-Load erstellt
+- **MediaPipe-Initialisierung angepasst**: FaceMesh wird nach Video-Element-Erstellung initialisiert
+- **Variable-Scope behoben**: `videoElement` wird korrekt als `let` deklariert
+
+### Technische Details
+- **Video-Element**: Wird dynamisch in `initializeCamera()` erstellt
+- **MediaPipe**: Initialisierung erfolgt nach Video-Element-Erstellung
+- **iPhone Safari**: Touch-Navigation wird weiterhin korrekt aktiviert
+- **Console-Logs**: Verbesserte Debugging-Ausgaben für jeden Schritt
+
+### Debugging-Features
+- Console-Logs für Video-Element-Erstellung
+- MediaPipe-Initialisierung-Logs
+- iPhone Safari-Erkennung und Behandlung
+- Kamera-Stream-Verbindung überwacht
+
+### Status
+✅ **Abgeschlossen** - Kamera sollte jetzt nach Header-Änderung funktionieren
+
 ## 2024-12-19 - Kamera-Problembehebung
 
 ### Problem

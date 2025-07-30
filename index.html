@@ -59,13 +59,8 @@ Bearbeitet von Barbara Kammerl
 
 <body>
   <script type="module">  
-    // Video-Element erstellen und zum DOM hinzufügen
-    const videoElement = document.createElement('video');
-    videoElement.id = 'input_video';
-    videoElement.setAttribute('facingMode', 'user');
-    videoElement.style.margin = 'auto';
-    videoElement.style.display = 'none'; // Verstecken, da es nur für MediaPipe verwendet wird
-    document.body.appendChild(videoElement);
+    // Video-Element Variable (wird später erstellt)
+    let videoElement = null;
     
     // facefactor bestimmt ab welchem Großenfaktor ein geschlossenes Auge erkannt wird.
     // Die Höhe des Gesichtes wird hiermit multipliziert um einen Grenzwert festzulegen.
@@ -790,6 +785,10 @@ Bearbeitet von Barbara Kammerl
     const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
     const isSafari = /Safari/.test(navigator.userAgent) && !/Chrome/.test(navigator.userAgent);
     
+    // iPhone Safari-Erkennung
+    const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
+    const isSafari = /Safari/.test(navigator.userAgent) && !/Chrome/.test(navigator.userAgent);
+    
     // iPhone Safari: MediaPipe oft problematisch
     if (isIOS && isSafari) {
       console.log('iPhone Safari erkannt - MediaPipe wird übersprungen');
@@ -797,36 +796,22 @@ Bearbeitet von Barbara Kammerl
       
       // Touch-basierte Navigation für iPhone aktivieren
       enableTouchNavigation();
-    } else {
-      try {
-        faceMesh = new FaceMesh({locateFile: (file) => {
-          return `https://cdn.jsdelivr.net/npm/@mediapipe/face_mesh/${file}`;
-        }});
-        faceMesh.setOptions({
-          maxNumFaces: 1,               //nur ein Gesicht erkennen
-          refineLandmarks: true,
-          minDetectionConfidence: 0.5,  //zu 50% ein gesicht? Zählt als Gesicht
-          minTrackingConfidence: 0.5    //zu 50% ein Teil des Gesichtes? Zählt als Landmark
-        });
-
-        function handle_result(landmarks) {
-          root.Frame_Abhandlung(landmarks);  //rufe Funkion in vue auf
-        }
-
-        //sobald ein Gesicht erkannt wird, beginne mit Analyse
-        faceMesh.onResults(handle_result);
-        
-        console.log('MediaPipe FaceMesh erfolgreich initialisiert');
-      } catch (error) {
-        console.error('MediaPipe FaceMesh Fehler:', error);
-        alert('Face-Erkennung nicht verfügbar. Die Anwendung funktioniert ohne Kamera-Features.');
-      }
     } 
 
     // Kamera-Initialisierung mit Browser-Kompatibilität
     async function initializeCamera() {
       try {
         console.log('Kamera-Initialisierung gestartet...');
+        
+        // Video-Element erstellen und zum DOM hinzufügen
+        videoElement = document.createElement('video');
+        videoElement.id = 'input_video';
+        videoElement.setAttribute('facingMode', 'user');
+        videoElement.style.margin = 'auto';
+        videoElement.style.display = 'none'; // Verstecken, da es nur für MediaPipe verwendet wird
+        document.body.appendChild(videoElement);
+        
+        console.log('Video-Element erstellt und zum DOM hinzugefügt');
         
         // Erst prüfen ob getUserMedia unterstützt wird
         if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
@@ -884,23 +869,49 @@ Bearbeitet von Barbara Kammerl
           await new Promise(resolve => setTimeout(resolve, 2000));
         }
 
-        // MediaPipe-Kamera starten (nur wenn FaceMesh verfügbar)
-        if (faceMesh) {
-          console.log('FaceMesh verfügbar - MediaPipe-Kamera starten...');
-          const camera = new Camera(videoElement, {
-            onFrame: async () => {
-              try {
-                await faceMesh.send({image: videoElement});
-              } catch (error) {
-                console.error('FaceMesh error:', error);
-              }
+        // MediaPipe-Initialisierung (nur wenn nicht iPhone Safari)
+        if (!(isIOS && isSafari)) {
+          try {
+            console.log('MediaPipe FaceMesh initialisieren...');
+            faceMesh = new FaceMesh({locateFile: (file) => {
+              return `https://cdn.jsdelivr.net/npm/@mediapipe/face_mesh/${file}`;
+            }});
+            faceMesh.setOptions({
+              maxNumFaces: 1,               //nur ein Gesicht erkennen
+              refineLandmarks: true,
+              minDetectionConfidence: 0.5,  //zu 50% ein gesicht? Zählt als Gesicht
+              minTrackingConfidence: 0.5    //zu 50% ein Teil des Gesichtes? Zählt als Landmark
+            });
+
+            function handle_result(landmarks) {
+              root.Frame_Abhandlung(landmarks);  //rufe Funkion in vue auf
             }
-          });
-          
-          camera.start();
-          console.log('MediaPipe-Kamera gestartet');
+
+            //sobald ein Gesicht erkannt wird, beginne mit Analyse
+            faceMesh.onResults(handle_result);
+            
+            console.log('MediaPipe FaceMesh erfolgreich initialisiert');
+            
+            // MediaPipe-Kamera starten
+            console.log('FaceMesh verfügbar - MediaPipe-Kamera starten...');
+            const camera = new Camera(videoElement, {
+              onFrame: async () => {
+                try {
+                  await faceMesh.send({image: videoElement});
+                } catch (error) {
+                  console.error('FaceMesh error:', error);
+                }
+              }
+            });
+            
+            camera.start();
+            console.log('MediaPipe-Kamera gestartet');
+          } catch (error) {
+            console.error('MediaPipe FaceMesh Fehler:', error);
+            console.log('FaceMesh nicht verfügbar - Kamera ohne Face-Erkennung');
+          }
         } else {
-          console.log('FaceMesh nicht verfügbar - Kamera ohne Face-Erkennung');
+          console.log('iPhone Safari - FaceMesh übersprungen');
         }
 
       } catch (error) {
