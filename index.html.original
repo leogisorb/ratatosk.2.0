@@ -60,38 +60,6 @@ Bearbeitet von Barbara Kammerl
 <body>
   <script type="module">  
     const videoElement = document.getElementById("input_video"); 
-    
-    // Einfache Kamera-Initialisierung für iPhone-Kompatibilität
-    async function initCamera() {
-      try {
-        console.log('Initialisiere Kamera...');
-        
-        if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
-          console.error('getUserMedia nicht verfügbar');
-          return false;
-        }
-        
-        const stream = await navigator.mediaDevices.getUserMedia({
-          video: {
-            facingMode: 'user',
-            width: { ideal: 640 },
-            height: { ideal: 480 }
-          },
-          audio: false
-        });
-        
-        if (videoElement) {
-          videoElement.srcObject = stream;
-          console.log('Kamera erfolgreich initialisiert');
-          return true;
-        }
-        
-      } catch (error) {
-        console.error('Kamera-Initialisierung fehlgeschlagen:', error);
-        return false;
-      }
-    }
-    
     // facefactor bestimmt ab welchem Großenfaktor ein geschlossenes Auge erkannt wird.
     // Die Höhe des Gesichtes wird hiermit multipliziert um einen Grenzwert festzulegen.
     // Aus Selbstets ergab sich ein Faktor von 35 bis 60 als ideal für niedrigen und hohen Abstand zwischen Gesicht und Kamera.
@@ -109,20 +77,6 @@ Bearbeitet von Barbara Kammerl
     }
 
     const serviceBell = new Audio('./ServiceGlocke.wav');
-    
-    // Audio-Initialisierung mit Fehlerbehandlung
-    serviceBell.addEventListener('error', (e) => {
-      console.error('Fehler beim Laden der Audio-Datei:', e);
-    });
-    
-    serviceBell.addEventListener('loadstart', () => {
-      console.log('Audio-Datei wird geladen...');
-    });
-    
-    serviceBell.addEventListener('canplaythrough', () => {
-      console.log('Audio-Datei erfolgreich geladen');
-    });
-    
     import { createApp } from 'vue/dist/vue.esm-bundler.js';
     
     const element_click = createApp({
