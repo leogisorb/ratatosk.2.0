@@ -208,6 +208,17 @@
 - **Einfachere iPhone-Lösung** - normale Touch-Buttons verwenden
 - **Kamera-Verzögerung verbessert** für iPhone Safari
 
+### NEUES KRITISCHES PROBLEM:
+- **Nach letzter Änderung funktioniert nichts mehr**
+- **iPhone und Mac betroffen**
+- **Zurück zur funktionierenden Version**
+
+### PROBLEM BEHOBEN:
+- **Komplexe Kamera-Initialisierung entfernt**
+- **Zurück zur einfachen Camera-Klasse**
+- **iPhone Safari-Erkennung vereinfacht**
+- **Anwendung sollte wieder funktionieren**
+
 ### Warngeräusch-Problem behoben:
 1. **Fehlerbehandlung hinzugefügt**
    - Try-catch für Audio-Play

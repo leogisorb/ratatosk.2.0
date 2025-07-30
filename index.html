@@ -786,7 +786,7 @@ Bearbeitet von Barbara Kammerl
     // iPhone Safari: MediaPipe oft problematisch
     if (isIOS && isSafari) {
       console.log('iPhone Safari erkannt - MediaPipe wird übersprungen');
-      alert('iPhone Safari erkannt. Die Anwendung funktioniert ohne Face-Erkennung. Verwende die normalen Touch-Buttons in der Anwendung.');
+      alert('iPhone Safari erkannt. Die Anwendung funktioniert ohne Face-Erkennung.');
     } else {
       try {
         faceMesh = new FaceMesh({locateFile: (file) => {
@@ -813,92 +813,23 @@ Bearbeitet von Barbara Kammerl
       }
     } 
 
-    // Kamera-Initialisierung mit Browser-Kompatibilität
-    async function initializeCamera() {
-      try {
-        // Erst prüfen ob getUserMedia unterstützt wird
-        if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
-          throw new Error('Kamera-API nicht unterstützt');
-        }
-
-        // iPhone Safari-spezifische Konfiguration
-        const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
-        const isSafari = /Safari/.test(navigator.userAgent) && !/Chrome/.test(navigator.userAgent);
-        
-        let videoConstraints = {
-          facingMode: 'user',
-          width: { ideal: 640 },
-          height: { ideal: 480 }
-        };
-
-        // iPhone Safari: Kleinere Auflösung für bessere Performance
-        if (isIOS && isSafari) {
-          videoConstraints = {
-            facingMode: 'user',
-            width: { ideal: 320, max: 640 },
-            height: { ideal: 240, max: 480 }
-          };
-          console.log('iPhone Safari erkannt - kleinere Auflösung verwendet');
-        }
-
-        // Kamera-Berechtigung anfordern
-        const stream = await navigator.mediaDevices.getUserMedia({
-          video: videoConstraints
-        });
-
-        // Video-Element mit Stream verbinden
-        videoElement.srcObject = stream;
-        videoElement.play();
-
-        console.log('Kamera erfolgreich gestartet');
-
-        // iPhone Safari: Verzögerung für MediaPipe
-        if (isIOS && isSafari) {
-          console.log('iPhone Safari: Warte auf MediaPipe-Initialisierung...');
-          await new Promise(resolve => setTimeout(resolve, 2000));
-        }
-
-        // MediaPipe-Kamera starten (nur wenn FaceMesh verfügbar)
-        if (faceMesh) {
-          const camera = new Camera(videoElement, {
-            onFrame: async () => {
-              try {
-                await faceMesh.send({image: videoElement});
-              } catch (error) {
-                console.error('FaceMesh error:', error);
-              }
-            }
-          });
-          
-          camera.start();
-          console.log('MediaPipe-Kamera gestartet');
-        } else {
-          console.log('FaceMesh nicht verfügbar - Kamera ohne Face-Erkennung');
-        }
-
-        // iPhone Safari: Zusätzliche Kamera-Verzögerung
-        if (isIOS && isSafari) {
-          console.log('iPhone Safari: Kamera-Initialisierung abgeschlossen');
-        }
-
-      } catch (error) {
-        console.error('Kamera-Fehler:', error);
-        
-        // Benutzer-freundliche Fehlermeldung
-        if (error.name === 'NotAllowedError') {
-          alert('Kamera-Zugriff verweigert. Bitte erlauben Sie den Zugriff auf die Kamera in den Browser-Einstellungen.');
-        } else if (error.name === 'NotFoundError') {
-          alert('Keine Kamera gefunden. Bitte überprüfen Sie, ob eine Kamera angeschlossen ist.');
-        } else {
-          alert('Kamera-Fehler: ' + error.message);
+    // Einfache Kamera-Initialisierung
+    const camera = new Camera(videoElement, {
+      onFrame: async () => {
+        try {
+          await faceMesh.send({image: videoElement});
+        } catch (error) {
+          console.error('FaceMesh error:', error);
         }
       }
+    });
+    
+    try {
+      camera.start();
+      console.log('Kamera erfolgreich gestartet');
+    } catch (error) {
+      console.error('Kamera-Fehler:', error);
     }
-
-
-
-    // Kamera initialisieren
-    initializeCamera();
 
     //Array mit allen Bildern, die vorgeladen werden müssen
     vorladen("./public/Ratatosk.svg","./public/GoHome.svg","./public/Goback.svg", // Sonstiges
