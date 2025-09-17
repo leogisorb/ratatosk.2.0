@@ -10,6 +10,7 @@ export default defineConfig({
     vue(),
     vueDevTools(),
   ],
+  base: '/ratatosk.2.0/',
   resolve: {
     alias: {
       '@': fileURLToPath(new URL('./src', import.meta.url))
