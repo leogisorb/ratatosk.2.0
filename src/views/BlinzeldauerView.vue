@@ -220,7 +220,7 @@ function selectSensibilitaet(sensibilitaetId: string) {
 
 // Blink Detection
 const handleBlink = () => {
-  if (!faceRecognition.isBlinking()) return
+  if (!faceRecognition.isBlinking.value) return
   
   const now = Date.now()
   
