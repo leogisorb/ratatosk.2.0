@@ -115,19 +115,4 @@ export interface UsageAnalytics {
   errors: AppError[]
 }
 
-// Export all types
-export type {
-  Message,
-  QuickMessage,
-  PainLocation,
-  PainAssessment,
-  UserSettings,
-  FaceLandmarks,
-  EyeState,
-  FaceRecognitionState,
-  MenuItem,
-  AudioSettings,
-  AppState,
-  AppError,
-  UsageAnalytics
-} 
+// All types are already exported above with their interface declarations 

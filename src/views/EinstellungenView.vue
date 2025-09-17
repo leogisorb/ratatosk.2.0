@@ -250,7 +250,7 @@ function selectEinstellung(einstellungId: string) {
 
 // Blink Detection
 const handleBlink = () => {
-  if (!faceRecognition.isBlinking.value) return
+  if (!faceRecognition.isBlinking()) return
   
   const now = Date.now()
   
