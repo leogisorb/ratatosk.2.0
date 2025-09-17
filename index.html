@@ -112,6 +112,7 @@ Bearbeitet von Barbara Kammerl
         selectedElement: "Start",    //Auswahl des momentan aufleuchtenden Symboles (überall)
         element: "Start",
         selectedKeyboard : 0,
+       
 
         Keyboards: [
           //Alphabetisch:
@@ -363,7 +364,7 @@ Bearbeitet von Barbara Kammerl
         blancButton(elementID,menuValue){
           let elementToBlanc=document.getElementById(elementID);
           if((elementToBlanc) && (this.showMenu == menuValue)){
-            elementToBlanc.style.backgroundColor = '#e7e7e7';
+            elementToBlanc.style.backgroundColor = '#00B098';
           }
         },
         colorListDiv(rows,listID , goBackID, menuValue){
@@ -932,7 +933,7 @@ Bearbeitet von Barbara Kammerl
 
     <!-- Oberer Teil der Seite -->
       <header >
-        <img src="./public/Ratatosk.svg" width="80vw" height="20vh" alt="Logo" filter='none' style="color:white"></img> 
+        <img src="./public/Ratatosk.svg" width="80vw" height="20vh" alt="Logo" filter='none' style="color:#00796B"></img> 
         <!-- <span class="site_name">Ratatosk</span> -->
         <p id="orientierung" class="site_name" style="margin:auto; font-size: 5.5vmin;">Ratatosk</p>
         <hr style="color:var(--maincolor);margin-left:0;width:80%;margin:auto;">
@@ -998,49 +999,49 @@ Bearbeitet von Barbara Kammerl
         
         <!-- WARNGERÄUSCH Button -->
         <div style="width: 422px; left: 83px; top: 151px; position: absolute; flex-direction: column; justify-content: flex-start; align-items: flex-start; gap: 10px; display: inline-flex">
-          <div id="SOS" style="align-self: stretch; padding-left: 67px; padding-right: 67px; padding-top: 35px; padding-bottom: 35px; background: rgba(217, 217, 217, 0.10); border-radius: 10px; outline: 1.50px black solid; outline-offset: -1.50px; flex-direction: column; justify-content: flex-start; align-items: center; gap: 26px; display: flex; cursor: pointer;" @click="showMenu=1">
-            <img src="./public/bell.svg" style="width: 119.09px; height: 125px; object-fit: contain; filter: invert(27%) sepia(51%) saturate(2878%) hue-rotate(187deg) brightness(104%) contrast(97%);" alt="Warnung">
-            <div style="color: black; font-size: 40px; font-family: Source Code Pro; font-weight: 400; word-wrap: break-word">WARNGERÄUSCH</div>
+          <div id="SOS" :style="showMenu==1 ? 'align-self: stretch; padding-left: 67px; padding-right: 67px; padding-top: 35px; padding-bottom: 35px; background: #00B098; box-shadow: 0px 9px 9px rgba(0, 0, 0, 0.25) inset; border-radius: 10px; outline: 1.50px white solid; outline-offset: -1.50px; flex-direction: column; justify-content: flex-start; align-items: center; gap: 26px; display: flex; cursor: pointer;' : 'align-self: stretch; padding-left: 67px; padding-right: 67px; padding-top: 35px; padding-bottom: 35px; background: rgba(217, 217, 217, 0.10); border-radius: 10px; outline: 1.50px black solid; outline-offset: -1.50px; flex-direction: column; justify-content: flex-start; align-items: center; gap: 26px; display: flex; cursor: pointer;'" @click="showMenu=1">
+            <img src="./public/bell.svg" :style="showMenu==1 ? 'width: 119.09px; height: 125px; object-fit: contain; filter: brightness(0) invert(1);' : 'width: 119.09px; height: 125px; object-fit: contain; filter: invert(48%) sepia(79%) saturate(2476%) hue-rotate(86deg) brightness(118%) contrast(119%);'" alt="Warnung">
+            <div :style="showMenu==1 ? 'color: white; font-size: 40px; font-family: Source Code Pro; font-weight: 500; word-wrap: break-word' : 'color: black; font-size: 40px; font-family: Source Code Pro; font-weight: 400; word-wrap: break-word'">WARNGERÄUSCH</div>
           </div>
         </div>
         
         <!-- UNTERHALTEN Button -->
         <div style="width: 422px; left: 545px; top: 151px; position: absolute; flex-direction: column; justify-content: flex-start; align-items: flex-start; gap: 10px; display: inline-flex">
-          <div id="NAC" style="align-self: stretch; padding-left: 67px; padding-right: 67px; padding-top: 35px; padding-bottom: 35px; background: rgba(217, 217, 217, 0.10); border-radius: 10px; outline: 1.50px black solid; outline-offset: -1.50px; flex-direction: column; justify-content: flex-start; align-items: center; gap: 26px; display: flex; cursor: pointer;" @click="showMenu=3">
-            <img src="./public/comment-dots.svg" style="width: 125px; height: 125px; object-fit: contain; filter: invert(27%) sepia(51%) saturate(2878%) hue-rotate(187deg) brightness(104%) contrast(97%);" alt="Unterhalten">
-            <div style="color: black; font-size: 40px; font-family: Source Code Pro; font-weight: 400; word-wrap: break-word">UNTERHALTEN</div>
+          <div id="NAC" :style="showMenu==3 ? 'align-self: stretch; padding-left: 67px; padding-right: 67px; padding-top: 35px; padding-bottom: 35px; background: #00B098; box-shadow: 0px 9px 9px rgba(0, 0, 0, 0.25) inset; border-radius: 10px; outline: 1.50px white solid; outline-offset: -1.50px; flex-direction: column; justify-content: flex-start; align-items: center; gap: 26px; display: flex; cursor: pointer;' : 'align-self: stretch; padding-left: 67px; padding-right: 67px; padding-top: 35px; padding-bottom: 35px; background: rgba(217, 217, 217, 0.10); border-radius: 10px; outline: 1.50px black solid; outline-offset: -1.50px; flex-direction: column; justify-content: flex-start; align-items: center; gap: 26px; display: flex; cursor: pointer;'" @click="showMenu=3">
+            <img src="./public/comment-dots.svg" :style="showMenu==3 ? 'width: 125px; height: 125px; object-fit: contain; filter: brightness(0) invert(1);' : 'width: 125px; height: 125px; object-fit: contain; filter: invert(48%) sepia(79%) saturate(2476%) hue-rotate(86deg) brightness(118%) contrast(119%);'" alt="Unterhalten">
+            <div :style="showMenu==3 ? 'color: white; font-size: 40px; font-family: Source Code Pro; font-weight: 500; word-wrap: break-word' : 'color: black; font-size: 40px; font-family: Source Code Pro; font-weight: 400; word-wrap: break-word'">UNTERHALTEN</div>
           </div>
         </div>
         
         <!-- ICH Button -->
         <div style="width: 422px; left: 1007px; top: 151px; position: absolute; flex-direction: column; justify-content: flex-start; align-items: flex-start; gap: 10px; display: inline-flex">
-          <div id="SEL" style="align-self: stretch; padding-left: 67px; padding-right: 67px; padding-top: 35px; padding-bottom: 35px; background: rgba(217, 217, 217, 0.10); border-radius: 10px; outline: 1.50px black solid; outline-offset: -1.50px; flex-direction: column; justify-content: flex-start; align-items: center; gap: 26px; display: flex; cursor: pointer;" @click="showMenu=5">
-            <img src="./public/user.svg" style="width: 125px; height: 125px; object-fit: contain; filter: invert(27%) sepia(51%) saturate(2878%) hue-rotate(187deg) brightness(104%) contrast(97%);" alt="Ich">
-            <div style="color: black; font-size: 40px; font-family: Source Code Pro; font-weight: 400; word-wrap: break-word">ICH</div>
+          <div id="SEL" :style="showMenu==5 ? 'align-self: stretch; padding-left: 67px; padding-right: 67px; padding-top: 35px; padding-bottom: 35px; background: #00B098; box-shadow: 0px 9px 9px rgba(0, 0, 0, 0.25) inset; border-radius: 10px; outline: 1.50px white solid; outline-offset: -1.50px; flex-direction: column; justify-content: flex-start; align-items: center; gap: 26px; display: flex; cursor: pointer;' : 'align-self: stretch; padding-left: 67px; padding-right: 67px; padding-top: 35px; padding-bottom: 35px; background: rgba(217, 217, 217, 0.10); border-radius: 10px; outline: 1.50px black solid; outline-offset: -1.50px; flex-direction: column; justify-content: flex-start; align-items: center; gap: 26px; display: flex; cursor: pointer;'" @click="showMenu=5">
+            <img src="./public/user.svg" :style="showMenu==5 ? 'width: 125px; height: 125px; object-fit: contain; filter: brightness(0) invert(1);' : 'width: 125px; height: 125px; object-fit: contain; filter: invert(48%) sepia(79%) saturate(2476%) hue-rotate(86deg) brightness(118%) contrast(119%);'" alt="Ich">
+            <div :style="showMenu==5 ? 'color: white; font-size: 40px; font-family: Source Code Pro; font-weight: 500; word-wrap: break-word' : 'color: black; font-size: 40px; font-family: Source Code Pro; font-weight: 400; word-wrap: break-word'">ICH</div>
           </div>
         </div>
         
         <!-- SCHMERZEN Button -->
         <div style="width: 422px; left: 83px; top: 474px; position: absolute; flex-direction: column; justify-content: flex-start; align-items: flex-start; gap: 10px; display: inline-flex">
-          <div id="AUA" style="align-self: stretch; padding-left: 67px; padding-right: 67px; padding-top: 35px; padding-bottom: 35px; background: rgba(217, 217, 217, 0.10); border-radius: 10px; outline: 1.50px black solid; outline-offset: -1.50px; flex-direction: column; justify-content: flex-start; align-items: center; gap: 26px; display: flex; cursor: pointer;" @click="showMenu=2">
-            <img src="./public/headache.svg" style="width: 125px; height: 125px; object-fit: contain; filter: invert(27%) sepia(51%) saturate(2878%) hue-rotate(187deg) brightness(104%) contrast(97%);" alt="Schmerzen">
-            <div style="color: black; font-size: 40px; font-family: Source Code Pro; font-weight: 400; word-wrap: break-word">SCHMERZEN</div>
+          <div id="AUA" :style="showMenu==2 ? 'align-self: stretch; padding-left: 67px; padding-right: 67px; padding-top: 35px; padding-bottom: 35px; background: #00B098; box-shadow: 0px 9px 9px rgba(0, 0, 0, 0.25) inset; border-radius: 10px; outline: 1.50px white solid; outline-offset: -1.50px; flex-direction: column; justify-content: flex-start; align-items: center; gap: 26px; display: flex; cursor: pointer;' : 'align-self: stretch; padding-left: 67px; padding-right: 67px; padding-top: 35px; padding-bottom: 35px; background: rgba(217, 217, 217, 0.10); border-radius: 10px; outline: 1.50px black solid; outline-offset: -1.50px; flex-direction: column; justify-content: flex-start; align-items: center; gap: 26px; display: flex; cursor: pointer;'" @click="showMenu=2">
+            <img src="./public/headache.svg" :style="showMenu==2 ? 'width: 125px; height: 125px; object-fit: contain; filter: brightness(0) invert(1);' : 'width: 125px; height: 125px; object-fit: contain; filter: invert(48%) sepia(79%) saturate(2476%) hue-rotate(86deg) brightness(118%) contrast(119%);'" alt="Schmerzen">
+            <div :style="showMenu==2 ? 'color: white; font-size: 40px; font-family: Source Code Pro; font-weight: 500; word-wrap: break-word' : 'color: black; font-size: 40px; font-family: Source Code Pro; font-weight: 400; word-wrap: break-word'">SCHMERZEN</div>
           </div>
         </div>
         
         <!-- UMGEBUNG Button -->
         <div style="width: 422px; left: 545px; top: 474px; position: absolute; flex-direction: column; justify-content: flex-start; align-items: flex-start; gap: 10px; display: inline-flex">
-          <div id="UMG" style="align-self: stretch; padding-left: 67px; padding-right: 67px; padding-top: 35px; padding-bottom: 35px; background: rgba(217, 217, 217, 0.10); border-radius: 10px; outline: 1.50px black solid; outline-offset: -1.50px; flex-direction: column; justify-content: flex-start; align-items: center; gap: 26px; display: flex; cursor: pointer;" @click="showMenu=4">
-            <img src="./public/house-chimney.svg" style="width: 125px; height: 125px; object-fit: contain; filter: invert(27%) sepia(51%) saturate(2878%) hue-rotate(187deg) brightness(104%) contrast(97%);" alt="Umgebung">
-            <div style="color: black; font-size: 40px; font-family: Source Code Pro; font-weight: 400; word-wrap: break-word">UMGEBUNG</div>
+          <div id="UMG" :style="showMenu==4 ? 'align-self: stretch; padding-left: 67px; padding-right: 67px; padding-top: 35px; padding-bottom: 35px; background: #00B098; box-shadow: 0px 9px 9px rgba(0, 0, 0, 0.25) inset; border-radius: 10px; outline: 1.50px white solid; outline-offset: -1.50px; flex-direction: column; justify-content: flex-start; align-items: center; gap: 26px; display: flex; cursor: pointer;' : 'align-self: stretch; padding-left: 67px; padding-right: 67px; padding-top: 35px; padding-bottom: 35px; background: rgba(217, 217, 217, 0.10); border-radius: 10px; outline: 1.50px black solid; outline-offset: -1.50px; flex-direction: column; justify-content: flex-start; align-items: center; gap: 26px; display: flex; cursor: pointer;'" @click="showMenu=4">
+            <img src="./public/house-chimney.svg" :style="showMenu==4 ? 'width: 125px; height: 125px; object-fit: contain; filter: brightness(0) invert(1);' : 'width: 125px; height: 125px; object-fit: contain; filter: invert(48%) sepia(79%) saturate(2476%) hue-rotate(86deg) brightness(118%) contrast(119%);'" alt="Umgebung">
+            <div :style="showMenu==4 ? 'color: white; font-size: 40px; font-family: Source Code Pro; font-weight: 500; word-wrap: break-word' : 'color: black; font-size: 40px; font-family: Source Code Pro; font-weight: 400; word-wrap: break-word'">UMGEBUNG</div>
           </div>
         </div>
         
         <!-- EINSTELLUNGEN Button -->
         <div style="width: 422px; left: 1007px; top: 474px; position: absolute; flex-direction: column; justify-content: flex-start; align-items: flex-start; gap: 10px; display: inline-flex">
-          <div id="EIN" style="align-self: stretch; padding-left: 67px; padding-right: 67px; padding-top: 35px; padding-bottom: 35px; background: rgba(217, 217, 217, 0.10); border-radius: 10px; outline: 1.50px black solid; outline-offset: -1.50px; flex-direction: column; justify-content: flex-start; align-items: center; gap: 26px; display: flex; cursor: pointer;" @click="showMenu=6">
-            <img src="./public/settings-sliders.svg" style="width: 125px; height: 125px; object-fit: contain; filter: invert(27%) sepia(51%) saturate(2878%) hue-rotate(187deg) brightness(104%) contrast(97%);" alt="Einstellungen">
-            <div style="color: black; font-size: 40px; font-family: Source Code Pro; font-weight: 400; word-wrap: break-word">EINSTELLUNGEN</div>
+          <div id="EIN" :style="showMenu==6 ? 'align-self: stretch; padding-left: 67px; padding-right: 67px; padding-top: 35px; padding-bottom: 35px; background: #00B098; box-shadow: 0px 9px 9px rgba(0, 0, 0, 0.25) inset; border-radius: 10px; outline: 1.50px white solid; outline-offset: -1.50px; flex-direction: column; justify-content: flex-start; align-items: center; gap: 26px; display: flex; cursor: pointer;' : 'align-self: stretch; padding-left: 67px; padding-right: 67px; padding-top: 35px; padding-bottom: 35px; background: rgba(217, 217, 217, 0.10); border-radius: 10px; outline: 1.50px black solid; outline-offset: -1.50px; flex-direction: column; justify-content: flex-start; align-items: center; gap: 26px; display: flex; cursor: pointer;'" @click="showMenu=6">
+            <img src="./public/settings-sliders.svg" :style="showMenu==6 ? 'width: 125px; height: 125px; object-fit: contain; filter: brightness(0) invert(1);' : 'width: 125px; height: 125px; object-fit: contain; filter: invert(48%) sepia(79%) saturate(2476%) hue-rotate(86deg) brightness(118%) contrast(119%);'" alt="Einstellungen">
+            <div :style="showMenu==6 ? 'color: white; font-size: 40px; font-family: Source Code Pro; font-weight: 500; word-wrap: break-word' : 'color: black; font-size: 40px; font-family: Source Code Pro; font-weight: 400; word-wrap: break-word'">EINSTELLUNGEN</div>
           </div>
         </div>
       </div>

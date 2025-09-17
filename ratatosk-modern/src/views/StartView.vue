@@ -4,22 +4,18 @@
     <header class="w-full max-w-4xl px-6 py-8">
       <div class="text-center">
         <div class="flex items-center justify-center space-x-4 mb-6">
-          <div class="h-16 w-16 bg-primary-600 rounded-xl flex items-center justify-center shadow-lg">
-            <span class="text-white text-2xl font-bold">R</span>
-          </div>
-          <h1 class="text-4xl font-bold text-gray-900 dark:text-white font-source-code">
+          <h1 class="text-4xl font-bold text-gray-900 dark:text-white font-source-code font-light">
             RATATOSK
           </h1>
+          <img src="/rattenkopf.svg" alt="Ratatosk Logo" class="w-16 h-16" />
+          <div class="w-2.5 h-1.5 bg-[#00796B]"></div>
         </div>
-        <p class="text-lg text-gray-600 dark:text-gray-300 max-w-2xl mx-auto">
-          Ihr Kommunikationsassistent für einfache Bedienung durch Augenblinzeln
-        </p>
       </div>
     </header>
 
     <!-- Main Content -->
     <main class="flex-1 flex items-center justify-center w-full max-w-4xl px-6">
-      <div class="text-center space-y-8">
+      <div class="text-center space-y-12">
         <!-- Status Display -->
         <div class="space-y-4">
           <!-- Camera Status -->
@@ -103,16 +99,23 @@
             </div>
           </div>
 
+          <!-- Abstandshalter -->
+          <div style="height: 3rem;"></div>
+
           <!-- Manual Start Option -->
           <div v-if="cameraStatus === 'active'" class="max-w-md mx-auto">
             <button
               @click="startWithoutBlink"
-              class="w-full btn-secondary text-lg py-3 px-6"
+              class="w-full text-white rounded-lg"
+              style="background-color: #00796B; font-size: 16px; height: 40px; padding: 8px 16px; border: none;"
             >
               Ohne Blinzeln starten
             </button>
           </div>
         </div>
+
+        <!-- Abstandshalter -->
+        <div style="height: 3rem;"></div>
 
         <!-- Error Message -->
         <div v-if="error" class="max-w-md mx-auto p-4 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg">

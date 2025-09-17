@@ -9,6 +9,8 @@ export const useSettingsStore = defineStore('settings', () => {
     keyboardLayout: 'alphabetical',
     blinkDuration: 2,
     blinkSpeed: 2,
+    autoModeSpeed: 3000, // 3 Sekunden in Millisekunden
+    blinkSensitivity: 0.5, // 0.5 Sekunden
     soundEnabled: true,
     voiceEnabled: false,
     accessibility: {
@@ -44,6 +46,11 @@ export const useSettingsStore = defineStore('settings', () => {
     saveSettings()
   }
 
+  function toggleDarkMode() {
+    settings.value.theme = settings.value.theme === 'dark' ? 'light' : 'dark'
+    saveSettings()
+  }
+
   function toggleAccessibility(feature: keyof UserSettings['accessibility']) {
     settings.value.accessibility[feature] = !settings.value.accessibility[feature]
     saveSettings()
@@ -55,6 +62,8 @@ export const useSettingsStore = defineStore('settings', () => {
       keyboardLayout: 'alphabetical',
       blinkDuration: 2,
       blinkSpeed: 2,
+      autoModeSpeed: 3000,
+      blinkSensitivity: 0.5,
       soundEnabled: true,
       voiceEnabled: false,
       accessibility: {
@@ -97,6 +106,7 @@ export const useSettingsStore = defineStore('settings', () => {
     // Actions
     updateSettings,
     toggleTheme,
+    toggleDarkMode,
     toggleAccessibility,
     resetSettings,
     saveSettings,

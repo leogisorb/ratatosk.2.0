@@ -36,6 +36,8 @@ export interface UserSettings {
   keyboardLayout: 'alphabetical' | 'qwertz' | 'frequency'
   blinkDuration: number // in seconds
   blinkSpeed: number // in seconds
+  autoModeSpeed: number // in milliseconds (default: 3000)
+  blinkSensitivity: number // in seconds (default: 0.5)
   soundEnabled: boolean
   voiceEnabled: boolean
   accessibility: {
