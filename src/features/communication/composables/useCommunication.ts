@@ -1,4 +1,4 @@
-import { ref, computed } from 'vue'
+import { ref, computed, readonly } from 'vue'
 import type { Message, MessageType, MessageCategory } from '../../../core/domain/entities/Message'
 import { CommunicationService } from '../../../core/application/services/CommunicationService'
 import { LocalMessageRepository } from '../../../core/domain/repositories/MessageRepository'
