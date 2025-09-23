@@ -1,8 +1,14 @@
 import { defineStore } from 'pinia'
 import { ref, computed } from 'vue'
 import type { UserSettings } from '@/types'
+import { UserService } from '../core/application/services/UserService'
+import { LocalUserRepository } from '../core/domain/repositories/UserRepository'
 
 export const useSettingsStore = defineStore('settings', () => {
+  // Dependencies
+  const userRepository = new LocalUserRepository()
+  const userService = new UserService(userRepository)
+
   // State
   const settings = ref<UserSettings>({
     theme: 'light',

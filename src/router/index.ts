@@ -3,6 +3,7 @@ import StartView from '../views/StartView.vue'
 import HomeView from '../views/HomeView.vue'
 import WarningView from '../views/WarningView.vue'
 import UnterhaltenView from '../views/UnterhaltenView.vue'
+import CommunicationView from '../features/communication/views/CommunicationView.vue'
 import IchView from '../views/IchView.vue'
 import GefuehleView from '../views/GefuehleView.vue'
 import SchmerzView from '../views/SchmerzView.vue'
@@ -42,6 +43,11 @@ const router = createRouter({
       path: '/unterhalten',
       name: 'unterhalten',
       component: UnterhaltenView,
+    },
+    {
+      path: '/communication',
+      name: 'communication',
+      component: CommunicationView,
     },
     {
       path: '/ich',
