@@ -1,8 +1,8 @@
 <script setup lang="ts">
 import { ref, onMounted, onUnmounted, computed } from 'vue'
 import { useRouter } from 'vue-router'
-import { useFaceRecognition } from '@/composables/useFaceRecognition'
-import { useSettingsStore } from '@/stores/settings'
+import { useFaceRecognition } from '../../face-recognition/composables/useFaceRecognition'
+import { useSettingsStore } from '../../settings/stores/settings'
 import PainScale from '../components/PainScale.vue'
 import { keyboardGridConfig, getKeyboardTileStyle } from '@/config/gridConfig'
 

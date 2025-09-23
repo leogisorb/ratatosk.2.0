@@ -1,5 +1,5 @@
 import { ref, onMounted, onUnmounted, readonly } from 'vue'
-import type { FaceRecognitionState, EyeState, FaceLandmarks } from '@/types'
+import type { FaceRecognitionState, EyeState, FaceLandmarks } from '../shared/types/index'
 
 export function useFaceRecognition() {
   // State

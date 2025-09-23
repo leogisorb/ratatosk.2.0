@@ -2,7 +2,7 @@
 import { ref, onMounted, onUnmounted, computed } from 'vue'
 import { useRouter } from 'vue-router'
 import { useFaceRecognition } from '../../face-recognition/composables/useFaceRecognition'
-import { useSettingsStore } from '@/stores/settings'
+import { useSettingsStore } from '../../settings/stores/settings'
 import PainScale from '../components/PainScale.vue'
 import { keyboardGridConfig, getKeyboardTileStyle } from '@/config/gridConfig'
 

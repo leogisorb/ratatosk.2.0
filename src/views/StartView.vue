@@ -150,7 +150,7 @@
 <script setup lang="ts">
 import { ref, computed, onMounted, onUnmounted } from 'vue'
 import { useRouter } from 'vue-router'
-import { useFaceRecognition } from '@/composables/useFaceRecognition'
+import { useFaceRecognition } from '../features/face-recognition/composables/useFaceRecognition'
 
 // Router
 const router = useRouter()

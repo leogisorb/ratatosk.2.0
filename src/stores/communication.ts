@@ -1,6 +1,6 @@
 import { defineStore } from 'pinia'
 import { ref, computed } from 'vue'
-import type { Message, QuickMessage } from '@/types'
+import type { Message, QuickMessage } from '../shared/types/index'
 
 export const useCommunicationStore = defineStore('communication', () => {
   // State

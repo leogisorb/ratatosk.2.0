@@ -1,8 +1,8 @@
 <script setup lang="ts">
 import { ref, computed, onMounted, onUnmounted } from 'vue'
 import { useRouter } from 'vue-router'
-import { useSettingsStore } from '@/stores/settings'
-import { useFaceRecognition } from '@/composables/useFaceRecognition'
+import { useSettingsStore } from '../features/settings/stores/settings'
+import { useFaceRecognition } from '../features/face-recognition/composables/useFaceRecognition'
 import { mainGridConfig, getTileStyle as getTileStyleConfig, getIconStyle as getIconStyleConfig, getTextStyle as getTextStyleConfig, getIconColor } from '@/config/gridConfig'
 
 // Router

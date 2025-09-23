@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { ref, onMounted, onUnmounted, computed, watch } from 'vue'
-import { useFaceRecognition } from '@/composables/useFaceRecognition'
-import { useSettingsStore } from '@/stores/settings'
+import { useFaceRecognition } from '../../face-recognition/composables/useFaceRecognition'
+import { useSettingsStore } from '../../settings/stores/settings'
 
 // Props
 interface Props {
