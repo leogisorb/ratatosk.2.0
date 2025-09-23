@@ -32,12 +32,11 @@ src/
 │       ├── api/              # API Clients
 │       └── storage/          # Local Storage
 ├── 📁 features/               # Feature-basierte Organisation
-│   ├── 📁 communication/      # Kommunikations-Feature
-│   │   ├── components/       # Feature-spezifische Komponenten
-│   │   ├── views/            # Feature-spezifische Views
-│   │   ├── stores/           # Feature-spezifische Stores
-│   │   └── composables/      # Feature-spezifische Composables
-│   ├── 📁 pain-assessment/    # Schmerz-Assessment Feature
+│   ├── 📁 face-recognition/  # Gesichtserkennung Feature
+│   │   ├── components/       # Face Recognition Komponenten
+│   │   ├── composables/      # useFaceRecognition
+│   │   └── services/         # Face Recognition Services
+│   ├── 📁 pain-assessment/   # Schmerz-Assessment Feature
 │   ├── 📁 face-recognition/  # Gesichtserkennung Feature
 │   └── 📁 settings/          # Einstellungen Feature
 ├── 📁 shared/                # Geteilte Komponenten & Utilities

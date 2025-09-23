@@ -3,7 +3,7 @@ import { ref, onMounted, onUnmounted, computed } from 'vue'
 import { useRouter } from 'vue-router'
 import { useFaceRecognition } from '@/composables/useFaceRecognition'
 import { useSettingsStore } from '@/stores/settings'
-import PainScale from '@/components/PainScale.vue'
+import PainScale from '../components/PainScale.vue'
 import { keyboardGridConfig, getKeyboardTileStyle } from '@/config/gridConfig'
 
 // Router
@@ -17,7 +17,7 @@ const faceRecognition = useFaceRecognition()
 
 // State
 const currentTileIndex = ref(0)
-const selectedArmeBereich = ref('')
+const selectedTorsoBereich = ref('')
 const isAutoMode = ref(true)
 const autoModeInterval = ref<number | null>(null)
 const closedFrames = ref(0)
@@ -39,22 +39,22 @@ const isTTSEnabled = ref(true)
 // Verwende die Keyboard-Grid-Konfiguration
 const gridConfig = keyboardGridConfig
 
-// Arme-Bereiche basierend auf dem gezeigten Interface
-const armeBereiche = [
-  // Zeile 1: Finger, Handfläche, Handrücken
-  { id: 'finger', text: 'Finger', type: 'armbereich' },
-  { id: 'handflaeche', text: 'Handfläche', type: 'armbereich' },
-  { id: 'handruecken', text: 'Handrücken', type: 'armbereich' },
+// Torso-Bereiche basierend auf dem gezeigten Interface
+const torsoBereiche = [
+  // Zeile 1: Herz, Brust, Schultern
+  { id: 'herz', text: 'Herz', type: 'torsobereich' },
+  { id: 'brust', text: 'Brust', type: 'torsobereich' },
+  { id: 'schultern', text: 'Schultern', type: 'torsobereich' },
   
-  // Zeile 2: Unterarm, Ellenbogen, Ellenbeuge
-  { id: 'unterarm', text: 'Unterarm', type: 'armbereich' },
-  { id: 'ellenbogen', text: 'Ellenbogen', type: 'armbereich' },
-  { id: 'ellenbeuge', text: 'Ellenbeuge', type: 'armbereich' },
+  // Zeile 2: Lunge, Magen, Blase, Hüfte
+  { id: 'lunge', text: 'Lunge', type: 'torsobereich' },
+  { id: 'magen', text: 'Magen', type: 'torsobereich' },
+  { id: 'blase', text: 'Blase', type: 'torsobereich' },
+  { id: 'huefte', text: 'Hüfte', type: 'torsobereich' },
   
-  // Zeile 3: Oberarm, Schulter, Achsel
-  { id: 'oberarm', text: 'Oberarm', type: 'armbereich' },
-  { id: 'schulter', text: 'Schulter', type: 'armbereich' },
-  { id: 'achsel', text: 'Achsel', type: 'armbereich' },
+  // Zeile 3: Schulterblätter, Wirbelsäule
+  { id: 'schulterblaetter', text: 'Schulterblätter', type: 'torsobereich' },
+  { id: 'wirbelsaeule', text: 'Wirbelsäule', type: 'torsobereich' },
   
   // Zurück
   { id: 'zurueck', text: 'zurück', type: 'navigation' }
@@ -62,10 +62,10 @@ const armeBereiche = [
 
 // Text-to-Speech Funktion
 const speakText = (text: string) => {
-  console.log('ArmeSchmerzView speakText called with:', text, 'isTTSEnabled:', isTTSEnabled.value, 'speechSynthesis:', speechSynthesis)
+  console.log('TorsoSchmerzView speakText called with:', text, 'isTTSEnabled:', isTTSEnabled.value, 'speechSynthesis:', speechSynthesis)
   
   if (!isTTSEnabled.value || !speechSynthesis) {
-    console.log('ArmeSchmerzView TTS disabled or speechSynthesis not available')
+    console.log('TorsoSchmerzView TTS disabled or speechSynthesis not available')
     return
   }
   
@@ -77,19 +77,19 @@ const speakText = (text: string) => {
   utterance.pitch = 1.0
   utterance.volume = 0.8
   
-  console.log('ArmeSchmerzView Speaking:', text)
+  console.log('TorsoSchmerzView Speaking:', text)
   speechSynthesis.speak(utterance)
 }
 
 // TTS Toggle
 const toggleTTS = () => {
-  console.log('ArmeSchmerzView toggleTTS called, current state:', isTTSEnabled.value)
+  console.log('TorsoSchmerzView toggleTTS called, current state:', isTTSEnabled.value)
   isTTSEnabled.value = !isTTSEnabled.value
-  console.log('ArmeSchmerzView TTS toggled to:', isTTSEnabled.value)
+  console.log('TorsoSchmerzView TTS toggled to:', isTTSEnabled.value)
   
   if (!isTTSEnabled.value) {
     speechSynthesis.cancel()
-    console.log('ArmeSchmerzView TTS cancelled')
+    console.log('TorsoSchmerzView TTS cancelled')
   } else {
     // Test TTS when enabling
     speakText('Sprachausgabe aktiviert')
@@ -107,13 +107,13 @@ const startAutoMode = () => {
     if (!isAutoMode.value || isAutoModePaused.value) {
       return
     }
-    currentTileIndex.value = (currentTileIndex.value + 1) % armeBereiche.length
-    const currentItem = armeBereiche[currentTileIndex.value]
+    currentTileIndex.value = (currentTileIndex.value + 1) % torsoBereiche.length
+    const currentItem = torsoBereiche[currentTileIndex.value]
     speakText(currentItem.text)
     autoModeInterval.value = window.setTimeout(cycleTiles, 3000) // 3 Sekunden
   }
   
-  const firstItem = armeBereiche[currentTileIndex.value]
+  const firstItem = torsoBereiche[currentTileIndex.value]
   speakText(firstItem.text)
   
   // Starte den ersten Zyklus nach 3 Sekunden
@@ -145,14 +145,14 @@ const stopAutoMode = () => {
   speechSynthesis.cancel()
 }
 
-// Arme-Bereich Auswahl
-function selectArmeBereich(bereichId: string) {
-  console.log('selectArmeBereich called with bereichId:', bereichId)
+// Torso-Bereich Auswahl
+function selectTorsoBereich(bereichId: string) {
+  console.log('selectTorsoBereich called with bereichId:', bereichId)
   pauseAutoMode()
   
-  const selectedItem = armeBereiche.find(item => item.id === bereichId)
+  const selectedItem = torsoBereiche.find(item => item.id === bereichId)
   if (selectedItem) {
-    selectedArmeBereich.value = selectedItem.text
+    selectedTorsoBereich.value = selectedItem.text
   }
   
   switch (bereichId) {
@@ -161,7 +161,7 @@ function selectArmeBereich(bereichId: string) {
       router.push('/schmerz')
       break
     default:
-      console.log('Selected Armbereich:', bereichId)
+      console.log('Selected Torsobereich:', bereichId)
       
       // Schmerzskala anzeigen (ohne TTS der Körperteil-Auswahl)
       selectedBodyPartForPain.value = selectedItem?.text || ''
@@ -173,7 +173,7 @@ function selectArmeBereich(bereichId: string) {
 function onPainScaleComplete(painLevel: number) {
   console.log('Pain scale completed with level:', painLevel, 'for body part:', selectedBodyPartForPain.value)
   
-  // Zurück zur Arme-Auswahl (ohne TTS, da PainScale bereits das Level vorgelesen hat)
+  // Zurück zur Torso-Auswahl (ohne TTS, da PainScale bereits das Level vorgelesen hat)
   showPainScale.value = false
   selectedBodyPartForPain.value = ''
   
@@ -214,11 +214,11 @@ const handleBlink = () => {
     }
     
     if (closedFrames.value >= blinkThreshold.value && !eyesClosed.value) {
-      const currentItem = armeBereiche[currentTileIndex.value]
+      const currentItem = torsoBereiche[currentTileIndex.value]
       console.log('Blink activation for tile:', currentTileIndex.value, 'bereichId:', currentItem.id, 'text:', currentItem.text)
       
       speakText(currentItem.text)
-      selectArmeBereich(currentItem.id)
+      selectTorsoBereich(currentItem.id)
       eyesClosed.value = true
       lastBlinkTime.value = now
       closedFrames.value = 0
@@ -235,11 +235,11 @@ const handleBlink = () => {
 const handleRightClick = (event: MouseEvent) => {
   event.preventDefault()
   console.log('Right click detected - treating as blink')
-  const currentItem = armeBereiche[currentTileIndex.value]
+  const currentItem = torsoBereiche[currentTileIndex.value]
   console.log('Right click activation for tile:', currentTileIndex.value, 'bereichId:', currentItem.id, 'text:', currentItem.text)
   
   speakText(currentItem.text)
-  selectArmeBereich(currentItem.id)
+  selectTorsoBereich(currentItem.id)
 }
 
 // Lifecycle
@@ -276,7 +276,7 @@ onUnmounted(() => {
     @back="onPainScaleBack"
   />
   
-  <!-- Normale Arme-Auswahl anzeigen -->
+  <!-- Normale Torso-Auswahl anzeigen -->
   <div v-show="!showPainScale" class="min-h-screen bg-white dark:bg-gray-900 flex flex-col">
     <!-- Header -->
     <header class="bg-gray-200 shadow-2xl flex-shrink-0" style="box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);">
@@ -289,7 +289,7 @@ onUnmounted(() => {
               </svg>
             </button>
             <h1 class="text-2xl font-bold text-black font-source-code font-light">
-              ARMSCHMERZEN
+              TORSOSCHMERZEN
             </h1>
           </div>
           
@@ -342,28 +342,28 @@ onUnmounted(() => {
     <!-- Main Content -->
     <main class="flex-1 flex items-center justify-center p-16">
       <div class="max-w-8xl mx-auto">
-        <!-- Ausgewählter Arme-Bereich Anzeige -->
+        <!-- Ausgewählter Torso-Bereich Anzeige -->
         <div class="mb-64 text-center">
           <div class="bg-blue-100 dark:bg-blue-900 rounded-xl p-20 max-w-8xl mx-auto">
             <h2 class="text-8xl font-bold text-blue-800 dark:text-blue-200 mb-12" style="font-family: 'Source Code Pro', monospace; font-weight: 300;">
               Ausgewählter Bereich:
             </h2>
             <div class="font-bold text-blue-900 dark:text-blue-100" style="font-family: 'Source Code Pro', monospace; font-weight: 300; font-size: 4rem;">
-              {{ selectedArmeBereich || 'Wählen Sie einen Arme-Bereich aus' }}
+              {{ selectedTorsoBereich || 'Wählen Sie einen Torso-Bereich aus' }}
             </div>
           </div>
         </div>
          <!-- Abstandshalter -->
          <div style="height: 4rem;"></div>
 
-        <!-- Arme-Bereiche Tastatur -->
+        <!-- Torso-Bereiche Tastatur -->
         <div class="space-y-20 mt-32 mb-48">
-          <!-- Zeile 1: Finger, Handfläche, Handrücken -->
+          <!-- Zeile 1: Herz, Brust, Schultern -->
           <div class="flex justify-center space-x-32">
             <button
-              v-for="(item, index) in armeBereiche.slice(0, 3)"
+              v-for="(item, index) in torsoBereiche.slice(0, 3)"
               :key="item.id"
-              @click="selectArmeBereich(item.id)"
+              @click="selectTorsoBereich(item.id)"
               class="transition-all duration-300 font-medium hover:scale-110"
                 :style="getKeyboardTileStyle(index, currentTileIndex, gridConfig)"
               :class="currentTileIndex === index ? 'text-orange-500 scale-110' : 'text-black hover:text-gray-600'"
@@ -372,12 +372,12 @@ onUnmounted(() => {
             </button>
           </div>
 
-          <!-- Zeile 2: Unterarm, Ellenbogen, Ellenbeuge -->
+          <!-- Zeile 2: Lunge, Magen, Blase, Hüfte -->
           <div class="flex justify-center space-x-32">
             <button
-              v-for="(item, index) in armeBereiche.slice(3, 6)"
+              v-for="(item, index) in torsoBereiche.slice(3, 7)"
               :key="item.id"
-              @click="selectArmeBereich(item.id)"
+              @click="selectTorsoBereich(item.id)"
               class="transition-all duration-300 font-medium hover:scale-110"
               :style="{
                 fontSize: '2.646rem',
@@ -395,16 +395,16 @@ onUnmounted(() => {
             </button>
           </div>
 
-          <!-- Zeile 3: Oberarm, Schulter, Achsel -->
+          <!-- Zeile 3: Schulterblätter, Wirbelsäule -->
           <div class="flex justify-center space-x-32">
             <button
-              v-for="(item, index) in armeBereiche.slice(6, 9)"
+              v-for="(item, index) in torsoBereiche.slice(7, 9)"
               :key="item.id"
-              @click="selectArmeBereich(item.id)"
+              @click="selectTorsoBereich(item.id)"
               class="transition-all duration-300 font-medium hover:scale-110"
               :style="{
                 fontSize: '2.646rem',
-                background: currentTileIndex === index + 6 ? '#f3f4f6' : 'white',
+                background: currentTileIndex === index + 7 ? '#f3f4f6' : 'white',
                 border: '2px solid #d1d5db',
                 borderRadius: '15px',
                 outline: 'none',
@@ -412,7 +412,7 @@ onUnmounted(() => {
                 padding: '12.6px 18.9px',
                 margin: '0'
               }"
-              :class="currentTileIndex === index + 6 ? 'text-orange-500 scale-110' : 'text-black hover:text-gray-600'"
+              :class="currentTileIndex === index + 7 ? 'text-orange-500 scale-110' : 'text-black hover:text-gray-600'"
             >
               {{ item.text }}
             </button>
@@ -421,7 +421,7 @@ onUnmounted(() => {
           <!-- Zeile 4: Zurück -->
           <div class="flex justify-center">
             <button
-              @click="selectArmeBereich('zurueck')"
+              @click="selectTorsoBereich('zurueck')"
               class="transition-all duration-300 font-medium hover:scale-110"
               :style="{
                 fontSize: '2.646rem',
@@ -435,7 +435,7 @@ onUnmounted(() => {
               }"
               :class="currentTileIndex === 9 ? 'text-orange-500 scale-110' : 'text-black hover:text-gray-600'"
             >
-              {{ armeBereiche[9].text }}
+              {{ torsoBereiche[9].text }}
             </button>
           </div>
         </div>
@@ -450,8 +450,8 @@ onUnmounted(() => {
               Bedienung
             </h3>
             <p class="text-2xl text-blue-700 dark:text-blue-300" style="font-family: 'Source Code Pro', monospace; font-weight: 300;">
-              <strong>Kurz blinzeln ({{ settingsStore.settings.blinkSensitivity }}s):</strong> Arme-Bereich auswählen<br>
-              <strong>Rechte Maustaste:</strong> Arme-Bereich auswählen<br>
+              <strong>Kurz blinzeln ({{ settingsStore.settings.blinkSensitivity }}s):</strong> Torso-Bereich auswählen<br>
+              <strong>Rechte Maustaste:</strong> Torso-Bereich auswählen<br>
               <strong>Auto-Modus:</strong> Automatischer Durchlauf durch alle Bereiche
             </p>
           </div>

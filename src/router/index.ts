@@ -3,7 +3,6 @@ import StartView from '../views/StartView.vue'
 import HomeView from '../views/HomeView.vue'
 import WarningView from '../views/WarningView.vue'
 import UnterhaltenView from '../views/UnterhaltenView.vue'
-import CommunicationView from '../features/communication/views/CommunicationView.vue'
 import IchView from '../views/IchView.vue'
 import GefuehleView from '../views/GefuehleView.vue'
 import SchmerzView from '../views/SchmerzView.vue'
@@ -12,11 +11,11 @@ import UmgebungView from '../views/UmgebungView.vue'
 import KleidungView from '../views/KleidungView.vue'
 import BewegungView from '../views/BewegungView.vue'
 import ErnaehrungView from '../views/ErnaehrungView.vue'
-import KopfSchmerzView from '../views/KopfSchmerzView.vue'
-import TorsoSchmerzView from '../views/TorsoSchmerzView.vue'
-import BeineSchmerzView from '../views/BeineSchmerzView.vue'
-import ArmeSchmerzView from '../views/ArmeSchmerzView.vue'
-import EinstellungenView from '../views/EinstellungenView.vue'
+import KopfSchmerzView from '../features/pain-assessment/views/KopfSchmerzView.vue'
+import TorsoSchmerzView from '../features/pain-assessment/views/TorsoSchmerzView.vue'
+import BeineSchmerzView from '../features/pain-assessment/views/BeineSchmerzView.vue'
+import ArmeSchmerzView from '../features/pain-assessment/views/ArmeSchmerzView.vue'
+import EinstellungenView from '../features/settings/views/EinstellungenView.vue'
 import LeuchtDauerView from '../views/LeuchtDauerView.vue'
 import BlinzeldauerView from '../views/BlinzeldauerView.vue'
 import KamerapositionView from '../views/KamerapositionView.vue'
@@ -43,11 +42,6 @@ const router = createRouter({
       path: '/unterhalten',
       name: 'unterhalten',
       component: UnterhaltenView,
-    },
-    {
-      path: '/communication',
-      name: 'communication',
-      component: CommunicationView,
     },
     {
       path: '/ich',
