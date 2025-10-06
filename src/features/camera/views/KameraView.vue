@@ -91,14 +91,19 @@ const applyCameraSettings = () => {
   const videoTrack = stream.value.getVideoTracks()[0]
   if (!videoTrack) return
   
-  const constraints = {
+  const constraints: MediaTrackConstraints = {
+    // Note: These properties may not be supported by all browsers
+    // @ts-ignore - Browser-specific camera constraints
     brightness: brightness.value / 100,
+    // @ts-ignore
     contrast: contrast.value / 100,
+    // @ts-ignore
     saturation: saturation.value / 100,
+    // @ts-ignore
     zoom: zoom.value / 100
   }
   
-  videoTrack.applyConstraints({ advanced: [constraints] })
+  videoTrack.applyConstraints(constraints)
     .then(() => {
       speakText('Kamera-Einstellungen angewendet')
     })

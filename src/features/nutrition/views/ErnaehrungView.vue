@@ -342,9 +342,6 @@ onUnmounted(() => {
               :class="currentTileIndex === index ? 'text-orange-500 scale-110' : 'text-black hover:text-gray-600'"
             >
               <div v-if="item.emoji" style="font-size: 4rem;">{{ item.emoji }}</div>
-              <div v-else-if="item.icon" class="w-20 h-20 flex items-center justify-center">
-                <img :src="item.icon" :alt="item.text" style="width: 80px; height: 80px; object-fit: cover;" />
-              </div>
               <span>{{ item.text }}</span>
             </button>
           </div>
@@ -370,9 +367,6 @@ onUnmounted(() => {
               :class="currentTileIndex === index + 5 ? 'text-orange-500 scale-110' : 'text-black hover:text-gray-600'"
             >
               <div v-if="item.emoji" style="font-size: 4rem;">{{ item.emoji }}</div>
-              <div v-else-if="item.icon" class="w-20 h-20 flex items-center justify-center">
-                <img :src="item.icon" :alt="item.text" style="width: 80px; height: 80px; object-fit: cover;" />
-              </div>
               <span>{{ item.text }}</span>
             </button>
           </div>
@@ -398,9 +392,6 @@ onUnmounted(() => {
               :class="currentTileIndex === index + 10 ? 'text-orange-500 scale-110' : 'text-black hover:text-gray-600'"
             >
               <div v-if="item.emoji" style="font-size: 4rem;">{{ item.emoji }}</div>
-              <div v-else-if="item.icon" class="w-20 h-20 flex items-center justify-center">
-                <img :src="item.icon" :alt="item.text" style="width: 80px; height: 80px; object-fit: cover;" />
-              </div>
               <span>{{ item.text }}</span>
             </button>
           </div>

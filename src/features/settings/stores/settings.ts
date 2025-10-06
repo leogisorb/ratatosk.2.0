@@ -10,7 +10,7 @@ export const useSettingsStore = defineStore('settings', () => {
     blinkDuration: 2,
     blinkSpeed: 2,
     autoModeSpeed: 3000, // 3 Sekunden in Millisekunden
-    blinkSensitivity: 0.5, // 0.5 Sekunden
+    blinkSensitivity: 0.7, // 0.7 Sekunden
     soundEnabled: true,
     voiceEnabled: false,
     accessibility: {
@@ -63,7 +63,7 @@ export const useSettingsStore = defineStore('settings', () => {
       blinkDuration: 2,
       blinkSpeed: 2,
       autoModeSpeed: 3000,
-      blinkSensitivity: 0.5,
+      blinkSensitivity: 0.7,
       soundEnabled: true,
       voiceEnabled: false,
       accessibility: {

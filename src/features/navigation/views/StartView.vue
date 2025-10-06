@@ -55,7 +55,7 @@
           >
             <button
               @click="startCamera"
-              :disabled="cameraStatus.value === 'loading'"
+              :disabled="cameraStatus === 'loading'"
               class="w-full btn-primary text-lg py-4 px-8 flex items-center justify-center space-x-3"
             >
               <svg v-if="cameraStatus === 'loading'" class="animate-spin h-6 w-6" fill="none" viewBox="0 0 24 24">

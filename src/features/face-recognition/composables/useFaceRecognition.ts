@@ -66,7 +66,7 @@ export function useFaceRecognition() {
       console.log('Video-Element erstellt')
 
       // Safari-kompatible Kamera-Initialisierung
-      let stream: MediaStream
+      let stream: MediaStream | undefined
       
       try {
         // Erste Versuche mit verschiedenen Konfigurationen für Safari
@@ -90,7 +90,7 @@ export function useFaceRecognition() {
           }
         }
         
-        if (!streamObtained) {
+        if (!streamObtained || !stream) {
           throw new Error('Kamera-Zugriff auf allen Konfigurationen fehlgeschlagen')
         }
 
