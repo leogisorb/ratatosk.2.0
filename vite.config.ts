@@ -11,6 +11,11 @@ export default defineConfig({
     vueDevTools(),
   ],
   base: '/ratatosk.2.0/',
+  build: {
+    outDir: 'dist',
+    assetsDir: 'assets',
+    sourcemap: false,
+  },
   resolve: {
     alias: {
       '@': fileURLToPath(new URL('./src', import.meta.url))
