@@ -54,9 +54,19 @@ export function useFaceRecognition() {
 
       console.log('Face Recognition Initialisierung gestartet...')
       
+      // Prüfe Kamera-Berechtigung
+      if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+        throw new Error('Kamera-API nicht unterstützt in diesem Browser')
+      }
+      
       // Safari-Erkennung und spezielle Behandlung
       const isSafari = /^((?!chrome|android).)*safari/i.test(navigator.userAgent)
       console.log('Browser erkannt:', navigator.userAgent, 'Safari:', isSafari)
+      
+      // Prüfe verfügbare Kameras
+      const devices = await navigator.mediaDevices.enumerateDevices()
+      const videoDevices = devices.filter(device => device.kind === 'videoinput')
+      console.log('Verfügbare Kameras:', videoDevices.length)
 
       // Create video element first
       videoElement = document.createElement('video')
@@ -73,7 +83,9 @@ export function useFaceRecognition() {
         const constraints = [
           { video: { facingMode: 'user', width: { ideal: 640 }, height: { ideal: 480 } } },
           { video: { facingMode: 'user' } },
-          { video: true }
+          { video: true },
+          { video: { width: { ideal: 640 }, height: { ideal: 480 } } },
+          { video: { width: 640, height: 480 } }
         ]
         
         let streamObtained = false
@@ -96,6 +108,24 @@ export function useFaceRecognition() {
 
         // Connect video to stream
         videoElement.srcObject = stream
+        
+        // Warte auf Video-Load
+        await new Promise((resolve, reject) => {
+          videoElement.onloadedmetadata = () => {
+            console.log('Video-Metadaten geladen')
+            resolve(true)
+          }
+          videoElement.onerror = (error) => {
+            console.error('Video-Load-Fehler:', error)
+            reject(error)
+          }
+          // Timeout nach 5 Sekunden
+          setTimeout(() => {
+            if (videoElement.readyState < 2) {
+              reject(new Error('Video-Load-Timeout'))
+            }
+          }, 5000)
+        })
         
         // Safari-spezifische Video-Initialisierung
         videoElement.muted = true
