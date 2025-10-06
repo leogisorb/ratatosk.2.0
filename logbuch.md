@@ -2,6 +2,25 @@
 
 $ cd /Users/leopoldbrosig/Documents/uni/Bachelor/Ratatosk && npm run dev
 
+## 2025-01-31 - Standardeinstellungen angepasst
+
+### Problem
+- User möchte Standardeinstellungen für Leuchtdauer und Blinzeln anpassen
+- Aktuelle Standardeinstellungen waren nicht optimal für die Nutzung
+
+### Lösung
+- **Leuchtdauer**: 3000ms (3 Sekunden) - bereits korrekt eingestellt
+- **Blinzeln**: 0.7 Sekunden (von 0.5 auf 0.7 geändert)
+- **Settings Store**: Beide Werte in Standardeinstellungen und resetSettings() angepasst
+
+### Technische Details
+- **autoModeSpeed**: 3000ms (3 Sekunden) - unverändert
+- **blinkSensitivity**: 0.7 Sekunden (von 0.5 auf 0.7 erhöht)
+- **Konsistenz**: Änderungen sowohl in Standardeinstellungen als auch in resetSettings() Funktion
+
+### Status
+✅ **Abgeschlossen** - Standardeinstellungen angepasst und zu GitHub gepusht
+
 ## 2025-01-31 - Dark Mode Toggle Button implementiert
 
 ### Problem
