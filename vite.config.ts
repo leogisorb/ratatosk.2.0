@@ -10,7 +10,7 @@ export default defineConfig({
     vue(),
     vueDevTools(),
   ],
-  base: process.env.NODE_ENV === 'production' ? '/ratatosk.2.0/' : '/',
+  base: '/ratatosk.2.0/',
   resolve: {
     alias: {
       '@': fileURLToPath(new URL('./src', import.meta.url))
