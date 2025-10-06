@@ -8,6 +8,7 @@ import GefuehleView from '../features/feelings/views/GefuehleView.vue'
 import SchmerzView from '../features/pain-assessment/views/SchmerzView.vue'
 import HygieneView from '../features/hygiene/views/HygieneView.vue'
 import UmgebungView from '../features/environment/views/UmgebungView.vue'
+import GegenstaendeView from '../features/environment/views/GegenstaendeView.vue'
 import KleidungView from '../features/clothing/views/KleidungView.vue'
 import BewegungView from '../features/movement/views/BewegungView.vue'
 import ErnaehrungView from '../features/nutrition/views/ErnaehrungView.vue'
@@ -70,6 +71,11 @@ const router = createRouter({
       path: '/umgebung',
       name: 'umgebung',
       component: UmgebungView,
+    },
+    {
+      path: '/gegenstaende',
+      name: 'gegenstaende',
+      component: GegenstaendeView,
     },
     {
       path: '/kleidung',

@@ -48,7 +48,8 @@ const umgebungItems = [
     title: 'GEGENSTÄNDE',
     description: 'Gegenstände verwalten',
     icon: 'eyeglasses.png',
-    emoji: '👓'
+    emoji: '👓',
+    route: '/gegenstaende'
   },
   {
     id: 'bett',
@@ -162,6 +163,10 @@ function selectUmgebung(umgebungId: string) {
   }
   
   switch (umgebungId) {
+    case 'gegenstaende':
+      console.log('Navigating to /gegenstaende')
+      router.push('/gegenstaende')
+      break
     case 'zurueck':
       console.log('Navigating back to /app')
       router.push('/app')
@@ -170,11 +175,6 @@ function selectUmgebung(umgebungId: string) {
       console.log('Navigating to Zimmer')
       // Hier könnte später eine spezifische Zimmer-View navigiert werden
       speakText('Zimmer ausgewählt')
-      break
-    case 'gegenstaende':
-      console.log('Navigating to Gegenstände')
-      // Hier könnte später eine spezifische Gegenstände-View navigiert werden
-      speakText('Gegenstände ausgewählt')
       break
     case 'bett':
       console.log('Navigating to Bett')
