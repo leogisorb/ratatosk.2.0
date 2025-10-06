@@ -3,8 +3,7 @@ import { ref, onMounted, onUnmounted, computed } from 'vue'
 import { useRouter } from 'vue-router'
 import { useFaceRecognition } from '../../face-recognition/composables/useFaceRecognition'
 import { useSettingsStore } from '../../settings/stores/settings'
-import PainScale from '../components/PainScale.vue'
-import { keyboardGridConfig, getKeyboardTileStyle } from '@/config/gridConfig'
+import { keyboardGridConfig, getKeyboardTileStyle } from '../../../config/gridConfig'
 
 // Router
 const router = useRouter()
@@ -24,13 +23,11 @@ const closedFrames = ref(0)
 const eyesClosed = ref(false)
 const isAutoModePaused = ref(false)
 const restartTimeout = ref<number | null>(null)
-const showPainScale = ref(false)
-const selectedBodyPartForPain = ref('')
 
 // Verbesserte Blink-Detection Parameter - zentral gesteuert
 const blinkThreshold = computed(() => Math.ceil(settingsStore.settings.blinkSensitivity * 10)) // Konvertiere Sekunden zu Frames (10 FPS)
 const lastBlinkTime = ref(0)
-const blinkCooldown = 1500 // 1.5 Sekunden Cooldown zwischen Blinks
+const blinkCooldown = computed(() => settingsStore.settings.blinkSensitivity * 1000)
 
 // Text-to-Speech
 const speechSynthesis = window.speechSynthesis
@@ -39,24 +36,19 @@ const isTTSEnabled = ref(true)
 // Verwende die Keyboard-Grid-Konfiguration
 const gridConfig = keyboardGridConfig
 
-// Beine-Bereiche basierend auf dem gezeigten Interface
+// Beine-Bereiche mit SVG-Icons - 3 Zeilen Layout
 const beineBereiche = [
-  // Zeile 1: Zehen, Fußballen, Fußrücken
+  // Zeile 1: Zehen, Fußballen, Fußrücken, Knöchel, Unterschenkel
   { id: 'zehen', text: 'Zehen', type: 'beinebereich' },
   { id: 'fussballen', text: 'Fußballen', type: 'beinebereich' },
   { id: 'fussruecken', text: 'Fußrücken', type: 'beinebereich' },
-  
-  // Zeile 2: Knöchel, Unterschenkel, Knie
   { id: 'knoechel', text: 'Knöchel', type: 'beinebereich' },
   { id: 'unterschenkel', text: 'Unterschenkel', type: 'beinebereich' },
+  
+  // Zeile 2: Knie, Oberschenkel, Geschl.organ, Zurück
   { id: 'knie', text: 'Knie', type: 'beinebereich' },
-  
-  // Zeile 3: Oberschenkel, Hüfte, Geschl.organ
   { id: 'oberschenkel', text: 'Oberschenkel', type: 'beinebereich' },
-  { id: 'huefte', text: 'Hüfte', type: 'beinebereich' },
   { id: 'geschl_organ', text: 'Geschl.organ', type: 'beinebereich' },
-  
-  // Zurück
   { id: 'zurueck', text: 'zurück', type: 'navigation' }
 ]
 
@@ -163,46 +155,28 @@ function selectBeineBereich(bereichId: string) {
     default:
       console.log('Selected Beinebereich:', bereichId)
       
-      // Schmerzskala anzeigen (ohne TTS der Körperteil-Auswahl)
-      selectedBodyPartForPain.value = selectedItem?.text || ''
-      showPainScale.value = true
+      // Bein-Bereich ausgewählt - zur PainScale navigieren
+      console.log('Bein-Bereich ausgewählt:', selectedItem?.text)
+      speakText(`${selectedItem?.text} ausgewählt`)
+      
+      // Face Recognition stoppen bevor Navigation
+      if (faceRecognition.isActive.value) {
+        faceRecognition.stop()
+      }
+      
+      // Nach TTS zur PainScale navigieren
+      setTimeout(() => {
+        router.push({
+          path: '/pain-scale',
+          query: {
+            bodyPart: selectedItem?.text || '',
+            returnRoute: '/beine-schmerz'
+          }
+        })
+      }, 2000)
   }
 }
 
-// Schmerzskala Callbacks
-function onPainScaleComplete(painLevel: number) {
-  console.log('🎯 BeineSchmerzView: onPainScaleComplete called with level:', painLevel, 'for body part:', selectedBodyPartForPain.value)
-  
-  // Zurück zur Beine-Auswahl (ohne TTS, da PainScale bereits das Level vorgelesen hat)
-  console.log('🚪 BeineSchmerzView: Closing PainScale and returning to body part selection')
-  showPainScale.value = false
-  selectedBodyPartForPain.value = ''
-  
-  // Auto-Modus nach 3 Sekunden wieder starten
-  setTimeout(() => {
-    if (isAutoMode.value) {
-      console.log('🔄 BeineSchmerzView: Restarting auto mode')
-      currentTileIndex.value = 0
-      isAutoModePaused.value = false
-      startAutoMode()
-    }
-  }, 3000)
-}
-
-function onPainScaleBack() {
-  console.log('Pain scale back button clicked')
-  showPainScale.value = false
-  selectedBodyPartForPain.value = ''
-  
-  // Auto-Modus nach 5 Sekunden wieder starten
-  setTimeout(() => {
-    if (isAutoMode.value) {
-      currentTileIndex.value = 0
-      isAutoModePaused.value = false
-      startAutoMode()
-    }
-  }, 5000)
-}
 
 // Blink Detection
 const handleBlink = () => {
@@ -211,7 +185,7 @@ const handleBlink = () => {
   if (faceRecognition.isBlinking()) {
     closedFrames.value++
     
-    if (now - lastBlinkTime.value < blinkCooldown) {
+    if (now - lastBlinkTime.value < blinkCooldown.value) {
       return
     }
     
@@ -250,7 +224,10 @@ onMounted(() => {
     faceRecognition.start()
   }
   
-  startAutoMode()
+  // Auto-Modus nach 2 Sekunden starten (für Rückkehr von PainScale)
+  setTimeout(() => {
+    startAutoMode()
+  }, 2000)
   
   const blinkCheckInterval = setInterval(() => {
     handleBlink()
@@ -262,24 +239,11 @@ onMounted(() => {
 onUnmounted(() => {
   document.removeEventListener('contextmenu', handleRightClick)
   stopAutoMode()
-  // Stoppe auch die PainScale falls sie aktiv ist
-  if (showPainScale.value) {
-    showPainScale.value = false
-  }
 })
 </script>
 
 <template>
-  <!-- Schmerzskala anzeigen wenn ein Körperteil ausgewählt wurde -->
-  <PainScale 
-    v-show="showPainScale"
-    :selectedBodyPart="selectedBodyPartForPain"
-    @complete="onPainScaleComplete"
-    @back="onPainScaleBack"
-  />
-  
-  <!-- Normale Beine-Auswahl anzeigen -->
-  <div v-show="!showPainScale" class="min-h-screen bg-white dark:bg-gray-900 flex flex-col">
+  <div class="min-h-screen bg-white dark:bg-gray-900 flex flex-col">
     <!-- Header -->
     <header class="bg-gray-200 shadow-2xl flex-shrink-0" style="box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);">
       <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -360,30 +324,55 @@ onUnmounted(() => {
 
         <!-- Beine-Bereiche Tastatur -->
         <div class="space-y-20 mt-32 mb-48">
-          <!-- Zeile 1: Zehen, Fußballen, Fußrücken -->
+          <!-- Zeile 1: Zehen, Fußballen, Fußrücken, Knöchel, Unterschenkel -->
           <div class="flex justify-center space-x-32">
             <button
-              v-for="(item, index) in beineBereiche.slice(0, 3)"
+              v-for="(item, index) in beineBereiche.slice(0, 5)"
               :key="item.id"
               @click="selectBeineBereich(item.id)"
-              class="transition-all duration-300 font-medium hover:scale-110"
-                :style="getKeyboardTileStyle(index, currentTileIndex, gridConfig)"
+              class="transition-all duration-300 font-medium hover:scale-110 flex flex-col items-center"
+              :style="getKeyboardTileStyle(index, currentTileIndex, gridConfig)"
               :class="currentTileIndex === index ? 'text-orange-500 scale-110' : 'text-black hover:text-gray-600'"
             >
-              {{ item.text }}
+              <!-- SVG für Zehen -->
+              <div v-if="item.id === 'zehen'" class="mx-auto mb-2" style="width: 150px; height: 150px; max-width: 150px; max-height: 150px;">
+                <img src="/ZEHEN.svg" alt="Zehen" class="w-full h-full object-contain" />
+              </div>
+              
+              <!-- SVG für Fußballen -->
+              <div v-else-if="item.id === 'fussballen'" class="mx-auto mb-2" style="width: 150px; height: 150px; max-width: 150px; max-height: 150px;">
+                <img src="/FUSBALLEN.svg" alt="Fußballen" class="w-full h-full object-contain" />
+              </div>
+              
+              <!-- SVG für Fußrücken -->
+              <div v-else-if="item.id === 'fussruecken'" class="mx-auto mb-2" style="width: 150px; height: 150px; max-width: 150px; max-height: 150px;">
+                <img src="/FUSRÜCKEN.svg" alt="Fußrücken" class="w-full h-full object-contain" />
+              </div>
+              
+              <!-- SVG für Knöchel -->
+              <div v-else-if="item.id === 'knoechel'" class="mx-auto mb-2" style="width: 150px; height: 150px; max-width: 150px; max-height: 150px;">
+                <img src="/KNÖCHEL.svg" alt="Knöchel" class="w-full h-full object-contain" />
+              </div>
+              
+              <!-- SVG für Unterschenkel -->
+              <div v-else-if="item.id === 'unterschenkel'" class="mx-auto mb-2" style="width: 150px; height: 150px; max-width: 150px; max-height: 150px;">
+                <img src="/UNTERSCHENKEL.svg" alt="Unterschenkel" class="w-full h-full object-contain" />
+              </div>
+              
+              <span class="text-xl font-bold">{{ item.text }}</span>
             </button>
           </div>
 
-          <!-- Zeile 2: Knöchel, Unterschenkel, Knie -->
+          <!-- Zeile 2: Knie, Oberschenkel, Geschl.organ, Zurück -->
           <div class="flex justify-center space-x-32">
             <button
-              v-for="(item, index) in beineBereiche.slice(3, 6)"
+              v-for="(item, index) in beineBereiche.slice(5, 9)"
               :key="item.id"
               @click="selectBeineBereich(item.id)"
-              class="transition-all duration-300 font-medium hover:scale-110"
+              class="transition-all duration-300 font-medium hover:scale-110 flex flex-col items-center"
               :style="{
                 fontSize: '2.646rem',
-                background: currentTileIndex === index + 3 ? '#f3f4f6' : 'white',
+                background: currentTileIndex === index + 5 ? '#f3f4f6' : 'white',
                 border: '2px solid #d1d5db',
                 borderRadius: '15px',
                 outline: 'none',
@@ -391,55 +380,35 @@ onUnmounted(() => {
                 padding: '12.6px 18.9px',
                 margin: '0'
               }"
-              :class="currentTileIndex === index + 3 ? 'text-orange-500 scale-110' : 'text-black hover:text-gray-600'"
+              :class="currentTileIndex === index + 5 ? 'text-orange-500 scale-110' : 'text-black hover:text-gray-600'"
             >
-              {{ item.text }}
+              <!-- SVG für Knie -->
+              <div v-if="item.id === 'knie'" class="mx-auto mb-2" style="width: 150px; height: 150px; max-width: 150px; max-height: 150px;">
+                <img src="/KNIE.svg" alt="Knie" class="w-full h-full object-contain" />
+              </div>
+              
+              <!-- SVG für Oberschenkel -->
+              <div v-else-if="item.id === 'oberschenkel'" class="mx-auto mb-2" style="width: 150px; height: 150px; max-width: 150px; max-height: 150px;">
+                <img src="/OBERSCHENKEL.svg" alt="Oberschenkel" class="w-full h-full object-contain" />
+              </div>
+              
+              <!-- SVG für Geschlechtsorgan -->
+              <div v-else-if="item.id === 'geschl_organ'" class="mx-auto mb-2" style="width: 150px; height: 150px; max-width: 150px; max-height: 150px;">
+                <img src="/GESCHLECHTSORGAN.svg" alt="Geschlechtsorgan" class="w-full h-full object-contain" />
+              </div>
+              
+              <!-- SVG für Zurück -->
+              <div v-else-if="item.id === 'zurueck'" class="mx-auto mb-2" style="width: 150px; height: 150px; max-width: 150px; max-height: 150px;">
+                <svg width="150" height="150" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                  <path d="M19 12H5M12 19l-7-7 7-7" stroke="#FE0000" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                </svg>
+              </div>
+              
+              <span class="text-xl font-bold">{{ item.text }}</span>
             </button>
           </div>
 
-          <!-- Zeile 3: Oberschenkel, Hüfte, Geschl.organ -->
-          <div class="flex justify-center space-x-32">
-            <button
-              v-for="(item, index) in beineBereiche.slice(6, 9)"
-              :key="item.id"
-              @click="selectBeineBereich(item.id)"
-              class="transition-all duration-300 font-medium hover:scale-110"
-              :style="{
-                fontSize: '2.646rem',
-                background: currentTileIndex === index + 6 ? '#f3f4f6' : 'white',
-                border: '2px solid #d1d5db',
-                borderRadius: '15px',
-                outline: 'none',
-                boxShadow: 'none',
-                padding: '12.6px 18.9px',
-                margin: '0'
-              }"
-              :class="currentTileIndex === index + 6 ? 'text-orange-500 scale-110' : 'text-black hover:text-gray-600'"
-            >
-              {{ item.text }}
-            </button>
-          </div>
 
-          <!-- Zeile 4: Zurück -->
-          <div class="flex justify-center">
-            <button
-              @click="selectBeineBereich('zurueck')"
-              class="transition-all duration-300 font-medium hover:scale-110"
-              :style="{
-                fontSize: '2.646rem',
-                background: currentTileIndex === 9 ? '#f3f4f6' : 'white',
-                border: '2px solid #d1d5db',
-                borderRadius: '15px',
-                outline: 'none',
-                boxShadow: 'none',
-                padding: '12.6px 18.9px',
-                margin: '0'
-              }"
-              :class="currentTileIndex === 9 ? 'text-orange-500 scale-110' : 'text-black hover:text-gray-600'"
-            >
-              {{ beineBereiche[9].text }}
-            </button>
-          </div>
         </div>
 
         <!-- Abstandshalter -->

@@ -1,5 +1,5 @@
 import { ref, onMounted, onUnmounted, readonly } from 'vue'
-import type { FaceRecognitionState, EyeState, FaceLandmarks } from '../shared/types/index'
+import type { FaceRecognitionState, EyeState, FaceLandmarks } from '../../../shared/types/index'
 
 export function useFaceRecognition() {
   // State
@@ -53,6 +53,10 @@ export function useFaceRecognition() {
       error.value = null
 
       console.log('Face Recognition Initialisierung gestartet...')
+      
+      // Safari-Erkennung und spezielle Behandlung
+      const isSafari = /^((?!chrome|android).)*safari/i.test(navigator.userAgent)
+      console.log('Browser erkannt:', navigator.userAgent, 'Safari:', isSafari)
 
       // Create video element first
       videoElement = document.createElement('video')
@@ -61,18 +65,108 @@ export function useFaceRecognition() {
 
       console.log('Video-Element erstellt')
 
-      // Try to get camera access first
-      const stream = await navigator.mediaDevices.getUserMedia({ 
-        video: { facingMode: 'user' } 
-      })
+      // Safari-kompatible Kamera-Initialisierung
+      let stream: MediaStream
+      
+      try {
+        // Erste Versuche mit verschiedenen Konfigurationen für Safari
+        const constraints = [
+          { video: { facingMode: 'user', width: { ideal: 640 }, height: { ideal: 480 } } },
+          { video: { facingMode: 'user' } },
+          { video: true }
+        ]
+        
+        let streamObtained = false
+        for (const constraint of constraints) {
+          try {
+            console.log('Versuche Kamera-Zugriff mit:', constraint)
+            stream = await navigator.mediaDevices.getUserMedia(constraint)
+            console.log('Kamera-Stream erhalten mit:', constraint)
+            streamObtained = true
+            break
+          } catch (err) {
+            console.warn('Kamera-Zugriff fehlgeschlagen mit:', constraint, err)
+            continue
+          }
+        }
+        
+        if (!streamObtained) {
+          throw new Error('Kamera-Zugriff auf allen Konfigurationen fehlgeschlagen')
+        }
 
-      console.log('Kamera-Stream erhalten')
+        // Connect video to stream
+        videoElement.srcObject = stream
+        
+        // Safari-spezifische Video-Initialisierung
+        videoElement.muted = true
+        videoElement.playsInline = true
+        videoElement.setAttribute('playsinline', 'true')
+        videoElement.setAttribute('webkit-playsinline', 'true')
+        videoElement.setAttribute('x-webkit-airplay', 'deny')
+        
+        // Safari-spezifische zusätzliche Attribute
+        if (isSafari) {
+          videoElement.setAttribute('autoplay', 'true')
+          videoElement.setAttribute('muted', 'true')
+          videoElement.setAttribute('loop', 'false')
+          console.log('Safari-spezifische Video-Attribute gesetzt')
+        }
+        
+        // Warten bis Video geladen ist
+        await new Promise((resolve, reject) => {
+          videoElement!.onloadedmetadata = () => {
+            console.log('Video-Metadaten geladen')
+            resolve(true)
+          }
+          videoElement!.onerror = (err) => {
+            console.error('Video-Fehler:', err)
+            reject(err)
+          }
+          
+          // Fallback für Safari
+          setTimeout(() => {
+            if (videoElement!.readyState >= 2) {
+              resolve(true)
+            }
+          }, 1000)
+        })
+        
+        await videoElement.play()
+        console.log('Kamera erfolgreich gestartet')
 
-      // Connect video to stream
-      videoElement.srcObject = stream
-      await videoElement.play()
-
-      console.log('Kamera erfolgreich gestartet')
+      } catch (err) {
+        console.error('Kamera-Initialisierung fehlgeschlagen:', err)
+        
+        // Safari-spezifische Fehlerbehandlung
+        if (isSafari) {
+          console.log('Safari-spezifische Fehlerbehandlung aktiviert')
+          // Versuche alternative Initialisierung für Safari
+          try {
+            // Warte kurz und versuche erneut
+            await new Promise(resolve => setTimeout(resolve, 1000))
+            console.log('Safari: Versuche alternative Kamera-Initialisierung...')
+            
+            // Alternative Safari-Konfiguration
+            const safariStream = await navigator.mediaDevices.getUserMedia({ 
+              video: { 
+                facingMode: 'user',
+                width: { min: 320, ideal: 640, max: 1280 },
+                height: { min: 240, ideal: 480, max: 720 }
+              } 
+            })
+            
+            videoElement.srcObject = safariStream
+            await videoElement.play()
+            console.log('Safari: Alternative Kamera-Initialisierung erfolgreich')
+            
+          } catch (safariErr) {
+            console.error('Safari: Alternative Kamera-Initialisierung fehlgeschlagen:', safariErr)
+            throw new Error(`Safari Kamera-Zugriff fehlgeschlagen: ${safariErr instanceof Error ? safariErr.message : 'Unbekannter Safari-Fehler'}`)
+          }
+        } else {
+          throw new Error(`Kamera-Zugriff fehlgeschlagen: ${err instanceof Error ? err.message : 'Unbekannter Fehler'}`)
+        }
+      }
 
       // Try to initialize MediaPipe
       try {
@@ -184,8 +278,19 @@ export function useFaceRecognition() {
 
   // Start face recognition
   async function start() {
-    if (!isActive.value) {
+    if (isActive.value) {
+      console.log('Face Recognition bereits aktiv')
+      return
+    }
+    
+    console.log('Starte Face Recognition...')
+    try {
       await initializeMediaPipe()
+      console.log('Face Recognition erfolgreich gestartet')
+    } catch (err) {
+      console.error('Face Recognition Start fehlgeschlagen:', err)
+      error.value = `Face Recognition konnte nicht gestartet werden: ${err instanceof Error ? err.message : 'Unbekannter Fehler'}`
+      throw err
     }
   }
 

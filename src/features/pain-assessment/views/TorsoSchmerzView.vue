@@ -3,8 +3,7 @@ import { ref, onMounted, onUnmounted, computed } from 'vue'
 import { useRouter } from 'vue-router'
 import { useFaceRecognition } from '../../face-recognition/composables/useFaceRecognition'
 import { useSettingsStore } from '../../settings/stores/settings'
-import PainScale from '../components/PainScale.vue'
-import { keyboardGridConfig, getKeyboardTileStyle } from '@/config/gridConfig'
+import { keyboardGridConfig, getKeyboardTileStyle } from '../../../config/gridConfig'
 
 // Router
 const router = useRouter()
@@ -24,13 +23,11 @@ const closedFrames = ref(0)
 const eyesClosed = ref(false)
 const isAutoModePaused = ref(false)
 const restartTimeout = ref<number | null>(null)
-const showPainScale = ref(false)
-const selectedBodyPartForPain = ref('')
 
 // Verbesserte Blink-Detection Parameter - zentral gesteuert
 const blinkThreshold = computed(() => Math.ceil(settingsStore.settings.blinkSensitivity * 10)) // Konvertiere Sekunden zu Frames (10 FPS)
 const lastBlinkTime = ref(0)
-const blinkCooldown = 1500 // 1.5 Sekunden Cooldown zwischen Blinks
+const blinkCooldown = computed(() => settingsStore.settings.blinkSensitivity * 1000)
 
 // Text-to-Speech
 const speechSynthesis = window.speechSynthesis
@@ -41,22 +38,18 @@ const gridConfig = keyboardGridConfig
 
 // Torso-Bereiche basierend auf dem gezeigten Interface
 const torsoBereiche = [
-  // Zeile 1: Herz, Brust, Schultern
+  // Zeile 1: Herz, Brust, Schultern, Lunge, Magen
   { id: 'herz', text: 'Herz', type: 'torsobereich' },
   { id: 'brust', text: 'Brust', type: 'torsobereich' },
   { id: 'schultern', text: 'Schultern', type: 'torsobereich' },
-  
-  // Zeile 2: Lunge, Magen, Blase, Hüfte
   { id: 'lunge', text: 'Lunge', type: 'torsobereich' },
   { id: 'magen', text: 'Magen', type: 'torsobereich' },
+  
+  // Zeile 2: Blase, Hüfte, Schulterblätter, Wirbelsäule, Zurück
   { id: 'blase', text: 'Blase', type: 'torsobereich' },
   { id: 'huefte', text: 'Hüfte', type: 'torsobereich' },
-  
-  // Zeile 3: Schulterblätter, Wirbelsäule
   { id: 'schulterblaetter', text: 'Schulterblätter', type: 'torsobereich' },
   { id: 'wirbelsaeule', text: 'Wirbelsäule', type: 'torsobereich' },
-  
-  // Zurück
   { id: 'zurueck', text: 'zurück', type: 'navigation' }
 ]
 
@@ -163,44 +156,29 @@ function selectTorsoBereich(bereichId: string) {
     default:
       console.log('Selected Torsobereich:', bereichId)
       
-      // Schmerzskala anzeigen (ohne TTS der Körperteil-Auswahl)
-      selectedBodyPartForPain.value = selectedItem?.text || ''
-      showPainScale.value = true
+      // Torso-Bereich ausgewählt - zur PainScale navigieren
+      console.log('Torso-Bereich ausgewählt:', selectedItem?.text)
+      speakText(`${selectedItem?.text} ausgewählt`)
+      
+      // Face Recognition stoppen bevor Navigation
+      if (faceRecognition.isActive.value) {
+        faceRecognition.stop()
+      }
+      
+      // Nach TTS zur PainScale navigieren
+      setTimeout(() => {
+        router.push({
+          path: '/pain-scale',
+          query: {
+            bodyPart: selectedItem?.text || '',
+            returnRoute: '/torso-schmerz'
+          }
+        })
+      }, 2000)
   }
 }
 
 // Schmerzskala Callbacks
-function onPainScaleComplete(painLevel: number) {
-  console.log('Pain scale completed with level:', painLevel, 'for body part:', selectedBodyPartForPain.value)
-  
-  // Zurück zur Torso-Auswahl (ohne TTS, da PainScale bereits das Level vorgelesen hat)
-  showPainScale.value = false
-  selectedBodyPartForPain.value = ''
-  
-  // Auto-Modus nach 3 Sekunden wieder starten
-  setTimeout(() => {
-    if (isAutoMode.value) {
-      currentTileIndex.value = 0
-      isAutoModePaused.value = false
-      startAutoMode()
-    }
-  }, 3000)
-}
-
-function onPainScaleBack() {
-  console.log('Pain scale back button clicked')
-  showPainScale.value = false
-  selectedBodyPartForPain.value = ''
-  
-  // Auto-Modus nach 5 Sekunden wieder starten
-  setTimeout(() => {
-    if (isAutoMode.value) {
-      currentTileIndex.value = 0
-      isAutoModePaused.value = false
-      startAutoMode()
-    }
-  }, 5000)
-}
 
 // Blink Detection
 const handleBlink = () => {
@@ -209,7 +187,7 @@ const handleBlink = () => {
   if (faceRecognition.isBlinking()) {
     closedFrames.value++
     
-    if (now - lastBlinkTime.value < blinkCooldown) {
+    if (now - lastBlinkTime.value < blinkCooldown.value) {
       return
     }
     
@@ -248,7 +226,10 @@ onMounted(() => {
     faceRecognition.start()
   }
   
-  startAutoMode()
+  // Auto-Modus nach 2 Sekunden starten (für Rückkehr von PainScale)
+  setTimeout(() => {
+    startAutoMode()
+  }, 2000)
   
   const blinkCheckInterval = setInterval(() => {
     handleBlink()
@@ -260,24 +241,12 @@ onMounted(() => {
 onUnmounted(() => {
   document.removeEventListener('contextmenu', handleRightClick)
   stopAutoMode()
-  // Stoppe auch die PainScale falls sie aktiv ist
-  if (showPainScale.value) {
-    showPainScale.value = false
-  }
 })
 </script>
 
 <template>
   <!-- Schmerzskala anzeigen wenn ein Körperteil ausgewählt wurde -->
-  <PainScale 
-    v-show="showPainScale"
-    :selectedBodyPart="selectedBodyPartForPain"
-    @complete="onPainScaleComplete"
-    @back="onPainScaleBack"
-  />
-  
-  <!-- Normale Torso-Auswahl anzeigen -->
-  <div v-show="!showPainScale" class="min-h-screen bg-white dark:bg-gray-900 flex flex-col">
+  <div class="min-h-screen bg-white dark:bg-gray-900 flex flex-col">
     <!-- Header -->
     <header class="bg-gray-200 shadow-2xl flex-shrink-0" style="box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);">
       <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -358,30 +327,59 @@ onUnmounted(() => {
 
         <!-- Torso-Bereiche Tastatur -->
         <div class="space-y-20 mt-32 mb-48">
-          <!-- Zeile 1: Herz, Brust, Schultern -->
+          <!-- Zeile 1: Herz, Brust, Schultern, Lunge, Magen -->
           <div class="flex justify-center space-x-32">
             <button
-              v-for="(item, index) in torsoBereiche.slice(0, 3)"
+              v-for="(item, index) in torsoBereiche.slice(0, 5)"
               :key="item.id"
               @click="selectTorsoBereich(item.id)"
-              class="transition-all duration-300 font-medium hover:scale-110"
-                :style="getKeyboardTileStyle(index, currentTileIndex, gridConfig)"
+              class="transition-all duration-300 font-medium hover:scale-110 flex flex-col items-center"
+              :style="getKeyboardTileStyle(index, currentTileIndex, gridConfig)"
               :class="currentTileIndex === index ? 'text-orange-500 scale-110' : 'text-black hover:text-gray-600'"
             >
-              {{ item.text }}
+              <!-- SVG für Herz -->
+              <div v-if="item.id === 'herz'" class="mx-auto mb-2" style="width: 150px; height: 150px; max-width: 150px; max-height: 150px;">
+                <img src="/anatomisches-herz.svg" alt="Herz" class="w-full h-full object-contain" />
+              </div>
+              
+              <!-- SVG für Brust -->
+              <div v-else-if="item.id === 'brust'" class="mx-auto mb-2" style="width: 150px; height: 150px; max-width: 150px; max-height: 150px;">
+                <div class="w-full h-full bg-gray-300 rounded-full flex items-center justify-center">
+                  <span class="text-gray-600 text-2xl">{{ item.text.charAt(0) }}</span>
+                </div>
+              </div>
+              
+              <!-- SVG für Schultern -->
+              <div v-else-if="item.id === 'schultern'" class="mx-auto mb-2" style="width: 150px; height: 150px; max-width: 150px; max-height: 150px;">
+                <div class="w-full h-full bg-gray-300 rounded-full flex items-center justify-center">
+                  <span class="text-gray-600 text-2xl">{{ item.text.charAt(0) }}</span>
+                </div>
+              </div>
+              
+              <!-- SVG für Lunge -->
+              <div v-else-if="item.id === 'lunge'" class="mx-auto mb-2" style="width: 150px; height: 150px; max-width: 150px; max-height: 150px;">
+                <img src="/lunge.svg" alt="Lunge" class="w-full h-full object-contain" />
+              </div>
+              
+              <!-- SVG für Magen -->
+              <div v-else-if="item.id === 'magen'" class="mx-auto mb-2" style="width: 150px; height: 150px; max-width: 150px; max-height: 150px;">
+                <img src="/magen.svg" alt="Magen" class="w-full h-full object-contain" />
+              </div>
+              
+              <span class="text-xl font-bold">{{ item.text }}</span>
             </button>
           </div>
 
-          <!-- Zeile 2: Lunge, Magen, Blase, Hüfte -->
+          <!-- Zeile 2: Blase, Hüfte, Schulterblätter, Wirbelsäule, Zurück -->
           <div class="flex justify-center space-x-32">
             <button
-              v-for="(item, index) in torsoBereiche.slice(3, 7)"
+              v-for="(item, index) in torsoBereiche.slice(5, 10)"
               :key="item.id"
               @click="selectTorsoBereich(item.id)"
-              class="transition-all duration-300 font-medium hover:scale-110"
+              class="transition-all duration-300 font-medium hover:scale-110 flex flex-col items-center"
               :style="{
                 fontSize: '2.646rem',
-                background: currentTileIndex === index + 3 ? '#f3f4f6' : 'white',
+                background: currentTileIndex === index + 5 ? '#f3f4f6' : 'white',
                 border: '2px solid #d1d5db',
                 borderRadius: '15px',
                 outline: 'none',
@@ -389,55 +387,45 @@ onUnmounted(() => {
                 padding: '12.6px 18.9px',
                 margin: '0'
               }"
-              :class="currentTileIndex === index + 3 ? 'text-orange-500 scale-110' : 'text-black hover:text-gray-600'"
+              :class="currentTileIndex === index + 5 ? 'text-orange-500 scale-110' : 'text-black hover:text-gray-600'"
             >
-              {{ item.text }}
+              <!-- SVG für Blase -->
+              <div v-if="item.id === 'blase'" class="mx-auto mb-2" style="width: 150px; height: 150px; max-width: 150px; max-height: 150px;">
+                <div class="w-full h-full bg-gray-300 rounded-full flex items-center justify-center">
+                  <span class="text-gray-600 text-2xl">{{ item.text.charAt(0) }}</span>
+                </div>
+              </div>
+              
+              <!-- SVG für Hüfte -->
+              <div v-else-if="item.id === 'huefte'" class="mx-auto mb-2" style="width: 150px; height: 150px; max-width: 150px; max-height: 150px;">
+                <div class="w-full h-full bg-gray-300 rounded-full flex items-center justify-center">
+                  <span class="text-gray-600 text-2xl">{{ item.text.charAt(0) }}</span>
+                </div>
+              </div>
+              
+              <!-- SVG für Schulterblätter -->
+              <div v-else-if="item.id === 'schulterblaetter'" class="mx-auto mb-2" style="width: 150px; height: 150px; max-width: 150px; max-height: 150px;">
+                <div class="w-full h-full bg-gray-300 rounded-full flex items-center justify-center">
+                  <span class="text-gray-600 text-2xl">{{ item.text.charAt(0) }}</span>
+                </div>
+              </div>
+              
+              <!-- SVG für Wirbelsäule -->
+              <div v-else-if="item.id === 'wirbelsaeule'" class="mx-auto mb-2" style="width: 150px; height: 150px; max-width: 150px; max-height: 150px;">
+                <img src="/wirbelsaule.svg" alt="Wirbelsäule" class="w-full h-full object-contain" />
+              </div>
+              
+              <!-- SVG für Zurück -->
+              <div v-else-if="item.id === 'zurueck'" class="mx-auto mb-2" style="width: 150px; height: 150px; max-width: 150px; max-height: 150px;">
+                <svg width="150" height="150" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                  <path d="M19 12H5M12 19l-7-7 7-7" stroke="#FE0000" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                </svg>
+              </div>
+              
+              <span class="text-xl font-bold">{{ item.text }}</span>
             </button>
           </div>
 
-          <!-- Zeile 3: Schulterblätter, Wirbelsäule -->
-          <div class="flex justify-center space-x-32">
-            <button
-              v-for="(item, index) in torsoBereiche.slice(7, 9)"
-              :key="item.id"
-              @click="selectTorsoBereich(item.id)"
-              class="transition-all duration-300 font-medium hover:scale-110"
-              :style="{
-                fontSize: '2.646rem',
-                background: currentTileIndex === index + 7 ? '#f3f4f6' : 'white',
-                border: '2px solid #d1d5db',
-                borderRadius: '15px',
-                outline: 'none',
-                boxShadow: 'none',
-                padding: '12.6px 18.9px',
-                margin: '0'
-              }"
-              :class="currentTileIndex === index + 7 ? 'text-orange-500 scale-110' : 'text-black hover:text-gray-600'"
-            >
-              {{ item.text }}
-            </button>
-          </div>
-
-          <!-- Zeile 4: Zurück -->
-          <div class="flex justify-center">
-            <button
-              @click="selectTorsoBereich('zurueck')"
-              class="transition-all duration-300 font-medium hover:scale-110"
-              :style="{
-                fontSize: '2.646rem',
-                background: currentTileIndex === 9 ? '#f3f4f6' : 'white',
-                border: '2px solid #d1d5db',
-                borderRadius: '15px',
-                outline: 'none',
-                boxShadow: 'none',
-                padding: '12.6px 18.9px',
-                margin: '0'
-              }"
-              :class="currentTileIndex === 9 ? 'text-orange-500 scale-110' : 'text-black hover:text-gray-600'"
-            >
-              {{ torsoBereiche[9].text }}
-            </button>
-          </div>
         </div>
 
         <!-- Abstandshalter -->

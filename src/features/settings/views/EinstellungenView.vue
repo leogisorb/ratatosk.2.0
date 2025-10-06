@@ -3,13 +3,16 @@ import { ref, computed, onMounted, onUnmounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { useSettingsStore } from '../stores/settings'
 import { useFaceRecognition } from '../../face-recognition/composables/useFaceRecognition'
-import { mainGridConfig, getTileStyle as getTileStyleConfig, getIconStyle as getIconStyleConfig, getTextStyle as getTextStyleConfig, getIconColor } from '@/config/gridConfig'
+import { useKeyboardDesignStore } from '../../communication/stores/keyboardDesign'
+import KeyboardDesign from '../../communication/components/KeyboardDesign.vue'
+import { mainGridConfig, getTileStyle as getTileStyleConfig, getIconStyle as getIconStyleConfig, getTextStyle as getTextStyleConfig, getIconColor } from '../../../config/gridConfig'
 
 // Router
 const router = useRouter()
 
 // Stores
 const settingsStore = useSettingsStore()
+const keyboardDesignStore = useKeyboardDesignStore()
 
 // Face Recognition
 const faceRecognition = useFaceRecognition()
@@ -25,7 +28,7 @@ const isAutoModePaused = ref(false)
 // Verbesserte Blink-Detection Parameter
 const blinkThreshold = 5 // Mindestens 5 Frames (0.5 Sekunden) für gültigen Blink
 const lastBlinkTime = ref(0)
-const blinkCooldown = 1500 // 1.5 Sekunden Cooldown zwischen Blinks
+const blinkCooldown = computed(() => settingsStore.settings.blinkSensitivity * 1000)
 
 // Text-to-Speech
 const speechSynthesis = window.speechSynthesis
@@ -61,16 +64,16 @@ const einstellungsItems = [
     icon: 'settings-sliders.svg'
   },
   {
+    id: 'kamera',
+    title: 'KAMERA',
+    description: 'Kamera-Einstellungen',
+    icon: 'settings-sliders.svg'
+  },
+  {
     id: 'impressum',
     title: 'IMPRESSUM',
     description: 'Impressum anzeigen',
     icon: 'user.svg'
-  },
-  {
-    id: 'kameraposition',
-    title: 'KAMERAPOSITION',
-    description: 'Kameraposition einstellen',
-    icon: 'settings-sliders.svg'
   }
 ]
 
@@ -219,17 +222,22 @@ function selectEinstellung(einstellungId: string) {
       console.log('Farbmodus selected')
       speakText('Farbmodus ausgewählt')
       toggleDarkMode()
+      // Auto-Modus sofort neu starten nach Farbmodus-Wechsel
+      setTimeout(() => {
+        isAutoModePaused.value = false
+        startAutoMode()
+      }, 2000) // 2 Sekunden warten
+      break
+    case 'kamera':
+      console.log('Kamera selected')
+      speakText('Kamera ausgewählt')
+      stopAutoMode() // Stoppe Auto-Modus komplett vor Navigation
+      router.push('/kamera')
       break
     case 'impressum':
       console.log('Impressum selected')
       speakText('Impressum ausgewählt')
       // Hier könnte das Impressum geöffnet werden
-      break
-    case 'kameraposition':
-      console.log('Kameraposition selected')
-      speakText('Kameraposition ausgewählt')
-      stopAutoMode() // Stoppe Auto-Modus komplett vor Navigation
-      router.push('/kameraposition')
       break
     case 'zurueck':
       console.log('Zurück selected')
@@ -240,7 +248,7 @@ function selectEinstellung(einstellungId: string) {
   }
   
   // Nur bei lokalen Aktionen (nicht bei Navigation) Auto-Modus nach 10 Sekunden neu starten
-  if (einstellungId === 'tastatur-design' || einstellungId === 'farbmodus' || einstellungId === 'impressum') {
+  if (einstellungId === 'tastatur-design' || einstellungId === 'impressum') {
     setTimeout(() => {
       isAutoModePaused.value = false
       startAutoMode()
@@ -250,12 +258,12 @@ function selectEinstellung(einstellungId: string) {
 
 // Blink Detection
 const handleBlink = () => {
-  if (!faceRecognition.isBlinking.value) return
+  if (!faceRecognition.isBlinking()) return
   
   const now = Date.now()
   
   // Cooldown prüfen
-  if (now - lastBlinkTime.value < blinkCooldown) {
+  if (now - lastBlinkTime.value < blinkCooldown.value) {
     return
   }
   
@@ -434,7 +442,7 @@ onUnmounted(() => {
           <div 
             class="flex flex-col justify-start items-center cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
             :style="getTileStyle(0)"
-            @click="selectEinstellung('tastatur-design')"
+            @click="$router.push('/tastaturdesign')"
           >
             <div 
               class="flex items-center justify-center rounded-lg"
@@ -454,7 +462,7 @@ onUnmounted(() => {
               class="text-center font-source-code font-normal"
               :style="getTextStyle(0)"
             >
-              TASTATUR-DESIGN
+              TASTATUR
             </div>
           </div>
 
@@ -542,10 +550,38 @@ onUnmounted(() => {
             </div>
           </div>
 
-          <!-- IMPRESSUM -->
+          <!-- KAMERA -->
           <div 
             class="flex flex-col justify-start items-center cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
             :style="getTileStyle(4)"
+            @click="selectEinstellung('kamera')"
+          >
+            <div 
+              class="flex items-center justify-center rounded-lg"
+              :style="{
+                width: gridConfig.iconWidth,
+                height: gridConfig.iconHeight,
+                backgroundColor: gridConfig.iconBackgroundColor
+              }"
+            >
+              <img 
+                src="/settings-sliders.svg" 
+                alt="KAMERA" 
+                :style="getIconStyle(4)"
+              />
+            </div>
+            <div 
+              class="text-center font-source-code font-normal"
+              :style="getTextStyle(4)"
+            >
+              KAMERA
+            </div>
+          </div>
+
+          <!-- IMPRESSUM -->
+          <div 
+            class="flex flex-col justify-start items-center cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
+            :style="getTileStyle(5)"
             @click="selectEinstellung('impressum')"
           >
             <div 
@@ -559,34 +595,6 @@ onUnmounted(() => {
               <img 
                 src="/user.svg" 
                 alt="IMPRESSUM" 
-                :style="getIconStyle(4)"
-              />
-            </div>
-            <div 
-              class="text-center font-source-code font-normal"
-              :style="getTextStyle(4)"
-            >
-              IMPRESSUM
-            </div>
-          </div>
-
-          <!-- KAMERAPOSITION -->
-          <div 
-            class="flex flex-col justify-start items-center cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
-            :style="getTileStyle(5)"
-            @click="selectEinstellung('kameraposition')"
-          >
-            <div 
-              class="flex items-center justify-center rounded-lg"
-              :style="{
-                width: gridConfig.iconWidth,
-                height: gridConfig.iconHeight,
-                backgroundColor: gridConfig.iconBackgroundColor
-              }"
-            >
-              <img 
-                src="/settings-sliders.svg" 
-                alt="KAMERAPOSITION" 
                 :style="getIconStyle(5)"
               />
             </div>
@@ -594,10 +602,11 @@ onUnmounted(() => {
               class="text-center font-source-code font-normal"
               :style="getTextStyle(5)"
             >
-              KAMERAPOSITION
+              IMPRESSUM
             </div>
           </div>
         </div>
+
 
         <!-- Status Message -->
         <div class="mt-8 text-center">

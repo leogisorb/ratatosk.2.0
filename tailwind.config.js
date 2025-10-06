@@ -4,6 +4,21 @@ export default {
     "./index.html",
     "./src/**/*.{vue,js,ts,jsx,tsx}",
   ],
+  safelist: [
+    // Active key styles
+    'shadow-xl',
+    'scale-110',
+    'shadow-lg',
+    // Passive key styles
+    'bg-white',
+    'dark:bg-gray-700',
+    'border-gray-400',
+    'dark:border-gray-500',
+    'text-gray-800',
+    'dark:text-gray-200',
+    'hover:bg-gray-50',
+    'dark:hover:bg-gray-600'
+  ],
   theme: {
     extend: {
       colors: {

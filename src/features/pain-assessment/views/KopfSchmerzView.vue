@@ -3,8 +3,7 @@ import { ref, onMounted, onUnmounted, computed } from 'vue'
 import { useRouter } from 'vue-router'
 import { useFaceRecognition } from '../../face-recognition/composables/useFaceRecognition'
 import { useSettingsStore } from '../../settings/stores/settings'
-import PainScale from '../components/PainScale.vue'
-import { keyboardGridConfig, getKeyboardTileStyle } from '@/config/gridConfig'
+import { keyboardGridConfig, getKeyboardTileStyle } from '../../../config/gridConfig'
 
 // Router
 const router = useRouter()
@@ -24,13 +23,11 @@ const closedFrames = ref(0)
 const eyesClosed = ref(false)
 const isAutoModePaused = ref(false)
 const restartTimeout = ref<number | null>(null)
-const showPainScale = ref(false)
-const selectedBodyPartForPain = ref('')
 
 // Verbesserte Blink-Detection Parameter - zentral gesteuert
 const blinkThreshold = computed(() => Math.ceil(settingsStore.settings.blinkSensitivity * 10)) // Konvertiere Sekunden zu Frames (10 FPS)
 const lastBlinkTime = ref(0)
-const blinkCooldown = 1500 // 1.5 Sekunden Cooldown zwischen Blinks
+const blinkCooldown = computed(() => settingsStore.settings.blinkSensitivity * 1000)
 
 // Text-to-Speech
 const speechSynthesis = window.speechSynthesis
@@ -41,27 +38,20 @@ const gridConfig = keyboardGridConfig
 
 // Kopf-Bereiche basierend auf dem gezeigten Interface
 const kopfBereiche = [
-  // Zeile 1: Stirn, Hinterkopf, Schläfe
+  // Zeile 1: Stirn, Hinterkopf, Schläfe, Nacken, Speiseröhre
   { id: 'stirn', text: 'Stirn', type: 'kopfbereich' },
   { id: 'hinterkopf', text: 'Hinterkopf', type: 'kopfbereich' },
   { id: 'schlaefe', text: 'Schläfe', type: 'kopfbereich' },
-  
-  // Zeile 2: Ohr, Auge, Nebenhöhlen
-  { id: 'ohr', text: 'Ohr', type: 'kopfbereich' },
-  { id: 'auge', text: 'Auge', type: 'kopfbereich' },
-  { id: 'nebenhoehlen', text: 'Nebenhöhlen', type: 'kopfbereich' },
-  
-  // Zeile 3: Nase, Mund, Kiefer
-  { id: 'nase', text: 'Nase', type: 'kopfbereich' },
-  { id: 'mund', text: 'Mund', type: 'kopfbereich' },
-  { id: 'kiefer', text: 'Kiefer', type: 'kopfbereich' },
-  
-  // Zeile 4: Nacken, Hals, Speiseröhre
   { id: 'nacken', text: 'Nacken', type: 'kopfbereich' },
-  { id: 'hals', text: 'Hals', type: 'kopfbereich' },
   { id: 'speiseroehre', text: 'Speiseröhre', type: 'kopfbereich' },
   
-  // Zurück
+  // Zeile 2: Kiefer, Nebenhöhlen, Hals, Auge, Nase, Mund, Zurück
+  { id: 'kiefer', text: 'Kiefer', type: 'kopfbereich' },
+  { id: 'nebenhoehlen', text: 'Nebenhöhlen', type: 'kopfbereich' },
+  { id: 'hals', text: 'Hals', type: 'kopfbereich' },
+  { id: 'auge', text: 'Auge', type: 'kopfbereich' },
+  { id: 'nase', text: 'Nase', type: 'kopfbereich' },
+  { id: 'mund', text: 'Mund', type: 'kopfbereich' },
   { id: 'zurueck', text: 'zurück', type: 'navigation' }
 ]
 
@@ -69,11 +59,6 @@ const kopfBereiche = [
 const speakText = (text: string) => {
   console.log('KopfSchmerzView speakText called with:', text, 'isTTSEnabled:', isTTSEnabled.value, 'speechSynthesis:', speechSynthesis)
   
-  // Wenn PainScale aktiv ist, keine TTS von KopfSchmerzView
-  if (showPainScale.value) {
-    console.log('PainScale is active, ignoring KopfSchmerzView TTS')
-    return
-  }
   
   if (!isTTSEnabled.value || !speechSynthesis) {
     console.log('KopfSchmerzView TTS disabled or speechSynthesis not available')
@@ -123,7 +108,7 @@ const startAutoMode = () => {
   currentTileIndex.value = 0
   
   const cycleTiles = () => {
-    if (!isAutoMode.value || isAutoModePaused.value || showPainScale.value) {
+    if (!isAutoMode.value || isAutoModePaused.value) {
       return
     }
     currentTileIndex.value = (currentTileIndex.value + 1) % kopfBereiche.length
@@ -183,44 +168,28 @@ function selectKopfBereich(bereichId: string) {
     default:
       console.log('Selected Kopfbereich:', bereichId)
       
-      // Schmerzskala anzeigen (ohne TTS der Körperteil-Auswahl)
-      selectedBodyPartForPain.value = selectedItem?.text || ''
-      showPainScale.value = true
+      // Kopf-Bereich ausgewählt - zur PainScale navigieren
+      console.log('Kopf-Bereich ausgewählt:', selectedItem?.text)
+      speakText(`${selectedItem?.text} ausgewählt`)
+      
+      // Face Recognition stoppen bevor Navigation
+      if (faceRecognition.isActive.value) {
+        faceRecognition.stop()
+      }
+      
+      // Nach TTS zur PainScale navigieren
+  setTimeout(() => {
+        router.push({
+          path: '/pain-scale',
+          query: {
+            bodyPart: selectedItem?.text || '',
+            returnRoute: '/kopf-schmerz'
+          }
+        })
+      }, 2000)
   }
 }
 
-// Schmerzskala Callbacks
-function onPainScaleComplete(painLevel: number) {
-  console.log('Pain scale completed with level:', painLevel, 'for body part:', selectedBodyPartForPain.value)
-  
-  // Zurück zur Kopf-Auswahl (ohne TTS, da PainScale bereits das Level vorgelesen hat)
-  showPainScale.value = false
-  selectedBodyPartForPain.value = ''
-  
-  // Auto-Modus nach 3 Sekunden wieder starten
-  setTimeout(() => {
-    if (isAutoMode.value) {
-      currentTileIndex.value = 0
-      isAutoModePaused.value = false
-      startAutoMode()
-    }
-  }, 3000)
-}
-
-function onPainScaleBack() {
-  console.log('Pain scale back button clicked')
-  showPainScale.value = false
-  selectedBodyPartForPain.value = ''
-  
-  // Auto-Modus nach 5 Sekunden wieder starten
-  setTimeout(() => {
-    if (isAutoMode.value) {
-      currentTileIndex.value = 0
-      isAutoModePaused.value = false
-      startAutoMode()
-    }
-  }, 5000)
-}
 
 // Blink Detection
 const handleBlink = () => {
@@ -229,16 +198,11 @@ const handleBlink = () => {
   if (faceRecognition.isBlinking()) {
     closedFrames.value++
     
-    if (now - lastBlinkTime.value < blinkCooldown) {
+    if (now - lastBlinkTime.value < blinkCooldown.value) {
       return
     }
     
     if (closedFrames.value >= blinkThreshold.value && !eyesClosed.value) {
-      // Wenn PainScale aktiv ist, nicht reagieren
-      if (showPainScale.value) {
-        console.log('PainScale is active, ignoring blink')
-        return
-      }
       
       const currentItem = kopfBereiche[currentTileIndex.value]
       console.log('Blink activation for tile:', currentTileIndex.value, 'bereichId:', currentItem.id, 'text:', currentItem.text)
@@ -262,11 +226,6 @@ const handleRightClick = (event: MouseEvent) => {
   event.preventDefault()
   console.log('Right click detected - treating as blink')
   
-  // Wenn PainScale aktiv ist, nicht reagieren
-  if (showPainScale.value) {
-    console.log('PainScale is active, ignoring right click')
-    return
-  }
   
   const currentItem = kopfBereiche[currentTileIndex.value]
   console.log('Right click activation for tile:', currentTileIndex.value, 'bereichId:', currentItem.id, 'text:', currentItem.text)
@@ -281,8 +240,10 @@ onMounted(() => {
     faceRecognition.start()
   }
   
-  
+  // Auto-Modus nach 2 Sekunden starten (für Rückkehr von PainScale)
+  setTimeout(() => {
   startAutoMode()
+  }, 2000)
   
   const blinkCheckInterval = setInterval(() => {
     handleBlink()
@@ -294,24 +255,11 @@ onMounted(() => {
 onUnmounted(() => {
   document.removeEventListener('contextmenu', handleRightClick)
   stopAutoMode()
-  // Stoppe auch die PainScale falls sie aktiv ist
-  if (showPainScale.value) {
-    showPainScale.value = false
-  }
 })
 </script>
 
 <template>
-  <!-- Schmerzskala anzeigen wenn ein Körperteil ausgewählt wurde -->
-  <PainScale 
-    v-show="showPainScale"
-    :selectedBodyPart="selectedBodyPartForPain"
-    @complete="onPainScaleComplete"
-    @back="onPainScaleBack"
-  />
-  
-  <!-- Normale Kopf-Auswahl anzeigen -->
-  <div v-show="!showPainScale" class="min-h-screen bg-white dark:bg-gray-900 flex flex-col">
+  <div class="min-h-screen bg-white dark:bg-gray-900 flex flex-col">
     <!-- Header -->
     <header class="bg-gray-200 shadow-2xl flex-shrink-0" style="box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);">
       <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -392,30 +340,64 @@ onUnmounted(() => {
 
         <!-- Kopf-Bereiche Tastatur -->
         <div class="space-y-20 mt-32 mb-48">
-          <!-- Zeile 1: Stirn, Hinterkopf, Schläfe -->
+          <!-- Zeile 1: Stirn, Hinterkopf, Schläfe, Nacken, Speiseröhre -->
           <div class="flex justify-center space-x-32">
             <button
-              v-for="(item, index) in kopfBereiche.slice(0, 3)"
+              v-for="(item, index) in kopfBereiche.slice(0, 5)"
               :key="item.id"
               @click="selectKopfBereich(item.id)"
-              class="transition-all duration-300 font-medium hover:scale-110"
+              class="transition-all duration-300 font-medium hover:scale-110 flex flex-col items-center"
                 :style="getKeyboardTileStyle(index, currentTileIndex, gridConfig)"
               :class="currentTileIndex === index ? 'text-orange-500 scale-110' : 'text-black hover:text-gray-600'"
             >
+              <!-- Icon für Stirn -->
+              <div v-if="item.id === 'stirn'" class="mx-auto mb-2" style="width: 150px; height: 150px; max-width: 150px; max-height: 150px;">
+                <img src="/stirn.svg" alt="Stirn" style="width: 100%; height: 100%; object-fit: contain;" />
+              </div>
+              <!-- Icon für Hinterkopf -->
+              <div v-else-if="item.id === 'hinterkopf'" class="mx-auto mb-2" style="width: 150px; height: 150px; max-width: 150px; max-height: 150px;">
+                <img src="/hinterkopf.svg" alt="Hinterkopf" style="width: 100%; height: 100%; object-fit: contain;" />
+              </div>
+              <!-- Icon für Schläfe -->
+              <div v-else-if="item.id === 'schlaefe'" class="mx-auto mb-2" style="width: 150px; height: 150px; max-width: 150px; max-height: 150px;">
+                <img src="/schläfe.svg" alt="Schläfe" style="width: 100%; height: 100%; object-fit: contain;" />
+              </div>
+              <!-- Icon für Nacken -->
+              <div v-else-if="item.id === 'nacken'" class="mx-auto mb-2" style="width: 150px; height: 150px; max-width: 150px; max-height: 150px;">
+                <img src="/nacken.svg" alt="Nacken" style="width: 100%; height: 100%; object-fit: contain;" />
+              </div>
+              <!-- Icon für Speiseröhre -->
+              <div v-else-if="item.id === 'speiseroehre'" class="mx-auto mb-2" style="width: 150px; height: 150px; max-width: 150px; max-height: 150px;">
+                <img src="/speiseröhre.svg" alt="Speiseröhre" style="width: 100%; height: 100%; object-fit: contain;" />
+              </div>
+              <!-- Icon für Nebenhöhlen -->
+              <div v-else-if="item.id === 'nebenhoehlen'" class="mx-auto mb-2" style="width: 150px; height: 150px; max-width: 150px; max-height: 150px;">
+                <img src="/nebenhoehlen.svg" alt="Nebenhöhlen" style="width: 100%; height: 100%; object-fit: contain;" />
+              </div>
+              <!-- Icon für Hals -->
+              <div v-else-if="item.id === 'hals'" class="mx-auto mb-2" style="width: 150px; height: 150px; max-width: 150px; max-height: 150px;">
+                <img src="/hals.svg" alt="Hals" style="width: 100%; height: 100%; object-fit: contain;" />
+              </div>
+              <!-- Fallback für andere Bereiche -->
+              <div v-else class="w-16 h-16 mx-auto mb-2 flex items-center justify-center">
+                <div class="w-12 h-12 bg-gray-300 rounded-full flex items-center justify-center">
+                  <span class="text-gray-600 text-xs">{{ item.text.charAt(0) }}</span>
+                </div>
+              </div>
               {{ item.text }}
             </button>
           </div>
 
-          <!-- Zeile 2: Ohr, Auge, Nebenhöhlen -->
+          <!-- Zeile 2: Kiefer, Nebenhöhlen, Hals, Auge, Nase, Mund, Zurück -->
           <div class="flex justify-center space-x-32">
             <button
-              v-for="(item, index) in kopfBereiche.slice(3, 6)"
+              v-for="(item, index) in kopfBereiche.slice(5, 12)"
               :key="item.id"
               @click="selectKopfBereich(item.id)"
-              class="transition-all duration-300 font-medium hover:scale-110"
+              class="transition-all duration-300 font-medium hover:scale-110 flex flex-col items-center"
               :style="{
                 fontSize: '2.646rem',
-                background: currentTileIndex === index + 3 ? '#f3f4f6' : 'white',
+                background: currentTileIndex === index + 5 ? '#f3f4f6' : 'white',
                 border: '2px solid #d1d5db',
                 borderRadius: '15px',
                 outline: 'none',
@@ -423,78 +405,50 @@ onUnmounted(() => {
                 padding: '12.6px 18.9px',
                 margin: '0'
               }"
-              :class="currentTileIndex === index + 3 ? 'text-orange-500 scale-110' : 'text-black hover:text-gray-600'"
+              :class="currentTileIndex === index + 5 ? 'text-orange-500 scale-110' : 'text-black hover:text-gray-600'"
             >
+              <!-- Icon für Kiefer -->
+              <div v-if="item.id === 'kiefer'" class="mx-auto mb-2" style="width: 150px; height: 150px; max-width: 150px; max-height: 150px;">
+                <img src="/kiefer.svg" alt="Kiefer" style="width: 100%; height: 100%; object-fit: contain;" />
+              </div>
+              <!-- Icon für Nebenhöhlen -->
+              <div v-else-if="item.id === 'nebenhoehlen'" class="mx-auto mb-2" style="width: 150px; height: 150px; max-width: 150px; max-height: 150px;">
+                <img src="/nebenhoehlen.svg" alt="Nebenhöhlen" style="width: 100%; height: 100%; object-fit: contain;" />
+              </div>
+              <!-- Icon für Hals -->
+              <div v-else-if="item.id === 'hals'" class="mx-auto mb-2" style="width: 150px; height: 150px; max-width: 150px; max-height: 150px;">
+                <img src="/hals.svg" alt="Hals" style="width: 100%; height: 100%; object-fit: contain;" />
+              </div>
+              <!-- Icon für Auge -->
+              <div v-else-if="item.id === 'auge'" class="mx-auto mb-2" style="width: 150px; height: 150px; max-width: 150px; max-height: 150px;">
+                <img src="/auge.svg" alt="Auge" style="width: 100%; height: 100%; object-fit: contain;" />
+              </div>
+              <!-- Icon für Nase -->
+              <div v-else-if="item.id === 'nase'" class="mx-auto mb-2" style="width: 150px; height: 150px; max-width: 150px; max-height: 150px;">
+                <img src="/nase.svg" alt="Nase" style="width: 100%; height: 100%; object-fit: contain;" />
+              </div>
+              <!-- Icon für Mund -->
+              <div v-else-if="item.id === 'mund'" class="mx-auto mb-2" style="width: 150px; height: 150px; max-width: 150px; max-height: 150px;">
+                <img src="/mund.svg" alt="Mund" style="width: 100%; height: 100%; object-fit: contain;" />
+              </div>
+              <!-- SVG für Zurück -->
+              <div v-else-if="item.id === 'zurueck'" class="mx-auto mb-2" style="width: 150px; height: 150px; max-width: 150px; max-height: 150px;">
+                <svg width="150" height="150" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                  <path d="M19 12H5M12 19l-7-7 7-7" stroke="#FE0000" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                </svg>
+              </div>
+              <!-- Fallback für andere Bereiche -->
+              <div v-else class="w-16 h-16 mx-auto mb-2 flex items-center justify-center">
+                <div class="w-12 h-12 bg-gray-300 rounded-full flex items-center justify-center">
+                  <span class="text-gray-600 text-xs">{{ item.text.charAt(0) }}</span>
+          </div>
+          </div>
               {{ item.text }}
             </button>
           </div>
 
-          <!-- Zeile 3: Nase, Mund, Kiefer -->
-          <div class="flex justify-center space-x-32">
-            <button
-              v-for="(item, index) in kopfBereiche.slice(6, 9)"
-              :key="item.id"
-              @click="selectKopfBereich(item.id)"
-              class="transition-all duration-300 font-medium hover:scale-110"
-              :style="{
-                fontSize: '2.646rem',
-                background: currentTileIndex === index + 6 ? '#f3f4f6' : 'white',
-                border: '2px solid #d1d5db',
-                borderRadius: '15px',
-                outline: 'none',
-                boxShadow: 'none',
-                padding: '12.6px 18.9px',
-                margin: '0'
-              }"
-              :class="currentTileIndex === index + 6 ? 'text-orange-500 scale-110' : 'text-black hover:text-gray-600'"
-            >
-              {{ item.text }}
-            </button>
-          </div>
 
-          <!-- Zeile 4: Nacken, Hals, Speiseröhre -->
-          <div class="flex justify-center space-x-32">
-            <button
-              v-for="(item, index) in kopfBereiche.slice(9, 12)"
-              :key="item.id"
-              @click="selectKopfBereich(item.id)"
-              class="transition-all duration-300 font-medium hover:scale-110"
-              :style="{
-                fontSize: '2.646rem',
-                background: currentTileIndex === index + 9 ? '#f3f4f6' : 'white',
-                border: '2px solid #d1d5db',
-                borderRadius: '15px',
-                outline: 'none',
-                boxShadow: 'none',
-                padding: '12.6px 18.9px',
-                margin: '0'
-              }"
-              :class="currentTileIndex === index + 9 ? 'text-orange-500 scale-110' : 'text-black hover:text-gray-600'"
-            >
-              {{ item.text }}
-            </button>
-          </div>
 
-          <!-- Zeile 5: Zurück -->
-          <div class="flex justify-center">
-            <button
-              @click="selectKopfBereich('zurueck')"
-              class="transition-all duration-300 font-medium hover:scale-110"
-              :style="{
-                fontSize: '2.646rem',
-                background: currentTileIndex === 12 ? '#f3f4f6' : 'white',
-                border: '2px solid #d1d5db',
-                borderRadius: '15px',
-                outline: 'none',
-                boxShadow: 'none',
-                padding: '12.6px 18.9px',
-                margin: '0'
-              }"
-              :class="currentTileIndex === 12 ? 'text-orange-500 scale-110' : 'text-black hover:text-gray-600'"
-            >
-              {{ kopfBereiche[12].text }}
-            </button>
-          </div>
         </div>
 
         <!-- Abstandshalter -->

@@ -1,6 +1,6 @@
 import { defineStore } from 'pinia'
 import { ref, computed } from 'vue'
-import type { UserSettings } from '../../shared/types/index'
+import type { UserSettings } from '../../../shared/types/index'
 
 export const useSettingsStore = defineStore('settings', () => {
   // State

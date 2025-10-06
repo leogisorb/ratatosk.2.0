@@ -79,7 +79,7 @@ export class UserService {
     return this.createUser({
       name: 'Default User',
       preferences: {
-        theme: 'light',
+        theme: 'light' as const,
         language: 'de',
         soundEnabled: true,
         voiceEnabled: false,
@@ -90,7 +90,7 @@ export class UserService {
         highContrast: false,
         largeText: false,
         reducedMotion: false,
-        keyboardLayout: 'alphabetical'
+        keyboardLayout: 'alphabetical' as const
       }
     })
   }
@@ -107,7 +107,7 @@ export class UserService {
     const defaultUser = {
       ...user,
       preferences: {
-        theme: 'light',
+        theme: 'light' as const,
         language: 'de',
         soundEnabled: true,
         voiceEnabled: false,
@@ -118,7 +118,7 @@ export class UserService {
         highContrast: false,
         largeText: false,
         reducedMotion: false,
-        keyboardLayout: 'alphabetical'
+        keyboardLayout: 'alphabetical' as const
       },
       updatedAt: new Date()
     }
