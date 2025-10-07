@@ -4,7 +4,7 @@ import { useRouter } from 'vue-router'
 import { useFaceRecognition } from '../../face-recognition/composables/useFaceRecognition'
 import { useSettingsStore } from '../../settings/stores/settings'
 import { keyboardGridConfig, getKeyboardTileStyle } from '../../../config/gridConfig'
-import GlobalHeader from '../../../shared/components/GlobalHeader.vue
+import GlobalHeader from '../../../shared/components/GlobalHeader.vue'
 
 // Router
 const router = useRouter()
