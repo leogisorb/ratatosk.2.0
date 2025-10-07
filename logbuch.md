@@ -2,6 +2,45 @@
 
 $ cd /Users/leopoldbrosig/Documents/uni/Bachelor/Ratatosk && npm run dev
 
+## 2025-01-31 - Einheitlicher Header implementiert
+
+### Problem
+- User möchte einen einheitlichen Header auf allen Views
+- Header soll "RATATOSK" und das Logo links anzeigen
+- Schatten-Effekt wie in der Warning-View
+- Alle Views sollen konsistent aussehen
+
+### Lösung
+- **GlobalHeader Component**: Neue wiederverwendbare Header-Komponente erstellt
+- **Einheitliches Design**: "RATATOSK" + Logo links, Schatten-Effekt
+- **Alle Views aktualisiert**: HomeView, WarningView, UmgebungView, SchmerzView, KameraView, EinstellungenView
+- **Schmerz-Views**: KopfSchmerzView, ArmeSchmerzView, BeineSchmerzView, TorsoSchmerzView, PainScaleView
+- **Umgebungs-Views**: GegenstaendeView und weitere Environment-Views
+
+### Technische Details
+- **GlobalHeader.vue**: 
+  - Zeigt "RATATOSK" und Logo links an
+  - Schatten-Effekt: `box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05)`
+  - Dark Mode Support
+  - Slot-System für View-spezifische Buttons (Zurück, TTS, etc.)
+
+- **Aktualisierte Views**:
+  - **Navigation**: HomeView (/app) - bereits korrekt
+  - **Warning**: WarningView - GlobalHeader mit Zurück-Button
+  - **Environment**: UmgebungView, GegenstaendeView - GlobalHeader mit Zurück + TTS
+  - **Pain Assessment**: SchmerzView, KopfSchmerzView, ArmeSchmerzView, BeineSchmerzView, TorsoSchmerzView, PainScaleView
+  - **Camera**: KameraView - GlobalHeader mit Zurück + TTS
+  - **Settings**: EinstellungenView - GlobalHeader mit Zurück + TTS
+
+### Vorteile
+- **Konsistenz**: Alle Views haben den gleichen Header
+- **Wartbarkeit**: Änderungen nur in einer Datei nötig
+- **Flexibilität**: Views können spezifische Buttons behalten
+- **Einheitlichkeit**: Gleicher Schatten und Styling überall
+
+### Status
+✅ **Abgeschlossen** - Einheitlicher Header auf allen Views implementiert und zu GitHub gepusht
+
 ## 2025-01-31 - Standardeinstellungen angepasst
 
 ### Problem
