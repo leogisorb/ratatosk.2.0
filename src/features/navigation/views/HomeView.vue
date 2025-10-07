@@ -4,8 +4,7 @@ import { useRouter } from 'vue-router'
 import { useSettingsStore } from '../../settings/stores/settings'
 import { useCommunicationStore } from '../../communication/stores/communication'
 import { useFaceRecognition } from '../../face-recognition/composables/useFaceRecognition'
-import { mainGridConfig, getTileStyle as getTileStyleConfig, getIconStyle as getIconStyleConfig, getTextStyle as getTextStyleConfig, getIconColor } from '../../../config/gridConfig'
-import GlobalHeader from '../../../shared/components/GlobalHeader.vue'
+import AppHeader from '../../../shared/components/AppHeader.vue'
 
 // Router
 const router = useRouter()
@@ -36,8 +35,6 @@ const blinkCooldown = computed(() => settingsStore.settings.blinkSensitivity * 1
 const speechSynthesis = window.speechSynthesis
 const isTTSEnabled = ref(true)
 
-// Verwende die zentrale Grid-Konfiguration
-const gridConfig = mainGridConfig
 
 // Menu Items mit echten SVG-Icons
 const menuItems = [
@@ -86,26 +83,50 @@ const appClasses = computed(() => [
   settingsStore.isLargeText ? 'large-text' : ''
 ])
 
-// Text-to-Speech Functions
+// Text-to-Speech Functions - Browser-safe
 const speakText = (text: string) => {
-  console.log('speakText called with:', text, 'isTTSEnabled:', isTTSEnabled.value, 'speechSynthesis:', speechSynthesis)
+  console.log('HomeView speakText called with:', text, 'isTTSEnabled:', isTTSEnabled.value)
   
   if (!isTTSEnabled.value || !speechSynthesis) {
-    console.log('TTS disabled or speechSynthesis not available')
+    console.log('HomeView TTS disabled or speechSynthesis not available')
     return
   }
   
-  // Stoppe vorherige Sprachausgabe
-  speechSynthesis.cancel()
-  
-  const utterance = new SpeechSynthesisUtterance(text)
-  utterance.lang = 'de-DE'
-  utterance.rate = 0.8 // Etwas langsamer sprechen
-  utterance.pitch = 1.0
-  utterance.volume = 0.8
-  
-  console.log('Speaking:', text)
-  speechSynthesis.speak(utterance)
+  // Warte länger und verwende try-catch
+  setTimeout(() => {
+    try {
+      speechSynthesis.cancel()
+      
+      const utterance = new SpeechSynthesisUtterance(text)
+      utterance.lang = 'de-DE'
+      utterance.rate = 0.8
+      utterance.pitch = 1.0
+      utterance.volume = 1.0
+      
+      // Event Listener für Debugging
+      utterance.onstart = () => console.log('HomeView: Speech started:', text)
+      utterance.onend = () => console.log('HomeView: Speech ended:', text)
+      utterance.onerror = (event) => {
+        console.log('HomeView: Speech error:', event)
+        // Versuche es nochmal nach Fehler
+        setTimeout(() => {
+          console.log('HomeView: Retrying TTS...')
+          speechSynthesis.speak(utterance)
+        }, 500)
+      }
+      
+      console.log('HomeView Speaking:', text)
+      speechSynthesis.speak(utterance)
+    } catch (error) {
+      console.log('HomeView: TTS Error:', error)
+    }
+  }, 200)
+}
+
+// TTS Test Funktion
+const testTTS = () => {
+  console.log('TTS Test Button clicked!')
+  speakText('TTS Test funktioniert! Dies ist ein Test der Sprachausgabe.')
 }
 
 // Auto Mode Functions
@@ -165,40 +186,16 @@ const stopAutoMode = () => {
   speechSynthesis.cancel()
 }
 
-// Verwende die zentrale Styling-Funktion
-const getTileStyle = (index: number) => {
-  return getTileStyleConfig(index, currentTileIndex.value, false, gridConfig)
-}
-
-// Verwende die zentrale Styling-Funktion
-const getIconStyle = (index: number) => {
-  return getIconStyleConfig(index, currentTileIndex.value, false, gridConfig)
-}
-
-// Verwende die zentrale Styling-Funktion
-const getTextStyle = (index: number) => {
-  return getTextStyleConfig(index, currentTileIndex.value, false, gridConfig)
-}
-
-
-// TTS Toggle
-const toggleTTS = () => {
-  console.log('toggleTTS called, current state:', isTTSEnabled.value)
-  isTTSEnabled.value = !isTTSEnabled.value
-  console.log('TTS toggled to:', isTTSEnabled.value)
-  
-  if (!isTTSEnabled.value) {
-    speechSynthesis.cancel()
-    console.log('TTS cancelled')
-  } else {
-    // Test TTS when enabling
-    speakText('Sprachausgabe aktiviert')
-  }
-}
-
 // Methods
 function selectMenu(menuId: string) {
   console.log('selectMenu called with menuId:', menuId)
+  
+  // Setze den aktuellen Tile-Index basierend auf der menuId
+  const index = menuItems.findIndex(item => item.id === menuId)
+  if (index !== -1) {
+    currentTileIndex.value = index
+  }
+  
   currentMenu.value = menuId
   pauseAutoMode() // Pausiere Auto-Modus statt zu stoppen
   
@@ -326,96 +323,41 @@ onUnmounted(() => {
 
 <template>
   <div id="app" :class="appClasses">
-    <!-- Responsive Layout - automatischer Wechsel zwischen Mobile und Desktop -->
-    <div class="min-h-screen bg-white dark:bg-gray-900 flex flex-col">
-      <!-- Global Header -->
-      <GlobalHeader>
-        <!-- Control Buttons -->
-        <div class="flex space-x-2">
-          <!-- TTS Toggle Button -->
-          <button
-            @click="toggleTTS"
-            class="p-2 rounded-lg transition-colors"
-            :class="isTTSEnabled ? 'bg-green-300 hover:bg-green-400' : 'bg-gray-300 hover:bg-gray-400'"
-            :title="isTTSEnabled ? 'Sprachausgabe deaktivieren' : 'Sprachausgabe aktivieren'"
-          >
-            <!-- Speaker Icon für TTS aktiv -->
-            <svg
-              v-if="isTTSEnabled"
-              class="w-6 h-6"
-              :style="{ color: getIconColor(true, settingsStore.isDarkMode) }"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-            >
-              <path
-                stroke-linecap="round"
-                stroke-linejoin="round"
-                stroke-width="2"
-                d="M15.536 8.464a5 5 0 010 7.072m2.828-9.9a9 9 0 010 12.728M5.586 15H4a1 1 0 01-1-1v-4a1 1 0 011-1h1.586l4.707-4.707C10.923 3.663 12 4.109 12 5v14c0 .891-1.077 1.337-1.707.707L5.586 15z"
-              />
-            </svg>
-            <!-- Muted Speaker Icon für TTS deaktiviert -->
-            <svg
-              v-else
-              class="w-6 h-6"
-              :style="{ color: getIconColor(false, settingsStore.isDarkMode) }"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-            >
-              <path
-                stroke-linecap="round"
-                stroke-linejoin="round"
-                stroke-width="2"
-                d="M5.586 15H4a1 1 0 01-1-1v-4a1 1 0 011-1h1.586l4.707-4.707C10.923 3.663 12 4.109 12 5v14c0 .891-1.077 1.337-1.707.707L5.586 15z"
-              />
-              <path
-                stroke-linecap="round"
-                stroke-linejoin="round"
-                stroke-width="2"
-                d="M17 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2"
-              />
-            </svg>
-          </button>
+    <!-- App Header -->
+    <AppHeader />
 
+    <!-- Hauptinhalt -->
+    <main class="main-content">
+        
+        <!-- TTS Test Button -->
+        <div class="tts-test-section">
+          <button @click="testTTS" class="tts-test-button">🔊 TTS Test</button>
+          <p class="tts-test-text">Klicken Sie um TTS zu testen</p>
         </div>
-      </GlobalHeader>
-
-      <!-- Main Content -->
-      <main class="flex-1 flex items-center justify-center">
+        
         <!-- Desktop Layout (3×2 Grid) - wird auf allen Bildschirmen angezeigt -->
-        <div class="max-w-7xl mx-auto p-8">
-          <div 
-            class="grid grid-cols-3" 
-            :style="{
-              gap: gridConfig.tileGap,
-              gridTemplateColumns: `repeat(3, ${gridConfig.tileWidth})`
-            }"
-          >
+        <div class="grid-container">
             <!-- WARNGERÄUSCH -->
             <div 
-              class="flex flex-col justify-start items-center cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
-              :style="getTileStyle(0)"
+              class="menu-tile"
+              :class="currentTileIndex === 0 ? 'tile-active' : 'tile-inactive'"
               @click="selectMenu('warning')"
             >
               <div 
-                class="flex items-center justify-center rounded-lg"
-                :style="{
-                  width: gridConfig.iconWidth,
-                  height: gridConfig.iconHeight,
-                  backgroundColor: gridConfig.iconBackgroundColor
-                }"
+                class="tile-icon-container"
+                :class="currentTileIndex === 0 ? 'icon-active' : 'icon-inactive'"
               >
                 <img 
                   src="/bell.svg" 
                   alt="WARNGERÄUSCH" 
-                  :style="getIconStyle(0)"
+                  class="tile-icon"
+                  :class="currentTileIndex === 0 ? 'icon-inverted' : ''"
                 />
               </div>
               <div 
-                class="text-center font-source-code font-normal"
-                :style="getTextStyle(0)"
+                class="tile-text"
+                :class="currentTileIndex === 0 ? 'text-active' : 'text-inactive'"
+                :style="currentTileIndex === 0 ? 'color: white !important;' : ''"
               >
                 WARNGERÄUSCH
               </div>
@@ -423,27 +365,25 @@ onUnmounted(() => {
 
             <!-- UNTERHALTEN -->
             <div 
-              class="flex flex-col justify-start items-center cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
-              :style="getTileStyle(1)"
+              class="menu-tile"
+              :class="currentTileIndex === 1 ? 'tile-active' : 'tile-inactive'"
               @click="selectMenu('communication')"
             >
               <div 
-                class="flex items-center justify-center rounded-lg"
-                :style="{
-                  width: gridConfig.iconWidth,
-                  height: gridConfig.iconHeight,
-                  backgroundColor: gridConfig.iconBackgroundColor
-                }"
+                class="tile-icon-container"
+                :class="currentTileIndex === 1 ? 'icon-active' : 'icon-inactive'"
               >
                 <img 
                   src="/comment-dots.svg" 
                   alt="UNTERHALTEN" 
-                  :style="getIconStyle(1)"
+                  class="tile-icon"
+                  :class="currentTileIndex === 1 ? 'icon-inverted' : ''"
                 />
               </div>
               <div 
-                class="text-center font-source-code font-normal"
-                :style="getTextStyle(1)"
+                class="tile-text"
+                :class="currentTileIndex === 1 ? 'text-active' : 'text-inactive'"
+                :style="currentTileIndex === 1 ? 'color: white !important;' : ''"
               >
                 UNTERHALTEN
               </div>
@@ -451,27 +391,25 @@ onUnmounted(() => {
 
             <!-- ICH -->
             <div 
-              class="flex flex-col justify-start items-center cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
-              :style="getTileStyle(2)"
+              class="menu-tile"
+              :class="currentTileIndex === 2 ? 'tile-active' : 'tile-inactive'"
               @click="selectMenu('profile')"
             >
               <div 
-                class="flex items-center justify-center rounded-lg"
-                :style="{
-                  width: gridConfig.iconWidth,
-                  height: gridConfig.iconHeight,
-                  backgroundColor: gridConfig.iconBackgroundColor
-                }"
+                class="tile-icon-container"
+                :class="currentTileIndex === 2 ? 'icon-active' : 'icon-inactive'"
               >
                 <img 
                   src="/user.svg" 
                   alt="ICH" 
-                  :style="getIconStyle(2)"
+                  class="tile-icon"
+                  :class="currentTileIndex === 2 ? 'icon-inverted' : ''"
                 />
               </div>
               <div 
-                class="text-center font-source-code font-normal"
-                :style="getTextStyle(2)"
+                class="tile-text"
+                :class="currentTileIndex === 2 ? 'text-active' : 'text-inactive'"
+                :style="currentTileIndex === 2 ? 'color: white !important;' : ''"
               >
                 ICH
               </div>
@@ -479,27 +417,25 @@ onUnmounted(() => {
 
             <!-- SCHMERZEN -->
             <div 
-              class="flex flex-col justify-start items-center cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
-              :style="getTileStyle(3)"
+              class="menu-tile"
+              :class="currentTileIndex === 3 ? 'tile-active' : 'tile-inactive'"
               @click="selectMenu('pain')"
             >
               <div 
-                class="flex items-center justify-center rounded-lg"
-                :style="{
-                  width: gridConfig.iconWidth,
-                  height: gridConfig.iconHeight,
-                  backgroundColor: gridConfig.iconBackgroundColor
-                }"
+                class="tile-icon-container"
+                :class="currentTileIndex === 3 ? 'icon-active' : 'icon-inactive'"
               >
                 <img 
                   src="/headache.svg" 
                   alt="SCHMERZEN" 
-                  :style="getIconStyle(3)"
+                  class="tile-icon"
+                  :class="currentTileIndex === 3 ? 'icon-inverted' : ''"
                 />
               </div>
               <div 
-                class="text-center font-source-code font-normal"
-                :style="getTextStyle(3)"
+                class="tile-text"
+                :class="currentTileIndex === 3 ? 'text-active' : 'text-inactive'"
+                :style="currentTileIndex === 3 ? 'color: white !important;' : ''"
               >
                 SCHMERZEN
               </div>
@@ -507,27 +443,25 @@ onUnmounted(() => {
 
             <!-- UMGEBUNG -->
             <div 
-              class="flex flex-col justify-start items-center cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
-              :style="getTileStyle(4)"
+              class="menu-tile"
+              :class="currentTileIndex === 4 ? 'tile-active' : 'tile-inactive'"
               @click="selectMenu('environment')"
             >
               <div 
-                class="flex items-center justify-center rounded-lg"
-                :style="{
-                  width: gridConfig.iconWidth,
-                  height: gridConfig.iconHeight,
-                  backgroundColor: gridConfig.iconBackgroundColor
-                }"
+                class="tile-icon-container"
+                :class="currentTileIndex === 4 ? 'icon-active' : 'icon-inactive'"
               >
                 <img 
                   src="/house-chimney.svg" 
                   alt="UMGEBUNG" 
-                  :style="getIconStyle(4)"
+                  class="tile-icon"
+                  :class="currentTileIndex === 4 ? 'icon-inverted' : ''"
                 />
               </div>
               <div 
-                class="text-center font-source-code font-normal"
-                :style="getTextStyle(4)"
+                class="tile-text"
+                :class="currentTileIndex === 4 ? 'text-active' : 'text-inactive'"
+                :style="currentTileIndex === 4 ? 'color: white !important;' : ''"
               >
                 UMGEBUNG
               </div>
@@ -535,62 +469,58 @@ onUnmounted(() => {
 
             <!-- EINSTELLUNGEN -->
             <div 
-              class="flex flex-col justify-start items-center cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
-              :style="getTileStyle(5)"
+              class="menu-tile"
+              :class="currentTileIndex === 5 ? 'tile-active' : 'tile-inactive'"
               @click="selectMenu('settings')"
             >
               <div 
-                class="flex items-center justify-center rounded-lg"
-                :style="{
-                  width: gridConfig.iconWidth,
-                  height: gridConfig.iconHeight,
-                  backgroundColor: gridConfig.iconBackgroundColor
-                }"
+                class="tile-icon-container"
+                :class="currentTileIndex === 5 ? 'icon-active' : 'icon-inactive'"
               >
                 <img 
                   src="/settings-sliders.svg" 
                   alt="EINSTELLUNGEN" 
-                  :style="getIconStyle(5)"
+                  class="tile-icon"
+                  :class="currentTileIndex === 5 ? 'icon-inverted' : ''"
                 />
               </div>
               <div 
-                class="text-center font-source-code font-normal"
-                :style="getTextStyle(5)"
+                class="tile-text"
+                :class="currentTileIndex === 5 ? 'text-active' : 'text-inactive'"
+                :style="currentTileIndex === 5 ? 'color: white !important;' : ''"
               >
                 EINSTELLUNGEN
               </div>
             </div>
-          </div>
         </div>
-      </main>
-    </div>
+    </main>
 
     <!-- Content Area (Modal) -->
-    <div v-if="currentMenu !== ''" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-      <div class="bg-white dark:bg-gray-800 rounded-lg p-8 max-w-2xl w-full mx-4 max-h-[80vh] overflow-y-auto">
-        <div class="flex justify-between items-center mb-6">
-          <h2 class="text-2xl font-bold text-gray-900 dark:text-white">
+    <div v-if="currentMenu !== ''" class="modal-overlay">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h2 class="modal-title">
             {{ menuItems.find(item => item.id === currentMenu)?.title }}
           </h2>
           <button 
             @click="currentMenu = ''"
-            class="text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200"
+            class="modal-close"
           >
             ✕
           </button>
         </div>
 
         <!-- Communication Interface -->
-        <div v-if="currentMenu === 'communication'" class="space-y-6">
-          <div class="space-y-4">
+        <div v-if="currentMenu === 'communication'" class="communication-interface">
+          <div class="message-input-section">
             <textarea
               v-model="communicationStore.currentMessage"
               placeholder="Nachricht eingeben..."
-              class="input-field resize-none h-24 dark:bg-gray-700 dark:text-white dark:border-gray-600"
+              class="message-textarea"
               @keydown.enter.prevent="communicationStore.sendCurrentMessage"
             ></textarea>
             
-            <div class="flex space-x-2">
+            <div class="message-buttons">
               <button
                 @click="communicationStore.sendCurrentMessage"
                 class="btn-primary"
@@ -607,39 +537,39 @@ onUnmounted(() => {
           </div>
 
           <!-- Quick Messages -->
-          <div class="space-y-4">
-            <h3 class="text-lg font-semibold text-gray-900 dark:text-white">
+          <div class="quick-messages-section">
+            <h3 class="section-title">
               Schnellnachrichten
             </h3>
-            <div class="grid grid-cols-2 gap-2">
+            <div class="quick-messages-grid">
               <button
                 v-for="message in communicationStore.quickMessages"
                 :key="message.id"
                 @click="communicationStore.addQuickMessage(message.id)"
-                class="p-3 text-left rounded-lg border border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors dark:text-white"
+                class="quick-message-button"
               >
-                <div class="flex items-center space-x-2">
-                  <span class="text-lg">{{ message.icon }}</span>
-                  <span class="text-sm">{{ message.text }}</span>
+                <div class="quick-message-content">
+                  <span class="quick-message-icon">{{ message.icon }}</span>
+                  <span class="quick-message-text">{{ message.text }}</span>
                 </div>
               </button>
             </div>
           </div>
 
           <!-- Message History -->
-          <div class="space-y-4">
-            <h3 class="text-lg font-semibold text-gray-900 dark:text-white">
+          <div class="message-history-section">
+            <h3 class="section-title">
               Nachrichtenverlauf
             </h3>
-            <div class="space-y-2 max-h-64 overflow-y-auto">
+            <div class="message-history">
               <div
                 v-for="message in communicationStore.messages"
                 :key="message.id"
-                class="p-3 rounded-lg bg-gray-50 dark:bg-gray-800 dark:text-white"
+                class="message-item"
               >
-                <div class="flex justify-between items-start">
-                  <p class="text-sm">{{ message.text }}</p>
-                  <span class="text-xs text-gray-500 dark:text-gray-400">
+                <div class="message-content">
+                  <p class="message-text">{{ message.text }}</p>
+                  <span class="message-time">
                     {{ formatTime(message.timestamp) }}
                   </span>
                 </div>
@@ -649,14 +579,14 @@ onUnmounted(() => {
         </div>
 
         <!-- Other Menu Content -->
-        <div v-else class="text-center py-12">
-          <h2 class="text-2xl font-bold text-gray-900 dark:text-white mb-4">
+        <div v-else class="other-menu-content">
+          <h2 class="other-menu-title">
             {{ menuItems.find(item => item.id === currentMenu)?.title }}
           </h2>
-          <p class="text-gray-600 dark:text-gray-300">
+          <p class="other-menu-description">
             {{ menuItems.find(item => item.id === currentMenu)?.description }}
           </p>
-          <p class="text-sm text-gray-500 dark:text-gray-400 mt-4">
+          <p class="other-menu-note">
             Diese Funktion wird noch implementiert...
           </p>
         </div>
@@ -666,46 +596,135 @@ onUnmounted(() => {
 </template>
 
 <style scoped>
-.high-contrast {
-  filter: contrast(150%);
+/* HomeView verwendet jetzt globale CSS-Klassen aus main.css */
+
+/* Spezifische HomeView Styles */
+#app {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
 }
 
-.large-text {
-  font-size: 1.2em;
+.main-content {
+  background-color: #f9fafb;
 }
 
-/* Ratatosk Header mit höchster Spezifität */
-.ratatosk-header-main {
-  background-color: #D9D9D9 !important;
+/* Communication Interface - spezifische Styles */
+.communication-interface {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
 }
 
-/* Custom scrollbar */
-.overflow-y-auto::-webkit-scrollbar {
-  width: 6px;
+.message-input-section {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
 }
 
-.overflow-y-auto::-webkit-scrollbar-track {
-  background: #f1f5f9;
+.message-textarea {
+  resize: none;
+  height: 6rem;
 }
 
-.overflow-y-auto::-webkit-scrollbar-thumb {
-  background: #cbd5e1;
-  border-radius: 3px;
+.message-buttons {
+  display: flex;
+  gap: 0.5rem;
 }
 
-.overflow-y-auto::-webkit-scrollbar-thumb:hover {
-  background: #94a3b8;
+.quick-messages-section,
+.message-history-section {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
 }
 
-.dark .overflow-y-auto::-webkit-scrollbar-track {
-  background: #374151;
+.quick-messages-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 0.5rem;
 }
 
-.dark .overflow-y-auto::-webkit-scrollbar-thumb {
-  background: #6b7280;
+.quick-message-button {
+  padding: 0.75rem;
+  text-align: left;
+  border-radius: 0.5rem;
+  border: 1px solid #e5e7eb;
+  background-color: white;
+  cursor: pointer;
+  transition: background-color 0.2s;
 }
 
-.dark .overflow-y-auto::-webkit-scrollbar-thumb:hover {
-  background: #9ca3af;
+.quick-message-button:hover {
+  background-color: #f9fafb;
+}
+
+.quick-message-content {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.quick-message-icon {
+  font-size: 1.125rem;
+}
+
+.quick-message-text {
+  font-size: 0.875rem;
+}
+
+.message-history {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  max-height: 16rem;
+  overflow-y: auto;
+}
+
+.message-item {
+  padding: 0.75rem;
+  border-radius: 0.5rem;
+  background-color: #f9fafb;
+}
+
+.message-content {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+}
+
+.message-text {
+  font-size: 0.875rem;
+  margin: 0;
+}
+
+.message-time {
+  font-size: 0.75rem;
+  color: #6b7280;
+}
+
+/* Other Menu Content */
+.other-menu-content {
+  text-align: center;
+  padding: 3rem 0;
+}
+
+.other-menu-title {
+  font-size: 1.5rem;
+  font-weight: bold;
+  color: #111827;
+  margin-bottom: 1rem;
+}
+
+.other-menu-description {
+  color: #6b7280;
+  margin-bottom: 1rem;
+}
+
+.other-menu-note {
+  font-size: 0.875rem;
+  color: #9ca3af;
+  margin-top: 1rem;
 }
 </style>
+

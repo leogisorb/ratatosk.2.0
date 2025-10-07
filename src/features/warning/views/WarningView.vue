@@ -3,7 +3,7 @@ import { ref, onMounted, onUnmounted, computed } from 'vue'
 import { useRouter } from 'vue-router'
 import { useFaceRecognition } from '../../face-recognition/composables/useFaceRecognition'
 import { useSettingsStore } from '../../settings/stores/settings'
-import GlobalHeader from '../../../shared/components/GlobalHeader.vue'
+import AppHeader from '../../../shared/components/AppHeader.vue'
 
 // Router
 const router = useRouter()
@@ -128,7 +128,7 @@ function selectWarningTile(tileId: string) {
     case 'zurueck':
       console.log('Zurück selected')
       stopContinuousAlarm()
-      goBack()
+      router.push('/app')
       break
   }
 }
@@ -274,83 +274,50 @@ onUnmounted(() => {
   stopContinuousAlarm()
 })
 
-// Zurück zur Hauptseite
-const goBack = () => {
-  router.push('/app')
-}
+// Zurück-Funktion wird jetzt über AppHeader gesteuert
 </script>
 
 <template>
-  <div class="min-h-screen bg-white dark:bg-gray-900 flex flex-col">
-    <!-- Global Header -->
-    <GlobalHeader>
-      <!-- Zurück Button -->
-      <button
-        @click="goBack"
-        class="p-2 rounded-lg bg-gray-300 hover:bg-gray-400 dark:bg-gray-600 dark:hover:bg-gray-500 transition-colors"
-        title="Zurück zur Hauptseite (oder 10 Sekunden blinzeln)"
-      >
-        <svg class="w-6 h-6 text-gray-700 dark:text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
-        </svg>
-      </button>
-    </GlobalHeader>
+  <div class="page-container">
+    <!-- App Header -->
+    <AppHeader />
 
-    <!-- Main Content -->
-    <main class="flex-1 flex items-center justify-center p-16">
-      <div class="max-w-8xl mx-auto">
-        <!-- Großes Glocken Icon -->
-        <div class="mb-16 text-center">
+    <!-- Main Content - Zentriert -->
+    <main class="main-content">
+      <div class="content-wrapper">
+        <!-- Großes Glocken Icon - Zentriert -->
+        <div class="bell-container">
           <button
             @click="selectWarningTile('glocke')"
-            class="transition-all duration-300 hover:scale-110"
-            :class="currentTileIndex === 0 ? 'scale-110' : ''"
-            style="background: none; border: none; outline: none; box-shadow: none;"
+            class="bell-button"
+            :class="currentTileIndex === 0 ? 'bell-active' : ''"
           >
             <img 
               src="/bell.svg" 
               alt="WARNGERÄUSCH" 
-              class="mx-auto"
-              style="transition: transform 0.3s ease; width: 60%; height: auto;"
+              class="bell-icon"
             />
           </button>
         </div>
         
-        
-        <!-- Abstandshalter -->
-        <div style="height: 4rem;"></div>
-
-        <!-- Zurück Button -->
-        <div class="flex justify-center mb-48">
+        <!-- Zurück Button - Zentriert -->
+        <div class="back-section">
           <button
             @click="selectWarningTile('zurueck')"
-            class="transition-all duration-300 font-medium hover:scale-110"
-            :style="{
-              fontSize: '2.646rem',
-              background: currentTileIndex === 1 ? '#f3f4f6' : 'white',
-              border: '2px solid #d1d5db',
-              borderRadius: '15px',
-              outline: 'none',
-              boxShadow: 'none',
-              padding: '12.6px 18.9px',
-              margin: '0'
-            }"
-            :class="currentTileIndex === 1 ? 'text-orange-500 scale-110' : 'text-black hover:text-gray-600'"
+            class="back-action-button"
+            :class="currentTileIndex === 1 ? 'back-active' : ''"
           >
             Zurück
           </button>
         </div>
 
-        <!-- Abstandshalter -->
-        <div style="height: 4rem;"></div>
-
-        <!-- Instructions -->
-        <div class="text-center">
-          <div class="bg-blue-100 dark:bg-blue-900 rounded-xl p-12 max-w-4xl mx-auto">
-            <h3 class="text-4xl font-semibold text-blue-800 dark:text-blue-200 mb-4" style="font-family: 'Source Code Pro', monospace; font-weight: 300;">
+        <!-- Instructions - Zentriert -->
+        <div class="instructions-container">
+          <div class="instructions-box">
+            <h3 class="instructions-title">
               Bedienung
             </h3>
-            <p class="text-2xl text-blue-700 dark:text-blue-300" style="font-family: 'Source Code Pro', monospace; font-weight: 300;">
+            <p class="instructions-text">
               <strong>Kurz blinzeln ({{ settingsStore.settings.blinkSensitivity }}s):</strong> Aktion auswählen<br>
               <strong>Rechte Maustaste:</strong> Aktion auswählen<br>
               <strong>Auto-Modus:</strong> Automatischer Durchlauf durch alle Aktionen
@@ -363,6 +330,116 @@ const goBack = () => {
 </template>
 
 <style scoped>
+/* WarningView verwendet jetzt globale CSS-Klassen aus main.css */
+
+/* Spezifische WarningView Styles */
+.content-wrapper {
+  gap: 4rem;
+}
+
+/* Bell Container - Zentriert */
+.bell-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  width: 100%;
+}
+
+.bell-button {
+  background: none;
+  border: none;
+  outline: none;
+  box-shadow: none;
+  cursor: pointer;
+  transition: transform 0.3s ease;
+  padding: 2rem;
+}
+
+.bell-button:hover {
+  transform: scale(1.1);
+}
+
+.bell-active {
+  transform: scale(1.1);
+}
+
+.bell-icon {
+  width: 60%;
+  height: auto;
+  max-width: 400px;
+  transition: transform 0.3s ease;
+}
+
+/* Back Section - Zentriert */
+.back-section {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  width: 100%;
+}
+
+.back-action-button {
+  font-size: 2.646rem;
+  font-family: 'Source Code Pro', monospace;
+  font-weight: 500;
+  background: white;
+  border: 2px solid #d1d5db;
+  border-radius: 15px;
+  outline: none;
+  box-shadow: none;
+  padding: 12.6px 18.9px;
+  margin: 0;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  color: black;
+}
+
+.back-action-button:hover {
+  transform: scale(1.1);
+  color: #6b7280;
+}
+
+.back-active {
+  background: #f3f4f6;
+  color: #00B098;
+  transform: scale(1.1);
+}
+
+/* Instructions - Zentriert */
+.instructions-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  width: 100%;
+}
+
+.instructions-box {
+  background-color: transparent;
+  color: #374151;
+  padding: 1rem;
+  max-width: 600px;
+  width: 100%;
+  text-align: center;
+}
+
+.instructions-title {
+  font-size: 1.25rem;
+  font-weight: bold;
+  margin: 0 0 1rem 0;
+  color: #1f2937;
+}
+
+.instructions-text {
+  margin: 0;
+  line-height: 1.6;
+  color: #374151;
+}
+
+.instructions-text strong {
+  font-weight: bold;
+  color: #1f2937;
+}
+
 /* Custom animations */
 @keyframes pulse {
   0%, 100% {
@@ -377,8 +454,21 @@ const goBack = () => {
   animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
 }
 
-/* Dark mode styles */
-.dark {
-  color-scheme: dark;
+/* Responsive Design */
+@media (max-width: 768px) {
+  .content-wrapper {
+    gap: 2rem;
+    padding: 1rem;
+  }
+  
+  .bell-icon {
+    width: 80%;
+    max-width: 300px;
+  }
+  
+  .back-action-button {
+    font-size: 2rem;
+    padding: 10px 15px;
+  }
 }
 </style>

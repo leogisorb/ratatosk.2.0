@@ -542,13 +542,6 @@ onUnmounted(() => {
 </template>
 
 <style scoped>
-.high-contrast {
-  filter: contrast(150%);
-}
-
-.large-text {
-  font-size: 1.2em;
-}
 
 /* Custom scrollbar */
 .overflow-y-auto::-webkit-scrollbar {

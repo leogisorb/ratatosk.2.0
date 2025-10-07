@@ -2,6 +2,804 @@
 
 $ cd /Users/leopoldbrosig/Documents/uni/Bachelor/Ratatosk && npm run dev
 
+## 2025-01-31 - Tailwind CSS komplett entfernt und globales CSS-System implementiert
+
+### Problem
+- Tailwind CSS hielt die Entwicklung auf
+- Komplexe Safelist-Konfiguration erforderlich
+- Bundle-Größe durch Tailwind erhöht
+- Keine vollständige Kontrolle über Styling
+- Tailwind-Purge-Probleme bei dynamischen Klassen
+
+### Lösung
+- **Tailwind komplett entfernt**: Alle Dependencies und Konfigurationen gelöscht
+- **Reine CSS-Architektur**: Globale CSS-Klassen in `main.css`
+- **Wiederverwendbare Komponenten**: Zentrale Styling-Definitionen
+- **Bessere Performance**: Kleinere Bundle-Größe ohne Tailwind
+- **Vollständige Kontrolle**: Eigenes CSS-System
+
+### Technische Details
+
+#### Tailwind-Entfernung
+```bash
+# Entfernte Dependencies
+- @tailwindcss/postcss
+- autoprefixer  
+- postcss
+- tailwindcss
+
+# Gelöschte Dateien
+- tailwind.config.js
+- postcss.config.js
+```
+
+#### Globales CSS-System in main.css
+```css
+/* ============================================
+   GLOBAL COMPONENT STYLES
+   ============================================ */
+
+/* Header Styles */
+.global-header {
+  background-color: white;
+  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+  border-bottom: 1px solid #e5e7eb;
+}
+
+.header-content {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1rem 2rem;
+}
+
+/* Button Styles */
+.btn-primary {
+  background-color: #16a34a;
+  color: white;
+  font-family: 'Source Code Pro', monospace;
+}
+
+.btn-secondary {
+  background-color: #d2691e;
+  color: white;
+}
+
+/* Layout Styles */
+.page-container {
+  min-height: 100vh;
+  background-color: white;
+  display: flex;
+  flex-direction: column;
+}
+
+.main-content {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 2rem;
+}
+
+/* Grid Layout */
+.grid-container {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 2.4rem;
+  justify-items: center;
+  align-items: center;
+}
+
+/* Menu Tiles */
+.menu-tile {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  cursor: pointer;
+  padding: 1rem;
+  border: 2px solid #9ca3af;
+  border-radius: 2rem;
+  width: 32rem;
+  height: 20rem;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+  transition: all 0.3s ease;
+}
+
+.menu-tile:hover {
+  background-color: #f3f4f6;
+  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
+  transform: scale(1.05);
+}
+
+.tile-active {
+  background-color: #00B098;
+  color: white;
+}
+
+.tile-inactive {
+  background-color: white;
+  color: black;
+}
+
+.tile-icon {
+  width: 8.5rem;
+  height: 8.5rem;
+  object-fit: contain;
+  max-width: 8.5rem;
+  max-height: 8.5rem;
+}
+
+.icon-inverted {
+  filter: brightness(0) invert(1);
+}
+
+.tile-text {
+  text-align: center;
+  font-family: 'Source Code Pro', monospace;
+  font-weight: normal;
+  font-size: 3.5rem;
+}
+
+/* Modal Styles */
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 50;
+}
+
+.modal-content {
+  background-color: white;
+  border-radius: 0.5rem;
+  padding: 2rem;
+  max-width: 32rem;
+  width: 100%;
+  margin: 0 1rem;
+  max-height: 80vh;
+  overflow-y: auto;
+}
+
+/* Form Elements */
+.input-field {
+  width: 100%;
+  padding: 0.5rem 0.75rem;
+  border: 1px solid #d1d5db;
+  border-radius: 0.375rem;
+  background-color: white;
+  color: #111827;
+  font-family: 'Source Code Pro', monospace;
+}
+
+.input-field:focus {
+  outline: none;
+  border-color: #16a34a;
+  box-shadow: 0 0 0 3px rgba(22, 163, 74, 0.1);
+}
+
+/* Accessibility Classes */
+.high-contrast {
+  filter: contrast(150%);
+}
+
+.large-text {
+  font-size: 1.2em;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .grid-container {
+    grid-template-columns: 1fr;
+    gap: 1.5rem;
+  }
+  
+  .menu-tile {
+    width: 100%;
+    max-width: 400px;
+    height: 15rem;
+  }
+  
+  .tile-text {
+    font-size: 2.5rem;
+  }
+}
+```
+
+#### Komponenten-Refaktorierung
+
+**HomeView.vue:**
+```vue
+<!-- Vorher (Tailwind) -->
+<div class="min-h-screen bg-white flex flex-col">
+  <header class="w-full">
+    <div class="flex justify-between items-center py-4 px-6">
+      <div class="flex items-center space-x-4 ml-[2%]">
+        <h1 class="text-2xl font-bold text-gray-800 font-source-code">
+          RATATOSK
+        </h1>
+      </div>
+    </div>
+  </header>
+  <main class="flex-1 bg-gray-50 flex items-center justify-center">
+    <div class="grid grid-cols-3 gap-[2.4rem] justify-center items-center">
+      <div class="flex flex-col justify-center items-center cursor-pointer p-4 border-2 border-gray-400 rounded-[2rem] hover:bg-gray-100 hover:shadow-xl hover:scale-105 transition-all duration-300 w-[32rem] h-[20rem] shadow-md">
+        <!-- Tailwind-Klassen -->
+      </div>
+    </div>
+  </main>
+</div>
+
+<!-- Nachher (Reine CSS) -->
+<div id="app" :class="appClasses">
+  <header class="global-header">
+    <AppHeader />
+  </header>
+  <main class="main-content">
+    <div class="grid-container">
+      <div class="menu-tile" :class="currentTileIndex === 0 ? 'tile-active' : 'tile-inactive'">
+        <div class="tile-icon-container" :class="currentTileIndex === 0 ? 'icon-active' : 'icon-inactive'">
+          <img src="/bell.svg" class="tile-icon" :class="currentTileIndex === 0 ? 'icon-inverted' : ''" />
+        </div>
+        <div class="tile-text" :class="currentTileIndex === 0 ? 'text-active' : 'text-inactive'">
+          WARNGERÄUSCH
+        </div>
+      </div>
+    </div>
+  </main>
+</div>
+```
+
+**WarningView.vue:**
+```vue
+<!-- Vorher (Tailwind) -->
+<div class="min-h-screen bg-white dark:bg-gray-900 flex flex-col">
+  <GlobalHeader>
+    <button class="p-2 rounded-lg bg-gray-300 hover:bg-gray-400 dark:bg-gray-600 dark:hover:bg-gray-500 transition-colors">
+      <!-- Tailwind-Klassen -->
+    </button>
+  </GlobalHeader>
+  <main class="flex-1 flex items-center justify-center p-16">
+    <div class="max-w-8xl mx-auto">
+      <div class="mb-16 text-center">
+        <button class="transition-all duration-300 hover:scale-110">
+          <img src="/bell.svg" class="mx-auto" style="width: 60%; height: auto;" />
+        </button>
+      </div>
+    </div>
+  </main>
+</div>
+
+<!-- Nachher (Reine CSS) -->
+<div class="page-container">
+  <AppHeader />
+  <main class="main-content">
+    <div class="content-wrapper">
+      <div class="bell-container">
+        <button class="bell-button" :class="currentTileIndex === 0 ? 'bell-active' : ''">
+          <img src="/bell.svg" class="bell-icon" />
+        </button>
+      </div>
+    </div>
+  </main>
+</div>
+```
+
+### Vorteile des neuen Systems
+
+#### Performance
+- **Kleinere Bundle-Größe**: Keine Tailwind-Dependencies
+- **Bessere CSS-Optimierung**: Nur verwendete Styles
+- **Schnellere Build-Zeit**: Kein Tailwind-Processing
+
+#### Wartbarkeit
+- **Zentrale Styles**: Alle CSS-Definitionen in `main.css`
+- **Wiederverwendbare Klassen**: Globale Komponenten-Styles
+- **Konsistente UX**: Einheitliche Styling-Patterns
+- **Einfache Erweiterung**: Neue Komponenten nutzen globale Klassen
+
+#### Entwickler-Experience
+- **Vollständige Kontrolle**: Eigenes CSS-System
+- **Keine Tailwind-Limitationen**: Freie CSS-Gestaltung
+- **Bessere Debugging**: Klare CSS-Klassen-Namen
+- **Responsive Design**: Eigene Media Queries
+
+### Migration-Ergebnis
+
+#### Entfernte Tailwind-Klassen
+```css
+/* Entfernt */
+min-h-screen, bg-white, flex, flex-col
+w-full, justify-between, items-center, py-4, px-6
+grid, grid-cols-3, gap-[2.4rem], justify-center
+flex, flex-col, justify-center, items-center, cursor-pointer
+p-4, border-2, border-gray-400, rounded-[2rem]
+hover:bg-gray-100, hover:shadow-xl, hover:scale-105
+transition-all, duration-300, w-[32rem], h-[20rem], shadow-md
+```
+
+#### Neue CSS-Klassen
+```css
+/* Hinzugefügt */
+.page-container, .main-content, .content-wrapper
+.global-header, .header-content, .header-left, .header-right
+.grid-container, .menu-tile, .tile-active, .tile-inactive
+.tile-icon-container, .icon-active, .icon-inactive
+.tile-icon, .icon-inverted, .tile-text
+.text-active, .text-inactive
+.modal-overlay, .modal-content, .modal-header
+.input-field, .btn-primary, .btn-secondary
+```
+
+### Responsive Design
+```css
+@media (max-width: 768px) {
+  .content-wrapper {
+    gap: 1.5rem;
+    padding: 1rem;
+  }
+  
+  .grid-container {
+    grid-template-columns: 1fr;
+    gap: 1.5rem;
+  }
+  
+  .menu-tile {
+    width: 100%;
+    max-width: 400px;
+    height: 15rem;
+  }
+  
+  .tile-text {
+    font-size: 2.5rem;
+  }
+}
+```
+
+### Accessibility
+```css
+.high-contrast {
+  filter: contrast(150%);
+}
+
+.large-text {
+  font-size: 1.2em;
+}
+```
+
+## 2025-01-31 - Globales Header-System implementiert
+
+### Problem
+- Verschiedene Header-Implementierungen in Komponenten
+- Inkonsistente Button-Styles
+- Keine zentrale Steuerung für Navigation
+- Doppelte CSS-Definitionen für Header-Elemente
+
+### Lösung
+- **AppHeader-Komponente erstellt**: Zentrale Header-Verwaltung
+- **3-Button-System**: Lautstärke, Dark Mode, Zurück
+- **Logo rechts, Buttons links**: Intuitive Anordnung
+- **Globale CSS-Klassen**: Wiederverwendbare Header-Styles
+
+### Technische Details
+
+#### AppHeader.vue Komponente
+```vue
+<template>
+  <header class="global-header">
+    <div class="header-content">
+      <!-- Linke Seite - RATATOSK Logo -->
+      <div class="header-left">
+        <h1 class="header-title">RATATOSK</h1>
+        <img src="/rattenkopf.svg" alt="Ratatosk Logo" class="header-logo" />
+      </div>
+
+      <!-- Rechte Seite - 3 Buttons -->
+      <div class="header-right">
+        <!-- Lautstärke Button -->
+        <button @click="toggleVolume" class="header-button" :class="{ active: isVolumeEnabled }">
+          <svg class="header-button-icon">
+            <!-- Speaker-Icon -->
+          </svg>
+        </button>
+
+        <!-- Dark Mode Button -->
+        <button @click="toggleDarkMode" class="header-button" :class="{ active: isDarkMode }">
+          <svg class="header-button-icon">
+            <!-- Mond/Sonne-Icon -->
+          </svg>
+        </button>
+
+        <!-- Zurück Button -->
+        <button @click="goBack" class="header-button">
+          <svg class="header-button-icon">
+            <!-- Pfeil-Icon -->
+          </svg>
+        </button>
+      </div>
+    </div>
+  </header>
+</template>
+```
+
+#### Header-CSS-Styles
+```css
+/* Header Styles */
+.global-header {
+  background-color: white;
+  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+  flex-shrink: 0;
+  width: 100%;
+  border-bottom: 1px solid #e5e7eb;
+}
+
+.header-content {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1rem 2rem;
+  width: 100%;
+  max-width: 100%;
+}
+
+/* Linke Seite - RATATOSK Logo */
+.header-left {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.header-title {
+  font-size: 1.5rem;
+  font-weight: bold;
+  color: #1f2937;
+  font-family: 'Source Code Pro', monospace;
+  font-weight: 300;
+  margin: 0;
+}
+
+.header-logo {
+  width: 3rem;
+  height: 3rem;
+}
+
+/* Rechte Seite - 3 Buttons */
+.header-right {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.header-button {
+  padding: 0.75rem;
+  border-radius: 0.5rem;
+  border: none;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: #f3f4f6;
+  color: #374151;
+}
+
+.header-button:hover {
+  background-color: #e5e7eb;
+  transform: translateY(-1px);
+}
+
+.header-button.active {
+  background-color: #3b82f6;
+  color: white;
+}
+
+.header-button-icon {
+  width: 1.25rem;
+  height: 1.25rem;
+}
+```
+
+#### Komponenten-Integration
+
+**HomeView.vue:**
+```vue
+<!-- Vorher -->
+<header class="global-header">
+  <GlobalHeader>
+    <div class="control-buttons">
+      <button @click="toggleTTS" class="tts-button">
+        <!-- TTS Toggle -->
+      </button>
+    </div>
+  </GlobalHeader>
+</header>
+
+<!-- Nachher -->
+<AppHeader />
+```
+
+**WarningView.vue:**
+```vue
+<!-- Vorher -->
+<GlobalHeader>
+  <button @click="goBack" class="btn-back">
+    <!-- Zurück Button -->
+  </button>
+</GlobalHeader>
+
+<!-- Nachher -->
+<AppHeader />
+```
+
+### Funktionalitäten
+
+#### Lautstärke-Button
+- 🔊 **Toggle-Funktion** für Audio-Einstellungen
+- 🎵 **Visual Feedback** mit aktiv/inaktiv Zustand
+- 📢 **Tooltip** mit Beschreibung
+- 🎨 **Speaker-Icon** mit Mute-Overlay
+
+#### Dark Mode-Button
+- 🌙 **Mond/Sonne-Icon** je nach Modus
+- 🎨 **Settings Store Integration**
+- 🔄 **Automatische UI-Updates**
+- 🌓 **Smooth Transitions**
+
+#### Zurück-Button
+- ⬅️ **Navigation zur Hauptseite**
+- 🎯 **Konsistente Funktionalität** in allen Views
+- 📱 **Touch-friendly** Design
+- 🚀 **Router-Integration**
+
+### Layout-Anordnung
+
+#### Finale Header-Struktur
+```
+[RATATOSK] [🐀 Logo]                    [🔊] [🌙] [⬅️]
+```
+
+#### CSS-Layout
+```css
+.header-content {
+  display: flex;
+  justify-content: space-between;  /* Logo links, Buttons rechts */
+  align-items: center;
+}
+
+.header-left {
+  display: flex;
+  align-items: center;
+  gap: 1rem;  /* Abstand zwischen Titel und Logo */
+}
+
+.header-right {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;  /* Abstand zwischen Buttons */
+}
+```
+
+### Vorteile des Header-Systems
+
+#### Konsistenz
+- 🎯 **Einheitliches Design** in allen Views
+- 🔧 **Zentrale Steuerung** aller Header-Funktionen
+- 📱 **Responsive** und touch-friendly
+- ⚡ **Performance-optimiert** mit globalen CSS-Klassen
+
+#### Wartbarkeit
+- 🧹 **Keine doppelten CSS-Definitionen**
+- 📝 **Zentrale Komponente** für alle Header-Funktionen
+- 🔄 **Einfache Updates** in einer Datei
+- 🎨 **Konsistente UX** mit Hover-Effekten
+
+#### Entwickler-Experience
+- 🚀 **Plug-and-Play**: `<AppHeader />` in jeder Komponente
+- 🎛️ **Vollständige Funktionalität**: Lautstärke, Dark Mode, Navigation
+- 📱 **Responsive Design**: Automatische Anpassung
+- 🎨 **Smooth Animations**: Hover-Effekte und Transitions
+
+### Migration-Ergebnis
+
+#### Entfernte Komponenten
+- ❌ **GlobalHeader.vue**: Alte Header-Implementierung
+- ❌ **Lokale CSS-Definitionen**: Doppelte Styles entfernt
+- ❌ **TTS-Toggle in HomeView**: Jetzt im Header
+- ❌ **Zurück-Buttons in Views**: Jetzt im Header
+
+#### Neue Struktur
+- ✅ **AppHeader.vue**: Zentrale Header-Komponente
+- ✅ **Globale CSS-Klassen**: Wiederverwendbare Styles
+- ✅ **3-Button-System**: Vollständige Funktionalität
+- ✅ **Logo rechts, Buttons links**: Intuitive Anordnung
+
+### Responsive Design
+```css
+@media (max-width: 768px) {
+  .header-content {
+    padding: 0.75rem 1rem;
+  }
+  
+  .header-title {
+    font-size: 1.25rem;
+  }
+  
+  .header-logo {
+    width: 2.5rem;
+    height: 2.5rem;
+  }
+  
+  .header-button {
+    padding: 0.5rem;
+  }
+  
+  .header-button-icon {
+    width: 1rem;
+    height: 1rem;
+  }
+}
+```
+
+### Accessibility
+- 🎯 **Keyboard Navigation**: Alle Buttons fokussierbar
+- 🔊 **Screen Reader Support**: Alt-Texte und ARIA-Labels
+- 🎨 **High Contrast**: Aktive Buttons hervorgehoben
+- 📱 **Touch Targets**: Mindestens 44px für Touch-Geräte
+
+## 2025-01-31 - HomeView komplett auf Tailwind CSS umgestellt (Teil 1)
+
+## 2025-01-31 - HomeView komplett auf Tailwind CSS umgestellt (Teil 2 - Finale Refaktorierung)
+
+### Problem
+- Inline-Styles mit `!important` überschrieben Tailwind-Klassen
+- Spezifische Werte (32rem, 8.5rem, 3.5rem) nicht in Tailwind verfügbar
+- Browser-Kompatibilität (z.B. -webkit-border-radius) fehlte
+- Code war schwer wartbar durch gemischte Inline-Styles und Tailwind-Klassen
+- Tailwind-Purge-Problem: Dynamische Klassen wurden entfernt
+
+### Lösung
+- **Safelist erweitert**: Alle spezifischen Werte in `tailwind.config.js` hinzugefügt
+- **Inline-Styles durch Tailwind ersetzt**: Reine Tailwind-Klassen ohne `!important`
+- **Spezifische Werte mit Tailwind**: `w-[32rem]`, `h-[20rem]`, `text-[3.5rem]`
+- **Browser-Kompatibilität**: Tailwind's `rounded-[2rem]` statt CSS-Vendor-Prefixes
+- **Code-Qualität verbessert**: Wartbarer, konsistenter Code
+
+### Technische Details
+
+#### Safelist erweitert
+```js
+safelist: [
+  // Spezifische Werte für HomeView
+  'w-[32rem]',
+  'h-[20rem]',
+  'w-[8.5rem]',
+  'h-[8.5rem]',
+  'text-[3.5rem]',
+  'rounded-[2rem]',
+  'gap-[2.4rem]',
+  'mb-[3rem]',
+  'max-w-[8.5rem]',
+  'max-h-[8.5rem]',
+  'bg-[#00B098]',
+  '!text-white',
+  'ml-[2%]',
+  'mr-[2%]'
+]
+```
+
+#### HomeView.vue Refaktorierung
+**Vorher (Inline-Styles):**
+```vue
+<div style="width: 32rem !important; height: 20rem !important; border-radius: 2rem !important;">
+  <img style="width: 8.5rem !important; height: 8.5rem !important;" />
+  <p style="font-size: 3.5rem !important;">Text</p>
+</div>
+```
+
+**Nachher (Reine Tailwind):**
+```vue
+<div class="w-[32rem] h-[20rem] rounded-[2rem]">
+  <img class="w-[8.5rem] h-[8.5rem] object-contain" />
+  <p class="text-[3.5rem]">Text</p>
+</div>
+```
+
+#### Header-Positionierung
+**Vorher (Inline-Styles):**
+```vue
+<div style="margin-left: 50%;">
+```
+
+**Nachher (Tailwind):**
+```vue
+<div class="ml-[50%]">
+```
+
+#### Google Fonts wiederhergestellt
+**Problem:** Source Code Pro funktionierte nicht mehr
+**Lösung:** Google Fonts in `index.html` hinzugefügt:
+```html
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Source+Code+Pro:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+```
+
+### Vorteile der Refaktorierung
+- **Wartbarkeit**: Zentrale Styling-Logik in Tailwind
+- **Performance**: Keine Inline-Styles, bessere Browser-Optimierung
+- **Konsistenz**: Einheitliche Styling-Sprache
+- **Debugging**: Einfacher zu debuggen durch Tailwind-Klassen
+- **Responsive**: Tailwind's responsive Design funktioniert out-of-the-box
+
+### Ergebnis
+- **100% Tailwind CSS**: Keine Inline-Styles mehr
+- **Bessere Performance**: Optimierte CSS-Ausgabe
+- **Wartbarer Code**: Zentrale Styling-Logik
+- **Konsistente Styles**: Einheitliche Design-Sprache
+- **Vollständige Browser-Kompatibilität**: Source Code Pro funktioniert überall
+
+### Problem
+- HomeView Layout war linksbündig und untereinander angeordnet
+- GridConfig-System mit inline-Styles überschrieb Tailwind-Klassen
+- Tailwind CSS funktionierte nicht korrekt durch PostCSS-Konfigurationsprobleme
+- Kacheln wurden nicht als 3×2 Grid angezeigt
+
+### Lösung
+- **GridConfig-System entfernt**: Alle `getTileStyle()`, `getIconStyle()`, `getTextStyle()` Funktionen gelöscht
+- **Inline-Styles entfernt**: Keine `:style="..."` mehr, nur noch Tailwind-Klassen
+- **PostCSS-Konfiguration repariert**: `@tailwindcss/postcss` Plugin installiert und konfiguriert
+- **Globale CSS-Konflikte behoben**: `base.css` und CSS-Variablen entfernt, die Tailwind überschrieben
+- **Scoped Styles entfernt**: `<style scoped>` → `<style>` für Tailwind-Kompatibilität
+
+### Technische Details
+- **PostCSS-Konfiguration**:
+  ```js
+  import tailwindcss from '@tailwindcss/postcss'
+  import autoprefixer from 'autoprefixer'
+  
+  export default {
+    plugins: [tailwindcss, autoprefixer],
+  }
+  ```
+
+- **HomeView.vue komplett überarbeitet**:
+  - **Grid-Layout**: `grid grid-cols-3 gap-8 justify-items-center`
+  - **Kachel-Styling**: `w-64 h-64 rounded-2xl border-4 border-black bg-white`
+  - **Aktive Zustände**: `bg-teal-700 text-white shadow-2xl scale-105`
+  - **Hover-Effekte**: `hover:bg-gray-100 hover:shadow-2xl hover:scale-105`
+  - **Animationen**: `transition-all duration-300`
+
+- **Klick-Hervorhebung repariert**:
+  ```typescript
+  function selectMenu(menuId: string) {
+    const index = menuItems.findIndex(item => item.id === menuId)
+    if (index !== -1) {
+      currentTileIndex.value = index
+    }
+    // ... rest of function
+  }
+  ```
+
+- **Globale CSS bereinigt**:
+  - Entfernt: `background-color: var(--background-color)`
+  - Entfernt: `color: var(--text-color)`
+  - Entfernt: Alle CSS-Variablen die Tailwind überschrieben
+
+### Vorteile
+- **100% Tailwind CSS**: Keine CSS-Konflikte mehr
+- **Konsistentes Design**: Einheitliches Design-System
+- **Bessere Performance**: Tailwind purged unused styles
+- **Wartbar**: Alle Styling über Utility-Klassen
+- **Responsive**: Funktioniert auf allen Bildschirmgrößen
+
+### Status
+✅ **Abgeschlossen** - HomeView vollständig auf Tailwind CSS umgestellt, 3×2 Grid funktioniert perfekt
+
 ## 2025-01-31 - Einheitlicher Header implementiert
 
 ### Problem
