@@ -1,10 +1,10 @@
 <template>
-    <header class="bg-blue-500 shadow-2xl flex-shrink-0" style="box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);">
+    <header class="bg-white shadow-2xl flex-shrink-0" style="box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
       <div class="flex justify-between items-center py-4">
         <!-- Ratatosk Logo and Title (left side) -->
         <div class="flex items-center space-x-4">
-          <h1 class="text-2xl font-bold text-black dark:text-white" style="font-family: 'Source Code Pro', monospace; font-weight: 300;">
+          <h1 class="text-2xl font-bold text-gray-800" style="font-family: 'Source Code Pro', monospace; font-weight: 300;">
             RATATOSK
           </h1>
           <img src="/rattenkopf.svg" alt="Ratatosk Logo" class="w-12 h-12" />
