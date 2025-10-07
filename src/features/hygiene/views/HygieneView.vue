@@ -160,7 +160,7 @@ function selectHygiene(hygieneId: string) {
       // Hier könnte später die Hygiene-Auswahl gespeichert werden
       speakText(`${selectedItem?.text} ausgewählt`)
       
-      // Auto-Modus nach 10 Sekunden wieder starten
+      // Auto-Modus nach 3 Sekunden wieder starten
       if (restartTimeout.value) {
         clearTimeout(restartTimeout.value)
       }
@@ -171,7 +171,7 @@ function selectHygiene(hygieneId: string) {
           startAutoMode()
         }
         restartTimeout.value = null
-      }, 10000)
+      }, 3000)
   }
 }
 
@@ -357,7 +357,7 @@ onUnmounted(() => {
           <div class="flex justify-center">
             <button
               @click="selectHygiene('zurueck')"
-              class="transition-all duration-300 font-medium hover:scale-110"
+              class="transition-all duration-300 font-medium hover:scale-110 flex flex-col items-center space-y-4"
               :style="{
                 fontSize: '2.646rem',
                 background: currentTileIndex === 7 ? '#f3f4f6' : 'white',
@@ -366,11 +366,13 @@ onUnmounted(() => {
                 outline: 'none',
                 boxShadow: 'none',
                 padding: '12.6px 18.9px',
-                margin: '0'
+                margin: '0',
+                minWidth: '120px'
               }"
               :class="currentTileIndex === 7 ? 'text-orange-500 scale-110' : 'text-black hover:text-gray-600'"
             >
-              {{ hygieneItems[7].text }}
+              <div v-if="hygieneItems[7].emoji" style="font-size: 4rem;">{{ hygieneItems[7].emoji }}</div>
+              <span>{{ hygieneItems[7].text }}</span>
             </button>
           </div>
         </div>

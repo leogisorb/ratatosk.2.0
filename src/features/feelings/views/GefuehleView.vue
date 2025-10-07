@@ -54,7 +54,7 @@ const gefuehleItems = [
   // Zeile 3: Gestresst, Unsicher, Zurück
   { id: 'gestresst', text: 'gestresst', type: 'emotion', emoji: '😫' },
   { id: 'unsicher', text: 'unsicher', type: 'emotion', emoji: '😕' },
-  { id: 'zurueck', text: 'zurück', type: 'navigation', emoji: null, icon: '/arrow-left.svg' }
+  { id: 'zurueck', text: 'zurück', type: 'navigation', emoji: '⬅️' }
 ]
 
 // Text-to-Speech Funktion

@@ -66,7 +66,6 @@ const umgebungItems = [
 // Computed
 const appClasses = computed(() => [
   'min-h-screen flex flex-col',
-  settingsStore.isDarkMode ? 'dark' : '',
   settingsStore.isHighContrast ? 'high-contrast' : '',
   settingsStore.isLargeText ? 'large-text' : ''
 ])
@@ -264,12 +263,12 @@ onUnmounted(() => {
 <template>
   <div id="app" :class="appClasses">
     <!-- Responsive Layout - automatischer Wechsel zwischen Mobile und Desktop -->
-    <div class="min-h-screen bg-white dark:bg-gray-900 flex flex-col">
+    <div class="min-h-screen bg-white flex flex-col">
       <!-- Global Header -->
       <GlobalHeader>
         <div class="flex items-center space-x-4">
           <button @click="$router.push('/app')" class="p-2 rounded-lg bg-gray-300 hover:bg-gray-400 transition-colors">
-            <svg class="w-6 h-6" :style="{ color: getIconColor(false, settingsStore.isDarkMode) }" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <svg class="w-6 h-6" :style="{ color: getIconColor(false, false) }" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
             </svg>
           </button>
@@ -291,7 +290,7 @@ onUnmounted(() => {
             <svg
               v-if="isTTSEnabled"
               class="w-6 h-6"
-              :style="{ color: getIconColor(true, settingsStore.isDarkMode) }"
+              :style="{ color: getIconColor(true, false) }"
               fill="none"
               stroke="currentColor"
               viewBox="0 0 24 24"
@@ -307,7 +306,7 @@ onUnmounted(() => {
             <svg
               v-else
               class="w-6 h-6"
-              :style="{ color: getIconColor(false, settingsStore.isDarkMode) }"
+              :style="{ color: getIconColor(false, false) }"
               fill="none"
               stroke="currentColor"
               viewBox="0 0 24 24"
@@ -342,7 +341,7 @@ onUnmounted(() => {
         >
           <!-- BETT -->
           <div 
-            class="flex flex-col justify-start items-center cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
+            class="flex flex-col justify-start items-center cursor-pointer hover:bg-gray-100 transition-colors"
             :style="getTileStyle(0)"
             @click="selectUmgebung('bett')"
           >
@@ -370,7 +369,7 @@ onUnmounted(() => {
 
           <!-- ZIMMER -->
           <div 
-            class="flex flex-col justify-start items-center cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
+            class="flex flex-col justify-start items-center cursor-pointer hover:bg-gray-100 transition-colors"
             :style="getTileStyle(1)"
             @click="selectUmgebung('zimmer')"
           >
@@ -398,7 +397,7 @@ onUnmounted(() => {
 
           <!-- GEGENSTÄNDE -->
           <div 
-            class="flex flex-col justify-start items-center cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
+            class="flex flex-col justify-start items-center cursor-pointer hover:bg-gray-100 transition-colors"
             :style="getTileStyle(2)"
             @click="selectUmgebung('gegenstaende')"
           >
@@ -426,7 +425,7 @@ onUnmounted(() => {
 
           <!-- ZURÜCK -->
           <div 
-            class="flex flex-col justify-start items-center cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
+            class="flex flex-col justify-start items-center cursor-pointer hover:bg-gray-100 transition-colors"
             :style="getTileStyle(3)"
             @click="selectUmgebung('zurueck')"
           >
@@ -485,15 +484,4 @@ onUnmounted(() => {
   background: #94a3b8;
 }
 
-.dark .overflow-y-auto::-webkit-scrollbar-track {
-  background: #374151;
-}
-
-.dark .overflow-y-auto::-webkit-scrollbar-thumb {
-  background: #6b7280;
-}
-
-.dark .overflow-y-auto::-webkit-scrollbar-thumb:hover {
-  background: #9ca3af;
-}
 </style>
