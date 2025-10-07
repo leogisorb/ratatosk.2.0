@@ -2,6 +2,7 @@
 import { ref, computed, onMounted, onUnmounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { useSettingsStore } from '../../settings/stores/settings'
+import GlobalHeader from '../../../shared/components/GlobalHeader.vue'
 
 // Router
 const router = useRouter()
@@ -137,25 +138,21 @@ onUnmounted(() => {
   <div id="app" :class="appClasses">
     <!-- Responsive Layout -->
     <div class="min-h-screen bg-white dark:bg-gray-900 flex flex-col">
-      <!-- Header -->
-      <header class="bg-gray-200 dark:bg-gray-800 shadow-2xl flex-shrink-0" style="box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div class="flex justify-between items-center py-4">
-            <div class="flex items-center space-x-4">
-              <button @click="$router.push('/einstellungen')" class="p-2 rounded-lg bg-gray-300 dark:bg-gray-700 hover:bg-gray-400 dark:hover:bg-gray-600 transition-colors">
-                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
-                </svg>
-              </button>
-              <h1 class="text-2xl font-bold text-black dark:text-white font-source-code font-light">
-                KAMERA
-              </h1>
-              <img src="/rattenkopf.svg" alt="Ratatosk Logo" class="w-12 h-12" />
-              <div class="w-2.5 h-1.5 bg-[#00796B]"></div>
-            </div>
-            
-            <!-- Control Buttons -->
-            <div class="flex space-x-2">
+      <!-- Global Header -->
+      <GlobalHeader>
+        <div class="flex items-center space-x-4">
+          <button @click="$router.push('/einstellungen')" class="p-2 rounded-lg bg-gray-300 dark:bg-gray-700 hover:bg-gray-400 dark:hover:bg-gray-600 transition-colors">
+            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
+            </svg>
+          </button>
+          <h1 class="text-2xl font-bold text-black dark:text-white font-source-code font-light">
+            KAMERA
+          </h1>
+        </div>
+        
+        <!-- Control Buttons -->
+        <div class="flex space-x-2">
               <!-- TTS Toggle Button -->
               <button
                 @click="toggleTTS"
@@ -229,10 +226,8 @@ onUnmounted(() => {
                   />
                 </svg>
               </button>
-            </div>
-          </div>
         </div>
-      </header>
+      </GlobalHeader>
 
       <!-- Main Content -->
       <main class="flex-1 flex flex-col items-center justify-center p-8">

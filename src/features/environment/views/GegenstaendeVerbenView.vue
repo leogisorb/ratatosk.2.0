@@ -1,12 +1,13 @@
 <script setup lang="ts">
 import { ref, onMounted, onUnmounted, computed } from 'vue'
-import { useRouter } from 'vue-router'
+import { useRouter, useRoute } from 'vue-router'
 import { useFaceRecognition } from '../../face-recognition/composables/useFaceRecognition'
 import { useSettingsStore } from '../../settings/stores/settings'
 import { keyboardGridConfig, getKeyboardTileStyle } from '../../../config/gridConfig'
 
 // Router
 const router = useRouter()
+const route = useRoute()
 
 // Stores
 const settingsStore = useSettingsStore()
@@ -16,6 +17,7 @@ const faceRecognition = useFaceRecognition()
 
 // State
 const currentTileIndex = ref(0)
+const selectedVerb = ref('')
 const selectedGegenstand = ref('')
 const isAutoMode = ref(true)
 const autoModeInterval = ref<number | null>(null)
@@ -36,19 +38,19 @@ const isTTSEnabled = ref(true)
 // Verwende die Keyboard-Grid-Konfiguration
 const gridConfig = keyboardGridConfig
 
-// Gegenstände-Items mit passenden Emojis
-const gegenstaendeItems = [
-  { id: 'handy', text: 'Handy', type: 'gegenstand', emoji: '📱' },
-  { id: 'glas', text: 'Glas', type: 'gegenstand', emoji: '🥛' },
-  { id: 'brille', text: 'Brille', type: 'gegenstand', emoji: '👓' },
-  { id: 'stift', text: 'Stift', type: 'gegenstand', emoji: '✏️' },
-  { id: 'papier', text: 'Papier', type: 'gegenstand', emoji: '📄' },
-  { id: 'lineal', text: 'Lineal', type: 'gegenstand', emoji: '📏' },
-  { id: 'teller', text: 'Teller', type: 'gegenstand', emoji: '🍽️' },
-  { id: 'besteck', text: 'Besteck', type: 'gegenstand', emoji: '🍴' },
-  { id: 'buch', text: 'Buch', type: 'gegenstand', emoji: '📚' },
-  { id: 'uhr', text: 'Uhr', type: 'gegenstand', emoji: '🕐' },
-  { id: 'schluessel', text: 'Schlüssel', type: 'gegenstand', emoji: '🗝️' },
+// Gegenstände-Verben-Items mit passenden Emojis (max 11 Verben + Zurück = 12 total = 3 Zeilen à 4)
+const gegenstaendeVerbenItems = [
+  { id: 'benutzen', text: 'benutzen', type: 'verb', emoji: '👆' },
+  { id: 'halten', text: 'halten', type: 'verb', emoji: '🤏' },
+  { id: 'legen', text: 'legen', type: 'verb', emoji: '📦' },
+  { id: 'nehmen', text: 'nehmen', type: 'verb', emoji: '✋' },
+  { id: 'geben', text: 'geben', type: 'verb', emoji: '🤲' },
+  { id: 'aufheben', text: 'aufheben', type: 'verb', emoji: '⬆️' },
+  { id: 'reinigen', text: 'reinigen', type: 'verb', emoji: '🧼' },
+  { id: 'weglegen', text: 'weglegen', type: 'verb', emoji: '📦' },
+  { id: 'finden', text: 'finden', type: 'verb', emoji: '🔍' },
+  { id: 'bringen', text: 'bringen', type: 'verb', emoji: '📦' },
+  { id: 'holen', text: 'holen', type: 'verb', emoji: '🏃' },
   { id: 'zurück', text: 'zurück', type: 'navigation', emoji: '⬅️' }
 ]
 
@@ -88,13 +90,13 @@ const startAutoMode = () => {
     if (!isAutoMode.value || isAutoModePaused.value) {
       return
     }
-    currentTileIndex.value = (currentTileIndex.value + 1) % gegenstaendeItems.length
-    const currentItem = gegenstaendeItems[currentTileIndex.value]
+    currentTileIndex.value = (currentTileIndex.value + 1) % gegenstaendeVerbenItems.length
+    const currentItem = gegenstaendeVerbenItems[currentTileIndex.value]
     speakText(currentItem.text)
     autoModeInterval.value = window.setTimeout(cycleTiles, 3000) // 3 Sekunden
   }
   
-  const firstItem = gegenstaendeItems[currentTileIndex.value]
+  const firstItem = gegenstaendeVerbenItems[currentTileIndex.value]
   speakText(firstItem.text)
   
   autoModeInterval.value = window.setTimeout(cycleTiles, 3000)
@@ -125,28 +127,30 @@ const stopAutoMode = () => {
   speechSynthesis.cancel()
 }
 
-// Gegenstand-Auswahl
-function selectGegenstand(gegenstandId: string) {
+// Verb-Auswahl
+function selectVerb(verbId: string) {
   pauseAutoMode()
   
-  const selectedItem = gegenstaendeItems.find(item => item.id === gegenstandId)
+  const selectedItem = gegenstaendeVerbenItems.find(item => item.id === verbId)
   if (selectedItem) {
-    selectedGegenstand.value = selectedItem.text
+    selectedVerb.value = selectedItem.text
   }
   
-  switch (gegenstandId) {
+  switch (verbId) {
     case 'zurück':
-      router.push('/umgebung')
+      router.push('/gegenstaende')
       break
     default:
       speakText(`${selectedItem?.text} ausgewählt`)
       
-      // Weiterleitung zu Gegenstände-Verben nach 2 Sekunden
+      // Kombination anzeigen
+      const combination = `${selectedGegenstand.value} ${selectedItem?.text}`
+      speakText(`Kombination: ${combination}`)
+      
+      // Nach 3 Sekunden zurück zum Gegenstände-View
       restartTimeout.value = window.setTimeout(() => {
-        if (gegenstandId !== 'zurück') {
-          router.push(`/gegenstaende-verben/${gegenstandId}`)
-        }
-      }, 2000)
+        router.push('/gegenstaende')
+      }, 3000)
   }
 }
 
@@ -162,10 +166,10 @@ const handleBlink = () => {
     }
     
     if (closedFrames.value >= blinkThreshold.value && !eyesClosed.value) {
-      const currentItem = gegenstaendeItems[currentTileIndex.value]
+      const currentItem = gegenstaendeVerbenItems[currentTileIndex.value]
       
       speakText(currentItem.text)
-      selectGegenstand(currentItem.id)
+      selectVerb(currentItem.id)
       eyesClosed.value = true
       lastBlinkTime.value = now
       closedFrames.value = 0
@@ -181,14 +185,34 @@ const handleBlink = () => {
 // Rechte Maustaste als Blinzeln-Ersatz
 const handleRightClick = (event: MouseEvent) => {
   event.preventDefault()
-  const currentItem = gegenstaendeItems[currentTileIndex.value]
+  const currentItem = gegenstaendeVerbenItems[currentTileIndex.value]
   
   speakText(currentItem.text)
-  selectGegenstand(currentItem.id)
+  selectVerb(currentItem.id)
 }
 
 // Lifecycle
 onMounted(() => {
+  // Hole den Gegenstand aus der Route und konvertiere Umlaute
+  const itemId = route.params.gegenstand as string || 'Gegenstand'
+  
+  // Konvertiere URL-Parameter zu korrekten deutschen Umlauten
+  const umlautMap: { [key: string]: string } = {
+    'handy': 'Handy',
+    'glas': 'Glas',
+    'brille': 'Brille',
+    'stift': 'Stift',
+    'papier': 'Papier',
+    'lineal': 'Lineal',
+    'teller': 'Teller',
+    'besteck': 'Besteck',
+    'buch': 'Buch',
+    'uhr': 'Uhr',
+    'schluessel': 'Schlüssel'
+  }
+  
+  selectedGegenstand.value = umlautMap[itemId] || itemId
+  
   if (!faceRecognition.isActive.value) {
     faceRecognition.start()
   }
@@ -215,13 +239,13 @@ onUnmounted(() => {
       <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div class="flex justify-between items-center py-4">
           <div class="flex items-center space-x-4">
-            <button @click="$router.push('/umgebung')" class="p-2 rounded-lg bg-gray-300 hover:bg-gray-400 transition-colors">
+            <button @click="$router.push('/gegenstaende')" class="p-2 rounded-lg bg-gray-300 hover:bg-gray-400 transition-colors">
               <svg class="w-6 h-6 text-gray-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
               </svg>
             </button>
             <h1 class="text-2xl font-bold text-black font-source-code font-light">
-              GEGENSTÄNDE
+              GEGENSTÄNDE-VERBEN FÜR: {{ selectedGegenstand.toUpperCase() }}
             </h1>
           </div>
           
@@ -274,28 +298,28 @@ onUnmounted(() => {
     <!-- Main Content -->
     <main class="flex-1 flex items-center justify-center p-16">
       <div class="max-w-8xl mx-auto">
-        <!-- Ausgewähltes Gegenstand-Item Anzeige -->
+        <!-- Gewählte Kombination Anzeige -->
         <div class="mb-64 text-center">
-          <div class="bg-blue-100 dark:bg-blue-900 rounded-xl p-20 max-w-8xl mx-auto">
-            <h2 class="text-8xl font-bold text-blue-800 dark:text-blue-200 mb-12" style="font-family: 'Source Code Pro', monospace; font-weight: 300;">
-              Ausgewähltes Item:
+          <div class="bg-green-100 dark:bg-green-900 rounded-xl p-20 max-w-8xl mx-auto">
+            <h2 class="text-8xl font-bold text-green-800 dark:text-green-200 mb-12" style="font-family: 'Source Code Pro', monospace; font-weight: 300;">
+              Kombination:
             </h2>
-            <div class="font-bold text-blue-900 dark:text-blue-100" style="font-family: 'Source Code Pro', monospace; font-weight: 300; font-size: 4rem;">
-              {{ selectedGegenstand || 'Wählen Sie einen Gegenstand aus' }}
+            <div class="font-bold text-green-900 dark:text-green-100" style="font-family: 'Source Code Pro', monospace; font-weight: 300; font-size: 4rem;">
+              {{ selectedGegenstand }}{{ selectedVerb ? ' ' + selectedVerb : '' }}
             </div>
           </div>
         </div>
          <!-- Abstandshalter -->
          <div style="height: 4rem;"></div>
 
-        <!-- Gegenstände-Items Tastatur - 3 Zeilen -->
+        <!-- Gegenstände-Verben-Items Tastatur - 4 Teile pro Zeile -->
         <div class="space-y-20 mt-32 mb-48">
-          <!-- Zeile 1: Handy, Glas, Brille, Stift -->
+          <!-- Zeile 1: benutzen, halten, legen, nehmen -->
           <div class="flex justify-center space-x-16">
             <button
-              v-for="(item, index) in gegenstaendeItems.slice(0, 4)"
+              v-for="(item, index) in gegenstaendeVerbenItems.slice(0, 4)"
               :key="item.id"
-              @click="selectGegenstand(item.id)"
+              @click="selectVerb(item.id)"
               class="transition-all duration-300 font-medium hover:scale-110 flex flex-col items-center space-y-4"
               :style="{
                 fontSize: '2.2rem',
@@ -315,12 +339,12 @@ onUnmounted(() => {
             </button>
           </div>
 
-          <!-- Zeile 2: Papier, Lineal, Teller, Besteck -->
+          <!-- Zeile 2: geben, aufheben, reinigen, weglegen -->
           <div class="flex justify-center space-x-16">
             <button
-              v-for="(item, index) in gegenstaendeItems.slice(4, 8)"
+              v-for="(item, index) in gegenstaendeVerbenItems.slice(4, 8)"
               :key="item.id"
-              @click="selectGegenstand(item.id)"
+              @click="selectVerb(item.id)"
               class="transition-all duration-300 font-medium hover:scale-110 flex flex-col items-center space-y-4"
               :style="{
                 fontSize: '2.2rem',
@@ -340,12 +364,12 @@ onUnmounted(() => {
             </button>
           </div>
 
-          <!-- Zeile 3: Buch, Uhr, Schlüssel, Zurück -->
+          <!-- Zeile 3: finden, bringen, holen, zurück -->
           <div class="flex justify-center space-x-16">
             <button
-              v-for="(item, index) in gegenstaendeItems.slice(8, 12)"
+              v-for="(item, index) in gegenstaendeVerbenItems.slice(8, 12)"
               :key="item.id"
-              @click="selectGegenstand(item.id)"
+              @click="selectVerb(item.id)"
               class="transition-all duration-300 font-medium hover:scale-110 flex flex-col items-center space-y-4"
               :style="{
                 fontSize: '2.2rem',
@@ -361,9 +385,6 @@ onUnmounted(() => {
               :class="currentTileIndex === index + 8 ? 'text-orange-500 scale-110' : 'text-black hover:text-gray-600'"
             >
               <div v-if="item.emoji" style="font-size: 4rem;">{{ item.emoji }}</div>
-              <div v-else-if="item.icon" class="w-16 h-16 flex items-center justify-center">
-                <img :src="item.icon" :alt="item.text" style="width: 64px; height: 64px; object-fit: cover;" />
-              </div>
               <span>{{ item.text }}</span>
             </button>
           </div>
@@ -374,14 +395,14 @@ onUnmounted(() => {
 
         <!-- Instructions -->
         <div class="mt-16 text-center">
-          <div class="bg-blue-100 dark:bg-blue-900 rounded-xl p-12 max-w-4xl mx-auto">
-            <h3 class="text-4xl font-semibold text-blue-800 dark:text-blue-200 mb-4" style="font-family: 'Source Code Pro', monospace; font-weight: 300;">
+          <div class="bg-green-100 dark:bg-green-900 rounded-xl p-12 max-w-4xl mx-auto">
+            <h3 class="text-4xl font-semibold text-green-800 dark:text-green-200 mb-4" style="font-family: 'Source Code Pro', monospace; font-weight: 300;">
               Bedienung
             </h3>
-            <p class="text-2xl text-blue-700 dark:text-blue-300" style="font-family: 'Source Code Pro', monospace; font-weight: 300;">
-              <strong>Kurz blinzeln ({{ settingsStore.settings.blinkSensitivity }}s):</strong> Gegenstand auswählen<br>
-              <strong>Rechte Maustaste:</strong> Gegenstand auswählen<br>
-              <strong>Auto-Modus:</strong> Automatischer Durchlauf durch alle Items
+            <p class="text-2xl text-green-700 dark:text-green-300" style="font-family: 'Source Code Pro', monospace; font-weight: 300;">
+              <strong>Kurz blinzeln ({{ settingsStore.settings.blinkSensitivity }}s):</strong> Verb auswählen<br>
+              <strong>Rechte Maustaste:</strong> Verb auswählen<br>
+              <strong>Auto-Modus:</strong> Automatischer Durchlauf durch alle Verben
             </p>
           </div>
         </div>
@@ -391,7 +412,33 @@ onUnmounted(() => {
 </template>
 
 <style scoped>
-.hover\:scale-102:hover {
-  transform: scale(1.02);
+/* Custom scrollbar */
+.overflow-y-auto::-webkit-scrollbar {
+  width: 6px;
+}
+
+.overflow-y-auto::-webkit-scrollbar-track {
+  background: #f1f5f9;
+}
+
+.overflow-y-auto::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
+  border-radius: 3px;
+}
+
+.overflow-y-auto::-webkit-scrollbar-thumb:hover {
+  background: #94a3b8;
+}
+
+.dark .overflow-y-auto::-webkit-scrollbar-track {
+  background: #374151;
+}
+
+.dark .overflow-y-auto::-webkit-scrollbar-thumb {
+  background: #6b7280;
+}
+
+.dark .overflow-y-auto::-webkit-scrollbar-thumb:hover {
+  background: #9ca3af;
 }
 </style>

@@ -3,6 +3,7 @@ import { ref, onMounted, onUnmounted, computed } from 'vue'
 import { useRouter } from 'vue-router'
 import { useFaceRecognition } from '../../face-recognition/composables/useFaceRecognition'
 import { useSettingsStore } from '../../settings/stores/settings'
+import GlobalHeader from '../../../shared/components/GlobalHeader.vue'
 
 // Router
 const router = useRouter()
@@ -281,34 +282,19 @@ const goBack = () => {
 
 <template>
   <div class="min-h-screen bg-white dark:bg-gray-900 flex flex-col">
-    <!-- Header -->
-    <header class="bg-gray-200 dark:bg-gray-800 shadow-2xl flex-shrink-0" style="box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);">
-      <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div class="flex justify-between items-center py-4">
-          <!-- Zurück Button (oben links) -->
-          <button
-            @click="goBack"
-            class="p-2 rounded-lg bg-gray-300 hover:bg-gray-400 dark:bg-gray-600 dark:hover:bg-gray-500 transition-colors"
-            title="Zurück zur Hauptseite (oder 10 Sekunden blinzeln)"
-          >
-            <svg class="w-6 h-6 text-gray-700 dark:text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
-            </svg>
-          </button>
-          
-          <div class="flex items-center space-x-4">
-            <h1 class="text-2xl font-bold text-black dark:text-white" style="font-family: 'Source Code Pro', monospace; font-weight: 300;">
-              WARNGERÄUSCH
-            </h1>
-            <img src="/rattenkopf.svg" alt="Ratatosk Logo" class="w-12 h-12" />
-            <div class="w-2.5 h-1.5 bg-[#00796B]"></div>
-          </div>
-          
-          <!-- Platzhalter für zentrierte Ausrichtung -->
-          <div class="w-10 h-10"></div>
-        </div>
-      </div>
-    </header>
+    <!-- Global Header -->
+    <GlobalHeader>
+      <!-- Zurück Button -->
+      <button
+        @click="goBack"
+        class="p-2 rounded-lg bg-gray-300 hover:bg-gray-400 dark:bg-gray-600 dark:hover:bg-gray-500 transition-colors"
+        title="Zurück zur Hauptseite (oder 10 Sekunden blinzeln)"
+      >
+        <svg class="w-6 h-6 text-gray-700 dark:text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+        </svg>
+      </button>
+    </GlobalHeader>
 
     <!-- Main Content -->
     <main class="flex-1 flex items-center justify-center p-16">

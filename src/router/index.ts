@@ -9,6 +9,12 @@ import SchmerzView from '../features/pain-assessment/views/SchmerzView.vue'
 import HygieneView from '../features/hygiene/views/HygieneView.vue'
 import UmgebungView from '../features/environment/views/UmgebungView.vue'
 import GegenstaendeView from '../features/environment/views/GegenstaendeView.vue'
+import VerbenView from '../features/environment/views/VerbenView.vue'
+import GegenstaendeVerbenView from '../features/environment/views/GegenstaendeVerbenView.vue'
+import BettVerbenView from '../features/environment/views/BettVerbenView.vue'
+import ZimmerVerbenView from '../features/environment/views/ZimmerVerbenView.vue'
+import ZimmerView from '../features/environment/views/ZimmerView.vue'
+import BettView from '../features/environment/views/BettView.vue'
 import KleidungView from '../features/clothing/views/KleidungView.vue'
 import BewegungView from '../features/movement/views/BewegungView.vue'
 import ErnaehrungView from '../features/nutrition/views/ErnaehrungView.vue'
@@ -76,6 +82,36 @@ const router = createRouter({
       path: '/gegenstaende',
       name: 'gegenstaende',
       component: GegenstaendeView,
+    },
+    {
+      path: '/verben/:gegenstand',
+      name: 'verben',
+      component: VerbenView,
+    },
+    {
+      path: '/gegenstaende-verben/:gegenstand',
+      name: 'gegenstaende-verben',
+      component: GegenstaendeVerbenView,
+    },
+    {
+      path: '/bett-verben/:bettItem',
+      name: 'bett-verben',
+      component: BettVerbenView,
+    },
+    {
+      path: '/zimmer-verben/:zimmerItem',
+      name: 'zimmer-verben',
+      component: ZimmerVerbenView,
+    },
+    {
+      path: '/zimmer',
+      name: 'zimmer',
+      component: ZimmerView,
+    },
+    {
+      path: '/bett',
+      name: 'bett',
+      component: BettView,
     },
     {
       path: '/kleidung',
