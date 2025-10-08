@@ -1,0 +1,241 @@
+/* BewegungView - Komplett neu geschriebenes CSS nach Ernährung-Vorbild */
+
+/* App Container */
+.bewegung-app {
+  min-height: 100vh;
+  background-color: white;
+  display: flex;
+  flex-direction: column;
+}
+
+/* Main Content - Weniger Abstand unter Header */
+.main-content {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1rem 4rem; /* Weniger Abstand oben/unten: 4rem → 1rem */
+}
+
+.content-wrapper {
+  max-width: 8xl;
+  margin: 0 auto;
+  width: 100%;
+}
+
+/* Ausgewähltes Item Anzeige - Nochmal 5% weiter hoch */
+.selected-item-container {
+  margin-bottom: 0.43rem; /* 5% weniger: 0.45rem * 0.95 = 0.43rem */
+  margin-top: -0.58rem; /* 5% mehr negativer Abstand: -0.55rem * 1.05 = -0.58rem */
+  text-align: center;
+}
+
+.selected-item-title {
+  font-size: 3.75rem; /* 25% kleiner: 5rem * 0.75 = 3.75rem */
+  font-weight: bold;
+  color: #374151;
+  font-family: 'Source Code Pro', monospace;
+  font-weight: 300;
+  margin-bottom: 1rem;
+}
+
+.selected-item-text {
+  font-size: 1.875rem; /* 25% kleiner: 2.5rem * 0.75 = 1.875rem */
+  font-weight: bold;
+  color: #1f2937;
+  font-family: 'Source Code Pro', monospace;
+  font-weight: 300;
+}
+
+/* Spacer */
+.spacer {
+  height: 4rem;
+}
+
+/* Bewegung Items Grid - Nochmal 5% weiter hoch */
+.bewegung-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 0.86rem; /* 5% weniger: 0.9rem * 0.95 = 0.86rem */
+  margin: 0 0 0.43rem 0; /* 5% weniger: 0.45rem * 0.95 = 0.43rem */
+}
+
+.bewegung-row {
+  display: flex;
+  justify-content: center;
+  gap: 0.75rem; /* Noch näher: 1.5rem → 0.75rem */
+}
+
+/* Bewegung Item Buttons - Alle gleich groß */
+.bewegung-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.75rem;
+  padding: 1.5rem;
+  border: 2px solid #d1d5db;
+  border-radius: 15px;
+  background: white;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  font-size: 1.65rem;
+  font-weight: 500;
+  width: 246px; /* 10% breiter: 224px * 1.1 = 246px */
+  height: 120px; /* Höhe bleibt gleich */
+  outline: none;
+  box-shadow: none;
+  margin: 0;
+}
+
+.bewegung-item:hover {
+  transform: scale(1.1);
+  color: #6b7280;
+}
+
+.bewegung-item.active {
+  background: #f3f4f6;
+  color: #f97316;
+  transform: scale(1.1);
+}
+
+.bewegung-item.inactive {
+  color: black;
+}
+
+.bewegung-emoji {
+  font-size: 3rem; /* 25% kleiner: 4rem * 0.75 = 3rem */
+}
+
+.bewegung-text {
+  font-family: 'Source Code Pro', monospace;
+}
+
+/* Instructions - Nochmal 5% weiter hoch */
+.instructions-container {
+  margin-top: -0.15rem; /* 5% mehr negativer Abstand: -0.1rem * 1.5 = -0.15rem */
+  text-align: center;
+}
+
+.instructions-title {
+  font-size: 2.5rem;
+  font-weight: 600;
+  color: #374151;
+  font-family: 'Source Code Pro', monospace;
+  font-weight: 300;
+  margin-bottom: 0.25rem; /* Weniger Abstand zum Text darunter */
+}
+
+.instructions-text {
+  font-size: 1.5rem;
+  color: #1f2937;
+  font-family: 'Source Code Pro', monospace;
+  font-weight: 300;
+  line-height: 1.6;
+}
+
+.instructions-text strong {
+  font-weight: bold;
+}
+
+/* Custom scrollbar */
+.overflow-y-auto::-webkit-scrollbar {
+  width: 6px;
+}
+
+.overflow-y-auto::-webkit-scrollbar-track {
+  background: #f1f5f9;
+}
+
+.overflow-y-auto::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
+  border-radius: 3px;
+}
+
+.overflow-y-auto::-webkit-scrollbar-thumb:hover {
+  background: #94a3b8;
+}
+
+/* Dark mode scrollbar */
+.dark .overflow-y-auto::-webkit-scrollbar-track {
+  background: #374151;
+}
+
+.dark .overflow-y-auto::-webkit-scrollbar-thumb {
+  background: #6b7280;
+}
+
+.dark .overflow-y-auto::-webkit-scrollbar-thumb:hover {
+  background: #9ca3af;
+}
+
+/* Responsive Design - 25% kleiner angepasst */
+@media (max-width: 768px) {
+  .main-content {
+    padding: 0.5rem 2rem; /* Weniger Abstand oben/unten: 2rem → 0.5rem */
+  }
+  
+  .bewegung-row {
+    gap: 0.5rem; /* Noch näher: 1rem → 0.5rem */
+  }
+  
+  .bewegung-item {
+    padding: 1rem;
+    font-size: 1.35rem;
+    width: 206px; /* 10% breiter: 187px * 1.1 = 206px */
+    height: 100px; /* Alle gleich hoch */
+  }
+  
+  .bewegung-emoji {
+    font-size: 2.25rem; /* 25% kleiner: 3rem * 0.75 = 2.25rem */
+  }
+  
+  .selected-item-title {
+    font-size: 2.25rem; /* 25% kleiner: 3rem * 0.75 = 2.25rem */
+  }
+  
+  .selected-item-text {
+    font-size: 1.5rem; /* 25% kleiner: 2rem * 0.75 = 1.5rem */
+  }
+  
+  .instructions-title {
+    font-size: 2rem;
+  }
+  
+  .instructions-text {
+    font-size: 1.2rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .main-content {
+    padding: 0.25rem 1rem; /* Weniger Abstand oben/unten: 1rem → 0.25rem */
+  }
+  
+  .bewegung-grid {
+    gap: 0.75rem; /* Noch näher: 1.5rem → 0.75rem */
+  }
+  
+  .bewegung-row {
+    gap: 0.25rem; /* Noch näher: 0.5rem → 0.25rem */
+  }
+  
+  .bewegung-item {
+    padding: 0.75rem;
+    font-size: 1.125rem;
+    width: 165px; /* 10% breiter: 150px * 1.1 = 165px */
+    height: 80px; /* Höhe bleibt gleich */
+  }
+  
+  .bewegung-emoji {
+    font-size: 1.875rem; /* 25% kleiner: 2.5rem * 0.75 = 1.875rem */
+  }
+  
+  .selected-item-title {
+    font-size: 1.875rem; /* 25% kleiner: 2.5rem * 0.75 = 1.875rem */
+  }
+  
+  .selected-item-text {
+    font-size: 1.125rem; /* 25% kleiner: 1.5rem * 0.75 = 1.125rem */
+  }
+}

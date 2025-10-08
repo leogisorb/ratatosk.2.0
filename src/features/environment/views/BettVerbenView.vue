@@ -291,10 +291,7 @@ onUnmounted(() => {
         <!-- Gewählte Kombination Anzeige -->
         <div class="mb-64 text-center">
           <div class="bg-green-100">
-            <h2 class="text-8xl font-bold text-green-800" style="font-family: 'Source Code Pro', monospace; font-weight: 300;">
-              Kombination:
-            </h2>
-            <div class="font-bold text-green-900" style="font-family: 'Source Code Pro', monospace; font-weight: 300; font-size: 4rem;">
+            <div class="font-bold text-green-900" style="font-family: 'Source Code Pro', monospace; font-weight: 300; font-size: 6rem;">
               {{ selectedBettItem }}{{ selectedVerb ? ' ' + selectedVerb : '' }}
             </div>
           </div>

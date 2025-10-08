@@ -1,386 +1,75 @@
 <script setup lang="ts">
-import { ref, onMounted, onUnmounted, computed } from 'vue'
-import { useRouter } from 'vue-router'
-import { useFaceRecognition } from '../../face-recognition/composables/useFaceRecognition'
-import { useSettingsStore } from '../../settings/stores/settings'
-import { keyboardGridConfig, getKeyboardTileStyle } from '../../../config/gridConfig'
-import GlobalHeader from '../../../shared/components/GlobalHeader.vue'
+import { useGegenstaendeViewLogic } from './GegenstaendeView.ts'
+import AppHeader from '../../../shared/components/AppHeader.vue'
 
-// Router
-const router = useRouter()
-
-// Stores
-const settingsStore = useSettingsStore()
-
-// Face Recognition
-const faceRecognition = useFaceRecognition()
-
-// State
-const currentTileIndex = ref(0)
-const selectedGegenstand = ref('')
-const isAutoMode = ref(true)
-const autoModeInterval = ref<number | null>(null)
-const closedFrames = ref(0)
-const eyesClosed = ref(false)
-const isAutoModePaused = ref(false)
-const restartTimeout = ref<number | null>(null)
-
-// Verbesserte Blink-Detection Parameter - zentral gesteuert
-const blinkThreshold = computed(() => Math.ceil(settingsStore.settings.blinkSensitivity * 10)) // Konvertiere Sekunden zu Frames (10 FPS)
-const lastBlinkTime = ref(0)
-const blinkCooldown = computed(() => settingsStore.settings.blinkSensitivity * 1000)
-
-// Text-to-Speech
-const speechSynthesis = window.speechSynthesis
-const isTTSEnabled = ref(true)
-
-// Verwende die Keyboard-Grid-Konfiguration
-const gridConfig = keyboardGridConfig
-
-// Gegenstände-Items mit passenden Emojis
-const gegenstaendeItems = [
-  { id: 'handy', text: 'Handy', type: 'gegenstand', emoji: '📱' },
-  { id: 'glas', text: 'Glas', type: 'gegenstand', emoji: '🥛' },
-  { id: 'brille', text: 'Brille', type: 'gegenstand', emoji: '👓' },
-  { id: 'stift', text: 'Stift', type: 'gegenstand', emoji: '✏️' },
-  { id: 'papier', text: 'Papier', type: 'gegenstand', emoji: '📄' },
-  { id: 'lineal', text: 'Lineal', type: 'gegenstand', emoji: '📏' },
-  { id: 'teller', text: 'Teller', type: 'gegenstand', emoji: '🍽️' },
-  { id: 'besteck', text: 'Besteck', type: 'gegenstand', emoji: '🍴' },
-  { id: 'buch', text: 'Buch', type: 'gegenstand', emoji: '📚' },
-  { id: 'uhr', text: 'Uhr', type: 'gegenstand', emoji: '🕐' },
-  { id: 'schluessel', text: 'Schlüssel', type: 'gegenstand', emoji: '🗝️' },
-  { id: 'zurück', text: 'zurück', type: 'navigation', emoji: '⬅️' }
-]
-
-// Text-to-Speech Funktion
-const speakText = (text: string) => {
-  if (!isTTSEnabled.value || !speechSynthesis) return
-  
-  speechSynthesis.cancel()
-  
-  const utterance = new SpeechSynthesisUtterance(text)
-  utterance.lang = 'de-DE'
-  utterance.rate = 0.8
-  utterance.pitch = 1.0
-  utterance.volume = 1.0
-  
-  speechSynthesis.speak(utterance)
-}
-
-// TTS Toggle
-const toggleTTS = () => {
-  isTTSEnabled.value = !isTTSEnabled.value
-  
-  if (!isTTSEnabled.value) {
-    speechSynthesis.cancel()
-  } else {
-    speakText('Sprachausgabe aktiviert')
-  }
-}
-
-// Auto Mode Funktionen
-const startAutoMode = () => {
-  if (autoModeInterval.value) return
-  
-  currentTileIndex.value = 0
-  
-  const cycleTiles = () => {
-    if (!isAutoMode.value || isAutoModePaused.value) {
-      return
-    }
-    currentTileIndex.value = (currentTileIndex.value + 1) % gegenstaendeItems.length
-    const currentItem = gegenstaendeItems[currentTileIndex.value]
-    speakText(currentItem.text)
-    autoModeInterval.value = window.setTimeout(cycleTiles, 3000) // 3 Sekunden
-  }
-  
-  const firstItem = gegenstaendeItems[currentTileIndex.value]
-  speakText(firstItem.text)
-  
-  autoModeInterval.value = window.setTimeout(cycleTiles, 3000)
-}
-
-const pauseAutoMode = () => {
-  isAutoModePaused.value = true
-  if (autoModeInterval.value) {
-    clearTimeout(autoModeInterval.value)
-    autoModeInterval.value = null
-  }
-  if (restartTimeout.value) {
-    clearTimeout(restartTimeout.value)
-    restartTimeout.value = null
-  }
-  speechSynthesis.cancel()
-}
-
-const stopAutoMode = () => {
-  if (autoModeInterval.value) {
-    clearTimeout(autoModeInterval.value)
-    autoModeInterval.value = null
-  }
-  if (restartTimeout.value) {
-    clearTimeout(restartTimeout.value)
-    restartTimeout.value = null
-  }
-  speechSynthesis.cancel()
-}
-
-// Gegenstand-Auswahl
-function selectGegenstand(gegenstandId: string) {
-  pauseAutoMode()
-  
-  const selectedItem = gegenstaendeItems.find(item => item.id === gegenstandId)
-  if (selectedItem) {
-    selectedGegenstand.value = selectedItem.text
-  }
-  
-  switch (gegenstandId) {
-    case 'zurück':
-      router.push('/umgebung')
-      break
-    default:
-      speakText(`${selectedItem?.text} ausgewählt`)
-      
-      // Weiterleitung zu Gegenstände-Verben nach 2 Sekunden
-      restartTimeout.value = window.setTimeout(() => {
-        if (gegenstandId !== 'zurück') {
-          router.push(`/gegenstaende-verben/${gegenstandId}`)
-        }
-      }, 2000)
-  }
-}
-
-// Blink Detection
-const handleBlink = () => {
-  const now = Date.now()
-  
-  if (faceRecognition.isBlinking()) {
-    closedFrames.value++
-    
-    if (now - lastBlinkTime.value < blinkCooldown.value) {
-      return
-    }
-    
-    if (closedFrames.value >= blinkThreshold.value && !eyesClosed.value) {
-      const currentItem = gegenstaendeItems[currentTileIndex.value]
-      
-      speakText(currentItem.text)
-      selectGegenstand(currentItem.id)
-      eyesClosed.value = true
-      lastBlinkTime.value = now
-      closedFrames.value = 0
-    }
-  } else {
-    if (closedFrames.value > 0) {
-      closedFrames.value = 0
-      eyesClosed.value = false
-    }
-  }
-}
-
-// Rechte Maustaste als Blinzeln-Ersatz
-const handleRightClick = (event: MouseEvent) => {
-  event.preventDefault()
-  const currentItem = gegenstaendeItems[currentTileIndex.value]
-  
-  speakText(currentItem.text)
-  selectGegenstand(currentItem.id)
-}
-
-// Lifecycle
-onMounted(() => {
-  if (!faceRecognition.isActive.value) {
-    faceRecognition.start()
-  }
-  
-  startAutoMode()
-  
-  const blinkCheckInterval = setInterval(() => {
-    handleBlink()
-  }, 100)
-  
-  document.addEventListener('contextmenu', handleRightClick)
-})
-
-onUnmounted(() => {
-  document.removeEventListener('contextmenu', handleRightClick)
-  stopAutoMode()
-})
+const {
+  currentTileIndex,
+  selectedGegenstaendeItem,
+  isAutoMode,
+  autoModeInterval,
+  closedFrames,
+  eyesClosed,
+  isAutoModePaused,
+  restartTimeout,
+  blinkThreshold,
+  lastBlinkTime,
+  blinkCooldown,
+  speechSynthesis,
+  isTTSEnabled,
+  gegenstaendeItems,
+  speakText,
+  toggleTTS,
+  startAutoMode,
+  pauseAutoMode,
+  stopAutoMode,
+  selectGegenstaendeItem,
+  handleBlink,
+  handleRightClick,
+  settingsStore,
+  faceRecognition
+} = useGegenstaendeViewLogic()
 </script>
 
 <template>
-  <div class="min-h-screen bg-white">
-    <!-- Global Header -->
-    <GlobalHeader>
-      <div class="flex items-center space-x-4">
-        <button @click="$router.push('/umgebung')" class="p-2 rounded-lg bg-gray-300 hover:bg-gray-400 transition-colors">
-          <svg class="w-6 h-6 text-gray-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
-          </svg>
-        </button>
-        <h1 class="text-2xl font-bold text-black font-source-code font-light">
-          GEGENSTÄNDE
-        </h1>
-      </div>
-      
-      <!-- TTS Toggle Button -->
-      <button
-        @click="toggleTTS"
-        class="p-2 rounded-lg transition-colors"
-        :class="isTTSEnabled ? 'bg-green-300 hover:bg-green-400' : 'bg-gray-300 hover:bg-gray-400'"
-        :title="isTTSEnabled ? 'Sprachausgabe deaktivieren' : 'Sprachausgabe aktivieren'"
-      >
-        <svg
-          v-if="isTTSEnabled"
-          class="w-6 h-6 text-green-700"
-          fill="none"
-          stroke="currentColor"
-          viewBox="0 0 24 24"
-        >
-          <path
-            stroke-linecap="round"
-            stroke-linejoin="round"
-            stroke-width="2"
-            d="M15.536 8.464a5 5 0 010 7.072m2.828-9.9a9 9 0 010 12.728M5.586 15H4a1 1 0 01-1-1v-4a1 1 0 011-1h1.586l4.707-4.707C10.923 3.663 12 4.109 12 5v14c0 .891-1.077 1.337-1.707.707L5.586 15z"
-          />
-        </svg>
-        <svg
-          v-else
-          class="w-6 h-6 text-gray-700"
-          fill="none"
-          stroke="currentColor"
-          viewBox="0 0 24 24"
-        >
-          <path
-            stroke-linecap="round"
-            stroke-linejoin="round"
-            stroke-width="2"
-            d="M5.586 15H4a1 1 0 01-1-1v-4a1 1 0 011-1h1.586l4.707-4.707C10.923 3.663 12 4.109 12 5v14c0 .891-1.077 1.337-1.707.707L5.586 15z"
-          />
-          <path
-            stroke-linecap="round"
-            stroke-linejoin="round"
-            stroke-width="2"
-            d="M17 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2"
-          />
-        </svg>
-      </button>
-    </GlobalHeader>
+  <div class="gegenstaende-app">
+    <!-- App Header -->
+    <AppHeader />
 
-    <!-- Main Content -->
-    <main class="flex-1 flex items-center justify-center p-16">
-      <div class="max-w-8xl mx-auto">
+    <!-- Main Content - Zentriert -->
+    <main class="main-content">
+      <div class="content-wrapper">
         <!-- Ausgewähltes Gegenstand-Item Anzeige -->
-        <div class="mb-64 text-center">
-          <div class="bg-blue-100">
-            <h2 class="text-8xl font-bold text-blue-800" style="font-family: 'Source Code Pro', monospace; font-weight: 300;">
-              Ausgewähltes Item:
-            </h2>
-            <div class="font-bold text-blue-900" style="font-family: 'Source Code Pro', monospace; font-weight: 300; font-size: 4rem;">
-              {{ selectedGegenstand || 'Wählen Sie einen Gegenstand aus' }}
-            </div>
-          </div>
-        </div>
-         <!-- Abstandshalter -->
-         <div style="height: 4rem;"></div>
-
-        <!-- Gegenstände-Items Tastatur - 3 Zeilen -->
-        <div class="space-y-20 mt-32 mb-48">
-          <!-- Zeile 1: Handy, Glas, Brille, Stift -->
-          <div class="flex justify-center space-x-16">
-            <button
-              v-for="(item, index) in gegenstaendeItems.slice(0, 4)"
-              :key="item.id"
-              @click="selectGegenstand(item.id)"
-              class="transition-all duration-300 font-medium hover:scale-110 flex flex-col items-center space-y-4"
-              :style="{
-                fontSize: '2.2rem',
-                background: currentTileIndex === index ? '#f3f4f6' : 'white',
-                border: '2px solid #d1d5db',
-                borderRadius: '15px',
-                outline: 'none',
-                boxShadow: 'none',
-                padding: '12.6px 18.9px',
-                margin: '0',
-                minWidth: '120px'
-              }"
-              :class="currentTileIndex === index ? 'text-orange-500 scale-110' : 'text-black hover:text-gray-600'"
-            >
-              <div v-if="item.emoji" style="font-size: 4rem;">{{ item.emoji }}</div>
-              <span>{{ item.text }}</span>
-            </button>
-          </div>
-
-          <!-- Zeile 2: Papier, Lineal, Teller, Besteck -->
-          <div class="flex justify-center space-x-16">
-            <button
-              v-for="(item, index) in gegenstaendeItems.slice(4, 8)"
-              :key="item.id"
-              @click="selectGegenstand(item.id)"
-              class="transition-all duration-300 font-medium hover:scale-110 flex flex-col items-center space-y-4"
-              :style="{
-                fontSize: '2.2rem',
-                background: currentTileIndex === index + 4 ? '#f3f4f6' : 'white',
-                border: '2px solid #d1d5db',
-                borderRadius: '15px',
-                outline: 'none',
-                boxShadow: 'none',
-                padding: '12.6px 18.9px',
-                margin: '0',
-                minWidth: '120px'
-              }"
-              :class="currentTileIndex === index + 4 ? 'text-orange-500 scale-110' : 'text-black hover:text-gray-600'"
-            >
-              <div v-if="item.emoji" style="font-size: 4rem;">{{ item.emoji }}</div>
-              <span>{{ item.text }}</span>
-            </button>
-          </div>
-
-          <!-- Zeile 3: Buch, Uhr, Schlüssel, Zurück -->
-          <div class="flex justify-center space-x-16">
-            <button
-              v-for="(item, index) in gegenstaendeItems.slice(8, 12)"
-              :key="item.id"
-              @click="selectGegenstand(item.id)"
-              class="transition-all duration-300 font-medium hover:scale-110 flex flex-col items-center space-y-4"
-              :style="{
-                fontSize: '2.2rem',
-                background: currentTileIndex === index + 8 ? '#f3f4f6' : 'white',
-                border: '2px solid #d1d5db',
-                borderRadius: '15px',
-                outline: 'none',
-                boxShadow: 'none',
-                padding: '12.6px 18.9px',
-                margin: '0',
-                minWidth: '120px'
-              }"
-              :class="currentTileIndex === index + 8 ? 'text-orange-500 scale-110' : 'text-black hover:text-gray-600'"
-            >
-              <div v-if="item.emoji" style="font-size: 4rem;">{{ item.emoji }}</div>
-              <div v-else-if="item.icon" class="w-16 h-16 flex items-center justify-center">
-                <img :src="item.icon" :alt="item.text" style="width: 64px; height: 64px; object-fit: cover;" />
-              </div>
-              <span>{{ item.text }}</span>
-            </button>
+        <div class="selected-item-container">
+          <h2 class="selected-item-title">
+            Ausgewähltes Item:
+          </h2>
+          <div class="selected-item-text">
+            {{ selectedGegenstaendeItem || 'Wählen Sie einen Gegenstand aus' }}
           </div>
         </div>
 
-        <!-- Abstandshalter -->
-        <div style="height: 4rem;"></div>
+        <!-- Gegenstand-Items Grid - 3x3 Grid für 9 Items -->
+        <div class="gegenstaende-items-grid">
+          <button
+            v-for="(item, index) in gegenstaendeItems"
+            :key="item.id"
+            @click="selectGegenstaendeItem(item.id)"
+            class="gegenstaende-items-item"
+            :class="currentTileIndex === index ? 'active' : 'inactive'"
+          >
+            <div v-if="item.emoji" class="gegenstaende-items-emoji">{{ item.emoji }}</div>
+            <span class="gegenstaende-items-text">{{ item.text }}</span>
+          </button>
+        </div>
 
         <!-- Instructions -->
-        <div class="mt-16 text-center">
-          <div class="bg-blue-100">
-            <h3 class="text-4xl font-semibold text-blue-800" style="font-family: 'Source Code Pro', monospace; font-weight: 300;">
-              Bedienung
-            </h3>
-            <p class="text-2xl text-blue-700" style="font-family: 'Source Code Pro', monospace; font-weight: 300;">
-              <strong>Kurz blinzeln ({{ settingsStore.settings.blinkSensitivity }}s):</strong> Gegenstand auswählen<br>
-              <strong>Rechte Maustaste:</strong> Gegenstand auswählen<br>
-              <strong>Auto-Modus:</strong> Automatischer Durchlauf durch alle Items
-            </p>
-          </div>
+        <div class="instructions-container">
+          <h3 class="instructions-title">Bedienung</h3>
+          <p class="instructions-text">
+            <strong>Kurz blinzeln ({{ settingsStore.settings.blinkSensitivity }}s):</strong> Gegenstand auswählen<br>
+            <strong>Rechte Maustaste:</strong> Gegenstand auswählen<br>
+            <strong>Auto-Modus:</strong> Automatischer Durchlauf durch alle Items
+          </p>
         </div>
       </div>
     </main>
@@ -388,7 +77,5 @@ onUnmounted(() => {
 </template>
 
 <style scoped>
-.hover\:scale-102:hover {
-  transform: scale(1.02);
-}
+@import './GegenstaendeView.css';
 </style>

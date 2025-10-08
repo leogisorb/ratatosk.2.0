@@ -1,0 +1,173 @@
+/* HomeView spezifische Styles */
+
+/* App Container */
+#app {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+.main-content {
+  background-color: #f8f9fa;
+}
+
+/* Communication Interface - spezifische Styles */
+.communication-interface {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.message-input-section {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.message-textarea {
+  resize: none;
+  height: 6rem;
+}
+
+.message-buttons {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.quick-messages-section,
+.message-history-section {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.quick-messages-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 0.5rem;
+}
+
+.quick-message-button {
+  padding: 0.75rem;
+  text-align: left;
+  border-radius: 0.5rem;
+  border: 1px solid #e5e7eb;
+  background-color: white;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.quick-message-button:hover {
+  background-color: #00B098;
+  color: white;
+  border-color: #00B098;
+}
+
+.quick-message-content {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.quick-message-icon {
+  font-size: 1.125rem;
+}
+
+.quick-message-text {
+  font-size: 0.875rem;
+}
+
+.message-history {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  max-height: 16rem;
+  overflow-y: auto;
+}
+
+.message-item {
+  padding: 0.75rem;
+  border-radius: 0.5rem;
+  background-color: #f8f9fa;
+  border-left: 3px solid #00B098;
+}
+
+.message-content {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+}
+
+.message-text {
+  font-size: 0.875rem;
+  margin: 0;
+}
+
+.message-time {
+  font-size: 0.75rem;
+  color: #6b7280;
+}
+
+/* Other Menu Content */
+.other-menu-content {
+  text-align: center;
+  padding: 3rem 0;
+}
+
+.other-menu-title {
+  font-size: 1.5rem;
+  font-weight: bold;
+  color: #00B098;
+  margin-bottom: 1rem;
+}
+
+.other-menu-description {
+  color: #6b7280;
+  margin-bottom: 1rem;
+}
+
+.other-menu-note {
+  font-size: 0.875rem;
+  color: #9ca3af;
+  margin-top: 1rem;
+}
+
+/* TTS Status Indicator */
+.tts-status-indicator {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  background-color: #fef3c7;
+  border: 2px solid #f59e0b;
+  border-radius: 0.75rem;
+  padding: 1rem 1.5rem;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+  z-index: 1000;
+  animation: pulse 2s infinite;
+}
+
+.tts-status-content {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.tts-status-icon {
+  font-size: 1.5rem;
+}
+
+.tts-status-text {
+  font-size: 1rem;
+  font-weight: 500;
+  color: #92400e;
+}
+
+@keyframes pulse {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.7;
+  }
+}

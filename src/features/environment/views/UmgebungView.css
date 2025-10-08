@@ -1,0 +1,137 @@
+/* UmgebungView - CSS identisch mit SchmerzView */
+
+/* App Container */
+#app {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+.main-content {
+  background-color: #f8f9fa;
+}
+
+/* Grid Layout - 3x2 Grid für 4 Tiles */
+.grid-container {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  grid-template-rows: repeat(2, 1fr);
+  gap: 2.4rem;
+  justify-items: center;
+  align-items: center;
+}
+
+/* Menu Tiles - identisch mit SchmerzView */
+.menu-tile {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  cursor: pointer;
+  padding: 1rem;
+  border: 2px solid #9ca3af;
+  border-radius: 2rem;
+  width: 32rem;
+  height: 20rem;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+  transition: all 0.3s ease;
+  position: relative;
+  z-index: 1;
+  user-select: none;
+}
+
+.menu-tile:hover {
+  background-color: #f3f4f6;
+  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
+  transform: scale(1.05);
+}
+
+.menu-tile:active {
+  transform: scale(0.98);
+}
+
+.tile-active {
+  background-color: #00B098;
+  color: white;
+}
+
+.tile-inactive {
+  background-color: white;
+  color: black;
+}
+
+.tile-icon-container {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 3rem;
+  width: 4rem;
+  height: 4rem;
+  border-radius: 50%;
+}
+
+.icon-active {
+  background-color: white;
+}
+
+.icon-inactive {
+  background-color: #e5e7eb;
+}
+
+.tile-icon {
+  width: 8.5rem;
+  height: 8.5rem;
+  object-fit: contain;
+  max-width: 8.5rem;
+  max-height: 8.5rem;
+}
+
+.icon-inverted {
+  filter: brightness(0) invert(1);
+}
+
+/* SVG Farbanpassung für UmgebungView */
+.tile-icon {
+  filter: none;
+}
+
+.tile-active .tile-icon {
+  filter: brightness(0) invert(1);
+}
+
+.tile-inactive .tile-icon {
+  filter: none;
+}
+
+.tile-text {
+  text-align: center;
+  font-family: 'Source Code Pro', monospace;
+  font-weight: normal;
+  font-size: 3.5rem;
+}
+
+.text-active {
+  color: white;
+}
+
+.text-inactive {
+  color: black;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .grid-container {
+    grid-template-columns: 1fr;
+    gap: 1.5rem;
+  }
+  
+  .menu-tile {
+    width: 100%;
+    max-width: 400px;
+    height: 15rem;
+  }
+  
+  .tile-text {
+    font-size: 2.5rem;
+  }
+}

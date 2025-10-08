@@ -23,6 +23,7 @@
   width: 100%;
   max-width: 100%;
   margin: 0 auto;
+  padding: 0 1rem;
 }
 
 .text-display-box {
@@ -103,19 +104,14 @@
   font-weight: bold;
   box-sizing: border-box;
   flex: 1;
-  min-width: 60px;
+  min-width: 0;
   min-height: 45px;
   flex-shrink: 1;
-  flex-basis: auto;
-  max-width: 120px;
+  flex-basis: 0;
+  width: 100%;
 }
 
-/* Spezielle Breite für die letzte Zeile (LEERZEICHEN, LÖSCHEN, ZURÜCK) */
-.keyboard-row:last-child .keyboard-key {
-  min-width: 120px;
-  flex: 1;
-  max-width: 200px;
-}
+/* Alle Tasten gleich groß - keine speziellen Regeln für die letzte Zeile */
 
 
 .keyboard-key-active {

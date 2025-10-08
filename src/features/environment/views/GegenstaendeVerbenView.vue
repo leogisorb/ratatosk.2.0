@@ -3,8 +3,7 @@ import { ref, onMounted, onUnmounted, computed } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import { useFaceRecognition } from '../../face-recognition/composables/useFaceRecognition'
 import { useSettingsStore } from '../../settings/stores/settings'
-import { keyboardGridConfig, getKeyboardTileStyle } from '../../../config/gridConfig'
-import GlobalHeader from '../../../shared/components/GlobalHeader.vue'
+import AppHeader from '../../../shared/components/AppHeader.vue'
 
 // Router
 const router = useRouter()
@@ -36,10 +35,7 @@ const blinkCooldown = computed(() => settingsStore.settings.blinkSensitivity * 1
 const speechSynthesis = window.speechSynthesis
 const isTTSEnabled = ref(true)
 
-// Verwende die Keyboard-Grid-Konfiguration
-const gridConfig = keyboardGridConfig
-
-// Gegenstände-Verben-Items mit passenden Emojis (max 11 Verben + Zurück = 12 total = 3 Zeilen à 4)
+// Gegenstände-Verben-Items mit passenden Emojis (max 10 Verben + Zurück = 11 total = 2x5 Grid)
 const gegenstaendeVerbenItems = [
   { id: 'benutzen', text: 'benutzen', type: 'verb', emoji: '👆' },
   { id: 'halten', text: 'halten', type: 'verb', emoji: '🤏' },
@@ -51,7 +47,6 @@ const gegenstaendeVerbenItems = [
   { id: 'weglegen', text: 'weglegen', type: 'verb', emoji: '📦' },
   { id: 'finden', text: 'finden', type: 'verb', emoji: '🔍' },
   { id: 'bringen', text: 'bringen', type: 'verb', emoji: '📦' },
-  { id: 'holen', text: 'holen', type: 'verb', emoji: '🏃' },
   { id: 'zurück', text: 'zurück', type: 'navigation', emoji: '⬅️' }
 ]
 
@@ -207,9 +202,7 @@ onMounted(() => {
     'lineal': 'Lineal',
     'teller': 'Teller',
     'besteck': 'Besteck',
-    'buch': 'Buch',
-    'uhr': 'Uhr',
-    'schluessel': 'Schlüssel'
+    'tisch': 'Tisch'
   }
   
   selectedGegenstand.value = umlautMap[itemId] || itemId
@@ -234,174 +227,42 @@ onUnmounted(() => {
 </script>
 
 <template>
-  <div class="min-h-screen bg-white">
-    <!-- Global Header -->
-    <GlobalHeader>
-      <div class="flex items-center space-x-4">
-        <button @click="$router.push('/gegenstaende')" class="p-2 rounded-lg bg-gray-300 hover:bg-gray-400 transition-colors">
-          <svg class="w-6 h-6 text-gray-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
-          </svg>
-        </button>
-        <h1 class="text-2xl font-bold text-black font-source-code font-light">
-          GEGENSTÄNDE-VERBEN FÜR: {{ selectedGegenstand.toUpperCase() }}
-        </h1>
-      </div>
-      
-      <!-- TTS Toggle Button -->
-      <button
-        @click="toggleTTS"
-        class="p-2 rounded-lg transition-colors"
-        :class="isTTSEnabled ? 'bg-green-300 hover:bg-green-400' : 'bg-gray-300 hover:bg-gray-400'"
-        :title="isTTSEnabled ? 'Sprachausgabe deaktivieren' : 'Sprachausgabe aktivieren'"
-      >
-        <svg
-          v-if="isTTSEnabled"
-          class="w-6 h-6 text-green-700"
-          fill="none"
-          stroke="currentColor"
-          viewBox="0 0 24 24"
-        >
-          <path
-            stroke-linecap="round"
-            stroke-linejoin="round"
-            stroke-width="2"
-            d="M15.536 8.464a5 5 0 010 7.072m2.828-9.9a9 9 0 010 12.728M5.586 15H4a1 1 0 01-1-1v-4a1 1 0 011-1h1.586l4.707-4.707C10.923 3.663 12 4.109 12 5v14c0 .891-1.077 1.337-1.707.707L5.586 15z"
-          />
-        </svg>
-        <svg
-          v-else
-          class="w-6 h-6 text-gray-700"
-          fill="none"
-          stroke="currentColor"
-          viewBox="0 0 24 24"
-        >
-          <path
-            stroke-linecap="round"
-            stroke-linejoin="round"
-            stroke-width="2"
-            d="M5.586 15H4a1 1 0 01-1-1v-4a1 1 0 011-1h1.586l4.707-4.707C10.923 3.663 12 4.109 12 5v14c0 .891-1.077 1.337-1.707.707L5.586 15z"
-          />
-          <path
-            stroke-linecap="round"
-            stroke-linejoin="round"
-            stroke-width="2"
-            d="M17 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2"
-          />
-        </svg>
-      </button>
-    </GlobalHeader>
+  <div class="gegenstaende-verben-app">
+    <!-- App Header -->
+    <AppHeader />
 
-    <!-- Main Content -->
-    <main class="flex-1 flex items-center justify-center p-16">
-      <div class="max-w-8xl mx-auto">
-        <!-- Gewählte Kombination Anzeige -->
-        <div class="mb-64 text-center">
-          <div class="bg-green-100">
-            <h2 class="text-8xl font-bold text-green-800" style="font-family: 'Source Code Pro', monospace; font-weight: 300;">
-              Kombination:
-            </h2>
-            <div class="font-bold text-green-900" style="font-family: 'Source Code Pro', monospace; font-weight: 300; font-size: 4rem;">
-              {{ selectedGegenstand }}{{ selectedVerb ? ' ' + selectedVerb : '' }}
-            </div>
-          </div>
-        </div>
-         <!-- Abstandshalter -->
-         <div style="height: 4rem;"></div>
-
-        <!-- Gegenstände-Verben-Items Tastatur - 4 Teile pro Zeile -->
-        <div class="space-y-20 mt-32 mb-48">
-          <!-- Zeile 1: benutzen, halten, legen, nehmen -->
-          <div class="flex justify-center space-x-16">
-            <button
-              v-for="(item, index) in gegenstaendeVerbenItems.slice(0, 4)"
-              :key="item.id"
-              @click="selectVerb(item.id)"
-              class="transition-all duration-300 font-medium hover:scale-110 flex flex-col items-center space-y-4"
-              :style="{
-                fontSize: '2.2rem',
-                background: currentTileIndex === index ? '#f3f4f6' : 'white',
-                border: '2px solid #d1d5db',
-                borderRadius: '15px',
-                outline: 'none',
-                boxShadow: 'none',
-                padding: '12.6px 18.9px',
-                margin: '0',
-                minWidth: '120px'
-              }"
-              :class="currentTileIndex === index ? 'text-orange-500 scale-110' : 'text-black hover:text-gray-600'"
-            >
-              <div v-if="item.emoji" style="font-size: 4rem;">{{ item.emoji }}</div>
-              <span>{{ item.text }}</span>
-            </button>
-          </div>
-
-          <!-- Zeile 2: geben, aufheben, reinigen, weglegen -->
-          <div class="flex justify-center space-x-16">
-            <button
-              v-for="(item, index) in gegenstaendeVerbenItems.slice(4, 8)"
-              :key="item.id"
-              @click="selectVerb(item.id)"
-              class="transition-all duration-300 font-medium hover:scale-110 flex flex-col items-center space-y-4"
-              :style="{
-                fontSize: '2.2rem',
-                background: currentTileIndex === index + 4 ? '#f3f4f6' : 'white',
-                border: '2px solid #d1d5db',
-                borderRadius: '15px',
-                outline: 'none',
-                boxShadow: 'none',
-                padding: '12.6px 18.9px',
-                margin: '0',
-                minWidth: '120px'
-              }"
-              :class="currentTileIndex === index + 4 ? 'text-orange-500 scale-110' : 'text-black hover:text-gray-600'"
-            >
-              <div v-if="item.emoji" style="font-size: 4rem;">{{ item.emoji }}</div>
-              <span>{{ item.text }}</span>
-            </button>
-          </div>
-
-          <!-- Zeile 3: finden, bringen, holen, zurück -->
-          <div class="flex justify-center space-x-16">
-            <button
-              v-for="(item, index) in gegenstaendeVerbenItems.slice(8, 12)"
-              :key="item.id"
-              @click="selectVerb(item.id)"
-              class="transition-all duration-300 font-medium hover:scale-110 flex flex-col items-center space-y-4"
-              :style="{
-                fontSize: '2.2rem',
-                background: currentTileIndex === index + 8 ? '#f3f4f6' : 'white',
-                border: '2px solid #d1d5db',
-                borderRadius: '15px',
-                outline: 'none',
-                boxShadow: 'none',
-                padding: '12.6px 18.9px',
-                margin: '0',
-                minWidth: '120px'
-              }"
-              :class="currentTileIndex === index + 8 ? 'text-orange-500 scale-110' : 'text-black hover:text-gray-600'"
-            >
-              <div v-if="item.emoji" style="font-size: 4rem;">{{ item.emoji }}</div>
-              <span>{{ item.text }}</span>
-            </button>
+    <!-- Main Content - Zentriert -->
+    <main class="main-content">
+      <div class="content-wrapper">
+        <!-- Ausgewähltes Verb-Item Anzeige -->
+        <div class="selected-item-container">
+          <div class="selected-item-text">
+            {{ selectedGegenstand }}{{ selectedVerb ? ' ' + selectedVerb : '' }}
           </div>
         </div>
 
-        <!-- Abstandshalter -->
-        <div style="height: 4rem;"></div>
+        <!-- Gegenstände-Verben-Items Grid - 2x5 Grid für 10 Items -->
+        <div class="gegenstaende-verben-items-grid">
+          <button
+            v-for="(item, index) in gegenstaendeVerbenItems"
+            :key="item.id"
+            @click="selectVerb(item.id)"
+            class="gegenstaende-verben-items-item"
+            :class="currentTileIndex === index ? 'active' : 'inactive'"
+          >
+            <div v-if="item.emoji" class="gegenstaende-verben-items-emoji">{{ item.emoji }}</div>
+            <span class="gegenstaende-verben-items-text">{{ item.text }}</span>
+          </button>
+        </div>
 
         <!-- Instructions -->
-        <div class="mt-16 text-center">
-          <div class="bg-green-100">
-            <h3 class="text-4xl font-semibold text-green-800" style="font-family: 'Source Code Pro', monospace; font-weight: 300;">
-              Bedienung
-            </h3>
-            <p class="text-2xl text-green-700" style="font-family: 'Source Code Pro', monospace; font-weight: 300;">
-              <strong>Kurz blinzeln ({{ settingsStore.settings.blinkSensitivity }}s):</strong> Verb auswählen<br>
-              <strong>Rechte Maustaste:</strong> Verb auswählen<br>
-              <strong>Auto-Modus:</strong> Automatischer Durchlauf durch alle Verben
-            </p>
-          </div>
+        <div class="instructions-container">
+          <h3 class="instructions-title">Bedienung</h3>
+          <p class="instructions-text">
+            <strong>Kurz blinzeln ({{ settingsStore.settings.blinkSensitivity }}s):</strong> Verb auswählen<br>
+            <strong>Rechte Maustaste:</strong> Verb auswählen<br>
+            <strong>Auto-Modus:</strong> Automatischer Durchlauf durch alle Items
+          </p>
         </div>
       </div>
     </main>
@@ -409,6 +270,142 @@ onUnmounted(() => {
 </template>
 
 <style scoped>
+/* GegenstaendeVerbenView - Komplett neu geschriebenes CSS nach ZimmerView-Vorbild */
+
+/* App Container */
+.gegenstaende-verben-app {
+  min-height: 100vh;
+  background-color: white;
+  display: flex;
+  flex-direction: column;
+}
+
+/* Main Content - Weniger Abstand unter Header */
+.main-content {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1rem 4rem; /* Weniger Abstand oben/unten: 4rem → 1rem */
+}
+
+.content-wrapper {
+  max-width: 8xl;
+  margin: 0 auto;
+  width: 100%;
+}
+
+/* Ausgewähltes Item Anzeige - Nochmal 5% weiter hoch */
+.selected-item-container {
+  margin-bottom: 0.43rem; /* 5% weniger: 0.45rem * 0.95 = 0.43rem */
+  margin-top: -0.58rem; /* 5% mehr negativer Abstand: -0.55rem * 1.05 = -0.58rem */
+  text-align: center;
+}
+
+.selected-item-title {
+  font-size: 3.75rem; /* 25% kleiner: 5rem * 0.75 = 3.75rem */
+  font-weight: bold;
+  color: #374151;
+  font-family: 'Source Code Pro', monospace;
+  font-weight: 300;
+  margin-bottom: 1rem;
+}
+
+.selected-item-text {
+  font-size: 2.8125rem; /* 50% größer: 1.875rem * 1.5 = 2.8125rem */
+  font-weight: bold;
+  color: #1f2937;
+  font-family: 'Source Code Pro', monospace;
+  font-weight: 300;
+}
+
+/* Spacer */
+.spacer {
+  height: 4rem;
+}
+
+/* Gegenstände-Verben-Items Grid - 2x5 Grid für 10 Items */
+.gegenstaende-verben-items-grid {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 2rem;
+  justify-items: center;
+  align-items: center;
+  margin: 0 0 0.43rem 0; /* 5% weniger: 0.45rem * 0.95 = 0.43rem */
+}
+
+/* Gegenstände-Verben-Items Item Buttons - Alle gleich groß */
+.gegenstaende-verben-items-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.2rem; /* Noch weniger Abstand unter Emoji */
+  padding: 1.5rem;
+  border: 2px solid #d1d5db;
+  border-radius: 15px;
+  background: white;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  font-size: 2.145rem; /* 30% größer: 1.65rem * 1.3 = 2.145rem */
+  font-weight: 500;
+  width: 304px; /* 30% größer: 234px * 1.3 = 304px */
+  height: 156px; /* 30% größer: 120px * 1.3 = 156px */
+  outline: none;
+  box-shadow: none;
+  margin: 0;
+}
+
+.gegenstaende-verben-items-item:hover {
+  transform: scale(1.1);
+  color: #6b7280;
+}
+
+.gegenstaende-verben-items-item.active {
+  background: #f3f4f6;
+  color: #f97316;
+  transform: scale(1.1);
+}
+
+.gegenstaende-verben-items-item.inactive {
+  color: black;
+}
+
+.gegenstaende-verben-items-emoji {
+  font-size: 5.2rem; /* 30% größer: 4rem * 1.3 = 5.2rem */
+}
+
+.gegenstaende-verben-items-text {
+  font-family: 'Source Code Pro', monospace;
+}
+
+/* Instructions - Nochmal 5% weiter hoch */
+.instructions-container {
+  margin-top: -0.15rem; /* 5% mehr negativer Abstand: -0.1rem * 1.5 = -0.15rem */
+  text-align: center;
+}
+
+.instructions-title {
+  font-size: 2.5rem;
+  font-weight: 600;
+  color: #374151;
+  font-family: 'Source Code Pro', monospace;
+  font-weight: 300;
+  margin-bottom: 0.25rem; /* Weniger Abstand zum Text darunter */
+}
+
+.instructions-text {
+  font-size: 1.5rem;
+  color: #1f2937;
+  font-family: 'Source Code Pro', monospace;
+  font-weight: 300;
+  line-height: 1.6;
+}
+
+.instructions-text strong {
+  font-weight: bold;
+}
+
 /* Custom scrollbar */
 .overflow-y-auto::-webkit-scrollbar {
   width: 6px;
@@ -427,6 +424,7 @@ onUnmounted(() => {
   background: #94a3b8;
 }
 
+/* Dark mode scrollbar */
 .dark .overflow-y-auto::-webkit-scrollbar-track {
   background: #374151;
 }
@@ -437,5 +435,74 @@ onUnmounted(() => {
 
 .dark .overflow-y-auto::-webkit-scrollbar-thumb:hover {
   background: #9ca3af;
+}
+
+/* Responsive Design - 30% größer angepasst */
+@media (max-width: 768px) {
+  .main-content {
+    padding: 0.5rem 2rem; /* Weniger Abstand oben/unten: 2rem → 0.5rem */
+  }
+  
+  .gegenstaende-verben-items-grid {
+    grid-template-columns: repeat(3, 1fr);
+    gap: 1.5rem;
+  }
+  
+  .gegenstaende-verben-items-item {
+    padding: 1rem;
+    font-size: 1.755rem; /* 30% größer: 1.35rem * 1.3 = 1.755rem */
+    width: 254px; /* 30% größer: 195px * 1.3 = 254px */
+    height: 130px; /* 30% größer: 100px * 1.3 = 130px */
+  }
+  
+  .gegenstaende-verben-items-emoji {
+    font-size: 3.9rem; /* 30% größer: 3rem * 1.3 = 3.9rem */
+  }
+  
+  .selected-item-title {
+    font-size: 2.25rem; /* 25% kleiner: 3rem * 0.75 = 2.25rem */
+  }
+  
+  .selected-item-text {
+    font-size: 2.25rem; /* 50% größer: 1.5rem * 1.5 = 2.25rem */
+  }
+  
+  .instructions-title {
+    font-size: 2rem;
+  }
+  
+  .instructions-text {
+    font-size: 1.2rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .main-content {
+    padding: 0.25rem 1rem; /* Weniger Abstand oben/unten: 1rem → 0.25rem */
+  }
+  
+  .gegenstaende-verben-items-grid {
+    grid-template-columns: 1fr;
+    gap: 1rem;
+  }
+  
+  .gegenstaende-verben-items-item {
+    padding: 0.75rem;
+    font-size: 1.463rem; /* 30% größer: 1.125rem * 1.3 = 1.463rem */
+    width: 203px; /* 30% größer: 156px * 1.3 = 203px */
+    height: 104px; /* 30% größer: 80px * 1.3 = 104px */
+  }
+  
+  .gegenstaende-verben-items-emoji {
+    font-size: 3.25rem; /* 30% größer: 2.5rem * 1.3 = 3.25rem */
+  }
+  
+  .selected-item-title {
+    font-size: 1.875rem; /* 25% kleiner: 2.5rem * 0.75 = 1.875rem */
+  }
+  
+  .selected-item-text {
+    font-size: 1.6875rem; /* 50% größer: 1.125rem * 1.5 = 1.6875rem */
+  }
 }
 </style>

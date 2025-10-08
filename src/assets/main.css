@@ -379,7 +379,7 @@ body {
   gap: 2rem;
 }
 
-/* Grid Layout */
+/* Grid Layout - für HomeView */
 .grid-container {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
@@ -388,7 +388,7 @@ body {
   align-items: center;
 }
 
-/* Menu Tiles */
+/* Menu Tiles - für HomeView */
 .menu-tile {
   display: flex;
   flex-direction: column;
