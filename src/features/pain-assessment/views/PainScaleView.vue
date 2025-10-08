@@ -286,7 +286,7 @@ onUnmounted(() => {
 </script>
 
 <template>
-  <div class="min-h-screen bg-white dark:bg-gray-900 flex flex-col">
+  <div class="min-h-screen bg-white">
     <!-- Global Header -->
     <GlobalHeader>
       <div class="flex items-center space-x-4">
@@ -349,17 +349,17 @@ onUnmounted(() => {
       <div class="max-w-8xl mx-auto">
         <!-- Ausgewählter Körperteil und Schmerzlevel Anzeige -->
         <div class="mb-64 text-center">
-          <div class="bg-blue-100 dark:bg-blue-900 rounded-xl p-20 max-w-8xl mx-auto">
-            <h2 class="text-6xl font-bold text-blue-800 dark:text-blue-200 mb-8" style="font-family: 'Source Code Pro', monospace; font-weight: 300;">
+          <div class="bg-blue-100">
+            <h2 class="text-6xl font-bold text-blue-800" style="font-family: 'Source Code Pro', monospace; font-weight: 300;">
               {{ selectedBodyPart }}
             </h2>
-            <h3 class="text-8xl font-bold text-blue-800 dark:text-blue-200 mb-12" style="font-family: 'Source Code Pro', monospace; font-weight: 300;">
+            <h3 class="text-8xl font-bold text-blue-800" style="font-family: 'Source Code Pro', monospace; font-weight: 300;">
               Schmerzlevel:
             </h3>
-            <div class="font-bold text-blue-900 dark:text-blue-100" style="font-family: 'Source Code Pro', monospace; font-weight: 300; font-size: 6rem;">
+            <div class="font-bold text-blue-900" style="font-family: 'Source Code Pro', monospace; font-weight: 300; font-size: 6rem;">
               {{ currentPainLevel }}
             </div>
-            <div class="font-bold text-blue-700 dark:text-blue-300 mt-4" style="font-family: 'Source Code Pro', monospace; font-weight: 300; font-size: 3rem;">
+            <div class="font-bold text-blue-700" style="font-family: 'Source Code Pro', monospace; font-weight: 300; font-size: 3rem;">
               {{ painLevels.find(item => item.level === currentPainLevel)?.description }}
             </div>
           </div>
@@ -367,7 +367,7 @@ onUnmounted(() => {
 
         <!-- Schmerzskala Balken -->
         <div class="mb-32">
-          <div class="bg-gray-200 dark:bg-gray-700 rounded-full h-16 relative overflow-hidden">
+          <div class="bg-gray-200">
             <!-- Schmerzskala Balken -->
             <div 
               class="h-full transition-all duration-500 ease-out"
@@ -382,13 +382,13 @@ onUnmounted(() => {
             
             <!-- Schmerzlevel Marker -->
             <div 
-              class="absolute top-0 w-8 h-16 bg-white dark:bg-gray-800 border-4 border-gray-600 rounded-full transform -translate-x-1/2 transition-all duration-500 ease-out"
+              class="absolute top-0 w-8 h-16 bg-white"
               :style="{ left: `${(currentPainLevel / 10) * 100}%` }"
             ></div>
           </div>
           
           <!-- Skala Beschriftung -->
-          <div class="flex justify-between mt-4 text-2xl font-bold text-gray-600 dark:text-gray-400" style="font-family: 'Source Code Pro', monospace;">
+          <div class="flex justify-between mt-4 text-2xl font-bold text-gray-600" style="font-family: 'Source Code Pro', monospace;">
             <span>Leicht</span>
             <span>Schwer</span>
           </div>
@@ -423,11 +423,11 @@ onUnmounted(() => {
 
         <!-- Instructions -->
         <div class="text-center">
-          <div class="bg-blue-100 dark:bg-blue-900 rounded-xl p-12 max-w-4xl mx-auto">
-            <h3 class="text-4xl font-semibold text-blue-800 dark:text-blue-200 mb-4" style="font-family: 'Source Code Pro', monospace; font-weight: 300;">
+          <div class="bg-blue-100">
+            <h3 class="text-4xl font-semibold text-blue-800" style="font-family: 'Source Code Pro', monospace; font-weight: 300;">
               Bedienung
             </h3>
-            <p class="text-2xl text-blue-700 dark:text-blue-300" style="font-family: 'Source Code Pro', monospace; font-weight: 300;">
+            <p class="text-2xl text-blue-700" style="font-family: 'Source Code Pro', monospace; font-weight: 300;">
               <strong>Kurz blinzeln ({{ settingsStore.settings.blinkSensitivity }}s):</strong> Schmerzlevel auswählen<br>
               <strong>Rechte Maustaste:</strong> Schmerzlevel auswählen<br>
               <strong>Auto-Modus:</strong> Automatischer Durchlauf durch alle Schmerzlevel

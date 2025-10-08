@@ -318,7 +318,7 @@ onUnmounted(() => {
 <template>
   <div id="app" :class="appClasses">
     <!-- Responsive Layout - automatischer Wechsel zwischen Mobile und Desktop -->
-    <div class="min-h-screen bg-white dark:bg-gray-900 flex flex-col">
+    <div class="min-h-screen bg-white">
       <!-- Global Header -->
       <GlobalHeader>
         <div class="flex items-center space-x-4">
@@ -435,7 +435,7 @@ onUnmounted(() => {
         >
           <!-- TASTATUR-DESIGN -->
           <div 
-            class="flex flex-col justify-start items-center cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
+            class="flex flex-col justify-start items-center cursor-pointer hover:bg-gray-100"
             :style="getTileStyle(0)"
             @click="$router.push('/tastaturdesign')"
           >
@@ -463,7 +463,7 @@ onUnmounted(() => {
 
           <!-- LEUCHT-DAUER -->
           <div 
-            class="flex flex-col justify-start items-center cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
+            class="flex flex-col justify-start items-center cursor-pointer hover:bg-gray-100"
             :style="getTileStyle(1)"
             @click="selectEinstellung('leucht-dauer')"
           >
@@ -491,7 +491,7 @@ onUnmounted(() => {
 
           <!-- BLINZELDAUE -->
           <div 
-            class="flex flex-col justify-start items-center cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
+            class="flex flex-col justify-start items-center cursor-pointer hover:bg-gray-100"
             :style="getTileStyle(2)"
             @click="selectEinstellung('blinzeldaue')"
           >
@@ -519,7 +519,7 @@ onUnmounted(() => {
 
           <!-- FARBMODUS -->
           <div 
-            class="flex flex-col justify-start items-center cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
+            class="flex flex-col justify-start items-center cursor-pointer hover:bg-gray-100"
             :style="getTileStyle(3)"
             @click="selectEinstellung('farbmodus')"
           >
@@ -547,7 +547,7 @@ onUnmounted(() => {
 
           <!-- KAMERA -->
           <div 
-            class="flex flex-col justify-start items-center cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
+            class="flex flex-col justify-start items-center cursor-pointer hover:bg-gray-100"
             :style="getTileStyle(4)"
             @click="selectEinstellung('kamera')"
           >
@@ -575,7 +575,7 @@ onUnmounted(() => {
 
           <!-- IMPRESSUM -->
           <div 
-            class="flex flex-col justify-start items-center cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
+            class="flex flex-col justify-start items-center cursor-pointer hover:bg-gray-100"
             :style="getTileStyle(5)"
             @click="selectEinstellung('impressum')"
           >
@@ -605,7 +605,7 @@ onUnmounted(() => {
 
         <!-- Status Message -->
         <div class="mt-8 text-center">
-          <p class="text-lg italic text-gray-600 dark:text-gray-400">
+          <p class="text-lg italic text-gray-600">
             Blinzeldaue wurde erfolgreich geändert.
           </p>
         </div>

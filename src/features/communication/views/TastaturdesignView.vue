@@ -1,14 +1,14 @@
 <template>
-  <div class="min-h-screen bg-white dark:bg-gray-900 flex flex-col">
+  <div class="min-h-screen bg-white">
     <!-- Global Header -->
     <GlobalHeader>
       <div class="flex items-center space-x-4">
-        <button @click="$router.push('/einstellungen')" class="p-2 rounded-lg bg-gray-300 dark:bg-gray-600 hover:bg-gray-400 dark:hover:bg-gray-500 transition-colors">
-          <svg class="w-6 h-6 text-gray-700 dark:text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <button @click="$router.push('/einstellungen')" class="p-2 rounded-lg bg-gray-300">
+          <svg class="w-6 h-6 text-gray-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
           </svg>
         </button>
-        <h1 class="text-2xl font-bold text-black dark:text-white font-source-code font-light">
+        <h1 class="text-2xl font-bold text-black">
           TASTATURDESIGN
         </h1>
       </div>
@@ -18,7 +18,7 @@
     <main class="flex-1 flex flex-col items-center justify-center p-8">
       <div class="max-w-6xl mx-auto w-full px-8">
         <!-- Hauptüberschrift außerhalb der Kacheln -->
-        <h2 class="font-bold text-gray-900 dark:text-white text-center" style="font-family: 'Source Code Pro', monospace; font-weight: 300; font-size: 3rem;">
+        <h2 class="font-bold text-gray-900" style="font-family: 'Source Code Pro', monospace; font-weight: 300; font-size: 3rem;">
           Tastendesign Einstellungen
         </h2>
         
@@ -28,7 +28,7 @@
         <!-- Grid Container -->
         <div class="grid grid-cols-2 gap-8">
           <!-- Einstellungen -->
-          <div class="bg-gray-100 dark:bg-gray-800 rounded-lg p-6 border-2 border-gray-300 dark:border-gray-600">
+          <div class="bg-gray-100">
             <KeyboardDesign 
               @save="keyboardDesignStore.updateSettings"
               @update="updateLocalSettings"
@@ -36,11 +36,11 @@
           </div>
 
           <!-- Live Vorschau -->
-          <div class="bg-gray-100 dark:bg-gray-800 rounded-lg p-6 border-2 border-gray-300 dark:border-gray-600">
-            <h3 class="text-xl font-bold text-gray-900 dark:text-white mb-4 font-mono text-center">
+          <div class="bg-gray-100">
+            <h3 class="text-xl font-bold text-gray-900">
               Aktuelles Design
             </h3>
-            <div class="bg-white dark:bg-gray-700 rounded-lg p-6 border-2 border-gray-300 dark:border-gray-600">
+            <div class="bg-white">
               <div class="flex justify-center gap-4">
                 <!-- Beispiel-Tasten -->
                 <div 
@@ -66,10 +66,10 @@
 
             <!-- Einstellungs-Vorschau (unter der Live Vorschau) -->
             <div class="mt-6">
-              <h4 class="text-lg font-bold text-gray-900 dark:text-white mb-4 font-mono text-center">
+              <h4 class="text-lg font-bold text-gray-900">
                 Neue Einstellungen
               </h4>
-              <div class="bg-white dark:bg-gray-700 rounded-lg p-6 border-2 border-gray-300 dark:border-gray-600">
+              <div class="bg-white">
                 <div class="flex justify-center gap-4">
                   <!-- Beispiel-Tasten mit aktuellen Einstellungen -->
                   <div 

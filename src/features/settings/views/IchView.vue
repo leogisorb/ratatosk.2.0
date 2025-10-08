@@ -298,7 +298,7 @@ onUnmounted(() => {
 <template>
   <div id="app" :class="appClasses">
     <!-- Responsive Layout - automatischer Wechsel zwischen Mobile und Desktop -->
-    <div class="min-h-screen bg-white dark:bg-gray-900 flex flex-col">
+    <div class="min-h-screen bg-white">
       <!-- Global Header -->
       <GlobalHeader>
         <div class="flex items-center space-x-4">
@@ -369,7 +369,7 @@ onUnmounted(() => {
         >
           <!-- ERNÄHRUNG -->
           <div 
-            class="flex flex-col justify-start items-center cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
+            class="flex flex-col justify-start items-center cursor-pointer hover:bg-gray-100"
             :style="getTileStyle(0)"
             @click="selectMenu('ernaehrung')"
           >
@@ -397,7 +397,7 @@ onUnmounted(() => {
 
           <!-- GEFÜHLE -->
           <div 
-            class="flex flex-col justify-start items-center cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
+            class="flex flex-col justify-start items-center cursor-pointer hover:bg-gray-100"
             :style="getTileStyle(1)"
             @click="selectMenu('gefuehle')"
           >
@@ -425,7 +425,7 @@ onUnmounted(() => {
 
           <!-- KLEIDUNG -->
           <div 
-            class="flex flex-col justify-start items-center cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
+            class="flex flex-col justify-start items-center cursor-pointer hover:bg-gray-100"
             :style="getTileStyle(2)"
             @click="selectMenu('kleidung')"
           >
@@ -453,7 +453,7 @@ onUnmounted(() => {
 
           <!-- HYGIENE -->
           <div 
-            class="flex flex-col justify-start items-center cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
+            class="flex flex-col justify-start items-center cursor-pointer hover:bg-gray-100"
             :style="getTileStyle(3)"
             @click="selectMenu('hygiene')"
           >
@@ -481,7 +481,7 @@ onUnmounted(() => {
 
           <!-- BEWEGUNG -->
           <div 
-            class="flex flex-col justify-start items-center cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
+            class="flex flex-col justify-start items-center cursor-pointer hover:bg-gray-100"
             :style="getTileStyle(4)"
             @click="selectMenu('bewegung')"
           >
@@ -509,7 +509,7 @@ onUnmounted(() => {
 
           <!-- ZURÜCK -->
           <div 
-            class="flex flex-col justify-start items-center cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
+            class="flex flex-col justify-start items-center cursor-pointer hover:bg-gray-100"
             :style="getTileStyle(5)"
             @click="selectMenu('zurueck')"
           >

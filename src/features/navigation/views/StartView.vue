@@ -1,10 +1,10 @@
 <template>
-  <div class="min-h-screen flex flex-col items-center justify-center bg-gradient-to-br from-blue-50 to-indigo-100 dark:from-gray-900 dark:to-gray-800">
+  <div class="min-h-screen flex flex-col items-center justify-center bg-gradient-to-br from-blue-50 to-indigo-100">
     <!-- Header -->
     <header class="w-full max-w-4xl px-6 py-8">
       <div class="text-center">
         <div class="flex items-center justify-center space-x-4 mb-6">
-          <h1 class="text-4xl font-bold text-gray-900 dark:text-white font-source-code font-light">
+          <h1 class="text-4xl font-bold text-gray-900">
             RATATOSK
           </h1>
           <img src="/rattenkopf.svg" alt="Ratatosk Logo" class="w-16 h-16" />
@@ -28,7 +28,7 @@
                 'bg-red-500'
               ]"
             ></div>
-            <span class="text-lg font-medium text-gray-700 dark:text-gray-300">
+            <span class="text-lg font-medium text-gray-700">
               {{ cameraStatusText }}
             </span>
           </div>
@@ -41,7 +41,7 @@
                 faceRecognition.isDetected ? 'bg-green-500' : 'bg-gray-400'
               ]"
             ></div>
-            <span class="text-lg font-medium text-gray-700 dark:text-gray-300">
+            <span class="text-lg font-medium text-gray-700">
               {{ faceRecognition.isDetected ? 'Gesicht erkannt' : 'Gesicht suchen...' }}
             </span>
           </div>
@@ -74,25 +74,25 @@
             v-if="cameraStatus === 'active' && faceRecognition.isDetected"
             class="max-w-md mx-auto"
           >
-            <div class="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-8 border-2 border-primary-200 dark:border-primary-700">
+            <div class="bg-white">
               <div class="text-center space-y-4">
                 <div class="text-6xl mb-4">👁️</div>
-                <h2 class="text-2xl font-bold text-gray-900 dark:text-white">
+                <h2 class="text-2xl font-bold text-gray-900">
                   Blinzeln Sie zum Starten
                 </h2>
-                <p class="text-gray-600 dark:text-gray-300">
+                <p class="text-gray-600">
                   Halten Sie beide Augen für {{ blinkDuration }} Sekunden geschlossen
                 </p>
                 
                 <!-- Blink Progress -->
-                <div class="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-3">
+                <div class="w-full bg-gray-200">
                   <div 
                     class="bg-primary-600 h-3 rounded-full transition-all duration-300"
                     :style="{ width: `${blinkProgress}%` }"
                   ></div>
                 </div>
                 
-                <p class="text-sm text-gray-500 dark:text-gray-400">
+                <p class="text-sm text-gray-500">
                   {{ blinkProgress.toFixed(1) }}% / 100%
                 </p>
               </div>
@@ -118,14 +118,14 @@
         <div style="height: 3rem;"></div>
 
         <!-- Error Message -->
-        <div v-if="error" class="max-w-md mx-auto p-4 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg">
-          <p class="text-red-800 dark:text-red-200 text-sm">
+        <div v-if="error" class="max-w-md mx-auto p-4 bg-red-50">
+          <p class="text-red-800">
             {{ error }}
           </p>
         </div>
 
         <!-- Help Text -->
-        <div class="max-w-2xl mx-auto text-center text-sm text-gray-500 dark:text-gray-400 space-y-2">
+        <div class="max-w-2xl mx-auto text-center text-sm text-gray-500">
           <p>
             <strong>Tipp:</strong> Stellen Sie sich vor die Kamera und blinzeln Sie langsam
           </p>

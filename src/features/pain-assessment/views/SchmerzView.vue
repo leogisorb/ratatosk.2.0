@@ -345,7 +345,7 @@ onUnmounted(() => {
         >
           <!-- KOPF -->
           <div 
-            class="flex flex-col justify-start items-center cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
+            class="flex flex-col justify-start items-center cursor-pointer hover:bg-gray-100"
             :style="getTileStyle(0)"
             @click="selectSchmerz('kopf')"
           >
@@ -373,7 +373,7 @@ onUnmounted(() => {
 
           <!-- BEINE -->
           <div 
-            class="flex flex-col justify-start items-center cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
+            class="flex flex-col justify-start items-center cursor-pointer hover:bg-gray-100"
             :style="getTileStyle(1)"
             @click="selectSchmerz('beine')"
           >
@@ -401,7 +401,7 @@ onUnmounted(() => {
 
           <!-- ARME -->
           <div 
-            class="flex flex-col justify-start items-center cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
+            class="flex flex-col justify-start items-center cursor-pointer hover:bg-gray-100"
             :style="getTileStyle(2)"
             @click="selectSchmerz('arme')"
           >
@@ -429,7 +429,7 @@ onUnmounted(() => {
 
           <!-- TORSO -->
           <div 
-            class="flex flex-col justify-start items-center cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
+            class="flex flex-col justify-start items-center cursor-pointer hover:bg-gray-100"
             :style="getTileStyle(3)"
             @click="selectSchmerz('torso')"
           >
@@ -457,7 +457,7 @@ onUnmounted(() => {
 
           <!-- ZURÜCK -->
           <div 
-            class="flex flex-col justify-start items-center cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
+            class="flex flex-col justify-start items-center cursor-pointer hover:bg-gray-100"
             :style="getTileStyle(4)"
             @click="selectSchmerz('zurueck')"
           >

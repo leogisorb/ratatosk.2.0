@@ -1,5 +1,5 @@
 <template>
-  <div class="min-h-screen bg-white dark:bg-gray-900 flex flex-col">
+  <div class="min-h-screen bg-white">
     <!-- Global Header -->
     <GlobalHeader>
       <slot name="header" />

@@ -285,7 +285,7 @@ onUnmounted(() => {
 <template>
   <div id="app" :class="appClasses">
     <!-- Responsive Layout - automatischer Wechsel zwischen Mobile und Desktop -->
-    <div class="min-h-screen bg-white dark:bg-gray-900 flex flex-col">
+    <div class="min-h-screen bg-white">
       <!-- Global Header -->
       <GlobalHeader>
         <div class="flex items-center space-x-4">
@@ -349,10 +349,10 @@ onUnmounted(() => {
       <main class="flex-1 flex flex-col items-center justify-center p-8">
         <!-- Title -->
         <div class="text-center mb-12">
-          <h2 class="text-5xl font-bold text-gray-800 dark:text-gray-200 font-source-code mb-4">
+          <h2 class="text-5xl font-bold text-gray-800">
             Wählen Sie die Blink-Sensibilität
           </h2>
-          <p class="text-gray-600 dark:text-gray-400" style="font-size: 2rem;">
+          <p class="text-gray-600" style="font-size: 2rem;">
             Aktuelle Sensibilität: {{ settingsStore.settings.blinkSensitivity }} Sekunden
           </p>
         </div>
@@ -378,7 +378,7 @@ onUnmounted(() => {
           >
             <div class="text-center">
               <div class="text-3xl font-bold mb-2">{{ item.title }}</div>
-              <div class="text-xl text-gray-600 dark:text-gray-400">{{ item.description }}</div>
+              <div class="text-xl text-gray-600">{{ item.description }}</div>
             </div>
           </button>
         </div>
@@ -388,7 +388,7 @@ onUnmounted(() => {
 
         <!-- Instructions -->
         <div class="mt-16 text-center">
-          <div class="text-2xl text-gray-600 dark:text-gray-400 space-y-2">
+          <div class="text-2xl text-gray-600">
             <p><strong>Bedienung:</strong></p>
             <p>Kurz blinzeln ({{ settingsStore.settings.blinkSensitivity }}s): Sensibilität auswählen</p>
             <p>Rechte Maustaste: Sensibilität auswählen</p>

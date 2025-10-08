@@ -1,0 +1,141 @@
+/* WarningView Styles */
+
+/* Spezifische WarningView Styles */
+.content-wrapper {
+  gap: 4rem;
+}
+
+/* Bell Container - Zentriert */
+.bell-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  width: 100%;
+}
+
+.bell-button {
+  background: none;
+  border: none;
+  outline: none;
+  box-shadow: none;
+  cursor: pointer;
+  transition: transform 0.3s ease;
+  padding: 2rem;
+}
+
+.bell-button:hover {
+  transform: scale(1.1);
+}
+
+.bell-active {
+  transform: scale(1.1);
+}
+
+.bell-icon {
+  width: 60%;
+  height: auto;
+  max-width: 400px;
+  transition: transform 0.3s ease;
+}
+
+/* Back Section - Zentriert */
+.back-section {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  width: 100%;
+}
+
+.back-action-button {
+  font-size: 2.646rem;
+  font-family: 'Source Code Pro', monospace;
+  font-weight: 500;
+  background: white;
+  border: 2px solid #d1d5db;
+  border-radius: 15px;
+  outline: none;
+  box-shadow: none;
+  padding: 12.6px 18.9px;
+  margin: 0;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  color: black;
+}
+
+.back-action-button:hover {
+  transform: scale(1.1);
+  color: #6b7280;
+}
+
+.back-active {
+  background: #f3f4f6;
+  color: #00B098;
+  transform: scale(1.1);
+}
+
+/* Instructions - Zentriert */
+.instructions-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  width: 100%;
+}
+
+.instructions-box {
+  background-color: transparent;
+  color: #374151;
+  padding: 1rem;
+  max-width: 600px;
+  width: 100%;
+  text-align: center;
+}
+
+.instructions-title {
+  font-size: 1.25rem;
+  font-weight: bold;
+  margin: 0 0 1rem 0;
+  color: #1f2937;
+}
+
+.instructions-text {
+  margin: 0;
+  line-height: 1.6;
+  color: #374151;
+}
+
+.instructions-text strong {
+  font-weight: bold;
+  color: #1f2937;
+}
+
+/* Custom animations */
+@keyframes pulse {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.5;
+  }
+}
+
+.animate-pulse {
+  animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .content-wrapper {
+    gap: 2rem;
+    padding: 1rem;
+  }
+  
+  .bell-icon {
+    width: 80%;
+    max-width: 300px;
+  }
+  
+  .back-action-button {
+    font-size: 2rem;
+    padding: 10px 15px;
+  }
+}

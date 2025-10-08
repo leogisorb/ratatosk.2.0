@@ -1,0 +1,292 @@
+/* UnterhaltenView Styles */
+
+/* Spezifische UnterhaltenView Styles - Vertikales Layout */
+.main-content {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 2rem;
+}
+
+.page-title {
+  font-size: 3.125rem;
+  font-weight: bold;
+  color: #1f2937;
+  font-family: 'Source Code Pro', monospace;
+  font-weight: 300;
+  margin: 0 0 1.5rem 0;
+  text-align: center;
+}
+
+.text-display-container {
+  width: 100%;
+  max-width: 100%;
+  margin: 0 auto;
+}
+
+.text-display-box {
+  background-color: #f3f4f6;
+  border-radius: 0.5rem;
+  padding: 1.5rem;
+  border: 2px solid #d1d5db;
+  min-height: 80px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.text-display-text {
+  font-size: 1.875rem;
+  color: #1f2937;
+  font-family: 'Source Code Pro', monospace;
+  font-weight: 300;
+  margin: 0;
+  word-break: break-word;
+  text-align: center;
+}
+
+.instructions-section {
+  text-align: center;
+  width: 100%;
+  max-width: 600px;
+}
+
+.instructions-text {
+  font-size: 1.25rem;
+  color: #4b5563;
+  font-family: 'Source Code Pro', monospace;
+  font-weight: 300;
+  margin: 0;
+}
+
+.spacer {
+  height: 2rem;
+  width: 100%;
+}
+
+.keyboard-container {
+  margin: 0;
+  width: 100%;
+  max-width: 100%;
+  margin-left: auto;
+  margin-right: auto;
+  padding: 0 1rem;
+}
+
+.keyboard-vertical {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  align-items: center;
+  width: 100%;
+}
+
+.keyboard-row {
+  display: flex;
+  justify-content: center;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+  width: 100%;
+  max-width: 100%;
+  overflow-x: auto;
+}
+
+.keyboard-key {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.3s ease;
+  cursor: pointer;
+  border: 2px solid #d1d5db;
+  font-family: 'Source Code Pro', monospace;
+  font-weight: bold;
+  box-sizing: border-box;
+  flex: 1;
+  min-width: 60px;
+  min-height: 45px;
+  flex-shrink: 1;
+  flex-basis: auto;
+  max-width: 120px;
+}
+
+/* Spezielle Breite für die letzte Zeile (LEERZEICHEN, LÖSCHEN, ZURÜCK) */
+.keyboard-row:last-child .keyboard-key {
+  min-width: 120px;
+  flex: 1;
+  max-width: 200px;
+}
+
+
+.keyboard-key-active {
+  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+}
+
+.keyboard-key-inactive {
+  background-color: white;
+  color: #374151;
+}
+
+.keyboard-key-text {
+  font-family: 'Source Code Pro', monospace;
+  font-weight: bold;
+}
+
+
+.instructions-box {
+  background-color: transparent;
+  color: #374151;
+  padding: 1rem;
+  max-width: 600px;
+  width: 100%;
+  text-align: center;
+}
+
+.instructions-title {
+  font-size: 1.25rem;
+  font-weight: bold;
+  margin: 0 0 1rem 0;
+  color: #1f2937;
+}
+
+.instructions-text {
+  margin: 0;
+  line-height: 1.6;
+  color: #374151;
+  font-size: 1rem;
+}
+
+.instructions-text strong {
+  font-weight: bold;
+  color: #1f2937;
+}
+
+/* Custom animations */
+@keyframes pulse {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.5;
+  }
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .main-content {
+    padding: 1rem;
+  }
+  
+  .page-title {
+    font-size: 2rem;
+  }
+  
+  .letter-display {
+    font-size: 4rem;
+  }
+  
+  .keyboard-row {
+    gap: 0.5rem;
+  }
+  
+  .keyboard-key {
+    min-width: 40px;
+    min-height: 40px;
+  }
+  
+  /* Tastatur responsive - Tasten proportional verkleinern */
+  .keyboard-key {
+    flex: 1 !important;
+    min-width: 50px !important;
+    min-height: 35px !important;
+    max-width: 80px !important;
+    width: auto !important;
+    height: auto !important;
+  }
+  
+  .keyboard-key-text {
+    font-size: 12px !important;
+  }
+  
+  .keyboard-container {
+    max-width: 100%;
+    overflow-x: auto;
+    padding: 0 0.5rem;
+  }
+  
+  .text-display-container {
+    max-width: 100%;
+    padding: 0 0.5rem;
+  }
+  
+  .keyboard-vertical {
+    gap: 0.25rem;
+  }
+  
+  .keyboard-row {
+    gap: 0.25rem;
+    flex-wrap: wrap;
+    justify-content: center;
+  }
+  
+}
+
+/* iPhone 14 und ähnliche Geräte (430px) */
+@media (max-width: 430px) {
+  .keyboard-key {
+    flex: 1 !important;
+    min-width: 70px !important;
+    min-height: 55px !important;
+    max-width: 120px !important;
+    width: auto !important;
+    height: auto !important;
+  }
+  
+  .keyboard-key-text {
+    font-size: 16px !important;
+  }
+  
+  .keyboard-row {
+    gap: 0.75rem;
+    flex-wrap: wrap;
+    justify-content: center;
+  }
+  
+  .keyboard-container {
+    padding: 0 1rem;
+  }
+  
+  .text-display-container {
+    padding: 0 1rem;
+  }
+  
+}
+
+@media (max-width: 320px) {
+  .keyboard-key {
+    flex: 1 !important;
+    min-width: 25px !important;
+    min-height: 20px !important;
+    max-width: 40px !important;
+    width: auto !important;
+    height: auto !important;
+  }
+  
+  .keyboard-key-text {
+    font-size: 8px !important;
+  }
+  
+  .keyboard-row {
+    gap: 0.0625rem;
+    flex-wrap: wrap;
+    justify-content: center;
+  }
+  
+  .keyboard-container {
+    padding: 0 0.125rem;
+  }
+  
+  .text-display-container {
+    padding: 0 0.125rem;
+  }
+}

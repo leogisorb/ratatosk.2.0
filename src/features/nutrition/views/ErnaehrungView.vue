@@ -241,7 +241,7 @@ onUnmounted(() => {
 </script>
 
 <template>
-  <div class="min-h-screen bg-white dark:bg-gray-900 flex flex-col">
+  <div class="min-h-screen bg-white">
     <!-- Global Header -->
     <GlobalHeader>
       <div class="flex items-center space-x-4">
@@ -304,11 +304,11 @@ onUnmounted(() => {
       <div class="max-w-8xl mx-auto">
         <!-- Ausgewähltes Ernährung-Item Anzeige -->
         <div class="mb-64 text-center">
-          <div class="bg-blue-100 dark:bg-blue-900 rounded-xl p-20 max-w-8xl mx-auto">
-            <h2 class="text-8xl font-bold text-blue-800 dark:text-blue-200 mb-12" style="font-family: 'Source Code Pro', monospace; font-weight: 300;">
+          <div class="bg-blue-100">
+            <h2 class="text-8xl font-bold text-blue-800" style="font-family: 'Source Code Pro', monospace; font-weight: 300;">
               Ausgewähltes Item:
             </h2>
-            <div class="font-bold text-blue-900 dark:text-blue-100" style="font-family: 'Source Code Pro', monospace; font-weight: 300; font-size: 4rem;">
+            <div class="font-bold text-blue-900" style="font-family: 'Source Code Pro', monospace; font-weight: 300; font-size: 4rem;">
               {{ selectedErnaehrung || 'Wählen Sie ein Ernährung-Item aus' }}
             </div>
           </div>
@@ -399,11 +399,11 @@ onUnmounted(() => {
 
         <!-- Instructions -->
         <div class="mt-16 text-center">
-          <div class="bg-blue-100 dark:bg-blue-900 rounded-xl p-12 max-w-4xl mx-auto">
-            <h3 class="text-4xl font-semibold text-blue-800 dark:text-blue-200 mb-4" style="font-family: 'Source Code Pro', monospace; font-weight: 300;">
+          <div class="bg-blue-100">
+            <h3 class="text-4xl font-semibold text-blue-800" style="font-family: 'Source Code Pro', monospace; font-weight: 300;">
               Bedienung
             </h3>
-            <p class="text-2xl text-blue-700 dark:text-blue-300" style="font-family: 'Source Code Pro', monospace; font-weight: 300;">
+            <p class="text-2xl text-blue-700" style="font-family: 'Source Code Pro', monospace; font-weight: 300;">
               <strong>Kurz blinzeln ({{ settingsStore.settings.blinkSensitivity }}s):</strong> Ernährung-Item auswählen<br>
               <strong>Rechte Maustaste:</strong> Ernährung-Item auswählen<br>
               <strong>Auto-Modus:</strong> Automatischer Durchlauf durch alle Items

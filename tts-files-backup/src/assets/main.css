@@ -253,8 +253,6 @@ body {
 .header-logo {
   width: 3rem;
   height: 3rem;
-  transition: all 0.3s ease;
-  object-fit: contain;
 }
 
 /* Button Styles */
@@ -615,58 +613,5 @@ body {
   
   .instructions-text {
     font-size: 1.25rem;
-  }
-  
-  /* Header responsive adjustments */
-  .header-content {
-    padding: 0.75rem 1rem;
-  }
-  
-  .header-logo {
-    width: 2.5rem;
-    height: 2.5rem;
-  }
-  
-  .header-title {
-    font-size: 1.25rem;
-  }
-  
-  .header-button {
-    padding: 0.5rem;
-  }
-  
-  .header-button-icon {
-    width: 1rem;
-    height: 1rem;
-  }
-}
-
-@media (max-width: 480px) {
-  .header-logo {
-    width: 2rem;
-    height: 2rem;
-  }
-  
-  .header-title {
-    font-size: 1rem;
-  }
-  
-  .header-left {
-    gap: 0.5rem;
-  }
-  
-  .header-right {
-    gap: 0.5rem;
-  }
-}
-
-@media (max-width: 320px) {
-  .header-logo {
-    width: 1.5rem;
-    height: 1.5rem;
-  }
-  
-  .header-title {
-    font-size: 0.875rem;
   }
 }

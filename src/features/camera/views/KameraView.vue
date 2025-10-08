@@ -137,16 +137,16 @@ onUnmounted(() => {
 <template>
   <div id="app" :class="appClasses">
     <!-- Responsive Layout -->
-    <div class="min-h-screen bg-white dark:bg-gray-900 flex flex-col">
+    <div class="min-h-screen bg-white">
       <!-- Global Header -->
       <GlobalHeader>
         <div class="flex items-center space-x-4">
-          <button @click="$router.push('/einstellungen')" class="p-2 rounded-lg bg-gray-300 dark:bg-gray-700 hover:bg-gray-400 dark:hover:bg-gray-600 transition-colors">
+          <button @click="$router.push('/einstellungen')" class="p-2 rounded-lg bg-gray-300">
             <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
             </svg>
           </button>
-          <h1 class="text-2xl font-bold text-black dark:text-white font-source-code font-light">
+          <h1 class="text-2xl font-bold text-black">
             KAMERA
           </h1>
         </div>
@@ -234,8 +234,8 @@ onUnmounted(() => {
         <!-- Livebild und Einstellungen Grid -->
         <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 w-full max-w-6xl">
           <!-- Livebild -->
-          <div class="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6">
-            <h2 class="text-2xl font-bold text-gray-800 dark:text-gray-200 font-source-code mb-4 text-center">
+          <div class="bg-white">
+            <h2 class="text-2xl font-bold text-gray-800">
               Livebild
             </h2>
             <div class="relative">
@@ -247,27 +247,27 @@ onUnmounted(() => {
                 class="w-full h-auto rounded-lg shadow-lg"
                 style="transform: scaleX(-1);"
               ></video>
-              <div v-if="!isCameraActive" class="absolute inset-0 flex items-center justify-center bg-gray-200 dark:bg-gray-700 rounded-lg">
+              <div v-if="!isCameraActive" class="absolute inset-0 flex items-center justify-center bg-gray-200">
                 <div class="text-center">
                   <svg class="w-16 h-16 mx-auto mb-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" />
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 13a3 3 0 11-6 0 3 3 0 016 0z" />
                   </svg>
-                  <p class="text-gray-500 dark:text-gray-400">Kamera nicht aktiv</p>
+                  <p class="text-gray-500">Kamera nicht aktiv</p>
                 </div>
               </div>
             </div>
           </div>
 
           <!-- Einstellungen -->
-          <div class="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6">
-            <h2 class="text-2xl font-bold text-gray-800 dark:text-gray-200 font-source-code mb-6 text-center">
+          <div class="bg-white">
+            <h2 class="text-2xl font-bold text-gray-800">
               Kamera-Einstellungen
             </h2>
             
             <!-- Helligkeit -->
             <div class="mb-6">
-              <label class="block text-lg font-medium text-gray-700 dark:text-gray-300 mb-2">
+              <label class="block text-lg font-medium text-gray-700">
                 Helligkeit: {{ brightness }}%
               </label>
               <input
@@ -275,14 +275,14 @@ onUnmounted(() => {
                 type="range"
                 min="0"
                 max="100"
-                class="w-full h-2 bg-gray-200 dark:bg-gray-700 rounded-lg appearance-none cursor-pointer slider"
+                class="w-full h-2 bg-gray-200"
                 @input="applyCameraSettings"
               />
             </div>
 
             <!-- Kontrast -->
             <div class="mb-6">
-              <label class="block text-lg font-medium text-gray-700 dark:text-gray-300 mb-2">
+              <label class="block text-lg font-medium text-gray-700">
                 Kontrast: {{ contrast }}%
               </label>
               <input
@@ -290,14 +290,14 @@ onUnmounted(() => {
                 type="range"
                 min="0"
                 max="100"
-                class="w-full h-2 bg-gray-200 dark:bg-gray-700 rounded-lg appearance-none cursor-pointer slider"
+                class="w-full h-2 bg-gray-200"
                 @input="applyCameraSettings"
               />
             </div>
 
             <!-- Zoom -->
             <div class="mb-6">
-              <label class="block text-lg font-medium text-gray-700 dark:text-gray-300 mb-2">
+              <label class="block text-lg font-medium text-gray-700">
                 Zoom: {{ zoom }}%
               </label>
               <input
@@ -305,14 +305,14 @@ onUnmounted(() => {
                 type="range"
                 min="50"
                 max="200"
-                class="w-full h-2 bg-gray-200 dark:bg-gray-700 rounded-lg appearance-none cursor-pointer slider"
+                class="w-full h-2 bg-gray-200"
                 @input="applyCameraSettings"
               />
             </div>
 
             <!-- Sättigung -->
             <div class="mb-8">
-              <label class="block text-lg font-medium text-gray-700 dark:text-gray-300 mb-2">
+              <label class="block text-lg font-medium text-gray-700">
                 Sättigung: {{ saturation }}%
               </label>
               <input
@@ -320,7 +320,7 @@ onUnmounted(() => {
                 type="range"
                 min="0"
                 max="100"
-                class="w-full h-2 bg-gray-200 dark:bg-gray-700 rounded-lg appearance-none cursor-pointer slider"
+                class="w-full h-2 bg-gray-200"
                 @input="applyCameraSettings"
               />
             </div>
@@ -345,11 +345,11 @@ onUnmounted(() => {
 
         <!-- Bedienung -->
         <div class="mt-8 text-center">
-          <div class="bg-blue-100 dark:bg-blue-900 rounded-xl p-6 max-w-4xl mx-auto">
-            <h3 class="text-2xl font-semibold text-blue-800 dark:text-blue-200 mb-4 font-source-code">
+          <div class="bg-blue-100">
+            <h3 class="text-2xl font-semibold text-blue-800">
               Bedienung
             </h3>
-            <p class="text-lg text-blue-700 dark:text-blue-300 font-source-code">
+            <p class="text-lg text-blue-700">
               <strong>Kurz blinzeln ({{ settingsStore.settings.blinkSensitivity }}s):</strong> Einstellung auswählen<br>
               <strong>Rechte Maustaste:</strong> Einstellung auswählen<br>
               <strong>Auto-Modus:</strong> Automatischer Durchlauf durch alle Einstellungen

@@ -200,7 +200,7 @@ onUnmounted(() => {
 <template>
   <div id="app" :class="appClasses">
     <!-- Responsive Layout -->
-    <div class="min-h-screen bg-white dark:bg-gray-900 flex flex-col">
+    <div class="min-h-screen bg-white">
       <!-- Header -->
       <header class="bg-gray-200 shadow-2xl flex-shrink-0" style="box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -302,10 +302,10 @@ onUnmounted(() => {
       <main class="flex-1 flex flex-col items-center justify-center p-8">
         <!-- Instructions -->
         <div class="text-center mb-8 max-w-4xl">
-          <h2 class="text-3xl font-bold text-gray-800 dark:text-gray-200 font-source-code mb-6">
+          <h2 class="text-3xl font-bold text-gray-800">
             Kamera-Positionierung
           </h2>
-          <div class="text-lg text-gray-600 dark:text-gray-400 space-y-4 text-left">
+          <div class="text-lg text-gray-600">
             <p><strong>Die Kamera ist richtig positioniert, wenn um das vollständige Gesicht ein orangener Kreis abgebildet ist.</strong></p>
             <p>Sollte der Kreis zu klein oder nicht vorhanden sein, drehen Sie Ihr Endgerät so, dass Ihr Kopf mit der Stirn zu diesem Text zeigt.</p>
             <p>Zudem kann es helfen das automatische Drehen des Endgerätes an zu schalten.</p>
@@ -341,7 +341,7 @@ onUnmounted(() => {
             {{ focusStatus }}
           </div>
           
-          <div class="text-lg text-gray-600 dark:text-gray-400 space-y-2">
+          <div class="text-lg text-gray-600">
             <p v-if="!faceDetected" class="text-red-600">
               Bitte positionieren Sie Ihr Gesicht vor der Kamera
             </p>
