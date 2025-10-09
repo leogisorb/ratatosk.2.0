@@ -255,15 +255,6 @@ onUnmounted(() => {
           </button>
         </div>
 
-        <!-- Instructions -->
-        <div class="instructions-container">
-          <h3 class="instructions-title">Bedienung</h3>
-          <p class="instructions-text">
-            <strong>Kurz blinzeln ({{ settingsStore.settings.blinkSensitivity }}s):</strong> Verb auswählen<br>
-            <strong>Rechte Maustaste:</strong> Verb auswählen<br>
-            <strong>Auto-Modus:</strong> Automatischer Durchlauf durch alle Items
-          </p>
-        </div>
       </div>
     </main>
   </div>
@@ -312,7 +303,7 @@ onUnmounted(() => {
 }
 
 .selected-item-text {
-  font-size: 2.8125rem; /* 50% größer: 1.875rem * 1.5 = 2.8125rem */
+  font-size: 4.06rem; /* 75% größer: 2.32rem * 1.75 = 4.06rem */
   font-weight: bold;
   color: #1f2937;
   font-family: 'Source Code Pro', monospace;
@@ -464,7 +455,7 @@ onUnmounted(() => {
   }
   
   .selected-item-text {
-    font-size: 2.25rem; /* 50% größer: 1.5rem * 1.5 = 2.25rem */
+    font-size: 3.26rem; /* 75% größer: 1.86rem * 1.75 = 3.26rem */
   }
   
   .instructions-title {
@@ -502,7 +493,7 @@ onUnmounted(() => {
   }
   
   .selected-item-text {
-    font-size: 1.6875rem; /* 50% größer: 1.125rem * 1.5 = 1.6875rem */
+    font-size: 2.43rem; /* 75% größer: 1.39rem * 1.75 = 2.43rem */
   }
 }
 </style>

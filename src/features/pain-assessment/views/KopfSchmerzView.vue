@@ -40,11 +40,8 @@ const {
       <div class="content-wrapper">
         <!-- Ausgewähltes Kopf-Bereich Item Anzeige -->
         <div class="selected-item-container">
-          <h2 class="selected-item-title">
-            Ausgewähltes Item:
-            </h2>
-          <div class="selected-item-text">
-              {{ selectedKopfBereich || 'Wählen Sie einen Kopf-Bereich aus' }}
+          <div class="selected-item-text" style="font-size: 3.43rem; font-family: 'Source Code Pro', monospace; font-weight: 500;">
+            Wählen Sie einen Kopf-Bereich aus
           </div>
         </div>
 

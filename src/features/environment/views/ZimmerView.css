@@ -23,10 +23,11 @@
   width: 100%;
 }
 
-/* Ausgewähltes Item Anzeige - Nochmal 5% weiter hoch */
+/* Ausgewähltes Item Anzeige - Weiter runter */
 .selected-item-container {
-  margin-bottom: 0.43rem; /* 5% weniger: 0.45rem * 0.95 = 0.43rem */
-  margin-top: -0.58rem; /* 5% mehr negativer Abstand: -0.55rem * 1.05 = -0.58rem */
+  margin-bottom: 0.5rem; /* Weniger Abstand zur Tastatur */
+  margin-top: 4rem; /* Nochmal so viel Abstand zum Header: 2rem * 2 = 4rem */
+  transform: translateY(-50px); /* Weniger hoch: -125px + 75px = -50px */
   text-align: center;
 }
 

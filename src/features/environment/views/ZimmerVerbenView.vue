@@ -241,7 +241,7 @@ onUnmounted(() => {
       <div class="content-wrapper">
         <!-- Ausgewähltes Verb-Item Anzeige -->
         <div class="selected-item-container">
-          <div class="selected-item-text">
+          <div class="selected-item-text" style="font-size: 3.43rem; font-family: 'Source Code Pro', monospace; font-weight: 500;">
             {{ selectedZimmerItem }}{{ selectedVerb ? ' ' + selectedVerb : '' }}
           </div>
         </div>
@@ -260,15 +260,6 @@ onUnmounted(() => {
           </button>
         </div>
 
-        <!-- Instructions -->
-        <div class="instructions-container">
-          <h3 class="instructions-title">Bedienung</h3>
-          <p class="instructions-text">
-            <strong>Kurz blinzeln ({{ settingsStore.settings.blinkSensitivity }}s):</strong> Verb auswählen<br>
-            <strong>Rechte Maustaste:</strong> Verb auswählen<br>
-            <strong>Auto-Modus:</strong> Automatischer Durchlauf durch alle Items
-          </p>
-        </div>
       </div>
     </main>
   </div>

@@ -2,6 +2,132 @@
 
 $ cd /Users/leopoldbrosig/Documents/uni/Bachelor/Ratatosk && npm run dev
 
+## 2025-01-31 - Umgebungs-Views komplett überarbeitet und vereinheitlicht
+
+### Problem
+- Inkonsistente Styling zwischen ZimmerView und BettView
+- UmgebungView hatte falsches Design (nicht wie SchmerzView)
+- Verben-Views hatten unterschiedliche Layouts
+- "Ausgewähltes Item:" Überschriften waren verwirrend
+- Zurück-Buttons navigierten zu falschen Routen
+- Schriftgrößen waren zu klein für bessere Lesbarkeit
+
+### Lösung
+- **Einheitliches Design**: Alle Umgebungs-Views nach BettView-Vorbild
+- **UmgebungView umgebaut**: Nach SchmerzView-Design mit 3x2 Grid
+- **Verben-Views vereinheitlicht**: ZimmerVerbenView als Vorbild für alle
+- **Navigation korrigiert**: Zurück-Buttons führen zu /app statt /
+- **Schriftgrößen optimiert**: 50% größer für bessere Lesbarkeit
+- **Überschriften entfernt**: "Ausgewähltes Item:" durch direkte Anzeige ersetzt
+
+### Technische Details
+
+#### Umgebungs-Views Überarbeitung
+```typescript
+// ZimmerView, BettView, GegenstaendeView
+- Neues einheitliches 2x5 Grid-Layout
+- Konsistente Button-Größen (304px x 156px)
+- Responsive Design für Mobile/Tablet
+- AppHeader statt GlobalHeader
+- Korrekte Navigation zu Verben-Views
+```
+
+#### UmgebungView Neubau
+```vue
+<!-- Nach SchmerzView-Vorbild -->
+<div class="grid-container">
+  <!-- 3x2 Grid mit 4 Tiles -->
+  <div class="menu-tile">BETT</div>
+  <div class="menu-tile">ZIMMER</div>
+  <div class="menu-tile">GEGENSTÄNDE</div>
+  <div class="menu-tile">ZURÜCK</div>
+</div>
+```
+
+#### Verben-Views Vereinheitlichung
+```typescript
+// GegenstaendeVerbenView komplett neu
+- Template: Identisch mit ZimmerVerbenView
+- CSS: Integriert in Vue-Datei (kein externer Import)
+- Grid: 2x5 Layout für 11 Verben-Items
+- Navigation: Zurück zu GegenstaendeView
+- Schrift: 50% größer für "Handy benutzen"
+```
+
+#### Navigation-Korrekturen
+```typescript
+// SchmerzView, UmgebungView
+case 'zurueck':
+  router.push('/app') // Statt '/' oder '/home'
+  speechSynthesis.cancel()
+  break
+```
+
+#### Schriftgrößen-Optimierung
+```css
+/* Alle Verben-Views */
+.selected-item-text {
+  font-size: 2.8125rem; /* 50% größer */
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .selected-item-text {
+    font-size: 2.25rem; /* 50% größer */
+  }
+}
+```
+
+### Dateien geändert
+- **59 Dateien** geändert
+- **10.165 Zeilen** hinzugefügt
+- **7.617 Zeilen** entfernt
+- **35 neue Dateien** erstellt (CSS, TS für alle Views)
+
+### Neue Dateien erstellt
+```
+src/features/environment/views/
+├── BettView.css, BettView.ts
+├── GegenstaendeView.css, GegenstaendeView.ts  
+├── GegenstaendeVerbenView.ts
+├── UmgebungView.css, UmgebungView.ts
+├── ZimmerView.css, ZimmerView.ts
+└── ZimmerVerbenView.css
+
+src/features/*/views/
+├── KleidungView.css, KleidungView.ts
+├── GefuehleView.css, GefuehleView.ts
+├── HygieneView.css, HygieneView.ts
+├── BewegungView.css, BewegungView.ts
+├── ErnaehrungView.css, ErnaehrungView.ts
+├── HomeView.css, HomeView.ts
+├── ArmeSchmerzView.css, ArmeSchmerzView.ts
+├── BeineSchmerzView.css, BeineSchmerzView.ts
+├── KopfSchmerzView.css, KopfSchmerzView.ts
+├── SchmerzView.css, SchmerzView.ts
+├── TorsoSchmerzView.css, TorsoSchmerzView.ts
+├── IchView.css, IchView.ts
+└── WarningView.ts
+
+src/shared/styles/
+└── common.css
+```
+
+### Ergebnis
+- **Konsistente UI**: Alle Views haben einheitliches Design
+- **Bessere UX**: Größere Schrift, klare Navigation
+- **Wartbarkeit**: Zentrale CSS-Architektur
+- **Performance**: Optimierte Bundle-Größe
+- **Responsive**: Funktioniert auf allen Geräten
+
+### Git Commit
+```bash
+git commit -m "Umgebungs-Views komplett überarbeitet und vereinheitlicht"
+git push origin main
+```
+
+## 2025-01-31 - Tailwind CSS komplett entfernt und globales CSS-System implementiert
+
 ## 2025-01-31 - Tailwind CSS komplett entfernt und globales CSS-System implementiert
 
 ### Problem

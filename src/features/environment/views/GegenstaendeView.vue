@@ -40,11 +40,8 @@ const {
       <div class="content-wrapper">
         <!-- Ausgewähltes Gegenstand-Item Anzeige -->
         <div class="selected-item-container">
-          <h2 class="selected-item-title">
-            Ausgewähltes Item:
-          </h2>
-          <div class="selected-item-text">
-            {{ selectedGegenstaendeItem || 'Wählen Sie einen Gegenstand aus' }}
+          <div class="selected-item-text" style="font-size: 3.43rem; font-family: 'Source Code Pro', monospace; font-weight: 500;">
+            Wählen Sie einen Gegenstand aus
           </div>
         </div>
 
@@ -62,15 +59,6 @@ const {
           </button>
         </div>
 
-        <!-- Instructions -->
-        <div class="instructions-container">
-          <h3 class="instructions-title">Bedienung</h3>
-          <p class="instructions-text">
-            <strong>Kurz blinzeln ({{ settingsStore.settings.blinkSensitivity }}s):</strong> Gegenstand auswählen<br>
-            <strong>Rechte Maustaste:</strong> Gegenstand auswählen<br>
-            <strong>Auto-Modus:</strong> Automatischer Durchlauf durch alle Items
-          </p>
-        </div>
       </div>
     </main>
   </div>

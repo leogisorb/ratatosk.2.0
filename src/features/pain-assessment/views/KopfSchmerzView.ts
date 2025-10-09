@@ -158,14 +158,11 @@ export function useKopfSchmerzViewLogic() {
         console.log('Selected Kopf-Bereich:', kopfBereichId)
         speakText(`${selectedItem?.text} ausgewählt`)
         
-        // Auto-Modus nach 10 Sekunden wieder starten
-        restartTimeout.value = window.setTimeout(() => {
-          if (isAutoMode.value) {
-            currentTileIndex.value = 0
-            isAutoModePaused.value = false
-            startAutoMode()
-          }
-        }, 10000)
+        // Navigation zur Schmerzskala
+        setTimeout(() => {
+          console.log('Navigating to pain scale for:', selectedItem?.text)
+          router.push(`/pain-scale?bodyPart=${encodeURIComponent(selectedItem?.text || '')}&returnRoute=/kopf-schmerz`)
+        }, 2000)
     }
   }
 

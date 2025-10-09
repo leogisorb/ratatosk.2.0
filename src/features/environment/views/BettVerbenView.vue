@@ -291,7 +291,7 @@ onUnmounted(() => {
         <!-- Gewählte Kombination Anzeige -->
         <div class="mb-64 text-center">
           <div class="bg-green-100">
-            <div class="font-bold text-green-900" style="font-family: 'Source Code Pro', monospace; font-weight: 300; font-size: 6rem;">
+            <div class="font-bold text-green-900" style="font-family: 'Source Code Pro', monospace; font-weight: 300; font-size: 8.66rem;">
               {{ selectedBettItem }}{{ selectedVerb ? ' ' + selectedVerb : '' }}
             </div>
           </div>
@@ -380,19 +380,6 @@ onUnmounted(() => {
         <!-- Abstandshalter -->
         <div style="height: 4rem;"></div>
 
-        <!-- Instructions -->
-        <div class="mt-16 text-center">
-          <div class="bg-green-100">
-            <h3 class="text-4xl font-semibold text-green-800" style="font-family: 'Source Code Pro', monospace; font-weight: 300;">
-              Bedienung
-            </h3>
-            <p class="text-2xl text-green-700" style="font-family: 'Source Code Pro', monospace; font-weight: 300;">
-              <strong>Kurz blinzeln ({{ settingsStore.settings.blinkSensitivity }}s):</strong> Verb auswählen<br>
-              <strong>Rechte Maustaste:</strong> Verb auswählen<br>
-              <strong>Auto-Modus:</strong> Automatischer Durchlauf durch alle Verben
-            </p>
-          </div>
-        </div>
       </div>
     </main>
   </div>
