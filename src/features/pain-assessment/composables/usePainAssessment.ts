@@ -59,14 +59,17 @@ export function usePainAssessment() {
         return
       }
 
-      isSpeaking.value = true
+      // Cancel any ongoing speech and wait
       speechSynthesis.cancel()
+      
+      setTimeout(() => {
+        isSpeaking.value = true
 
-      const utterance = new SpeechSynthesisUtterance(text)
-      utterance.lang = 'de-DE'
-      utterance.rate = 1.0
-      utterance.pitch = 1.0
-      utterance.volume = 1.0
+        const utterance = new SpeechSynthesisUtterance(text)
+        utterance.lang = 'de-DE'
+        utterance.rate = 0.9
+        utterance.pitch = 1.0
+        utterance.volume = 1.0
 
       // Prefer male voice
       const voices = speechSynthesis.getVoices()
@@ -99,7 +102,8 @@ export function usePainAssessment() {
         resolve()
       }
 
-      speechSynthesis.speak(utterance)
+        speechSynthesis.speak(utterance)
+      }, 50)
     })
   }
 

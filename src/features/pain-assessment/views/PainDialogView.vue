@@ -208,9 +208,23 @@ const selectPainLevel = async (level: number) => {
   const subRegion = currentSubRegions.value.find(item => item.id === selectedSubRegion.value)
   const painLevel = painLevels.find(p => p.level === level)
   
+  console.log('Pain level selection - mainRegion:', mainRegion, 'subRegion:', subRegion, 'painLevel:', painLevel)
+  
   if (mainRegion && subRegion && painLevel) {
     const confirmationText = `${subRegion.title} Schmerzlevel ${level} - ${painLevel.description}`
-    await speakText(confirmationText)
+    console.log('Speaking confirmation text:', confirmationText)
+    
+    // Force TTS to work by adding a small delay and ensuring speech synthesis is ready
+    setTimeout(async () => {
+      try {
+        await speakText(confirmationText)
+        console.log('TTS: Confirmation text spoken successfully')
+      } catch (error) {
+        console.error('TTS: Error speaking confirmation:', error)
+      }
+    }, 100)
+  } else {
+    console.error('Missing data for confirmation:', { mainRegion, subRegion, painLevel })
   }
   
   // After confirmation, return to main view after 3 seconds
