@@ -18,6 +18,10 @@ export default defineConfig({
       output: {
         manualChunks: undefined,
       },
+      external: (id) => {
+        // Don't try to bundle static assets that are referenced with absolute paths
+        return id.startsWith('/ratatosk.2.0/')
+      },
     },
   },
   resolve: {

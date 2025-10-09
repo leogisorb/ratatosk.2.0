@@ -89,15 +89,6 @@ const {
           </div>
         </div>
 
-        <!-- Instructions -->
-        <div class="instructions-container">
-          <h3 class="instructions-title">Bedienung</h3>
-          <p class="instructions-text">
-            <strong>Kurz blinzeln ({{ settingsStore.settings.blinkSensitivity }}s):</strong> Arm-Bereich auswählen<br>
-            <strong>Rechte Maustaste:</strong> Arm-Bereich auswählen<br>
-            <strong>Auto-Modus:</strong> Automatischer Durchlauf durch alle Items
-          </p>
-        </div>
       </div>
     </main>
   </div>

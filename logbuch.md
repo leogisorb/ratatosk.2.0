@@ -2,6 +2,242 @@
 
 $ cd /Users/leopoldbrosig/Documents/uni/Bachelor/Ratatosk && npm run dev
 
+## 2025-01-31 - Pain Dialog System komplett überarbeitet und Auto-Modus behoben
+
+### Problem
+- Pain Dialog hatte "massive Fehler" mit doppelten Rhythmen und Deklarationen
+- Auto-Modus-Algorithmus funktionierte nicht ("durchlauf algo geht geht nicht")
+- Linksklick funktionierte nicht zuverlässig - sprang zu falschen Bereichen
+- Pain Scale lief nicht korrekt
+- CSS war falsch - hatte bunte Hintergründe statt weißem Design
+- Titel hatten unnötige Boxen und Hintergründe
+- Pain Scale Zahlen waren zu klein und falsch gefärbt
+- Sub-Region-Kacheln waren zu groß und falsch angeordnet
+
+### Lösung
+- **Komplette Neuimplementierung**: PainDialogView von Grund auf neu erstellt
+- **Auto-Modus-Algorithmus behoben**: Vereinfachter, robuster Zyklus mit korrekter Index-Verwaltung
+- **Navigation korrigiert**: Watcher-basierte Zustandsverwaltung ohne Konflikte
+- **CSS wiederhergestellt**: Ursprüngliches weißes Design wie SchmerzView
+- **Titel ohne Boxen**: Saubere Textanzeige ohne Hintergründe
+- **Pain Scale optimiert**: Größere Zahlen, schwarze aktive Zahlen, breitere Bar
+- **Sub-Region-Layout**: 4 Kacheln pro Zeile, 25% größere Kacheln
+- **TTS-Debugging**: Detaillierte Logs für TTS-Problemdiagnose
+
+### Technische Details
+
+#### PainDialogView Neuimplementierung
+```vue
+<!-- Einheitliche View für alle Pain Assessment Schritte -->
+<template>
+  <!-- Main View: Body Region Selection -->
+  <div v-if="currentState === 'mainView'">
+    <div class="main-title">Wo haben Sie Schmerzen?</div>
+    <!-- 2x2 Grid: Kopf, Beine, Arme, Torso -->
+  </div>
+  
+  <!-- Sub Region View -->
+  <div v-if="currentState === 'subRegionView'">
+    <div class="main-title">Wählen Sie einen Kopfbereich aus</div>
+    <!-- 4 Kacheln pro Zeile, 25% größer -->
+  </div>
+  
+  <!-- Pain Scale View -->
+  <div v-if="currentState === 'painScaleView'">
+    <div class="pain-scale-body-part">Stirn</div>
+    <div class="pain-scale-title">Schmerzlevel:</div>
+    <div class="pain-scale-level">3</div>
+    <div class="pain-scale-description">leicht</div>
+    <!-- Pain Scale Bar: 290% breit, zentriert -->
+  </div>
+</template>
+```
+
+#### Auto-Modus-Algorithmus behoben
+```typescript
+// usePainAssessment.ts - Vereinfachter Auto-Modus
+const startAutoMode = async (items: any[], initialDelay: number = 3000, cycleDelay: number = 3000) => {
+  if (autoModeInterval.value || items.length === 0) return
+  
+  console.log('Starting auto-mode with items:', items.length)
+  currentTileIndex.value = 0
+  
+  const cycleTiles = async () => {
+    if (!isAutoMode.value || isAutoModePaused.value) return
+    
+    // Speak current item
+    const currentItem = items[currentTileIndex.value]
+    if (currentItem && currentItem.title) {
+      console.log('Speaking item:', currentItem.title, 'at index:', currentTileIndex.value)
+      await speakText(currentItem.title)
+    }
+    
+    // Move to next item
+    currentTileIndex.value = (currentTileIndex.value + 1) % items.length
+    console.log('Moved to next item, new index:', currentTileIndex.value)
+    
+    // Schedule next cycle
+    autoModeInterval.value = window.setTimeout(cycleTiles, cycleDelay)
+  }
+  
+  // Start after initial delay
+  autoModeInterval.value = window.setTimeout(cycleTiles, initialDelay)
+}
+```
+
+#### CSS Design wiederhergestellt
+```css
+/* Ursprüngliches weißes Design wie SchmerzView */
+.pain-dialog-app {
+  background-color: #f8f9fa; /* Weißer Hintergrund */
+}
+
+.main-title {
+  font-family: 'Source Code Pro', monospace;
+  font-size: 3.5rem;
+  color: black;
+  text-align: center;
+  /* Kein Hintergrund, keine Box */
+}
+
+.pain-dialog-item {
+  background-color: white;
+  border: 2px solid #9ca3af;
+  border-radius: 2rem;
+  width: 32rem;
+  height: 20rem;
+}
+
+.pain-dialog-item.active {
+  background-color: #00B098; /* Grün wenn aktiv */
+  color: white;
+}
+```
+
+#### Pain Scale Optimierungen
+```css
+/* Pain Scale Bar - 290% breit und zentriert */
+.pain-scale-bar {
+  width: 290%;
+  height: 80px;
+  background-color: #e5e7eb;
+  border-radius: 40px;
+  margin: 2rem auto;
+  transform: translateX(-50%);
+  left: 50%;
+}
+
+/* Pain Scale Zahlen - 50% größer */
+.pain-scale-number {
+  font-size: 3rem; /* Vorher: 2rem */
+}
+
+.pain-scale-number.active {
+  font-size: 3.75rem; /* Vorher: 2.5rem */
+  color: black; /* Vorher: #00B098 (grün) */
+}
+```
+
+#### Sub-Region-Layout optimiert
+```css
+/* Sub Region Grid - 4 Kacheln pro Zeile */
+.sub-region-grid {
+  display: grid !important;
+  grid-template-columns: repeat(4, 1fr) !important;
+  gap: 1.2rem !important;
+}
+
+/* Sub Region Items - 25% größer */
+.sub-region-item {
+  width: 20rem !important; /* Vorher: 16rem */
+  height: 12.5rem !important; /* Vorher: 10rem */
+}
+
+.sub-region-icon {
+  width: 5.3125rem !important; /* Vorher: 4.25rem */
+  height: 5.3125rem !important;
+}
+
+.sub-region-text {
+  font-size: 2.1875rem !important; /* Vorher: 1.75rem */
+}
+```
+
+#### TTS-Debugging verbessert
+```typescript
+// Detaillierte TTS-Logs für Problemdiagnose
+const speakText = (text: string): Promise<void> => {
+  return new Promise((resolve) => {
+    console.log('TTS: Attempting to speak:', text)
+    console.log('TTS: isTTSEnabled:', isTTSEnabled.value, 'isSpeaking:', isSpeaking.value)
+    
+    if (!isTTSEnabled.value) {
+      console.warn('TTS: TTS is disabled')
+      resolve()
+      return
+    }
+    
+    // ... TTS-Implementierung mit detaillierten Logs
+    utterance.onstart = () => {
+      console.log('TTS: Started speaking:', text)
+    }
+    
+    utterance.onend = () => {
+      console.log('TTS: Finished speaking:', text)
+      isSpeaking.value = false
+      resolve()
+    }
+    
+    utterance.onerror = (event) => {
+      console.error('TTS: Error speaking:', event.error, text)
+      isSpeaking.value = false
+      resolve()
+    }
+  })
+}
+```
+
+### Dateien geändert
+- `src/features/pain-assessment/views/PainDialogView.vue` - Komplett neu implementiert
+- `src/features/pain-assessment/composables/usePainAssessment.ts` - Auto-Modus und TTS verbessert
+- `src/features/pain-assessment/views/SchmerzView.vue` - Navigation zu PainDialogView
+- `src/features/pain-assessment/views/SchmerzView.ts` - Routing angepasst
+- `src/features/pain-assessment/data/painAssessmentData.ts` - Zentralisierte Daten
+- `vite.config.ts` - Build-Konfiguration für statische Assets
+
+### Ergebnis
+- ✅ Auto-Modus funktioniert korrekt durch alle Schritte
+- ✅ Navigation springt nicht mehr zu falschen Bereichen
+- ✅ Pain Scale läuft und zeigt korrekte Zahlen
+- ✅ CSS entspricht dem ursprünglichen weißen Design
+- ✅ Titel sind sauber ohne Boxen
+- ✅ Pain Scale ist 290% breit, zentriert, mit größeren schwarzen Zahlen
+- ✅ Sub-Region-Kacheln sind in 4er-Reihen, 25% größer
+- ✅ TTS hat detaillierte Debug-Logs für Problemdiagnose
+
+### Flow funktioniert jetzt korrekt:
+```
+START → Wo haben Sie Schmerzen? (nur Text, keine Box)
+   ↓ (Auto-Modus: Kopf, Beine, Arme, Torso)
+User wählt Region (z. B. Kopf)
+   ↓
+Wählen Sie einen Kopfbereich aus (nur Text, keine Box)
+   ↓ (Auto-Modus: Stirn, Hinterkopf, Schläfe, etc.)
+User wählt Unterregion (z. B. Stirn)
+   ↓
+Stirn (nur Text, keine Box)
+Schmerzlevel: (nur Text, keine Box)
+3 (nur Text, keine Box)
+leicht (nur Text, keine Box)
+   ↓ (Auto-Modus: 1, 2, 3, 4, 5, 6, 7, 8, 9, 10)
+[Pain Scale Bar - 290% breit, zentriert, schwarze aktive Zahlen]
+User wählt Schmerzlevel (z. B. 6)
+   ↓
+TTS: „Stirn Schmerzlevel 6 - mäßig bis stark"
+   ↓
+Zurück zum Start → Wo haben Sie Schmerzen? (Auto-Modus startet neu)
+```
+
 ## 2025-01-31 - Umgebungs-Views komplett überarbeitet und vereinheitlicht
 
 ### Problem

@@ -46,6 +46,7 @@ const blinkCooldown = computed(() => settingsStore.settings.blinkSensitivity * 1
 
 // Marker Position - für synchronen Lauf von Progress Bar und Marker
 const markerPosition = computed(() => {
+  // Korrekte Berechnung: Level 1 = 5%, Level 2 = 15%, ..., Level 10 = 95%
   const position = ((currentPainLevel.value - 1) * 10) + 5
   console.log('Current pain level:', currentPainLevel.value, 'Marker position:', position)
   return position
@@ -120,10 +121,14 @@ const handleVolumeToggle = (event: CustomEvent) => {
 const startAutoMode = () => {
   if (autoModeInterval.value) return
   
+  // Stelle sicher, dass wir bei Level 1 starten
+  currentPainLevel.value = 1
+  
   const cycleLevels = () => {
     if (!isAutoMode.value || isAutoModePaused.value || isSelectionComplete.value) {
       return
     }
+    // Zyklus durch alle 10 Level: 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, dann zurück zu 1
     currentPainLevel.value = currentPainLevel.value === 10 ? 1 : currentPainLevel.value + 1
     const currentItem = painLevels.find(item => item.level === currentPainLevel.value)
     if (currentItem) {
@@ -349,17 +354,6 @@ onUnmounted(() => {
         <!-- Abstandshalter -->
         <div style="height: 4rem;"></div>
 
-        <!-- Instructions -->
-        <div class="pain-instructions">
-          <h3 class="pain-instructions-title">
-            Bedienung
-          </h3>
-          <p class="pain-instructions-text">
-            <strong>Kurz blinzeln ({{ settingsStore.settings.blinkSensitivity }}s):</strong> Schmerzlevel auswählen<br>
-            <strong>Rechte Maustaste:</strong> Schmerzlevel auswählen<br>
-            <strong>Auto-Modus:</strong> Automatischer Durchlauf durch alle Schmerzlevel
-          </p>
-        </div>
       </div>
     </main>
   </div>

@@ -23,6 +23,7 @@ import TorsoSchmerzView from '../features/pain-assessment/views/TorsoSchmerzView
 import BeineSchmerzView from '../features/pain-assessment/views/BeineSchmerzView.vue'
 import ArmeSchmerzView from '../features/pain-assessment/views/ArmeSchmerzView.vue'
 import PainScaleView from '../features/pain-assessment/views/PainScaleView.vue'
+import PainDialogView from '../features/pain-assessment/views/PainDialogView.vue'
 import EinstellungenView from '../features/settings/views/EinstellungenView.vue'
 import LeuchtDauerView from '../features/light-duration/views/LeuchtDauerView.vue'
 import BlinzeldauerView from '../features/blink-duration/views/BlinzeldauerView.vue'
@@ -152,6 +153,11 @@ const router = createRouter({
       path: '/pain-scale',
       name: 'pain-scale',
       component: PainScaleView,
+    },
+    {
+      path: '/pain-dialog',
+      name: 'pain-dialog',
+      component: PainDialogView,
     },
     {
       path: '/einstellungen',

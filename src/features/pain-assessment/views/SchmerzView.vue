@@ -20,8 +20,6 @@ const {
   pauseAutoMode,
   stopAutoMode,
   selectSchmerz,
-  handleBlink,
-  handleRightClick,
   settingsStore,
   faceRecognition
 } = useSchmerzViewLogic()
@@ -36,133 +34,31 @@ const {
     <main class="main-content">
       <!-- Grid Container - 3x2 Grid wie Ich-View -->
       <div class="grid-container">
-        <!-- Kopf -->
+        <!-- Dynamic Menu Tiles -->
         <div 
+          v-for="(item, index) in schmerzItems"
+          :key="item.id"
           class="menu-tile"
-          :class="currentTileIndex === 0 ? 'tile-active' : 'tile-inactive'"
-          @click="selectSchmerz('kopf')"
+          :class="currentTileIndex === index ? 'tile-active' : 'tile-inactive'"
+          @click="selectSchmerz(item.id)"
         >
           <div 
             class="tile-icon-container"
-            :class="currentTileIndex === 0 ? 'icon-active' : 'icon-inactive'"
+            :class="currentTileIndex === index ? 'icon-active' : 'icon-inactive'"
           >
             <img 
-              src="/head.png" 
-              alt="KOPF" 
+              :src="item.icon" 
+              :alt="item.title" 
               class="tile-icon"
-              :class="currentTileIndex === 0 ? 'icon-inverted' : ''"
+              :class="currentTileIndex === index ? 'icon-inverted' : ''"
             />
           </div>
           <div 
             class="tile-text"
-            :class="currentTileIndex === 0 ? 'text-active' : 'text-inactive'"
-            :style="currentTileIndex === 0 ? 'color: white !important;' : ''"
+            :class="currentTileIndex === index ? 'text-active' : 'text-inactive'"
+            :style="currentTileIndex === index ? 'color: white !important;' : ''"
           >
-            KOPF
-          </div>
-        </div>
-
-        <!-- Beine -->
-        <div 
-          class="menu-tile"
-          :class="currentTileIndex === 1 ? 'tile-active' : 'tile-inactive'"
-          @click="selectSchmerz('beine')"
-        >
-          <div 
-            class="tile-icon-container"
-            :class="currentTileIndex === 1 ? 'icon-active' : 'icon-inactive'"
-          >
-            <img 
-              src="/leg.png" 
-              alt="BEINE" 
-              class="tile-icon"
-              :class="currentTileIndex === 1 ? 'icon-inverted' : ''"
-            />
-          </div>
-          <div 
-            class="tile-text"
-            :class="currentTileIndex === 1 ? 'text-active' : 'text-inactive'"
-            :style="currentTileIndex === 1 ? 'color: white !important;' : ''"
-          >
-            BEINE
-          </div>
-        </div>
-
-        <!-- Arme -->
-        <div 
-          class="menu-tile"
-          :class="currentTileIndex === 2 ? 'tile-active' : 'tile-inactive'"
-          @click="selectSchmerz('arme')"
-        >
-          <div 
-            class="tile-icon-container"
-            :class="currentTileIndex === 2 ? 'icon-active' : 'icon-inactive'"
-          >
-            <img 
-              src="/elbow-2.png" 
-              alt="ARME" 
-              class="tile-icon"
-              :class="currentTileIndex === 2 ? 'icon-inverted' : ''"
-            />
-          </div>
-          <div 
-            class="tile-text"
-            :class="currentTileIndex === 2 ? 'text-active' : 'text-inactive'"
-            :style="currentTileIndex === 2 ? 'color: white !important;' : ''"
-          >
-            ARME
-          </div>
-        </div>
-
-        <!-- Torso -->
-        <div 
-          class="menu-tile"
-          :class="currentTileIndex === 3 ? 'tile-active' : 'tile-inactive'"
-          @click="selectSchmerz('torso')"
-        >
-          <div 
-            class="tile-icon-container"
-            :class="currentTileIndex === 3 ? 'icon-active' : 'icon-inactive'"
-          >
-            <img 
-              src="/living.png" 
-              alt="TORSO" 
-              class="tile-icon"
-              :class="currentTileIndex === 3 ? 'icon-inverted' : ''"
-            />
-          </div>
-          <div 
-            class="tile-text"
-            :class="currentTileIndex === 3 ? 'text-active' : 'text-inactive'"
-            :style="currentTileIndex === 3 ? 'color: white !important;' : ''"
-          >
-            TORSO
-          </div>
-        </div>
-
-        <!-- Zurück -->
-        <div 
-          class="menu-tile"
-          :class="currentTileIndex === 4 ? 'tile-active' : 'tile-inactive'"
-          @click="selectSchmerz('zurueck')"
-        >
-          <div 
-            class="tile-icon-container"
-            :class="currentTileIndex === 4 ? 'icon-active' : 'icon-inactive'"
-          >
-            <img 
-              src="/Goback.svg" 
-              alt="ZURÜCK" 
-              class="tile-icon"
-              :class="currentTileIndex === 4 ? 'icon-inverted' : ''"
-            />
-          </div>
-          <div 
-            class="tile-text"
-            :class="currentTileIndex === 4 ? 'text-active' : 'text-inactive'"
-            :style="currentTileIndex === 4 ? 'color: white !important;' : ''"
-          >
-            ZURÜCK
+            {{ item.title }}
           </div>
         </div>
       </div>

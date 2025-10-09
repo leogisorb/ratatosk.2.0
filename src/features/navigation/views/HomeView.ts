@@ -298,8 +298,8 @@ export function useHomeViewLogic() {
         router.push('/ich')
         break
       case 'pain':
-        console.log('Navigating to /schmerz')
-        router.push('/schmerz')
+        console.log('Navigating to /pain-dialog')
+        router.push('/pain-dialog')
         break
       case 'environment':
         console.log('Navigating to /umgebung')
