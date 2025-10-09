@@ -16,7 +16,6 @@ const {
   isTTSEnabled,
   schmerzItems,
   speakText,
-  toggleTTS,
   startAutoMode,
   pauseAutoMode,
   stopAutoMode,

@@ -18,7 +18,6 @@ const {
   isTTSEnabled,
   armBereiche,
   speakText,
-  toggleTTS,
   startAutoMode,
   pauseAutoMode,
   stopAutoMode,

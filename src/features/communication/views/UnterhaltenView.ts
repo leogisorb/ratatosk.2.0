@@ -57,7 +57,7 @@ export function useUnterhaltenViewLogic() {
   const speechSynthesis = window.speechSynthesis
 
   // Text-to-Speech Funktion - Back to working version
-  const speakText = (text) => {
+  const speakText = (text: string) => {
     console.log('speakText called with:', text, 'isTTSEnabled:', isTTSEnabled.value, 'speechSynthesis:', speechSynthesis)
     
     if (!isTTSEnabled.value || !speechSynthesis) {
@@ -70,9 +70,9 @@ export function useUnterhaltenViewLogic() {
     
     const utterance = new SpeechSynthesisUtterance(text)
     utterance.lang = 'de-DE'
-    utterance.rate = 0.8 // Etwas langsamer sprechen
+    utterance.rate = 1.0
     utterance.pitch = 1.0
-    utterance.volume = 0.8  // ← WICHTIG: 0.8 statt 1.0!
+    utterance.volume = 1.0
     
     console.log('Speaking:', text)
     speechSynthesis.speak(utterance)  // ← KEIN setTimeout!
@@ -142,11 +142,11 @@ export function useUnterhaltenViewLogic() {
   }
 
   // Navigation Functions
-  const isCurrentRow = (rowIndex) => {
+  const isCurrentRow = (rowIndex: number) => {
     return currentStage.value === 'rows' && currentRowIndex.value === rowIndex
   }
 
-  const isCurrentLetter = (letter, rowIndex) => {
+  const isCurrentLetter = (letter: string, rowIndex: number) => {
     return currentStage.value === 'letters' && 
            currentRowIndex.value === rowIndex && 
            keyboardLayout[rowIndex][currentLetterIndex.value] === letter
@@ -236,7 +236,7 @@ export function useUnterhaltenViewLogic() {
       }
       
       // Nächster Schritt nach 2 Sekunden
-      keyboardInterval.value = window.setTimeout(navigate, 2000)
+      keyboardInterval.value = window.setTimeout(navigate, 2000) as any
     }
     
     // Starte sofort

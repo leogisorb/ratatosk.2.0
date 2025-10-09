@@ -66,7 +66,7 @@ export function useGefuehleViewLogic() {
     
     const utterance = new SpeechSynthesisUtterance(text)
     utterance.lang = 'de-DE'
-    utterance.rate = 0.8
+    utterance.rate = 1.0
     utterance.pitch = 1.0
     utterance.volume = 1.0
     

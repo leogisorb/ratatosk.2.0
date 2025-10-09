@@ -30,7 +30,7 @@ export function useArmeSchmerzViewLogic() {
 
   // Text-to-Speech
   const speechSynthesis = window.speechSynthesis
-  const isTTSEnabled = ref(true)
+  const isTTSEnabled = computed(() => settingsStore.settings.voiceEnabled)
 
   // Arm-Bereiche basierend auf dem gezeigten Interface
   const armBereiche = [
@@ -66,7 +66,7 @@ export function useArmeSchmerzViewLogic() {
     
     const utterance = new SpeechSynthesisUtterance(text)
     utterance.lang = 'de-DE'
-    utterance.rate = 0.8
+    utterance.rate = 1.0
     utterance.pitch = 1.0
     utterance.volume = 1.0
     
@@ -74,18 +74,12 @@ export function useArmeSchmerzViewLogic() {
     speechSynthesis.speak(utterance)
   }
 
-  // TTS Toggle
-  const toggleTTS = () => {
-    console.log('ArmeSchmerzView toggleTTS called, current state:', isTTSEnabled.value)
-    isTTSEnabled.value = !isTTSEnabled.value
-    console.log('ArmeSchmerzView TTS toggled to:', isTTSEnabled.value)
-    
-    if (!isTTSEnabled.value) {
+  // Volume Toggle Event Handler
+  const handleVolumeToggle = (event: CustomEvent) => {
+    console.log('ArmeSchmerzView received volumeToggle event:', event.detail)
+    if (!event.detail.enabled) {
       speechSynthesis.cancel()
-      console.log('ArmeSchmerzView TTS cancelled')
-    } else {
-      // Test TTS when enabling
-      speakText('Sprachausgabe aktiviert')
+      console.log('ArmeSchmerzView TTS cancelled due to global volume toggle')
     }
   }
 
@@ -219,10 +213,12 @@ export function useArmeSchmerzViewLogic() {
     }, 100)
     
     document.addEventListener('contextmenu', handleRightClick)
+    window.addEventListener('volumeToggle', handleVolumeToggle as EventListener)
   })
 
   onUnmounted(() => {
     document.removeEventListener('contextmenu', handleRightClick)
+    window.removeEventListener('volumeToggle', handleVolumeToggle as EventListener)
     stopAutoMode()
   })
 
@@ -242,7 +238,6 @@ export function useArmeSchmerzViewLogic() {
     isTTSEnabled,
     armBereiche,
     speakText,
-    toggleTTS,
     startAutoMode,
     pauseAutoMode,
     stopAutoMode,

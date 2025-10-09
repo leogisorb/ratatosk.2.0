@@ -92,26 +92,36 @@ const router = useRouter()
 // Stores
 const settingsStore = useSettingsStore()
 
-// State
-const isVolumeEnabled = ref(true)
+// State - verwende den Settings Store für globalen TTS State
+const isVolumeEnabled = computed({
+  get: () => settingsStore.settings.voiceEnabled,
+  set: (value: boolean) => {
+    settingsStore.updateSettings({ voiceEnabled: value })
+  }
+})
 
 // Computed
 const isDarkMode = computed(() => settingsStore.isDarkMode)
 
 // Methods
 const toggleVolume = () => {
-  isVolumeEnabled.value = !isVolumeEnabled.value
-  console.log('Volume toggled:', isVolumeEnabled.value)
+  const newValue = !isVolumeEnabled.value
+  console.log('Toggling volume from', isVolumeEnabled.value, 'to', newValue)
+  
+  // Direkt den Settings Store aktualisieren
+  settingsStore.updateSettings({ voiceEnabled: newValue })
+  
+  console.log('Volume toggled:', newValue, 'Current setting:', settingsStore.settings.voiceEnabled)
   
   // Stoppe alle laufenden Sprachausgaben wenn Volume deaktiviert wird
-  if (!isVolumeEnabled.value) {
+  if (!newValue) {
     window.speechSynthesis.cancel()
     console.log('All speech synthesis cancelled due to volume toggle')
   }
   
   // Sende Event an andere Komponenten
   window.dispatchEvent(new CustomEvent('volumeToggle', { 
-    detail: { enabled: isVolumeEnabled.value } 
+    detail: { enabled: newValue } 
   }))
 }
 
@@ -121,7 +131,12 @@ const toggleDarkMode = () => {
 }
 
 const goBack = () => {
-  router.push('/app')
+  // Zurück zur vorherigen Route oder zur HomeView falls keine Historie vorhanden
+  if (window.history.length > 1) {
+    router.go(-1)
+  } else {
+    router.push('/app')
+  }
 }
 </script>
 

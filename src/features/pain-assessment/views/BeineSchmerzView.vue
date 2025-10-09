@@ -18,7 +18,6 @@ const {
   isTTSEnabled,
   beinBereiche,
   speakText,
-  toggleTTS,
   startAutoMode,
   pauseAutoMode,
   stopAutoMode,

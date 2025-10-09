@@ -3,7 +3,7 @@ import { ref, onMounted, onUnmounted, computed } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import { useFaceRecognition } from '../../face-recognition/composables/useFaceRecognition'
 import { useSettingsStore } from '../../settings/stores/settings'
-import GlobalHeader from '../../../shared/components/GlobalHeader.vue'
+import AppHeader from '../../../shared/components/AppHeader.vue'
 
 // Props
 interface Props {
@@ -44,9 +44,16 @@ const blinkThreshold = computed(() => Math.ceil(settingsStore.settings.blinkSens
 const lastBlinkTime = ref(0)
 const blinkCooldown = computed(() => settingsStore.settings.blinkSensitivity * 1000)
 
+// Marker Position - für synchronen Lauf von Progress Bar und Marker
+const markerPosition = computed(() => {
+  const position = ((currentPainLevel.value - 1) * 10) + 5
+  console.log('Current pain level:', currentPainLevel.value, 'Marker position:', position)
+  return position
+})
+
 // Text-to-Speech
 const speechSynthesis = window.speechSynthesis
-const isTTSEnabled = ref(true)
+const isTTSEnabled = computed(() => settingsStore.settings.voiceEnabled)
 
 // Pain Scale Items (1-10)
 const painLevels = Array.from({ length: 10 }, (_, i) => ({
@@ -87,7 +94,7 @@ const speakText = (text: string) => {
   
   const utterance = new SpeechSynthesisUtterance(text)
   utterance.lang = 'de-DE'
-  utterance.rate = 0.8
+  utterance.rate = 1.0
   utterance.pitch = 1.0
   utterance.volume = 1.0
   
@@ -100,18 +107,12 @@ const speakText = (text: string) => {
   speechSynthesis.speak(utterance)
 }
 
-// TTS Toggle
-const toggleTTS = () => {
-  console.log('PainScaleView toggleTTS called, current state:', isTTSEnabled.value)
-  isTTSEnabled.value = !isTTSEnabled.value
-  console.log('PainScaleView TTS toggled to:', isTTSEnabled.value)
-  
-  if (!isTTSEnabled.value) {
+// Volume Toggle Event Handler
+const handleVolumeToggle = (event: CustomEvent) => {
+  console.log('PainScaleView received volumeToggle event:', event.detail)
+  if (!event.detail.enabled) {
     speechSynthesis.cancel()
-    console.log('PainScaleView TTS cancelled')
-  } else {
-    // Test TTS when enabling
-    speakText('Sprachausgabe aktiviert')
+    console.log('PainScaleView TTS cancelled due to global volume toggle')
   }
 }
 
@@ -259,6 +260,9 @@ onMounted(() => {
   
   document.addEventListener('contextmenu', handleRightClick)
   
+  // Volume Toggle Event Listener
+  window.addEventListener('volumeToggle', handleVolumeToggle as EventListener)
+  
   // Blink-Check Interval starten
   blinkCheckInterval.value = window.setInterval(() => {
     handleBlink()
@@ -271,6 +275,7 @@ onMounted(() => {
 onUnmounted(() => {
   console.log('PainScaleView unmounted - stopping face recognition')
   document.removeEventListener('contextmenu', handleRightClick)
+  window.removeEventListener('volumeToggle', handleVolumeToggle as EventListener)
   stopAutoMode()
   
   // Blink-Check Interval stoppen
@@ -286,153 +291,74 @@ onUnmounted(() => {
 </script>
 
 <template>
-  <div class="min-h-screen bg-white">
-    <!-- Global Header -->
-    <GlobalHeader>
-      <div class="flex items-center space-x-4">
-        <button @click="goBack" class="p-2 rounded-lg bg-gray-300 hover:bg-gray-400 transition-colors">
-          <svg class="w-6 h-6 text-gray-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
-          </svg>
-        </button>
-        <h1 class="text-2xl font-bold text-black font-source-code font-light">
-          SCHMERZSKALA
-        </h1>
-      </div>
-      
-      <!-- TTS Toggle Button -->
-      <button
-        @click="toggleTTS"
-        class="p-2 rounded-lg transition-colors"
-        :class="isTTSEnabled ? 'bg-green-300 hover:bg-green-400' : 'bg-gray-300 hover:bg-gray-400'"
-        :title="isTTSEnabled ? 'Sprachausgabe deaktivieren' : 'Sprachausgabe aktivieren'"
-      >
-        <svg
-          v-if="isTTSEnabled"
-          class="w-6 h-6 text-green-700"
-          fill="none"
-          stroke="currentColor"
-          viewBox="0 0 24 24"
-        >
-          <path
-            stroke-linecap="round"
-            stroke-linejoin="round"
-            stroke-width="2"
-            d="M15.536 8.464a5 5 0 010 7.072m2.828-9.9a9 9 0 010 12.728M5.586 15H4a1 1 0 01-1-1v-4a1 1 0 011-1h1.586l4.707-4.707C10.923 3.663 12 4.109 12 5v14c0 .891-1.077 1.337-1.707.707L5.586 15z"
-          />
-        </svg>
-        <svg
-          v-else
-          class="w-6 h-6 text-gray-700"
-          fill="none"
-          stroke="currentColor"
-          viewBox="0 0 24 24"
-        >
-          <path
-            stroke-linecap="round"
-            stroke-linejoin="round"
-            stroke-width="2"
-            d="M5.586 15H4a1 1 0 01-1-1v-4a1 1 0 011-1h1.586l4.707-4.707C10.923 3.663 12 4.109 12 5v14c0 .891-1.077 1.337-1.707.707L5.586 15z"
-          />
-          <path
-            stroke-linecap="round"
-            stroke-linejoin="round"
-            stroke-width="2"
-            d="M17 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2"
-          />
-        </svg>
-      </button>
-    </GlobalHeader>
+  <div class="pain-assessment-app">
+    <!-- App Header -->
+    <AppHeader />
 
     <!-- Main Content -->
-    <main class="flex-1 flex items-center justify-center p-16">
-      <div class="max-w-8xl mx-auto">
+    <main class="pain-main-content">
+      <div class="pain-content-wrapper">
         <!-- Ausgewählter Körperteil und Schmerzlevel Anzeige -->
-        <div class="mb-64 text-center">
-          <div class="bg-blue-100">
-            <h2 class="text-6xl font-bold text-blue-800" style="font-family: 'Source Code Pro', monospace; font-weight: 300;">
-              {{ selectedBodyPart }}
-            </h2>
-            <h3 class="text-8xl font-bold text-blue-800" style="font-family: 'Source Code Pro', monospace; font-weight: 300;">
-              Schmerzlevel:
-            </h3>
-            <div class="font-bold text-blue-900" style="font-family: 'Source Code Pro', monospace; font-weight: 300; font-size: 6rem;">
+        <div class="pain-scale-display">
+          <div class="pain-selected-container">
+            <div class="pain-scale-header-row">
+              <h2 class="pain-scale-body-part">
+                {{ selectedBodyPart }}
+              </h2>
+              <h3 class="pain-scale-title">
+                Schmerzlevel:
+              </h3>
+            </div>
+            <div class="pain-scale-level">
               {{ currentPainLevel }}
             </div>
-            <div class="font-bold text-blue-700" style="font-family: 'Source Code Pro', monospace; font-weight: 300; font-size: 3rem;">
+            <div class="pain-scale-description">
               {{ painLevels.find(item => item.level === currentPainLevel)?.description }}
             </div>
           </div>
         </div>
 
         <!-- Schmerzskala Balken -->
-        <div class="mb-32">
-          <div class="bg-gray-200">
-            <!-- Schmerzskala Balken -->
-            <div 
-              class="h-full transition-all duration-500 ease-out"
-              :style="{
-                width: `${(currentPainLevel / 10) * 100}%`,
-                background: `linear-gradient(to right, 
-                  #10b981 0%, 
-                  #f59e0b 50%, 
-                  #ef4444 100%)`
-              }"
-            ></div>
-            
-            <!-- Schmerzlevel Marker -->
-            <div 
-              class="absolute top-0 w-8 h-16 bg-white"
-              :style="{ left: `${(currentPainLevel / 10) * 100}%` }"
-            ></div>
+        <div class="pain-scale-bar">
+          <div class="pain-scale-progress"
+            :style="{ width: markerPosition + '%' }"
+          ></div>
+          
+          <!-- Pain Level Numbers in Bar -->
+          <div class="pain-scale-numbers">
+            <span 
+              v-for="(item, index) in painLevels" 
+              :key="item.level"
+              class="pain-scale-number"
+              :class="{ 'active': currentPainLevel === item.level }"
+              :style="{ left: `${(index * 10) + 5}%` }"
+            >
+              {{ item.level }}
+            </span>
           </div>
           
-          <!-- Skala Beschriftung -->
-          <div class="flex justify-between mt-4 text-2xl font-bold text-gray-600" style="font-family: 'Source Code Pro', monospace;">
-            <span>Leicht</span>
-            <span>Schwer</span>
-          </div>
+        </div>
+        
+        <!-- Skala Beschriftung -->
+        <div class="pain-scale-labels">
+          <span>Leicht</span>
+          <span>Schwer</span>
         </div>
 
-        <!-- Schmerzlevel Buttons - Horizontal -->
-        <div class="flex justify-center space-x-8 mb-16">
-          <button
-            v-for="(item, index) in painLevels"
-            :key="item.level"
-            @click="selectPainLevel(item.level)"
-            class="transition-all duration-300 font-medium hover:scale-110"
-            :style="{
-              fontSize: '2.5rem',
-              background: currentPainLevel === item.level ? '#f3f4f6' : 'white',
-              border: '2px solid #d1d5db',
-              borderRadius: '15px',
-              outline: 'none',
-              boxShadow: 'none',
-              padding: '20px 15px',
-              margin: '0',
-              minWidth: '80px'
-            }"
-            :class="currentPainLevel === item.level ? 'text-orange-500 scale-110' : 'text-black hover:text-gray-600'"
-          >
-            {{ item.text }}
-          </button>
-        </div>
 
         <!-- Abstandshalter -->
         <div style="height: 4rem;"></div>
 
         <!-- Instructions -->
-        <div class="text-center">
-          <div class="bg-blue-100">
-            <h3 class="text-4xl font-semibold text-blue-800" style="font-family: 'Source Code Pro', monospace; font-weight: 300;">
-              Bedienung
-            </h3>
-            <p class="text-2xl text-blue-700" style="font-family: 'Source Code Pro', monospace; font-weight: 300;">
-              <strong>Kurz blinzeln ({{ settingsStore.settings.blinkSensitivity }}s):</strong> Schmerzlevel auswählen<br>
-              <strong>Rechte Maustaste:</strong> Schmerzlevel auswählen<br>
-              <strong>Auto-Modus:</strong> Automatischer Durchlauf durch alle Schmerzlevel
-            </p>
-          </div>
+        <div class="pain-instructions">
+          <h3 class="pain-instructions-title">
+            Bedienung
+          </h3>
+          <p class="pain-instructions-text">
+            <strong>Kurz blinzeln ({{ settingsStore.settings.blinkSensitivity }}s):</strong> Schmerzlevel auswählen<br>
+            <strong>Rechte Maustaste:</strong> Schmerzlevel auswählen<br>
+            <strong>Auto-Modus:</strong> Automatischer Durchlauf durch alle Schmerzlevel
+          </p>
         </div>
       </div>
     </main>
@@ -440,33 +366,297 @@ onUnmounted(() => {
 </template>
 
 <style scoped>
-/* Custom scrollbar */
-.overflow-y-auto::-webkit-scrollbar {
-  width: 6px;
+/* Pain Scale View Specific Styles */
+.pain-assessment-app {
+  min-height: 100vh;
+  background-color: white;
+  display: flex;
+  flex-direction: column;
 }
 
-.overflow-y-auto::-webkit-scrollbar-track {
-  background: #f1f5f9;
+.pain-main-content {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1rem 4rem;
 }
 
-.overflow-y-auto::-webkit-scrollbar-thumb {
-  background: #cbd5e1;
-  border-radius: 3px;
+.pain-content-wrapper {
+  max-width: 8xl;
+  margin: 0 auto;
+  width: 100%;
 }
 
-.overflow-y-auto::-webkit-scrollbar-thumb:hover {
-  background: #94a3b8;
+.pain-scale-display {
+  margin-bottom: 4rem;
+  text-align: center;
 }
 
-.dark .overflow-y-auto::-webkit-scrollbar-track {
-  background: #374151;
+.pain-selected-container {
+  margin-bottom: 0.43rem;
+  margin-top: -0.58rem;
+  text-align: center;
 }
 
-.dark .overflow-y-auto::-webkit-scrollbar-thumb {
-  background: #6b7280;
+.pain-scale-header-row {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 2rem;
+  margin-bottom: 1rem;
 }
 
-.dark .overflow-y-auto::-webkit-scrollbar-thumb:hover {
-  background: #9ca3af;
+.pain-scale-body-part {
+  font-size: 4.2rem; /* 30% smaller: 6rem * 0.7 = 4.2rem */
+  font-weight: bold;
+  color: black;
+  font-family: 'Source Code Pro', monospace;
+  margin: 0;
+}
+
+.pain-scale-title {
+  font-size: 4.2rem; /* Gleiche Größe wie body-part */
+  font-weight: bold;
+  color: black;
+  font-family: 'Source Code Pro', monospace;
+  margin: 0;
+}
+
+.pain-scale-level {
+  font-size: 6rem;
+  font-weight: bold;
+  color: black;
+  font-family: 'Source Code Pro', monospace;
+  margin-bottom: 1rem;
+}
+
+.pain-scale-description {
+  font-size: 3rem;
+  font-weight: 300;
+  color: black;
+  font-family: 'Source Code Pro', monospace;
+}
+
+.pain-scale-bar {
+  margin-bottom: 2rem;
+  position: relative;
+  height: 6rem;
+  background-color: #e5e7eb;
+  border-radius: 3rem;
+  overflow: hidden;
+}
+
+.pain-scale-progress {
+  height: 100%;
+  transition: all 0.3s ease;
+  background: linear-gradient(to right, #10b981 0%, #f59e0b 50%, #ef4444 100%);
+}
+
+.pain-scale-numbers {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  pointer-events: none;
+}
+
+.pain-scale-number {
+  position: absolute;
+  font-size: 2.5rem;
+  font-weight: 600;
+  color: black;
+  font-family: 'Source Code Pro', monospace;
+  transition: all 0.3s ease;
+  text-shadow: 0 0 3px rgba(255, 255, 255, 0.8);
+  transform: translateX(-50%);
+  text-align: center;
+  z-index: 20;
+}
+
+.pain-scale-number.active {
+  color: black;
+  font-weight: 700;
+  font-size: 3.45rem; /* 15% größer: 3rem * 1.15 = 3.45rem */
+  text-shadow: 0 0 3px rgba(255, 255, 255, 0.8);
+}
+
+.pain-scale-marker {
+  position: absolute;
+  top: 0;
+  width: 6rem;
+  height: 6rem;
+  background: rgba(255, 255, 255, 0.8);
+  border: 2px solid #d1d5db;
+  border-radius: 50%;
+  transform: translateX(-50%);
+  z-index: 15;
+}
+
+.pain-scale-labels {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 1rem;
+  font-size: 2rem;
+  font-weight: 300;
+  color: #6b7280;
+  font-family: 'Source Code Pro', monospace;
+}
+
+.pain-scale-buttons {
+  display: flex;
+  justify-content: center;
+  gap: 2rem;
+  margin-bottom: 4rem;
+}
+
+.pain-scale-button {
+  transition: all 0.3s ease;
+  font-weight: 500;
+  font-size: 2.5rem;
+  background: white;
+  border: 2px solid #d1d5db;
+  border-radius: 15px;
+  outline: none;
+  box-shadow: none;
+  padding: 1.25rem 0.94rem;
+  margin: 0;
+  min-width: 5rem;
+  font-family: 'Source Code Pro', monospace;
+  cursor: pointer;
+}
+
+.pain-scale-button:hover {
+  transform: scale(1.1);
+  color: #6b7280;
+}
+
+.pain-scale-button.active {
+  background: #f3f4f6;
+  color: #f97316;
+  transform: scale(1.1);
+}
+
+.pain-scale-button.inactive {
+  color: #1f2937;
+}
+
+.pain-instructions {
+  margin-top: -0.15rem;
+  text-align: center;
+}
+
+.pain-instructions-title {
+  font-size: 2.5rem;
+  font-weight: 300;
+  color: #374151;
+  font-family: 'Source Code Pro', monospace;
+  margin-bottom: 0.25rem;
+}
+
+.pain-instructions-text {
+  font-size: 1.5rem;
+  color: #1f2937;
+  font-family: 'Source Code Pro', monospace;
+  font-weight: 300;
+  line-height: 1.6;
+}
+
+.pain-instructions-text strong {
+  font-weight: bold;
+}
+
+.pain-auto-mode-indicator {
+  position: fixed;
+  top: 1rem;
+  right: 1rem;
+  background: #3b82f6;
+  color: white;
+  padding: 0.5rem 1rem;
+  border-radius: 0.5rem;
+  font-family: 'Source Code Pro', monospace;
+  font-size: 1rem;
+  z-index: 1000;
+  opacity: 0.9;
+}
+
+.pain-auto-mode-indicator.active {
+  background: #f97316;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .pain-main-content {
+    padding: 0.5rem 2rem;
+  }
+  
+  .pain-scale-body-part {
+    font-size: 2.8rem; /* 30% smaller: 4rem * 0.7 = 2.8rem */
+  }
+  
+  .pain-scale-title {
+    font-size: 2.8rem; /* Gleiche Größe wie body-part */
+  }
+  
+  .pain-scale-level {
+    font-size: 4rem;
+  }
+  
+  .pain-scale-description {
+    font-size: 2rem;
+  }
+  
+  .pain-scale-button {
+    font-size: 2rem;
+    padding: 1rem 0.75rem;
+    min-width: 4rem;
+  }
+  
+  .pain-scale-number {
+    font-size: 2rem;
+  }
+  
+  .pain-scale-number.active {
+    font-size: 2.76rem; /* 15% größer: 2.4rem * 1.15 = 2.76rem */
+  }
+}
+
+@media (max-width: 480px) {
+  .pain-main-content {
+    padding: 0.25rem 1rem;
+  }
+  
+  .pain-scale-body-part {
+    font-size: 2.1rem; /* 30% smaller: 3rem * 0.7 = 2.1rem */
+  }
+  
+  .pain-scale-title {
+    font-size: 2.8rem; /* 30% smaller: 4rem * 0.7 = 2.8rem */
+  }
+  
+  .pain-scale-level {
+    font-size: 3rem;
+  }
+  
+  .pain-scale-description {
+    font-size: 1.5rem;
+  }
+  
+  .pain-scale-button {
+    font-size: 1.5rem;
+    padding: 0.75rem 0.5rem;
+    min-width: 3rem;
+  }
+  
+  .pain-scale-number {
+    font-size: 1.5rem;
+  }
+  
+  .pain-scale-number.active {
+    font-size: 2.07rem; /* 15% größer: 1.8rem * 1.15 = 2.07rem */
+  }
 }
 </style>
