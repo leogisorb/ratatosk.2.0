@@ -15,17 +15,15 @@ const {
   blinkThreshold,
   lastBlinkTime,
   blinkCooldown,
-  isTTSEnabled,
+  // TTS functions
   isVolumeEnabled,
-  isSpeaking,
+  speakText,
   menuItems,
   appClasses,
-  speakText,
   startAutoMode,
   pauseAutoMode,
   resumeAutoMode,
   stopAutoMode,
-  enableTTSOnInteraction,
   selectMenu,
   formatTime,
   handleBlink,
@@ -33,8 +31,7 @@ const {
   handleVolumeToggle,
   settingsStore,
   communicationStore,
-  faceRecognition,
-  ttsBlockedByBrowser
+  faceRecognition
 } = useHomeViewLogic()
 </script>
 
@@ -46,13 +43,7 @@ const {
     <!-- Hauptinhalt -->
     <main class="main-content">
         
-        <!-- TTS Status Indicator -->
-        <div v-if="ttsBlockedByBrowser" class="tts-status-indicator">
-          <div class="tts-status-content">
-            <span class="tts-status-icon">🔇</span>
-            <span class="tts-status-text">TTS blockiert - Klicken Sie irgendwo um Audio zu aktivieren</span>
-          </div>
-        </div>
+        <!-- TTS Status Indicator removed -->
         
         <!-- Desktop Layout (3×2 Grid) - wird auf allen Bildschirmen angezeigt -->
         <div class="grid-container">

@@ -82,7 +82,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed } from 'vue'
+import { ref, computed, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { useSettingsStore } from '../../features/settings/stores/settings'
 
@@ -92,38 +92,32 @@ const router = useRouter()
 // Stores
 const settingsStore = useSettingsStore()
 
-// State - verwende den Settings Store für globalen TTS State
-const isVolumeEnabled = computed({
-  get: () => settingsStore.settings.voiceEnabled,
-  set: (value: boolean) => {
-    settingsStore.updateSettings({ voiceEnabled: value })
-  }
-})
+// State - TTS enabled by default
+const isVolumeEnabled = ref(true)
 
 // Computed
 const isDarkMode = computed(() => settingsStore.isDarkMode)
 
 // Methods
 const toggleVolume = () => {
-  const newValue = !isVolumeEnabled.value
-  console.log('Toggling volume from', isVolumeEnabled.value, 'to', newValue)
+  isVolumeEnabled.value = !isVolumeEnabled.value
+  console.log('Volume button clicked:', isVolumeEnabled.value)
   
-  // Direkt den Settings Store aktualisieren
-  settingsStore.updateSettings({ voiceEnabled: newValue })
-  
-  console.log('Volume toggled:', newValue, 'Current setting:', settingsStore.settings.voiceEnabled)
-  
-  // Stoppe alle laufenden Sprachausgaben wenn Volume deaktiviert wird
-  if (!newValue) {
-    window.speechSynthesis.cancel()
-    console.log('All speech synthesis cancelled due to volume toggle')
-  }
-  
-  // Sende Event an andere Komponenten
-  window.dispatchEvent(new CustomEvent('volumeToggle', { 
-    detail: { enabled: newValue } 
-  }))
+  // Sende Event an alle Views
+  const event = new CustomEvent('volumeToggle', {
+    detail: { enabled: isVolumeEnabled.value }
+  })
+  window.dispatchEvent(event)
 }
+
+// Sende initialen Volume-Status beim Mount
+onMounted(() => {
+  const event = new CustomEvent('volumeToggle', {
+    detail: { enabled: isVolumeEnabled.value }
+  })
+  window.dispatchEvent(event)
+  console.log('Initial volume status sent:', isVolumeEnabled.value)
+})
 
 const toggleDarkMode = () => {
   settingsStore.toggleDarkMode()

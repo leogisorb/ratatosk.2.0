@@ -1,12 +1,12 @@
 <script setup lang="ts">
 // App.vue serves as the main router container
-import TTSActivator from './shared/components/TTSActivator.vue'
+// TTSActivator removed
 </script>
 
 <template>
   <div id="app">
     <router-view />
-    <TTSActivator />
+    <!-- TTSActivator removed -->
   </div>
 </template>
 

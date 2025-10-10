@@ -52,9 +52,7 @@ const markerPosition = computed(() => {
   return position
 })
 
-// Text-to-Speech
-const speechSynthesis = window.speechSynthesis
-const isTTSEnabled = computed(() => settingsStore.settings.voiceEnabled)
+// TTS removed
 
 // Pain Scale Items (1-10)
 const painLevels = Array.from({ length: 10 }, (_, i) => ({
@@ -79,42 +77,11 @@ function getPainDescription(level: number): string {
   return descriptions[level as keyof typeof descriptions] || ''
 }
 
-// Text-to-Speech Funktion
-const speakText = (text: string) => {
-  console.log('PainScaleView speakText called with:', text, 'isTTSEnabled:', isTTSEnabled.value)
-  
-  if (!isTTSEnabled.value || !speechSynthesis) {
-    console.log('PainScaleView TTS disabled or speechSynthesis not available')
-    return
-  }
-  
-  // Prüfe ob TTS verfügbar ist
-  if (!speechSynthesis.speaking && !speechSynthesis.pending) {
-    speechSynthesis.cancel()
-  }
-  
-  const utterance = new SpeechSynthesisUtterance(text)
-  utterance.lang = 'de-DE'
-  utterance.rate = 1.0
-  utterance.pitch = 1.0
-  utterance.volume = 1.0
-  
-  // Event Listeners für Debugging
-  utterance.onstart = () => console.log('PainScaleView TTS started:', text)
-  utterance.onend = () => console.log('PainScaleView TTS ended:', text)
-  utterance.onerror = (event) => console.error('PainScaleView TTS error:', event.error, text)
-  
-  console.log('PainScaleView Speaking:', text)
-  speechSynthesis.speak(utterance)
-}
+// TTS removed
 
-// Volume Toggle Event Handler
+// Volume Toggle Event Handler - TTS removed
 const handleVolumeToggle = (event: CustomEvent) => {
-  console.log('PainScaleView received volumeToggle event:', event.detail)
-  if (!event.detail.enabled) {
-    speechSynthesis.cancel()
-    console.log('PainScaleView TTS cancelled due to global volume toggle')
-  }
+  console.log('PainScaleView received volumeToggle event:', event.detail, '- TTS removed')
 }
 
 // Auto Mode Funktionen
@@ -132,7 +99,7 @@ const startAutoMode = () => {
     currentPainLevel.value = currentPainLevel.value === 10 ? 1 : currentPainLevel.value + 1
     const currentItem = painLevels.find(item => item.level === currentPainLevel.value)
     if (currentItem) {
-      speakText(`${currentItem.text} - ${currentItem.description}`)
+      console.log(`${currentItem.text} - ${currentItem.description} - TTS removed`)
     }
     autoModeInterval.value = window.setTimeout(cycleLevels, 2000) // 2 Sekunden
   }
@@ -141,7 +108,7 @@ const startAutoMode = () => {
   initialTimeout.value = window.setTimeout(() => {
     const firstItem = painLevels.find(item => item.level === currentPainLevel.value)
     if (firstItem) {
-      speakText(`${firstItem.text} - ${firstItem.description}`)
+      console.log(`${firstItem.text} - ${firstItem.description} - TTS removed`)
     }
     
     // 2 Sekunden warten, bevor der erste Zyklus startet
@@ -161,7 +128,7 @@ const pauseAutoMode = () => {
     clearTimeout(initialTimeout.value)
     initialTimeout.value = null
   }
-  speechSynthesis.cancel()
+    // TTS removed
 }
 
 const stopAutoMode = () => {
@@ -173,7 +140,7 @@ const stopAutoMode = () => {
     clearTimeout(initialTimeout.value)
     initialTimeout.value = null
   }
-  speechSynthesis.cancel()
+    // TTS removed
 }
 
 // Pain Level Auswahl
@@ -190,7 +157,7 @@ function selectPainLevel(level: number) {
   if (selectedItem) {
     // Level vorlesen
     console.log('🔊 PainScaleView: About to speak:', `Schmerzlevel ${selectedItem.text} - ${selectedItem.description}`)
-    speakText(`Schmerzlevel ${selectedItem.text} - ${selectedItem.description}`)
+    console.log(`Schmerzlevel ${selectedItem.text} - ${selectedItem.description} - TTS removed`)
     console.log('✅ PainScaleView: speakText called')
     
     // Nach TTS Ende: 3 Sekunden warten, dann zurück

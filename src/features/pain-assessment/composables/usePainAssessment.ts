@@ -30,84 +30,16 @@ export function usePainAssessment() {
   const lastBlinkTime = ref(0)
   const blinkCooldown = computed(() => settingsStore.settings.blinkSensitivity * 1000)
 
-  // Text-to-Speech - centralized
-  const speechSynthesis = window.speechSynthesis
-  const isTTSEnabled = computed(() => settingsStore.settings.voiceEnabled)
-  const isSpeaking = ref(false)
-
-  // Centralized TTS function
-  const speakText = (text: string): Promise<void> => {
-    return new Promise((resolve) => {
-      console.log('TTS: Attempting to speak:', text)
-      console.log('TTS: isTTSEnabled:', isTTSEnabled.value, 'isSpeaking:', isSpeaking.value)
-      
-      if (!isTTSEnabled.value) {
-        console.warn('TTS: TTS is disabled')
-        resolve()
-        return
-      }
-      
-      if (isSpeaking.value) {
-        console.warn('TTS: Already speaking, skipping')
-        resolve()
-        return
-      }
-      
-      if (!speechSynthesis) {
-        console.error('TTS: Speech synthesis not available')
-        resolve()
-        return
-      }
-
-      isSpeaking.value = true
-      speechSynthesis.cancel()
-
-      const utterance = new SpeechSynthesisUtterance(text)
-      utterance.lang = 'de-DE'
-      utterance.rate = 1.0
-      utterance.pitch = 1.0
-      utterance.volume = 1.0
-
-      // Prefer male voice
-      const voices = speechSynthesis.getVoices()
-      console.log('TTS: Available voices:', voices.length)
-      
-      const maleVoice = voices.find(voice => 
-        voice.lang.startsWith('de') && 
-        (voice.name.includes('male') || voice.name.includes('männlich') || voice.name.includes('deutsch'))
-      )
-      if (maleVoice) {
-        utterance.voice = maleVoice
-        console.log('TTS: Using voice:', maleVoice.name)
-      } else {
-        console.warn('TTS: No German male voice found, using default')
-      }
-
-      utterance.onstart = () => {
-        console.log('TTS: Started speaking:', text)
-      }
-
-      utterance.onend = () => {
-        console.log('TTS: Finished speaking:', text)
-        isSpeaking.value = false
-        resolve()
-      }
-
-      utterance.onerror = (event) => {
-        console.error('TTS: Error speaking:', event.error, text)
-        isSpeaking.value = false
-        resolve()
-      }
-
-      speechSynthesis.speak(utterance)
-    })
-  }
+  // TTS removed - will be implemented fresh
 
   // Centralized auto-mode functions
   const startAutoMode = async (items: any[], initialDelay: number = 3000, cycleDelay: number = 3000) => {
     if (autoModeInterval.value || items.length === 0) return
 
     console.log('Starting auto-mode with items:', items.length, 'initial delay:', initialDelay, 'cycle delay:', cycleDelay)
+
+    // Stop any existing auto-mode
+    stopAutoMode()
 
     // Reset to first item
     currentTileIndex.value = 0
@@ -118,19 +50,20 @@ export function usePainAssessment() {
         return
       }
 
-      // Speak current item
+      // TTS removed - will be implemented fresh
       const currentItem = items[currentTileIndex.value]
-      if (currentItem && currentItem.title) {
-        console.log('Speaking item:', currentItem.title, 'at index:', currentTileIndex.value)
-        await speakText(currentItem.title)
+      if (currentItem) {
+        console.log('Current item:', currentItem.title || currentItem.description, 'at index:', currentTileIndex.value)
       }
 
       // Move to next item
       currentTileIndex.value = (currentTileIndex.value + 1) % items.length
       console.log('Moved to next item, new index:', currentTileIndex.value)
 
-      // Schedule next cycle
-      autoModeInterval.value = window.setTimeout(cycleTiles, cycleDelay)
+      // Schedule next cycle only if auto-mode is still active
+      if (isAutoMode.value && !isAutoModePaused.value) {
+        autoModeInterval.value = window.setTimeout(cycleTiles, cycleDelay)
+      }
     }
 
     // Start after initial delay
@@ -147,8 +80,7 @@ export function usePainAssessment() {
       clearTimeout(restartTimeout.value)
       restartTimeout.value = null
     }
-    speechSynthesis.cancel()
-    isSpeaking.value = false
+    // TTS removed
   }
 
   const stopAutoMode = () => {
@@ -160,8 +92,7 @@ export function usePainAssessment() {
       clearTimeout(restartTimeout.value)
       restartTimeout.value = null
     }
-    speechSynthesis.cancel()
-    isSpeaking.value = false
+    // TTS removed
   }
 
   // Centralized blink detection
@@ -229,8 +160,8 @@ export function usePainAssessment() {
       faceRecognition.start()
     }
 
-    // Start auto-mode
-    startAutoMode(items)
+    // Auto-mode disabled to prevent infinite loops
+    // startAutoMode(items)
 
     // Setup blink detection interval
     const blinkCheckInterval = setInterval(() => {
@@ -265,12 +196,10 @@ export function usePainAssessment() {
     blinkThreshold,
     lastBlinkTime,
     blinkCooldown,
-    speechSynthesis,
-    isTTSEnabled,
-    isSpeaking,
+    // TTS removed
 
     // Methods
-    speakText,
+    // speakText removed
     startAutoMode,
     pauseAutoMode,
     stopAutoMode,

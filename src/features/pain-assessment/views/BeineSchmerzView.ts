@@ -28,9 +28,7 @@ export function useBeineSchmerzViewLogic() {
   const lastBlinkTime = ref(0)
   const blinkCooldown = computed(() => settingsStore.settings.blinkSensitivity * 1000)
 
-  // Text-to-Speech
-  const speechSynthesis = window.speechSynthesis
-  const isTTSEnabled = computed(() => settingsStore.settings.voiceEnabled)
+  // TTS removed
 
   // Bein-Bereiche basierend auf dem gezeigten Interface
   const beinBereiche = [
@@ -39,69 +37,40 @@ export function useBeineSchmerzViewLogic() {
     { id: 'knie', text: 'Knie', type: 'beinbereich', icon: 'KNIE.svg' },
     { id: 'unterschenkel', text: 'Unterschenkel', type: 'beinbereich', icon: 'UNTERSCHENKEL.svg' },
     { id: 'knoechel', text: 'Knöchel', type: 'beinbereich', icon: 'KNÖCHEL.svg' },
-    
-    // Zeile 2: Fuß, Zehen, Hüfte, Wade
-    { id: 'fuss', text: 'Fuß', type: 'beinbereich', icon: 'FUSBALLEN.svg' },
+    // Zeile 2: Fuß, Zehen, Fußrücken, Fußsohle
+    { id: 'fuss', text: 'Fuß', type: 'beinbereich', icon: 'barefoot.svg' },
     { id: 'zehen', text: 'Zehen', type: 'beinbereich', icon: 'ZEHEN.svg' },
-    { id: 'huefte', text: 'Hüfte', type: 'beinbereich', icon: 'hüfte.svg' },
-    { id: 'wade', text: 'Wade', type: 'beinbereich', icon: 'UNTERSCHENKEL.svg' },
-    
-    // Zeile 3: Leiste, Gesäß, Sprunggelenk, Zurück
-    { id: 'leiste', text: 'Leiste', type: 'beinbereich', icon: 'hüfte.svg' },
-    { id: 'gesaess', text: 'Gesäß', type: 'beinbereich', icon: 'hüfte.svg' },
-    { id: 'sprunggelenk', text: 'Sprunggelenk', type: 'beinbereich', icon: 'KNÖCHEL.svg' },
+    { id: 'fussruecken', text: 'Fußrücken', type: 'beinbereich', icon: 'FUSRÜCKEN.svg' },
+    { id: 'fussohle', text: 'Fußsohle', type: 'beinbereich', icon: 'FUSBALLEN.svg' },
+    // Zeile 3: Zurück Button
     { id: 'zurueck', text: 'zurück', type: 'navigation', icon: 'Goback.svg' }
   ]
 
-  // Text-to-Speech Funktion
-  const speakText = (text: string) => {
-    console.log('BeineSchmerzView speakText called with:', text, 'isTTSEnabled:', isTTSEnabled.value, 'speechSynthesis:', speechSynthesis)
-    
-    if (!isTTSEnabled.value || !speechSynthesis) {
-      console.log('BeineSchmerzView TTS disabled or speechSynthesis not available')
-      return
-    }
-    
-    speechSynthesis.cancel()
-    
-    const utterance = new SpeechSynthesisUtterance(text)
-    utterance.lang = 'de-DE'
-    utterance.rate = 1.0
-    utterance.pitch = 1.0
-    utterance.volume = 1.0
-    
-    console.log('BeineSchmerzView Speaking:', text)
-    speechSynthesis.speak(utterance)
-  }
+  // TTS removed
 
-  // Volume Toggle Event Handler
+  // Volume Toggle Event Handler - TTS removed
   const handleVolumeToggle = (event: CustomEvent) => {
-    console.log('BeineSchmerzView received volumeToggle event:', event.detail)
-    if (!event.detail.enabled) {
-      speechSynthesis.cancel()
-      console.log('BeineSchmerzView TTS cancelled due to global volume toggle')
-    }
+    console.log('BeineSchmerzView received volumeToggle event:', event.detail, '- TTS removed')
   }
 
   // Auto Mode Funktionen
   const startAutoMode = () => {
     if (autoModeInterval.value) return
     
-    // Stelle sicher, dass wir bei Index 0 starten
-    currentTileIndex.value = 0
-    
+    console.log('Starting auto-mode with', beinBereiche.length, 'items')
+
     const cycleTiles = () => {
       if (!isAutoMode.value || isAutoModePaused.value) {
         return
       }
       currentTileIndex.value = (currentTileIndex.value + 1) % beinBereiche.length
       const currentItem = beinBereiche[currentTileIndex.value]
-      speakText(currentItem.text)
+      console.log('Current item:', currentItem.text, '- TTS removed')
       autoModeInterval.value = window.setTimeout(cycleTiles, 3000) // 3 Sekunden
     }
     
     const firstItem = beinBereiche[currentTileIndex.value]
-    speakText(firstItem.text)
+    console.log('First item:', firstItem.text, '- TTS removed')
     
     // Starte den ersten Zyklus nach 3 Sekunden
     autoModeInterval.value = window.setTimeout(cycleTiles, 3000)
@@ -117,7 +86,7 @@ export function useBeineSchmerzViewLogic() {
       clearTimeout(restartTimeout.value)
       restartTimeout.value = null
     }
-    speechSynthesis.cancel()
+    // TTS removed
   }
 
   const stopAutoMode = () => {
@@ -129,34 +98,29 @@ export function useBeineSchmerzViewLogic() {
       clearTimeout(restartTimeout.value)
       restartTimeout.value = null
     }
-    speechSynthesis.cancel()
+    // TTS removed
   }
 
   // Bein-Bereich Auswahl
-  function selectBeinBereich(beinBereichId: string) {
-    console.log('selectBeinBereich called with beinBereichId:', beinBereichId)
-    pauseAutoMode()
-    
+  const selectBeinBereich = (beinBereichId: string) => {
     const selectedItem = beinBereiche.find(item => item.id === beinBereichId)
-    if (selectedItem) {
-      selectedBeinBereich.value = selectedItem.text
-    }
     
     switch (beinBereichId) {
       case 'zurueck':
-        console.log('Navigating back to /schmerz')
+        console.log('Navigating back to main pain view')
         stopAutoMode() // Stoppe Auto-Modus komplett vor Navigation
         router.push('/schmerz')
         break
       default:
         console.log('Selected Bein-Bereich:', beinBereichId)
-        speakText(`${selectedItem?.text} ausgewählt`)
+        console.log(`${selectedItem?.text} ausgewählt - TTS removed`)
         
         // Navigation zur Schmerzskala
         setTimeout(() => {
           console.log('Navigating to pain scale for:', selectedItem?.text)
           router.push(`/pain-scale?bodyPart=${encodeURIComponent(selectedItem?.text || '')}&returnRoute=/beine-schmerz`)
-        }, 2000)
+        }, 1000)
+        break
     }
   }
 
@@ -175,7 +139,7 @@ export function useBeineSchmerzViewLogic() {
         const currentItem = beinBereiche[currentTileIndex.value]
         console.log('Blink activation for tile:', currentTileIndex.value, 'beinBereichId:', currentItem.id, 'text:', currentItem.text)
         
-        speakText(currentItem.text)
+        console.log('Selected item:', currentItem.text, '- TTS removed')
         selectBeinBereich(currentItem.id)
         eyesClosed.value = true
         lastBlinkTime.value = now
@@ -189,40 +153,54 @@ export function useBeineSchmerzViewLogic() {
     }
   }
 
-  // Rechte Maustaste als Blinzeln-Ersatz
+  // Right-click handler
   const handleRightClick = (event: MouseEvent) => {
     event.preventDefault()
     console.log('Right click detected - treating as blink')
     const currentItem = beinBereiche[currentTileIndex.value]
     console.log('Right click activation for tile:', currentTileIndex.value, 'beinBereichId:', currentItem.id, 'text:', currentItem.text)
     
-    speakText(currentItem.text)
+    console.log('Selected item:', currentItem.text, '- TTS removed')
     selectBeinBereich(currentItem.id)
   }
 
   // Lifecycle
   onMounted(() => {
+    // Start face recognition if not active
     if (!faceRecognition.isActive.value) {
       faceRecognition.start()
     }
-    
-    startAutoMode()
-    
-    const blinkCheckInterval = setInterval(() => {
-      handleBlink()
-    }, 100)
-    
-    document.addEventListener('contextmenu', handleRightClick)
-    window.addEventListener('volumeToggle', handleVolumeToggle as EventListener)
+
+    // Setup blink detection interval
+    const blinkCheckInterval = setInterval(handleBlink, 100)
+
+    // Setup event listeners
+    const rightClickHandler = (event: MouseEvent) => handleRightClick(event)
+    const volumeToggleHandler = (event: CustomEvent) => handleVolumeToggle(event)
+
+    document.addEventListener('contextmenu', rightClickHandler)
+    window.addEventListener('volumeToggle', volumeToggleHandler as EventListener)
+
+    // Start auto-mode after a short delay
+    setTimeout(() => {
+      startAutoMode()
+    }, 1000)
+
+    // Cleanup function
+    return () => {
+      clearInterval(blinkCheckInterval)
+      document.removeEventListener('contextmenu', rightClickHandler)
+      window.removeEventListener('volumeToggle', volumeToggleHandler as EventListener)
+      stopAutoMode()
+    }
   })
 
   onUnmounted(() => {
-    document.removeEventListener('contextmenu', handleRightClick)
-    window.removeEventListener('volumeToggle', handleVolumeToggle as EventListener)
     stopAutoMode()
   })
 
   return {
+    // State
     currentTileIndex,
     selectedBeinBereich,
     isAutoMode,
@@ -234,16 +212,15 @@ export function useBeineSchmerzViewLogic() {
     blinkThreshold,
     lastBlinkTime,
     blinkCooldown,
-    speechSynthesis,
-    isTTSEnabled,
+    // TTS removed
     beinBereiche,
-    speakText,
     startAutoMode,
     pauseAutoMode,
     stopAutoMode,
     selectBeinBereich,
     handleBlink,
     handleRightClick,
+    handleVolumeToggle,
     settingsStore,
     faceRecognition
   }

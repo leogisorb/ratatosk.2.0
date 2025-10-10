@@ -1,19 +1,50 @@
+<template>
+  <div class="einstellungen-view">
+    <AppHeader />
+    
+    <div class="main-content">
+      <div class="grid-container">
+        <!-- Einstellungs-Items Grid -->
+        <div 
+          v-for="(item, index) in einstellungsItems" 
+          :key="item.id"
+          class="menu-tile"
+          :class="{ 
+            'tile-active': currentTileIndex === index,
+            'tile-inactive': currentTileIndex !== index 
+          }"
+          @click="selectEinstellung(item.id)"
+        >
+          <div class="tile-icon-container">
+            <img :src="`/ratatosk.2.0/${item.icon}`" :alt="item.title" class="tile-icon" />
+          </div>
+          <div class="tile-text">{{ item.title }}</div>
+        </div>
+      </div>
+      
+      <!-- Bedienungshinweise -->
+      <div class="instructions-container">
+        <h3>Bedienung</h3>
+        <p>Kurz blinzeln (0.7s): Auswahl bestätigen</p>
+        <p>Rechte Maustaste: Auswahl bestätigen</p>
+        <p>Auto-Modus: Automatischer Durchlauf durch alle Optionen</p>
+      </div>
+    </div>
+  </div>
+</template>
+
 <script setup lang="ts">
-import { ref, computed, onMounted, onUnmounted } from 'vue'
+import { ref, onMounted, onUnmounted, computed } from 'vue'
 import { useRouter } from 'vue-router'
 import { useSettingsStore } from '../stores/settings'
 import { useFaceRecognition } from '../../face-recognition/composables/useFaceRecognition'
-import { useKeyboardDesignStore } from '../../communication/stores/keyboardDesign'
-import KeyboardDesign from '../../communication/components/KeyboardDesign.vue'
-import { mainGridConfig, getTileStyle as getTileStyleConfig, getIconStyle as getIconStyleConfig, getTextStyle as getTextStyleConfig, getIconColor } from '../../../config/gridConfig'
-import GlobalHeader from '../../../shared/components/GlobalHeader.vue'
+import AppHeader from '../../../shared/components/AppHeader.vue'
 
 // Router
 const router = useRouter()
 
 // Stores
 const settingsStore = useSettingsStore()
-const keyboardDesignStore = useKeyboardDesignStore()
 
 // Face Recognition
 const faceRecognition = useFaceRecognition()
@@ -25,124 +56,44 @@ const autoModeInterval = ref<number | null>(null)
 const closedFrames = ref(0)
 const eyesClosed = ref(false)
 const isAutoModePaused = ref(false)
+const restartTimeout = ref<number | null>(null)
 
-// Verbesserte Blink-Detection Parameter
-const blinkThreshold = 5 // Mindestens 5 Frames (0.5 Sekunden) für gültigen Blink
+// Verbesserte Blink-Detection Parameter - zentral gesteuert
+const blinkThreshold = computed(() => Math.ceil(settingsStore.settings.blinkSensitivity * 10)) // Konvertiere Sekunden zu Frames (10 FPS)
 const lastBlinkTime = ref(0)
 const blinkCooldown = computed(() => settingsStore.settings.blinkSensitivity * 1000)
 
-// Text-to-Speech
-const speechSynthesis = window.speechSynthesis
-const isTTSEnabled = ref(true)
+// TTS removed
 
-// Verwende die zentrale Grid-Konfiguration
-const gridConfig = mainGridConfig
-
-// Einstellungs-Items basierend auf dem Foto
+// Einstellungs-Items
 const einstellungsItems = [
-  {
-    id: 'tastatur-design',
-    title: 'TASTATUR-DESIGN',
-    description: 'Tastatur-Design anpassen',
-    icon: 'settings-sliders.svg'
-  },
-  {
-    id: 'leucht-dauer',
-    title: 'LEUCHT-DAUER',
-    description: 'Leuchtdauer einstellen',
-    icon: 'bell.svg'
-  },
-  {
-    id: 'blinzeldaue',
-    title: 'BLINZELDAUE',
-    description: 'Blinzeldauer anpassen',
-    icon: 'face-smile-upside-down.svg'
-  },
-  {
-    id: 'farbmodus',
-    title: 'FARBMODUS',
-    description: 'Farbmodus wechseln',
-    icon: 'settings-sliders.svg'
-  },
-  {
-    id: 'kamera',
-    title: 'KAMERA',
-    description: 'Kamera-Einstellungen',
-    icon: 'settings-sliders.svg'
-  },
-  {
-    id: 'impressum',
-    title: 'IMPRESSUM',
-    description: 'Impressum anzeigen',
-    icon: 'user.svg'
-  }
+  { id: 'tastatur-design', title: 'Tastatur-Design', icon: 'settings-sliders.svg' },
+  { id: 'leucht-dauer', title: 'Leucht-Dauer', icon: 'settings-sliders.svg' },
+  { id: 'blinzeldauer', title: 'Blinzeldauer', icon: 'settings-sliders.svg' },
+  { id: 'farbmodus', title: 'Farbmodus', icon: 'settings-sliders.svg' },
+  { id: 'kamera', title: 'Kamera', icon: 'camera.svg' },
+  { id: 'impressum', title: 'Impressum', icon: 'settings-sliders.svg' },
+  { id: 'zurueck', title: 'Zurück', icon: 'Goback.svg' }
 ]
 
-// Computed
-const appClasses = computed(() => ({
-  'dark': settingsStore.isDarkMode
-}))
-
-// Text-to-Speech Funktion
-const speakText = (text: string) => {
-  console.log('EinstellungenView speakText called with:', text, 'isTTSEnabled:', isTTSEnabled.value, 'speechSynthesis:', speechSynthesis)
-  
-  if (!isTTSEnabled.value || !speechSynthesis) {
-    console.log('EinstellungenView TTS disabled or speechSynthesis not available')
-    return
-  }
-  
-  speechSynthesis.cancel()
-  
-  const utterance = new SpeechSynthesisUtterance(text)
-  utterance.lang = 'de-DE'
-  utterance.rate = 1.0
-  utterance.pitch = 1.0
-  utterance.volume = 1.0
-  
-  console.log('EinstellungenView Speaking:', text)
-  speechSynthesis.speak(utterance)
-}
-
-// TTS Toggle
-const toggleTTS = () => {
-  console.log('EinstellungenView toggleTTS called, current state:', isTTSEnabled.value)
-  isTTSEnabled.value = !isTTSEnabled.value
-  console.log('EinstellungenView TTS toggled to:', isTTSEnabled.value)
-  
-  if (!isTTSEnabled.value) {
-    speechSynthesis.cancel()
-    console.log('EinstellungenView TTS cancelled')
-  } else {
-    // Test TTS when enabling
-    speakText('Sprachausgabe aktiviert')
-  }
-}
-
-// Auto Mode Functions
+// Auto Mode Funktionen
 const startAutoMode = () => {
   if (autoModeInterval.value) return
   
-  // Stelle sicher, dass wir bei Index 0 starten
-  currentTileIndex.value = 0
-  
+  console.log('Starting auto-mode with', einstellungsItems.length, 'items')
+
   const cycleTiles = () => {
     if (!isAutoMode.value || isAutoModePaused.value) {
       return
     }
-    
     currentTileIndex.value = (currentTileIndex.value + 1) % einstellungsItems.length
-    
-    // Spreche den aktuellen Menüpunkt vor
     const currentItem = einstellungsItems[currentTileIndex.value]
-    speakText(currentItem.title)
-    
+    console.log('Current item:', currentItem.title, '- TTS removed')
     autoModeInterval.value = window.setTimeout(cycleTiles, 3000) // 3 Sekunden
   }
   
-  // Spreche den ersten Menüpunkt vor
   const firstItem = einstellungsItems[currentTileIndex.value]
-  speakText(firstItem.title)
+  console.log('First item:', firstItem.title, '- TTS removed')
   
   // Starte den ersten Zyklus nach 3 Sekunden
   autoModeInterval.value = window.setTimeout(cycleTiles, 3000)
@@ -154,17 +105,11 @@ const pauseAutoMode = () => {
     clearTimeout(autoModeInterval.value)
     autoModeInterval.value = null
   }
-  speechSynthesis.cancel()
-}
-
-const resumeAutoMode = () => {
-  isAutoModePaused.value = false
-  if (!autoModeInterval.value) {
-    // Starte den Auto-Modus bei der aktuellen Kachel
-    const currentItem = einstellungsItems[currentTileIndex.value]
-    speakText(currentItem.title)
-    startAutoMode()
+  if (restartTimeout.value) {
+    clearTimeout(restartTimeout.value)
+    restartTimeout.value = null
   }
+  // TTS removed
 }
 
 const stopAutoMode = () => {
@@ -172,450 +117,231 @@ const stopAutoMode = () => {
     clearTimeout(autoModeInterval.value)
     autoModeInterval.value = null
   }
-  // Stoppe auch die Sprachausgabe
-  speechSynthesis.cancel()
+  if (restartTimeout.value) {
+    clearTimeout(restartTimeout.value)
+    restartTimeout.value = null
+  }
+  // TTS removed
 }
 
-// Verwende die zentrale Styling-Funktion
-const getTileStyle = (index: number) => {
-  return getTileStyleConfig(index, currentTileIndex.value, settingsStore.isDarkMode, gridConfig)
+const resumeAutoMode = () => {
+  if (isAutoModePaused.value) {
+    isAutoModePaused.value = false
+    // Starte den Auto-Modus bei der aktuellen Kachel
+    const currentItem = einstellungsItems[currentTileIndex.value]
+    console.log('Resuming auto-mode with item:', currentItem.title, '- TTS removed')
+    startAutoMode()
+  }
 }
 
-// Verwende die zentrale Styling-Funktion
-const getIconStyle = (index: number) => {
-  return getIconStyleConfig(index, currentTileIndex.value, settingsStore.isDarkMode, gridConfig)
-}
-
-// Verwende die zentrale Styling-Funktion
-const getTextStyle = (index: number) => {
-  return getTextStyleConfig(index, currentTileIndex.value, settingsStore.isDarkMode, gridConfig)
-}
-
-// Dark Mode Toggle
-const toggleDarkMode = () => {
-  settingsStore.toggleDarkMode()
-}
-
-// Einstellungs-Auswahl
-function selectEinstellung(einstellungId: string) {
-  console.log('selectEinstellung called with einstellungId:', einstellungId)
-  pauseAutoMode() // Pausiere Auto-Modus statt zu stoppen
+// Einstellung Auswahl
+const selectEinstellung = (einstellungId: string) => {
+  const selectedItem = einstellungsItems.find(item => item.id === einstellungId)
   
   switch (einstellungId) {
     case 'tastatur-design':
       console.log('Tastatur-Design selected')
-      speakText('Tastatur-Design ausgewählt')
+      console.log('Tastatur-Design ausgewählt - TTS removed')
       // Hier könnte eine Tastatur-Design-Seite geöffnet werden
       break
     case 'leucht-dauer':
       console.log('Leucht-Dauer selected')
-      speakText('Leucht-Dauer ausgewählt')
+      console.log('Leucht-Dauer ausgewählt - TTS removed')
       stopAutoMode() // Stoppe Auto-Modus komplett vor Navigation
       router.push('/leucht-dauer')
       break
-    case 'blinzeldaue':
+    case 'blinzeldauer':
       console.log('Blinzeldauer selected')
-      speakText('Blinzeldauer ausgewählt')
+      console.log('Blinzeldauer ausgewählt - TTS removed')
       stopAutoMode() // Stoppe Auto-Modus komplett vor Navigation
       router.push('/blinzeldauer')
       break
     case 'farbmodus':
       console.log('Farbmodus selected')
-      speakText('Farbmodus ausgewählt')
+      console.log('Farbmodus ausgewählt - TTS removed')
       toggleDarkMode()
-      // Auto-Modus sofort neu starten nach Farbmodus-Wechsel
-      setTimeout(() => {
-        isAutoModePaused.value = false
-        startAutoMode()
-      }, 2000) // 2 Sekunden warten
       break
     case 'kamera':
       console.log('Kamera selected')
-      speakText('Kamera ausgewählt')
+      console.log('Kamera ausgewählt - TTS removed')
       stopAutoMode() // Stoppe Auto-Modus komplett vor Navigation
       router.push('/kamera')
       break
     case 'impressum':
       console.log('Impressum selected')
-      speakText('Impressum ausgewählt')
+      console.log('Impressum ausgewählt - TTS removed')
       // Hier könnte das Impressum geöffnet werden
       break
     case 'zurueck':
       console.log('Zurück selected')
-      speakText('Zurück zur Hauptseite')
+      console.log('Zurück zur Hauptseite - TTS removed')
       stopAutoMode() // Stoppe Auto-Modus komplett vor Navigation
       router.push('/app')
       break
+    default:
+      console.log('Selected Einstellung:', einstellungId)
+      console.log(`${selectedItem?.title} ausgewählt - TTS removed`)
+      break
   }
-  
-  // Nur bei lokalen Aktionen (nicht bei Navigation) Auto-Modus nach 10 Sekunden neu starten
-  if (einstellungId === 'tastatur-design' || einstellungId === 'impressum') {
-    setTimeout(() => {
-      isAutoModePaused.value = false
-      startAutoMode()
-    }, 10000)
-  }
+}
+
+// Dark Mode Toggle
+const toggleDarkMode = () => {
+  settingsStore.toggleDarkMode()
+  console.log('Dark mode toggled:', settingsStore.isDarkMode)
 }
 
 // Blink Detection
 const handleBlink = () => {
-  if (!faceRecognition.isBlinking()) return
-  
   const now = Date.now()
   
-  // Cooldown prüfen
-  if (now - lastBlinkTime.value < blinkCooldown.value) {
-    return
+  if (faceRecognition.isBlinking()) {
+    closedFrames.value++
+    
+    if (now - lastBlinkTime.value < blinkCooldown.value) {
+      return
+    }
+    
+    if (closedFrames.value >= blinkThreshold.value && !eyesClosed.value) {
+      const currentItem = einstellungsItems[currentTileIndex.value]
+      console.log('Blink activation for item:', currentItem.title)
+      
+      console.log('Selected item:', currentItem.title, '- TTS removed')
+      selectEinstellung(currentItem.id)
+      eyesClosed.value = true
+      lastBlinkTime.value = now
+      closedFrames.value = 0
+    }
+  } else {
+    if (closedFrames.value > 0) {
+      closedFrames.value = 0
+      eyesClosed.value = false
+    }
   }
-  
-  lastBlinkTime.value = now
-  console.log('EinstellungenView Blink detected, selecting current item')
-  
-  const currentItem = einstellungsItems[currentTileIndex.value]
-  speakText(currentItem.title)
-  selectEinstellung(currentItem.id)
 }
 
-// Right Click Handler
+// Right-click handler
 const handleRightClick = (event: MouseEvent) => {
   event.preventDefault()
-  console.log('EinstellungenView Right click detected, selecting current item')
-  
+  console.log('Right click detected - treating as blink')
   const currentItem = einstellungsItems[currentTileIndex.value]
-  speakText(currentItem.title)
+  console.log('Right click activation for item:', currentItem.title)
+  
+  console.log('Selected item:', currentItem.title, '- TTS removed')
   selectEinstellung(currentItem.id)
 }
 
 // Lifecycle
 onMounted(() => {
+  // Start face recognition if not active
   if (!faceRecognition.isActive.value) {
     faceRecognition.start()
   }
-  
-  // Resume Auto Mode if it was paused (e.g., returning from another page)
-  if (isAutoModePaused.value) {
-    resumeAutoMode()
-  } else {
-    // Start Auto Mode
+
+  // Setup blink detection interval
+  const blinkCheckInterval = setInterval(handleBlink, 100)
+
+  // Setup event listeners
+  const rightClickHandler = (event: MouseEvent) => handleRightClick(event)
+  document.addEventListener('contextmenu', rightClickHandler)
+
+  // Start auto-mode after a short delay
+  setTimeout(() => {
     startAutoMode()
+  }, 1000)
+
+  // Cleanup function
+  return () => {
+    clearInterval(blinkCheckInterval)
+    document.removeEventListener('contextmenu', rightClickHandler)
+    stopAutoMode()
   }
-  
-  // Watch for blinks using the isBlinking function
-  const blinkCheckInterval = setInterval(() => {
-    handleBlink()
-  }, 100) // Check every 100ms
-  
-  // Add right click listener
-  document.addEventListener('contextmenu', handleRightClick)
 })
 
 onUnmounted(() => {
-  document.removeEventListener('contextmenu', handleRightClick)
   stopAutoMode()
 })
 </script>
 
-<template>
-  <div id="app" :class="appClasses">
-    <!-- Responsive Layout - automatischer Wechsel zwischen Mobile und Desktop -->
-    <div class="min-h-screen bg-white">
-      <!-- Global Header -->
-      <GlobalHeader>
-        <div class="flex items-center space-x-4">
-          <button @click="stopAutoMode(); $router.push('/app')" class="p-2 rounded-lg bg-gray-300 hover:bg-gray-400 transition-colors">
-            <svg class="w-6 h-6" :style="{ color: getIconColor(false, settingsStore.isDarkMode) }" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
-            </svg>
-          </button>
-          <h1 class="text-2xl font-bold text-black font-source-code font-light">
-            EINSTELLUNGEN
-          </h1>
-        </div>
-        
-        <!-- Control Buttons -->
-        <div class="flex space-x-2">
-              <!-- TTS Toggle Button -->
-              <button
-                @click="toggleTTS"
-                class="p-2 rounded-lg transition-colors"
-                :class="isTTSEnabled ? 'bg-green-300 hover:bg-green-400' : 'bg-gray-300 hover:bg-gray-400'"
-                :title="isTTSEnabled ? 'Sprachausgabe deaktivieren' : 'Sprachausgabe aktivieren'"
-              >
-                <!-- Speaker Icon für TTS aktiv -->
-                <svg
-                  v-if="isTTSEnabled"
-                  class="w-6 h-6"
-                  :style="{ color: getIconColor(true, settingsStore.isDarkMode) }"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    stroke-linecap="round"
-                    stroke-linejoin="round"
-                    stroke-width="2"
-                    d="M15.536 8.464a5 5 0 010 7.072m2.828-9.9a9 9 0 010 12.728M5.586 15H4a1 1 0 01-1-1v-4a1 1 0 011-1h1.586l4.707-4.707C10.923 3.663 12 4.109 12 5v14c0 .891-1.077 1.337-1.707.707L5.586 15z"
-                  />
-                </svg>
-                <!-- Muted Speaker Icon für TTS deaktiviert -->
-                <svg
-                  v-else
-                  class="w-6 h-6"
-                  :style="{ color: getIconColor(false, settingsStore.isDarkMode) }"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    stroke-linecap="round"
-                    stroke-linejoin="round"
-                    stroke-width="2"
-                    d="M5.586 15H4a1 1 0 01-1-1v-4a1 1 0 011-1h1.586l4.707-4.707C10.923 3.663 12 4.109 12 5v14c0 .891-1.077 1.337-1.707.707L5.586 15z"
-                  />
-                  <path
-                    stroke-linecap="round"
-                    stroke-linejoin="round"
-                    stroke-width="2"
-                    d="M17 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2"
-                  />
-                </svg>
-              </button>
-              
-              <!-- Dark Mode Toggle Button -->
-              <button
-                @click="toggleDarkMode"
-                class="p-2 rounded-lg bg-gray-300 hover:bg-gray-400 transition-colors"
-                :title="settingsStore.isDarkMode ? 'Light Mode aktivieren' : 'Dark Mode aktivieren'"
-              >
-                <!-- Sun Icon für Light Mode -->
-                <svg
-                  v-if="settingsStore.isDarkMode"
-                  class="w-6 h-6"
-                  :style="{ color: getIconColor(true, settingsStore.isDarkMode) }"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    stroke-linecap="round"
-                    stroke-linejoin="round"
-                    stroke-width="2"
-                    d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z"
-                  />
-                </svg>
-                <!-- Moon Icon für Dark Mode -->
-                <svg
-                  v-else
-                  class="w-6 h-6"
-                  :style="{ color: getIconColor(false, settingsStore.isDarkMode) }"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    stroke-linecap="round"
-                    stroke-linejoin="round"
-                    stroke-width="2"
-                    d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z"
-                  />
-                </svg>
-              </button>
-        </div>
-      </GlobalHeader>
-
-      <!-- Main Content -->
-      <main class="flex-1 flex flex-col items-center justify-center p-8">
-        <!-- Grid Container -->
-        <div 
-          class="grid gap-8"
-          :style="{
-            gridTemplateColumns: 'repeat(3, 1fr)',
-            gap: gridConfig.tileGap
-          }"
-        >
-          <!-- TASTATUR-DESIGN -->
-          <div 
-            class="flex flex-col justify-start items-center cursor-pointer hover:bg-gray-100"
-            :style="getTileStyle(0)"
-            @click="$router.push('/tastaturdesign')"
-          >
-            <div 
-              class="flex items-center justify-center rounded-lg"
-              :style="{
-                width: gridConfig.iconWidth,
-                height: gridConfig.iconHeight,
-                backgroundColor: gridConfig.iconBackgroundColor
-              }"
-            >
-              <img 
-                src="/settings-sliders.svg" 
-                alt="TASTATUR-DESIGN" 
-                :style="getIconStyle(0)"
-              />
-            </div>
-            <div 
-              class="text-center font-source-code font-normal"
-              :style="getTextStyle(0)"
-            >
-              TASTATUR
-            </div>
-          </div>
-
-          <!-- LEUCHT-DAUER -->
-          <div 
-            class="flex flex-col justify-start items-center cursor-pointer hover:bg-gray-100"
-            :style="getTileStyle(1)"
-            @click="selectEinstellung('leucht-dauer')"
-          >
-            <div 
-              class="flex items-center justify-center rounded-lg"
-              :style="{
-                width: gridConfig.iconWidth,
-                height: gridConfig.iconHeight,
-                backgroundColor: gridConfig.iconBackgroundColor
-              }"
-            >
-              <img 
-                src="/bell.svg" 
-                alt="LEUCHT-DAUER" 
-                :style="getIconStyle(1)"
-              />
-            </div>
-            <div 
-              class="text-center font-source-code font-normal"
-              :style="getTextStyle(1)"
-            >
-              LEUCHT-DAUER
-            </div>
-          </div>
-
-          <!-- BLINZELDAUE -->
-          <div 
-            class="flex flex-col justify-start items-center cursor-pointer hover:bg-gray-100"
-            :style="getTileStyle(2)"
-            @click="selectEinstellung('blinzeldaue')"
-          >
-            <div 
-              class="flex items-center justify-center rounded-lg"
-              :style="{
-                width: gridConfig.iconWidth,
-                height: gridConfig.iconHeight,
-                backgroundColor: gridConfig.iconBackgroundColor
-              }"
-            >
-              <img 
-                src="/face-smile-upside-down.svg" 
-                alt="BLINZELDAUE" 
-                :style="getIconStyle(2)"
-              />
-            </div>
-            <div 
-              class="text-center font-source-code font-normal"
-              :style="getTextStyle(2)"
-            >
-              BLINZELDAUE
-            </div>
-          </div>
-
-          <!-- FARBMODUS -->
-          <div 
-            class="flex flex-col justify-start items-center cursor-pointer hover:bg-gray-100"
-            :style="getTileStyle(3)"
-            @click="selectEinstellung('farbmodus')"
-          >
-            <div 
-              class="flex items-center justify-center rounded-lg"
-              :style="{
-                width: gridConfig.iconWidth,
-                height: gridConfig.iconHeight,
-                backgroundColor: gridConfig.iconBackgroundColor
-              }"
-            >
-              <img 
-                src="/settings-sliders.svg" 
-                alt="FARBMODUS" 
-                :style="getIconStyle(3)"
-              />
-            </div>
-            <div 
-              class="text-center font-source-code font-normal"
-              :style="getTextStyle(3)"
-            >
-              FARBMODUS
-            </div>
-          </div>
-
-          <!-- KAMERA -->
-          <div 
-            class="flex flex-col justify-start items-center cursor-pointer hover:bg-gray-100"
-            :style="getTileStyle(4)"
-            @click="selectEinstellung('kamera')"
-          >
-            <div 
-              class="flex items-center justify-center rounded-lg"
-              :style="{
-                width: gridConfig.iconWidth,
-                height: gridConfig.iconHeight,
-                backgroundColor: gridConfig.iconBackgroundColor
-              }"
-            >
-              <img 
-                src="/settings-sliders.svg" 
-                alt="KAMERA" 
-                :style="getIconStyle(4)"
-              />
-            </div>
-            <div 
-              class="text-center font-source-code font-normal"
-              :style="getTextStyle(4)"
-            >
-              KAMERA
-            </div>
-          </div>
-
-          <!-- IMPRESSUM -->
-          <div 
-            class="flex flex-col justify-start items-center cursor-pointer hover:bg-gray-100"
-            :style="getTileStyle(5)"
-            @click="selectEinstellung('impressum')"
-          >
-            <div 
-              class="flex items-center justify-center rounded-lg"
-              :style="{
-                width: gridConfig.iconWidth,
-                height: gridConfig.iconHeight,
-                backgroundColor: gridConfig.iconBackgroundColor
-              }"
-            >
-              <img 
-                src="/user.svg" 
-                alt="IMPRESSUM" 
-                :style="getIconStyle(5)"
-              />
-            </div>
-            <div 
-              class="text-center font-source-code font-normal"
-              :style="getTextStyle(5)"
-            >
-              IMPRESSUM
-            </div>
-          </div>
-        </div>
-
-
-        <!-- Status Message -->
-        <div class="mt-8 text-center">
-          <p class="text-lg italic text-gray-600">
-            Blinzeldaue wurde erfolgreich geändert.
-          </p>
-        </div>
-      </main>
-    </div>
-  </div>
-</template>
-
 <style scoped>
-.font-source-code {
-  font-family: 'Source Code Pro', monospace;
+.einstellungen-view {
+  min-height: 100vh;
+  background: var(--bg-color);
+  color: var(--text-color);
+}
+
+.main-content {
+  padding: 2rem;
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+.grid-container {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 1.5rem;
+  margin-bottom: 2rem;
+}
+
+.menu-tile {
+  background: var(--card-bg);
+  border: 2px solid var(--border-color);
+  border-radius: 12px;
+  padding: 1.5rem;
+  text-align: center;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  min-height: 120px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+}
+
+.tile-active {
+  border-color: var(--primary-color);
+  background: var(--primary-bg);
+  transform: scale(1.05);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+.tile-inactive {
+  opacity: 0.7;
+}
+
+.tile-icon-container {
+  margin-bottom: 0.5rem;
+}
+
+.tile-icon {
+  width: 48px;
+  height: 48px;
+  object-fit: contain;
+}
+
+.tile-text {
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--text-color);
+}
+
+.instructions-container {
+  background: var(--card-bg);
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+  padding: 1.5rem;
+  margin-top: 2rem;
+}
+
+.instructions-container h3 {
+  margin: 0 0 1rem 0;
+  color: var(--primary-color);
+  font-size: 1.2rem;
+}
+
+.instructions-container p {
+  margin: 0.5rem 0;
+  color: var(--text-color);
+  font-size: 0.9rem;
 }
 </style>

@@ -1,4 +1,4 @@
-import { ref, computed, onMounted, onUnmounted } from 'vue'
+import { ref, computed, onMounted, onUnmounted, watch } from 'vue'
 import { useRouter } from 'vue-router'
 import { useSettingsStore } from '../../settings/stores/settings'
 import { useCommunicationStore } from '../../communication/stores/communication'
@@ -16,203 +16,256 @@ export function useHomeViewLogic() {
   const faceRecognition = useFaceRecognition()
 
   // State
-  const currentMenu = ref('')
   const currentTileIndex = ref(0)
   const isAutoMode = ref(true)
   const autoModeInterval = ref<number | null>(null)
   const closedFrames = ref(0)
   const eyesClosed = ref(false)
-  const timeClosed = 2 // 2 Sekunden für Blinzeln
   const isAutoModePaused = ref(false)
+  const restartTimeout = ref<number | null>(null)
+  const userInteracted = ref(false)
+  
+  // TTS State
+  const isVolumeEnabled = ref(true) // Standardmäßig aktiviert
+  const speechSynthesis = window.speechSynthesis
+  
+  // Instanz-ID für bessere Kontrolle
+  const instanceId = Math.random().toString(36).substr(2, 9)
+  console.log('HomeView instance created:', instanceId)
+  
+  // Global HomeView Management - stoppe alle anderen Instanzen
+  const stopAllOtherHomeViews = () => {
+    console.log(`[${instanceId}] Stopping all other HomeView instances`)
+    // Stoppe alle laufenden TTS
+    speechSynthesis.cancel()
+    // Sende Event an alle anderen Instanzen
+    const event = new CustomEvent('stopHomeView', { 
+      detail: { exceptInstanceId: instanceId } 
+    })
+    window.dispatchEvent(event)
+    
+    // Zusätzlich: Stoppe alle anderen Auto-Mode-Instanzen global
+    const stopAllAutoModeEvent = new CustomEvent('stopAllAutoMode')
+    window.dispatchEvent(stopAllAutoModeEvent)
+  }
+  
+  // Neue TTS Funktion - klar und verständlich
+  const speakText = (text: string) => {
+    if (!isVolumeEnabled.value) {
+      console.log(`[${instanceId}] TTS disabled - not speaking:`, text)
+      return
+    }
+    
+    // TTS nur nach Benutzerinteraktion
+    if (!userInteracted.value) {
+      console.log(`[${instanceId}] TTS not allowed yet - user must interact first:`, text)
+      return
+    }
+    
+    // Stoppe alle laufenden TTS (auch von anderen Instanzen)
+    speechSynthesis.cancel()
+    
+    // Warte kurz für sauberen Stop
+    setTimeout(() => {
+      const utterance = new SpeechSynthesisUtterance(text)
+      
+      // Optimale Einstellungen für klare Stimme
+      utterance.lang = 'de-DE'
+      utterance.rate = 0.8  // Etwas langsamer für bessere Verständlichkeit
+      utterance.pitch = 1.0  // Normale Tonhöhe
+      utterance.volume = 1.0 // Maximale Lautstärke
+      
+      // Beste deutsche Stimme finden
+      const voices = speechSynthesis.getVoices()
+      
+      // Priorität: Deutsche weibliche Stimme > Deutsche männliche > Standard
+      let selectedVoice = voices.find(voice => 
+        voice.lang.startsWith('de') && 
+        voice.name.toLowerCase().includes('female')
+      )
+      
+      if (!selectedVoice) {
+        selectedVoice = voices.find(voice => 
+          voice.lang.startsWith('de') && 
+          voice.name.toLowerCase().includes('male')
+        )
+      }
+      
+      if (!selectedVoice) {
+        selectedVoice = voices.find(voice => voice.lang.startsWith('de'))
+      }
+      
+      if (selectedVoice) {
+        utterance.voice = selectedVoice
+      }
+      
+      // Event-Handler für bessere Kontrolle
+      utterance.onstart = () => {
+        console.log(`[${instanceId}] TTS gestartet:`, text)
+      }
+      
+      utterance.onend = () => {
+        console.log(`[${instanceId}] TTS beendet:`, text)
+      }
+      
+      utterance.onerror = (event) => {
+        // Ignoriere "canceled" und "not-allowed" Fehler - das ist normal
+        if (event.error !== 'canceled' && event.error !== 'not-allowed') {
+          console.error(`[${instanceId}] TTS Fehler:`, event.error, 'für Text:', text)
+        } else if (event.error === 'not-allowed') {
+          console.log(`[${instanceId}] TTS not-allowed - Benutzer muss erst interagieren`)
+        }
+      }
+      
+      speechSynthesis.speak(utterance)
+    }, 100)
+  }
 
   // Verbesserte Blink-Detection Parameter - zentral gesteuert
   const blinkThreshold = computed(() => Math.ceil(settingsStore.settings.blinkSensitivity * 10)) // Konvertiere Sekunden zu Frames (10 FPS)
   const lastBlinkTime = ref(0)
   const blinkCooldown = computed(() => settingsStore.settings.blinkSensitivity * 1000)
+  
+  // Computed
+  const currentMenu = computed(() => {
+    return 'main'
+  })
+  
+  const appClasses = computed(() => {
+    return {
+      'dark-mode': settingsStore.isDarkMode,
+      'auto-mode': isAutoMode.value,
+      'auto-mode-paused': isAutoModePaused.value
+    }
+  })
 
-  // Text-to-Speech
-  const speechSynthesis = window.speechSynthesis
-  const isTTSEnabled = ref(true)
-  const isVolumeEnabled = ref(true) // Global volume state from header
-  const isSpeaking = ref(false) // Prevent overlapping TTS calls
+  // TTS removed
 
   // Menu Items mit echten SVG-Icons
   const menuItems = [
     {
       id: 'warning',
       title: 'WARNGERÄUSCH',
-      description: 'Warnung senden',
-      icon: 'bell.svg'
+      icon: '/ratatosk.2.0/Glocke.svg',
+      route: '/warning',
+      category: 'main' as const
     },
     {
       id: 'communication',
       title: 'UNTERHALTEN',
-      description: 'Nachrichten senden und empfangen',
-      icon: 'comment-dots.svg'
-    },
-    {
-      id: 'profile',
-      title: 'ICH',
-      description: 'Persönliche Einstellungen',
-      icon: 'user.svg'
+      icon: '/ratatosk.2.0/Nachricht.svg',
+      route: '/unterhalten',
+      category: 'communication' as const
     },
     {
       id: 'pain',
       title: 'SCHMERZEN',
-      description: 'Schmerzen dokumentieren',
-      icon: 'headache.svg'
+      icon: '/ratatosk.2.0/Schmerz.svg',
+      route: '/pain-dialog',
+      category: 'pain' as const
+    },
+    {
+      id: 'feelings',
+      title: 'GEFÜHLE',
+      icon: '/ratatosk.2.0/face-smile-upside-down.svg',
+      route: '/gefuehle',
+      category: 'main' as const
     },
     {
       id: 'environment',
       title: 'UMGEBUNG',
-      description: 'Umgebung beschreiben',
-      icon: 'house-chimney.svg'
+      icon: '/ratatosk.2.0/Umgebung.svg',
+      route: '/umgebung',
+      category: 'main' as const
+    },
+    {
+      id: 'hygiene',
+      title: 'HYGIENE',
+      icon: '/ratatosk.2.0/Hygiene.svg',
+      route: '/hygiene',
+      category: 'main' as const
+    },
+    {
+      id: 'clothing',
+      title: 'KLEIDUNG',
+      icon: '/ratatosk.2.0/clothes-hanger.svg',
+      route: '/kleidung',
+      category: 'main' as const
+    },
+    {
+      id: 'movement',
+      title: 'BEWEGUNG',
+      icon: '/ratatosk.2.0/barefoot.svg',
+      route: '/bewegung',
+      category: 'main' as const
+    },
+    {
+      id: 'nutrition',
+      title: 'ERNÄHRUNG',
+      icon: '/ratatosk.2.0/plate-wheat.svg',
+      route: '/ernaehrung',
+      category: 'main' as const
     },
     {
       id: 'settings',
       title: 'EINSTELLUNGEN',
-      description: 'App konfigurieren',
-      icon: 'settings-sliders.svg'
+      icon: '/ratatosk.2.0/Einstellungen.svg',
+      route: '/einstellungen',
+      category: 'settings' as const
+    },
+    {
+      id: 'camera',
+      title: 'KAMERA',
+      icon: '/ratatosk.2.0/camera.svg',
+      route: '/kamera',
+      category: 'settings' as const
+    },
+    {
+      id: 'camera-position',
+      title: 'KAMERAPOSITION',
+      icon: '/ratatosk.2.0/camera.svg',
+      route: '/kameraposition',
+      category: 'settings' as const
     }
   ]
 
-  // Computed
-  const appClasses = computed(() => [
-    'min-h-screen flex flex-col',
-    settingsStore.isHighContrast ? 'high-contrast' : '',
-    settingsStore.isLargeText ? 'large-text' : ''
-  ])
-
-  // Text-to-Speech Functions - Handle browser autoplay policy
-  let userInteracted = false
-  const ttsBlockedByBrowser = ref(false)
-
-  const speakText = (text: string) => {
-    console.log('HomeView speakText called with:', text, 'isTTSEnabled:', isTTSEnabled.value, 'isSpeaking:', isSpeaking.value, 'userInteracted:', userInteracted)
-
-    if (!isTTSEnabled.value || !speechSynthesis) {
-      console.log('HomeView TTS disabled or speechSynthesis not available')
-      return
-    }
-
-    // Check if user has interacted (required by browser autoplay policy)
-    if (!userInteracted) {
-      console.log('HomeView: TTS blocked - user interaction required by browser autoplay policy')
-      ttsBlockedByBrowser.value = true
-      return
-    }
-
-    // Prüfe ob Volume im Header aktiviert ist
-    if (!isVolumeEnabled.value) {
-      console.log('HomeView: Volume disabled in header - skipping TTS')
-      return
-    }
-
-    // Verhindere überlappende TTS-Aufrufe
-    if (isSpeaking.value) {
-      console.log('HomeView: TTS already speaking - skipping new call')
-      return
-    }
-
-    // Setze isSpeaking Flag sofort
-    isSpeaking.value = true
-    console.log('HomeView: Setting isSpeaking to true')
-
-    // WICHTIG: Warte länger zwischen cancel und speak
-    speechSynthesis.cancel()
-    
-    // Längere Wartezeit um sicherzustellen, dass alle vorherigen TTS gestoppt sind
-    setTimeout(() => {
-      // Prüfe nochmal ob wir sprechen dürfen
-      if (!isSpeaking.value) {
-        console.log('HomeView: isSpeaking wurde zurückgesetzt - TTS abgebrochen')
-        return
-      }
-
-      const utterance = new SpeechSynthesisUtterance(text)
-      utterance.lang = 'de-DE'
-      utterance.rate = 0.8
-      utterance.pitch = 1.0
-      utterance.volume = 1.0 // Volle Lautstärke
-
-      // Wähle eine deutsche Stimme falls verfügbar
-      const voices = speechSynthesis.getVoices()
-      const germanVoice = voices.find(voice => voice.lang.startsWith('de'))
-      if (germanVoice) {
-        utterance.voice = germanVoice
-        console.log('HomeView: Using German voice:', germanVoice.name)
-      }
-
-      utterance.onstart = () => {
-        console.log('🔊 HomeView: Speech started:', text)
-        console.log('🔊 Sollte jetzt Ton hören!')
-        console.log('🔊 isSpeaking is now:', isSpeaking.value)
-      }
-      utterance.onend = () => {
-        isSpeaking.value = false
-        console.log('✅ HomeView: Speech ended:', text)
-        console.log('✅ isSpeaking reset to:', isSpeaking.value)
-      }
-      utterance.onerror = (event) => {
-        isSpeaking.value = false
-        console.log('❌ HomeView: Speech error:', event)
-        console.log('❌ Error details:', event.error, event.charIndex, event.charLength)
-        console.log('❌ isSpeaking reset to:', isSpeaking.value)
-        
-        // Handle different error types
-        if (event.error === 'canceled') {
-          console.log('ℹ️ HomeView: Speech was canceled (normal)')
-        } else if (event.error === 'not-allowed') {
-          console.warn('⚠️ HomeView: Speech synthesis not allowed - browser autoplay policy blocking TTS')
-          ttsBlockedByBrowser.value = true
-          // Don't retry - user needs to interact first
-        } else {
-          console.error('❌ HomeView: Speech synthesis error:', event.error)
-        }
-      }
-
-      console.log('HomeView Speaking:', text)
-      speechSynthesis.speak(utterance)
-
-      // Fallback: Reset isSpeaking nach 5 Sekunden falls es hängen bleibt
-      setTimeout(() => {
-        if (isSpeaking.value) {
-          console.log('⚠️ HomeView: isSpeaking timeout - resetting flag')
-          isSpeaking.value = false
-        }
-      }, 5000)
-    }, 500) // 500ms Wartezeit - viel länger!
-  }
-
-  // Auto Mode Functions
+  // Auto-Mode Funktionen - Verwendet Leuchtdauer aus Einstellungen
   const startAutoMode = () => {
-    if (autoModeInterval.value) return
-    
-    // Stelle sicher, dass wir bei Index 0 starten
-    currentTileIndex.value = 0
-    
+    if (autoModeInterval.value || !isAutoMode.value) return
+
+    // Stoppe alle anderen HomeView-Instanzen
+    stopAllOtherHomeViews()
+
+    const leuchtdauer = settingsStore.settings.autoModeSpeed
+    console.log(`[${instanceId}] Starting auto-mode with`, menuItems.length, 'items, Leuchtdauer:', leuchtdauer, 'ms')
+
     const cycleTiles = () => {
       if (!isAutoMode.value || isAutoModePaused.value) {
+        console.log(`[${instanceId}] Auto-mode stopped or paused`)
         return
       }
+
+      // Aktuelle Leuchtdauer aus Einstellungen holen (kann sich dynamisch ändern)
+      const currentLeuchtdauer = settingsStore.settings.autoModeSpeed
       
+      // Move to next item ZUERST
       currentTileIndex.value = (currentTileIndex.value + 1) % menuItems.length
+      console.log(`[${instanceId}] Moved to next item, new index:`, currentTileIndex.value)
       
-      // Spreche den aktuellen Menüpunkt vor (nur wenn nicht bereits gesprochen wird)
+      // Aktuelle Kachel SOFORT vorlesen (wenn sie leuchtet)
       const currentItem = menuItems[currentTileIndex.value]
-      if (!isSpeaking.value) {
+      if (currentItem) {
+        console.log(`[${instanceId}] Current item:`, currentItem.title, 'at index:', currentTileIndex.value, 'Leuchtdauer:', currentLeuchtdauer, 'ms')
+        // TTS startet sofort wenn Kachel leuchtet
         speakText(currentItem.title)
       }
-      
-      autoModeInterval.value = window.setTimeout(cycleTiles, 6000) // 6 Sekunden (noch länger)
+
+      // Schedule next cycle mit aktueller Leuchtdauer aus Einstellungen
+      autoModeInterval.value = window.setTimeout(cycleTiles, currentLeuchtdauer)
     }
-    
-    // Spreche den ersten Menüpunkt vor
-    const firstItem = menuItems[currentTileIndex.value]
-    speakText(firstItem.title)
-    
-    // Starte den ersten Zyklus nach 6 Sekunden
-    autoModeInterval.value = window.setTimeout(cycleTiles, 6000)
+
+    // Start immediately
+    cycleTiles()
   }
 
   const pauseAutoMode = () => {
@@ -221,17 +274,11 @@ export function useHomeViewLogic() {
       clearTimeout(autoModeInterval.value)
       autoModeInterval.value = null
     }
-    speechSynthesis.cancel()
-  }
-
-  const resumeAutoMode = () => {
-    isAutoModePaused.value = false
-    if (!autoModeInterval.value) {
-      // Starte den Auto-Modus bei der aktuellen Kachel
-      const currentItem = menuItems[currentTileIndex.value]
-      speakText(currentItem.title)
-      startAutoMode()
+    if (restartTimeout.value) {
+      clearTimeout(restartTimeout.value)
+      restartTimeout.value = null
     }
+    // TTS removed
   }
 
   const stopAutoMode = () => {
@@ -239,116 +286,93 @@ export function useHomeViewLogic() {
       clearTimeout(autoModeInterval.value)
       autoModeInterval.value = null
     }
-    // Stoppe auch die Sprachausgabe
-    speechSynthesis.cancel()
+    if (restartTimeout.value) {
+      clearTimeout(restartTimeout.value)
+      restartTimeout.value = null
+    }
+    // TTS removed
   }
 
-  // User interaction detection
-  const enableTTSOnInteraction = () => {
-    if (!userInteracted) {
-    console.log('User interaction detected - enabling TTS...')
-    userInteracted = true
-    ttsBlockedByBrowser.value = false
-      
-      // Test TTS immediately after user interaction
+  const resumeAutoMode = () => {
+    if (isAutoModePaused.value) {
+      isAutoModePaused.value = false
+      // Starte den Auto-Modus bei der aktuellen Kachel
+      const currentItem = menuItems[currentTileIndex.value]
+      console.log('Resuming auto-mode with item:', currentItem.title)
+      startAutoMode()
+    }
+  }
+
+  // Funktion um Leuchtdauer dynamisch zu aktualisieren
+  const updateLeuchtdauer = () => {
+    if (isAutoMode.value && !isAutoModePaused.value) {
+      console.log('Leuchtdauer geändert, Auto-Mode wird mit neuer Geschwindigkeit neu gestartet')
+      stopAutoMode()
       setTimeout(() => {
-        const testUtterance = new SpeechSynthesisUtterance('')
-        testUtterance.volume = 0
-        speechSynthesis.speak(testUtterance)
-        speechSynthesis.cancel()
-        console.log('TTS initialized after user interaction')
+        startAutoMode()
       }, 100)
     }
   }
 
-  // Methods
-  function selectMenu(menuId: string) {
-    console.log('selectMenu called with menuId:', menuId)
+  // User interaction detection - aktiviert TTS
+  const enableTTSOnInteraction = () => {
+    if (!userInteracted.value) {
+      console.log(`[${instanceId}] User interaction detected - TTS now enabled`)
+      userInteracted.value = true
+    }
+  }
+
+  // Menu selection - verhindert Navigation ohne Interaktion
+  const selectMenu = (menuId: string) => {
+    console.log(`[${instanceId}] selectMenu called with menuId:`, menuId)
     
     // Enable TTS on user interaction
     enableTTSOnInteraction()
+    
+    // Stoppe Auto-Mode bei Navigation
+    stopAutoMode()
     
     // Setze den aktuellen Tile-Index basierend auf der menuId
     const index = menuItems.findIndex(item => item.id === menuId)
     if (index !== -1) {
       currentTileIndex.value = index
     }
-    
-    currentMenu.value = menuId
-    pauseAutoMode() // Pausiere Auto-Modus statt zu stoppen
-    
-    // Spreche den ausgewählten Menüpunkt vor
+
+    // Navigate to the selected route
     const selectedItem = menuItems.find(item => item.id === menuId)
     if (selectedItem) {
-      speakText(selectedItem.title)
+      console.log(`[${instanceId}] Selected item:`, selectedItem.title, '- Navigation erlaubt')
     }
     
-    // Navigate to corresponding route based on menu ID
-    switch (menuId) {
-      case 'warning':
-        console.log('Navigating to /warning')
-        router.push('/warning')
-        break
-      case 'communication':
-        console.log('Navigating to /unterhalten')
-        router.push('/unterhalten')
-        break
-      case 'profile':
-        console.log('Navigating to /ich')
-        router.push('/ich')
-        break
-      case 'pain':
-        console.log('Navigating to /pain-dialog')
-        router.push('/pain-dialog')
-        break
-      case 'environment':
-        console.log('Navigating to /umgebung')
-        router.push('/umgebung')
-        break
-      case 'settings':
-        console.log('Navigating to /einstellungen')
-        router.push('/einstellungen')
-        break
-      default:
-        console.log('Unknown menu ID:', menuId)
-    }
+    router.push(selectedItem?.route || '/app')
   }
 
-  function formatTime(date: Date): string {
-    return new Intl.DateTimeFormat('de-DE', {
-      hour: '2-digit',
-      minute: '2-digit'
-    }).format(date)
-  }
-
-  // Blink Detection - Verbessert und weniger sensibel (wie in UnterhaltenView)
+  // Blink detection
   const handleBlink = () => {
     const now = Date.now()
     
     if (faceRecognition.isBlinking()) {
       closedFrames.value++
       
-      // Nur verarbeiten wenn genug Zeit seit letztem Blink vergangen ist
       if (now - lastBlinkTime.value < blinkCooldown.value) {
         return
       }
       
-      // Menü-Auswahl bei kurzem Blinzeln (mindestens 5 Frames = 0.5 Sekunden)
       if (closedFrames.value >= blinkThreshold.value && !eyesClosed.value) {
         const currentItem = menuItems[currentTileIndex.value]
-        console.log('Blink activation for tile:', currentTileIndex.value, 'menuId:', currentItem.id, 'title:', currentItem.title, 'frames:', closedFrames.value, 'threshold:', blinkThreshold)
-        
-        // Spreche den Menüpunkt vor, bevor er ausgewählt wird
-        speakText(currentItem.title)
-        
-        selectMenu(currentItem.id)
-        eyesClosed.value = true
-        lastBlinkTime.value = now
-        // Reset frames after successful detection
-        closedFrames.value = 0
+        if (currentItem) {
+          console.log('Blink activation for item:', currentItem.title)
+          
+          // TTS removed - just log
+          console.log('Selected item:', currentItem.title, '- TTS removed')
+          
+          selectMenu(currentItem.id)
+          eyesClosed.value = true
+          lastBlinkTime.value = now
+          closedFrames.value = 0
+        }
       }
     } else {
-      // Reset nur wenn Augen wirklich offen sind
       if (closedFrames.value > 0) {
         closedFrames.value = 0
         eyesClosed.value = false
@@ -356,23 +380,52 @@ export function useHomeViewLogic() {
     }
   }
 
-  // Rechte Maustaste als Blinzeln-Ersatz
+  // Right-click handler
   const handleRightClick = (event: MouseEvent) => {
-    event.preventDefault() // Verhindert Kontextmenü
-    console.log('Right click detected - treating as blink')
+    event.preventDefault()
     const currentItem = menuItems[currentTileIndex.value]
-    console.log('Right click activation for tile:', currentTileIndex.value, 'menuId:', currentItem.id, 'title:', currentItem.title)
-    
-    // Spreche den Menüpunkt vor, bevor er ausgewählt wird
-    speakText(currentItem.title)
-    
-    selectMenu(currentItem.id)
+    if (currentItem) {
+      console.log('Right click activation for item:', currentItem.title)
+      
+      // TTS removed - just log
+      console.log('Selected item:', currentItem.title, '- TTS removed')
+      
+      selectMenu(currentItem.id)
+    }
   }
 
-  // Volume toggle event handler
-  const handleVolumeToggle = (event: any) => {
-    isVolumeEnabled.value = event.detail.enabled
-    console.log('HomeView: Volume toggle received:', event.detail.enabled)
+  // Volume toggle handler - synchronisiert mit Header
+  const handleVolumeToggle = (event: Event) => {
+    const customEvent = event as CustomEvent
+    isVolumeEnabled.value = customEvent.detail.enabled
+    console.log(`[${instanceId}] Volume toggle received:`, customEvent.detail.enabled)
+  }
+
+  // Stop HomeView handler - stoppt diese Instanz wenn andere aktiv wird
+  const handleStopHomeView = (event: Event) => {
+    const customEvent = event as CustomEvent
+    const exceptInstanceId = customEvent.detail.exceptInstanceId
+    
+    if (exceptInstanceId !== instanceId) {
+      console.log(`[${instanceId}] Received stop signal from another HomeView instance`)
+      stopAutoMode()
+      speechSynthesis.cancel()
+    }
+  }
+
+  // Stop All AutoMode handler - stoppt alle Auto-Mode-Instanzen
+  const handleStopAllAutoMode = (event: Event) => {
+    console.log(`[${instanceId}] Received stop all auto-mode signal`)
+    stopAutoMode()
+    speechSynthesis.cancel()
+  }
+
+  // Time formatting
+  const formatTime = (date: Date) => {
+    return date.toLocaleTimeString('de-DE', { 
+      hour: '2-digit', 
+      minute: '2-digit' 
+    })
   }
 
   // Lifecycle
@@ -383,33 +436,55 @@ export function useHomeViewLogic() {
     document.addEventListener('touchstart', enableTTSOnInteraction)
     
     // Listen for volume toggle events from header
-    window.addEventListener('volumeToggle', handleVolumeToggle)
+    window.addEventListener('volumeToggle', handleVolumeToggle as EventListener)
     
-    // Initialize TTS API
-    if (speechSynthesis) {
-      console.log('TTS API initialized on page load')
+    // Listen for stop HomeView events from other instances
+    window.addEventListener('stopHomeView', handleStopHomeView as EventListener)
+    
+    // Listen for stop all auto-mode events
+    window.addEventListener('stopAllAutoMode', handleStopAllAutoMode as EventListener)
+    
+    // Lade TTS-Stimmen
+    const loadVoices = () => {
+      const voices = speechSynthesis.getVoices()
+      console.log('TTS Stimmen geladen:', voices.length)
+      voices.forEach(voice => {
+        if (voice.lang.startsWith('de')) {
+          console.log('Deutsche Stimme gefunden:', voice.name, voice.lang)
+        }
+      })
     }
     
-    // Ensure face recognition is active if it was started from the start page
+    // Stimmen laden (manchmal sind sie nicht sofort verfügbar)
+    loadVoices()
+    speechSynthesis.onvoiceschanged = loadVoices
+    
+    console.log(`[${instanceId}] HomeView mounted - TTS aktiviert`)
+    
+    // Start face recognition if not active
     if (!faceRecognition.isActive.value) {
       faceRecognition.start()
     }
-    
-    // Resume Auto Mode if it was paused (e.g., returning from warning page)
-    if (isAutoModePaused.value) {
-      resumeAutoMode()
-    } else {
-      // Start Auto Mode
+
+    // Setup blink detection interval
+    const blinkCheckInterval = setInterval(handleBlink, 100)
+
+    // Setup event listeners
+    const rightClickHandler = (event: MouseEvent) => handleRightClick(event)
+    document.addEventListener('contextmenu', rightClickHandler)
+
+    // Start auto-mode automatisch (ohne TTS bis Benutzerinteraktion)
+    setTimeout(() => {
+      console.log(`[${instanceId}] Starting auto-mode automatically (TTS disabled until user interaction)`)
       startAutoMode()
+    }, 1000)
+
+    // Cleanup function
+    return () => {
+      clearInterval(blinkCheckInterval)
+      document.removeEventListener('contextmenu', rightClickHandler)
+      stopAutoMode()
     }
-    
-    // Watch for blinks using the isBlinking function
-    const blinkCheckInterval = setInterval(() => {
-      handleBlink()
-    }, 100) // Check every 100ms
-    
-    // Add right click listener
-    document.addEventListener('contextmenu', handleRightClick)
   })
 
   onUnmounted(() => {
@@ -418,8 +493,15 @@ export function useHomeViewLogic() {
     document.removeEventListener('keydown', enableTTSOnInteraction)
     document.removeEventListener('touchstart', enableTTSOnInteraction)
     document.removeEventListener('contextmenu', handleRightClick)
-    window.removeEventListener('volumeToggle', handleVolumeToggle)
+    window.removeEventListener('volumeToggle', handleVolumeToggle as EventListener)
+    window.removeEventListener('stopHomeView', handleStopHomeView as EventListener)
+    window.removeEventListener('stopAllAutoMode', handleStopAllAutoMode as EventListener)
+    
+    // Stoppe Auto-Mode und TTS
     stopAutoMode()
+    speechSynthesis.cancel()
+    
+    console.log(`[${instanceId}] HomeView unmounted - cleanup completed`)
   })
 
   return {
@@ -431,17 +513,17 @@ export function useHomeViewLogic() {
     closedFrames,
     eyesClosed,
     isAutoModePaused,
+    restartTimeout,
     blinkThreshold,
     lastBlinkTime,
     blinkCooldown,
-    isTTSEnabled,
+    userInteracted,
+
+    // TTS
     isVolumeEnabled,
-    isSpeaking,
-    menuItems,
-    appClasses,
+    speakText,
 
     // Methods
-    speakText,
     startAutoMode,
     pauseAutoMode,
     resumeAutoMode,
@@ -453,12 +535,11 @@ export function useHomeViewLogic() {
     handleRightClick,
     handleVolumeToggle,
 
-    // Stores
+    // Data
+    menuItems,
+    appClasses,
     settingsStore,
     communicationStore,
-    faceRecognition,
-
-    // TTS State
-    ttsBlockedByBrowser
+    faceRecognition
   }
 }

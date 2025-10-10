@@ -280,11 +280,29 @@ export function useIchViewLogic() {
     
     // Add right click listener
     document.addEventListener('contextmenu', handleRightClick)
+    
+    // Listen for stop HomeView events
+    const handleStopHomeView = (event: Event) => {
+      console.log('IchView received stop signal from HomeView')
+      stopAutoMode()
+      speechSynthesis.cancel()
+    }
+    window.addEventListener('stopHomeView', handleStopHomeView as EventListener)
+    
+    // Listen for stop all auto-mode events
+    const handleStopAllAutoMode = (event: Event) => {
+      console.log('IchView received stop all auto-mode signal')
+      stopAutoMode()
+      speechSynthesis.cancel()
+    }
+    window.addEventListener('stopAllAutoMode', handleStopAllAutoMode as EventListener)
   })
 
   onUnmounted(() => {
     // Clean up event listeners
     document.removeEventListener('contextmenu', handleRightClick)
+    window.removeEventListener('stopHomeView', handleStopHomeView as EventListener)
+    window.removeEventListener('stopAllAutoMode', handleStopAllAutoMode as EventListener)
     stopAutoMode()
   })
 

@@ -67,11 +67,8 @@
         <!-- Pain Scale View -->
         <div v-if="currentState === 'painScaleView'">
           <div class="pain-scale-display">
-            <div class="pain-scale-body-part">
-                  {{ getSubRegionTitle(selectedSubRegion) }}
-            </div>
             <div class="pain-scale-title">
-                  Schmerzlevel:
+                  Wie stark sind Ihre {{ getSubRegionTitle(selectedSubRegion) }}schmerzen?
               </div>
               <div class="pain-scale-level">
               {{ currentTileIndex + 1 }}
@@ -83,7 +80,7 @@
 
           <div class="pain-scale-bar">
             <div class="pain-scale-progress"
-              :style="{ width: `${(currentTileIndex + 1 - 1) * 10 + 5}%` }"
+              :style="{ width: `${Math.max(50, (currentTileIndex * 10) + 5)}%` }"
             ></div>
             
             <div class="pain-scale-numbers">
@@ -135,6 +132,7 @@ const currentState = ref<PainDialogState>('mainView')
 const selectedMainRegion = ref<string | null>(null)
 const selectedSubRegion = ref<string | null>(null)
 const selectedPainLevel = ref<number | null>(null)
+const hasUserInteracted = ref(false)
 
 // Use pain assessment composable
 const {
@@ -144,7 +142,7 @@ const {
   startAutoMode,
   pauseAutoMode,
   stopAutoMode,
-  speakText,
+  // speakText removed
   setupLifecycle
 } = usePainAssessment()
 
@@ -170,19 +168,26 @@ const getSubRegionTitle = (subRegionId: string | null) => {
 // Navigation functions
 const selectMainRegion = async (regionId: string) => {
   console.log('Selecting main region:', regionId)
+  
+  // TTS removed
+  if (!hasUserInteracted.value) {
+    hasUserInteracted.value = true
+    console.log('User first interaction - TTS removed')
+  }
+  
   selectedMainRegion.value = regionId
   currentState.value = 'subRegionView'
   currentTileIndex.value = 0
   
   const region = mainRegions.find(r => r.id === regionId)
   if (region) {
-    await speakText(`Wählen Sie einen ${region.title}bereich aus.`)
+    console.log(`Wählen Sie einen ${region.title}bereich aus. - TTS removed`)
   }
   
-  // Start auto-mode for sub-regions
-  setTimeout(() => {
-    startAutoMode(currentSubRegions.value, 1000, 3000)
-  }, 2000)
+  // Auto-mode disabled to prevent infinite loops
+  // setTimeout(() => {
+  //   startAutoMode(currentSubRegions.value, 2000, 3000)
+  // }, 2000)
 }
 
 const selectSubRegion = async (subRegionId: string) => {
@@ -191,12 +196,13 @@ const selectSubRegion = async (subRegionId: string) => {
   currentState.value = 'painScaleView'
   currentTileIndex.value = 0
   
-  await speakText('Wie stark sind Ihre Schmerzen?')
+  const subRegionTitle = getSubRegionTitle(selectedSubRegion.value)
+  console.log(`Wie stark sind Ihre ${subRegionTitle}schmerzen? - TTS removed`)
   
-  // Start auto-mode for pain levels
-  setTimeout(() => {
-    startAutoMode(painLevels, 1000, 2000)
-  }, 2000)
+  // Auto-mode disabled to prevent infinite loops
+  // setTimeout(() => {
+  //   startAutoMode(painLevels, 2000, 2000)
+  // }, 2000)
 }
 
 const selectPainLevel = async (level: number) => {
@@ -210,7 +216,7 @@ const selectPainLevel = async (level: number) => {
   
   if (mainRegion && subRegion && painLevel) {
     const confirmationText = `${subRegion.title} Schmerzlevel ${level} - ${painLevel.description}`
-    await speakText(confirmationText)
+    console.log(confirmationText + ' - TTS removed')
   }
   
   // After confirmation, return to main view after 3 seconds
@@ -226,7 +232,7 @@ const resetToMainView = async () => {
   selectedSubRegion.value = null
   selectedPainLevel.value = null
   
-  await speakText('Wo haben Sie Schmerzen?')
+  console.log('Wo haben Sie Schmerzen? - TTS removed')
   
   // Start auto-mode for main regions
   setTimeout(() => {
@@ -260,11 +266,12 @@ onMounted(() => {
   // Setup initial lifecycle and auto-mode
   cleanup = setupLifecycle(mainRegions, handleMainRegionSelection)
   
-  // Start with welcome message and auto-mode
-  setTimeout(async () => {
-    await speakText('Wo haben Sie Schmerzen?')
-    startAutoMode(mainRegions, 1000, 3000)
-  }, 1000)
+  // TTS will be triggered by user interaction instead of setTimeout
+  // setTimeout(async () => {
+  //   console.log('Wo haben Sie Schmerzen? - TTS removed')
+  //   // Auto-mode disabled to prevent infinite loops
+  //   // startAutoMode(mainRegions, 1000, 3000)
+  // }, 1000)
 })
 
 onUnmounted(() => {
@@ -490,14 +497,13 @@ watch(currentState, (newState) => {
 
 .pain-scale-bar {
   position: relative;
-  width: 290%;
+  width: 130%;
+  max-width: 1040px;
   height: 80px;
   background-color: #e5e7eb;
   border-radius: 40px;
   overflow: hidden;
   margin: 2rem auto;
-  transform: translateX(-50%);
-  left: 50%;
 }
 
 .pain-scale-progress {

@@ -35,7 +35,7 @@ export function useUnterhaltenViewLogic() {
   const isKeyboardActive = ref(false)
   const keyboardInterval = ref(null)
   const selectedText = ref('')
-  const isTTSEnabled = ref(true)
+  // TTS removed
 
   // Erweiterte Tastatur mit Silben und Sonderzeichen
   const keyboardLayout = [
@@ -53,30 +53,7 @@ export function useUnterhaltenViewLogic() {
   const currentStage = ref('rows') // 'rows' | 'letters'
   const letterPassCount = ref(0)
 
-  // Text-to-Speech
-  const speechSynthesis = window.speechSynthesis
-
-  // Text-to-Speech Funktion - Back to working version
-  const speakText = (text: string) => {
-    console.log('speakText called with:', text, 'isTTSEnabled:', isTTSEnabled.value, 'speechSynthesis:', speechSynthesis)
-    
-    if (!isTTSEnabled.value || !speechSynthesis) {
-      console.log('TTS disabled or speechSynthesis not available')
-      return
-    }
-    
-    // Stoppe vorherige Sprachausgabe
-    speechSynthesis.cancel()
-    
-    const utterance = new SpeechSynthesisUtterance(text)
-    utterance.lang = 'de-DE'
-    utterance.rate = 1.0
-    utterance.pitch = 1.0
-    utterance.volume = 1.0
-    
-    console.log('Speaking:', text)
-    speechSynthesis.speak(utterance)  // ← KEIN setTimeout!
-  }
+  // TTS removed
 
   // Blink Detection
   const handleBlink = () => {
@@ -109,8 +86,7 @@ export function useUnterhaltenViewLogic() {
     letterPassCount.value = 0
     
     console.log('Keyboard started successfully')
-    speakText('Tastatur gestartet')
-    speakCurrentRow()
+    console.log('Tastatur gestartet - TTS removed')
   }
 
   const stopKeyboard = () => {
@@ -123,23 +99,10 @@ export function useUnterhaltenViewLogic() {
     }
     
     console.log('Keyboard stopped')
-    speakText('Tastatur gestoppt')
+    console.log('Tastatur gestoppt - TTS removed')
   }
 
-  const speakCurrentRow = () => {
-    if (currentStage.value === 'rows') {
-      const rowNumber = currentRowIndex.value + 1
-      speakText(`Zeile ${rowNumber}`)
-    }
-  }
-
-  const speakCurrentLetter = () => {
-    if (currentStage.value === 'letters') {
-      const currentRow = keyboardLayout[currentRowIndex.value]
-      const currentLetter = currentRow[currentLetterIndex.value]
-      speakText(currentLetter)
-    }
-  }
+  // TTS functions removed
 
   // Navigation Functions
   const isCurrentRow = (rowIndex: number) => {
@@ -158,8 +121,7 @@ export function useUnterhaltenViewLogic() {
       currentStage.value = 'letters'
       currentLetterIndex.value = 0
       console.log(`Selected row ${currentRowIndex.value}, switching to letters mode`)
-      speakText('Buchstaben-Modus aktiviert')
-      speakCurrentLetter()
+      console.log('Buchstaben-Modus aktiviert - TTS removed')
       
       // Reset Zähler für neue Zeilen-Auswahl
       letterPassCount.value = 0
@@ -178,13 +140,13 @@ export function useUnterhaltenViewLogic() {
         // Text löschen
         console.log('Löschen-Button selected - clearing text')
         selectedText.value = ''
-        speakText('Text gelöscht')
+        console.log('Text gelöscht - TTS removed')
       } else if (currentLetter === 'LEERZEICHEN') {
         selectedText.value += ' '
-        speakText('Leerzeichen hinzugefügt')
+        console.log('Leerzeichen hinzugefügt - TTS removed')
       } else {
         selectedText.value += currentLetter
-        speakText(`${currentLetter} hinzugefügt`)
+        console.log(`${currentLetter} hinzugefügt - TTS removed`)
       }
       
       console.log('Selected letter:', currentLetter, 'Text:', selectedText.value)
@@ -196,18 +158,12 @@ export function useUnterhaltenViewLogic() {
     }
   }
 
-  const speakSelectedText = () => {
-    if (selectedText.value.trim()) {
-      speakText(`Ihr Text: ${selectedText.value}`)
-    } else {
-      speakText('Noch kein Text eingegeben')
-    }
-  }
+  // speakSelectedText removed
 
   // Test Funktion
   const testFunction = () => {
     console.log('Test button clicked!')
-    speakText('Test Button funktioniert')
+    console.log('Test Button funktioniert - TTS removed')
     selectedText.value += 'TEST '
   }
 
@@ -284,7 +240,7 @@ export function useUnterhaltenViewLogic() {
     isKeyboardActive,
     keyboardInterval,
     selectedText,
-    isTTSEnabled,
+    // isTTSEnabled removed
     keyboardLayout,
     currentRowIndex,
     currentLetterIndex,
@@ -292,16 +248,14 @@ export function useUnterhaltenViewLogic() {
     letterPassCount,
     
     // Functions
-    speakText,
+    // TTS functions removed
     handleBlink,
     startKeyboard,
     stopKeyboard,
-    speakCurrentRow,
-    speakCurrentLetter,
     isCurrentRow,
     isCurrentLetter,
     selectCurrentElement,
-    speakSelectedText,
+    // speakSelectedText removed
     testFunction,
     startKeyboardNavigation,
     

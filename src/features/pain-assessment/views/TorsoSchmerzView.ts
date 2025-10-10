@@ -28,9 +28,7 @@ export function useTorsoSchmerzViewLogic() {
   const lastBlinkTime = ref(0)
   const blinkCooldown = computed(() => settingsStore.settings.blinkSensitivity * 1000)
 
-  // Text-to-Speech
-  const speechSynthesis = window.speechSynthesis
-  const isTTSEnabled = computed(() => settingsStore.settings.voiceEnabled)
+  // TTS removed
 
   // Torso-Bereiche basierend auf dem gezeigten Interface
   const torsoBereiche = [
@@ -53,34 +51,11 @@ export function useTorsoSchmerzViewLogic() {
     { id: 'zurueck', text: 'zurück', type: 'navigation', icon: 'Goback.svg' }
   ]
 
-  // Text-to-Speech Funktion
-  const speakText = (text: string) => {
-    console.log('TorsoSchmerzView speakText called with:', text, 'isTTSEnabled:', isTTSEnabled.value, 'speechSynthesis:', speechSynthesis)
-    
-    if (!isTTSEnabled.value || !speechSynthesis) {
-      console.log('TorsoSchmerzView TTS disabled or speechSynthesis not available')
-      return
-    }
-    
-    speechSynthesis.cancel()
-    
-    const utterance = new SpeechSynthesisUtterance(text)
-    utterance.lang = 'de-DE'
-    utterance.rate = 1.0
-    utterance.pitch = 1.0
-    utterance.volume = 1.0
-    
-    console.log('TorsoSchmerzView Speaking:', text)
-    speechSynthesis.speak(utterance)
-  }
+  // TTS removed
 
-  // Volume Toggle Event Handler
+  // Volume Toggle Event Handler - TTS removed
   const handleVolumeToggle = (event: CustomEvent) => {
-    console.log('TorsoSchmerzView received volumeToggle event:', event.detail)
-    if (!event.detail.enabled) {
-      speechSynthesis.cancel()
-      console.log('TorsoSchmerzView TTS cancelled due to global volume toggle')
-    }
+    console.log('TorsoSchmerzView received volumeToggle event:', event.detail, '- TTS removed')
   }
 
   // Auto Mode Funktionen
@@ -96,12 +71,12 @@ export function useTorsoSchmerzViewLogic() {
       }
       currentTileIndex.value = (currentTileIndex.value + 1) % torsoBereiche.length
       const currentItem = torsoBereiche[currentTileIndex.value]
-      speakText(currentItem.text)
+      console.log('Current item:', currentItem.text, '- TTS removed')
       autoModeInterval.value = window.setTimeout(cycleTiles, 3000) // 3 Sekunden
     }
     
     const firstItem = torsoBereiche[currentTileIndex.value]
-    speakText(firstItem.text)
+    console.log('First item:', firstItem.text, '- TTS removed')
     
     // Starte den ersten Zyklus nach 3 Sekunden
     autoModeInterval.value = window.setTimeout(cycleTiles, 3000)
@@ -117,7 +92,7 @@ export function useTorsoSchmerzViewLogic() {
       clearTimeout(restartTimeout.value)
       restartTimeout.value = null
     }
-    speechSynthesis.cancel()
+    // TTS removed
   }
 
   const stopAutoMode = () => {
@@ -129,7 +104,7 @@ export function useTorsoSchmerzViewLogic() {
       clearTimeout(restartTimeout.value)
       restartTimeout.value = null
     }
-    speechSynthesis.cancel()
+    // TTS removed
   }
 
   // Torso-Bereich Auswahl
@@ -150,7 +125,7 @@ export function useTorsoSchmerzViewLogic() {
         break
       default:
         console.log('Selected Torso-Bereich:', torsoBereichId)
-        speakText(`${selectedItem?.text} ausgewählt`)
+        console.log(`${selectedItem?.text} ausgewählt - TTS removed`)
         
         // Navigation zur Schmerzskala
         setTimeout(() => {
@@ -175,7 +150,7 @@ export function useTorsoSchmerzViewLogic() {
         const currentItem = torsoBereiche[currentTileIndex.value]
         console.log('Blink activation for tile:', currentTileIndex.value, 'torsoBereichId:', currentItem.id, 'text:', currentItem.text)
         
-        speakText(currentItem.text)
+        console.log('Selected item:', currentItem.text, '- TTS removed')
         selectTorsoBereich(currentItem.id)
         eyesClosed.value = true
         lastBlinkTime.value = now
@@ -196,7 +171,7 @@ export function useTorsoSchmerzViewLogic() {
     const currentItem = torsoBereiche[currentTileIndex.value]
     console.log('Right click activation for tile:', currentTileIndex.value, 'torsoBereichId:', currentItem.id, 'text:', currentItem.text)
     
-    speakText(currentItem.text)
+    console.log('Selected item:', currentItem.text, '- TTS removed')
     selectTorsoBereich(currentItem.id)
   }
 
@@ -234,10 +209,8 @@ export function useTorsoSchmerzViewLogic() {
     blinkThreshold,
     lastBlinkTime,
     blinkCooldown,
-    speechSynthesis,
-    isTTSEnabled,
+    // TTS removed
     torsoBereiche,
-    speakText,
     startAutoMode,
     pauseAutoMode,
     stopAutoMode,
