@@ -214,9 +214,13 @@ const selectPainLevel = async (level: number) => {
   const subRegion = currentSubRegions.value.find(item => item.id === selectedSubRegion.value)
   const painLevel = painLevels.find(p => p.level === level)
   
+  console.log('Pain level selection - mainRegion:', mainRegion, 'subRegion:', subRegion, 'painLevel:', painLevel)
+  
   if (mainRegion && subRegion && painLevel) {
     const confirmationText = `${subRegion.title} Schmerzlevel ${level} - ${painLevel.description}`
     console.log(confirmationText + ' - TTS removed')
+  } else {
+    console.error('Missing data for confirmation:', { mainRegion, subRegion, painLevel })
   }
   
   // After confirmation, return to main view after 3 seconds
