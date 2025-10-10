@@ -12,7 +12,7 @@ export const useSettingsStore = defineStore('settings', () => {
     autoModeSpeed: 3000, // 3 Sekunden in Millisekunden
     blinkSensitivity: 0.7, // 0.7 Sekunden
     soundEnabled: true,
-    // voiceEnabled removed
+    voiceEnabled: true, // TTS aktiviert
     accessibility: {
       highContrast: false,
       largeText: false,
@@ -65,7 +65,7 @@ export const useSettingsStore = defineStore('settings', () => {
       autoModeSpeed: 3000,
       blinkSensitivity: 0.7,
       soundEnabled: true,
-      // voiceEnabled removed
+      voiceEnabled: true, // TTS aktiviert
       accessibility: {
         highContrast: false,
         largeText: false,

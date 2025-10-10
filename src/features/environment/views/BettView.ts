@@ -87,6 +87,11 @@ export function useBettViewLogic() {
     // Stelle sicher, dass wir bei Index 0 starten
     currentTileIndex.value = 0
     
+    // Erst den Titel vorlesen
+    setTimeout(() => {
+      speakText('Wählen Sie einen Bett-Bereich aus')
+    }, 1000)
+    
     const cycleTiles = () => {
       if (!isAutoMode.value || isAutoModePaused.value) {
         return
@@ -97,11 +102,14 @@ export function useBettViewLogic() {
       autoModeInterval.value = window.setTimeout(cycleTiles, 3000) // 3 Sekunden
     }
     
-    const firstItem = bettItems[currentTileIndex.value]
-    speakText(firstItem.text)
-    
-    // Starte den ersten Zyklus nach 3 Sekunden
-    autoModeInterval.value = window.setTimeout(cycleTiles, 3000)
+    // Starte den Auto-Mode nach 4 Sekunden (1s für Titel + 3s Pause)
+    setTimeout(() => {
+      const firstItem = bettItems[currentTileIndex.value]
+      speakText(firstItem.text)
+      
+      // Starte den ersten Zyklus nach 3 Sekunden
+      autoModeInterval.value = window.setTimeout(cycleTiles, 3000)
+    }, 4000)
   }
 
   const pauseAutoMode = () => {

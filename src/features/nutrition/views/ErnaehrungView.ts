@@ -2,6 +2,7 @@ import { ref, onMounted, onUnmounted, computed } from 'vue'
 import { useRouter } from 'vue-router'
 import { useFaceRecognition } from '../../face-recognition/composables/useFaceRecognition'
 import { useSettingsStore } from '../../settings/stores/settings'
+import { simpleFlowController } from '../../../core/application/SimpleFlowController'
 
 export function useErnaehrungViewLogic() {
   // Router
@@ -17,20 +18,23 @@ export function useErnaehrungViewLogic() {
   const currentTileIndex = ref(0)
   const selectedErnaehrung = ref('')
   const isAutoMode = ref(true)
-  const autoModeInterval = ref<number | null>(null)
   const closedFrames = ref(0)
   const eyesClosed = ref(false)
-  const isAutoModePaused = ref(false)
-  const restartTimeout = ref<number | null>(null)
+  const userInteracted = ref(false)
 
   // Verbesserte Blink-Detection Parameter - zentral gesteuert
-  const blinkThreshold = computed(() => Math.ceil(settingsStore.settings.blinkSensitivity * 10)) // Konvertiere Sekunden zu Frames (10 FPS)
+  const blinkThreshold = computed(() => Math.ceil(settingsStore.settings.blinkSensitivity * 10))
   const lastBlinkTime = ref(0)
   const blinkCooldown = computed(() => settingsStore.settings.blinkSensitivity * 1000)
 
-  // Text-to-Speech
-  const speechSynthesis = window.speechSynthesis
-  const isTTSEnabled = ref(true)
+  // User interaction detection - aktiviert TTS
+  const enableTTSOnInteraction = () => {
+    if (!userInteracted.value) {
+      console.log('ErnaehrungView: User interaction detected - TTS now enabled')
+      userInteracted.value = true
+      simpleFlowController.setUserInteracted(true)
+    }
+  }
 
   // Ernährung-Items basierend auf dem gezeigten Interface
   const ernaehrungItems = [
@@ -38,139 +42,58 @@ export function useErnaehrungViewLogic() {
     { id: 'essen', text: 'Essen', type: 'kategorie', emoji: '🍽️' },
     { id: 'trinken', text: 'Trinken', type: 'kategorie', emoji: '🥤' },
     
-    // Essen-Unterkategorien
-    { id: 'suess', text: 'süß', type: 'essen', emoji: '🍰' },
-    { id: 'herzhaft', text: 'herzhaft', type: 'essen', emoji: '🍔' },
-    { id: 'scharf', text: 'scharf', type: 'essen', emoji: '🌶️' },
-    { id: 'kalt', text: 'kalt', type: 'essen', emoji: '❄️' },
-    { id: 'warm', text: 'warm', type: 'essen', emoji: '🔥' },
-    { id: 'lauwarm', text: 'lauwarm', type: 'essen', emoji: '🌡️' },
-    { id: 'trocken', text: 'trocken', type: 'essen', emoji: '🍪' },
-    { id: 'nass', text: 'nass', type: 'essen', emoji: '💧' },
-    { id: 'breiig', text: 'breiig', type: 'essen', emoji: '🥣' },
+    // Geschmacksrichtungen
+    { id: 'suess', text: 'süß', type: 'geschmack', emoji: '🍰' },
+    { id: 'herzhaft', text: 'herzhaft', type: 'geschmack', emoji: '🍔' },
+    { id: 'scharf', text: 'scharf', type: 'geschmack', emoji: '🌶️' },
     
-    // Trinken-Items
-    { id: 'wasser', text: 'Wasser', type: 'trinken', emoji: '💧' },
-    { id: 'saft', text: 'Saft', type: 'trinken', emoji: '🧃' },
-    { id: 'milch', text: 'Milch', type: 'trinken', emoji: '🥛' },
+    // Temperaturen
+    { id: 'kalt', text: 'kalt', type: 'temperatur', emoji: '❄️' },
+    { id: 'warm', text: 'warm', type: 'temperatur', emoji: '🔥' },
+    { id: 'lauwarm', text: 'lauwarm', type: 'temperatur', emoji: '🌡️' },
     
-    // Zurück
+    // Konsistenzen
+    { id: 'trocken', text: 'trocken', type: 'konsistenz', emoji: '🍪' },
+    { id: 'nass', text: 'nass', type: 'konsistenz', emoji: '💧' },
+    { id: 'breiig', text: 'breiig', type: 'konsistenz', emoji: '🥣' },
+    
+    // Getränke
+    { id: 'wasser', text: 'Wasser', type: 'getraenk', emoji: '💧' },
+    { id: 'saft', text: 'Saft', type: 'getraenk', emoji: '🧃' },
+    { id: 'milch', text: 'Milch', type: 'getraenk', emoji: '🥛' },
+    
+    // Navigation
     { id: 'zurueck', text: 'zurück', type: 'navigation', emoji: '⬅️' }
   ]
 
-  // Text-to-Speech Funktion
-  const speakText = (text: string) => {
-    console.log('ErnaehrungView speakText called with:', text, 'isTTSEnabled:', isTTSEnabled.value, 'speechSynthesis:', speechSynthesis)
-    
-    if (!isTTSEnabled.value || !speechSynthesis) {
-      console.log('ErnaehrungView TTS disabled or speechSynthesis not available')
-      return
-    }
-    
-    speechSynthesis.cancel()
-    
-    const utterance = new SpeechSynthesisUtterance(text)
-    utterance.lang = 'de-DE'
-    utterance.rate = 0.8
-    utterance.pitch = 1.0
-    utterance.volume = 1.0
-    
-    console.log('ErnaehrungView Speaking:', text)
-    speechSynthesis.speak(utterance)
-  }
-
-  // TTS Toggle
-  const toggleTTS = () => {
-    console.log('ErnaehrungView toggleTTS called, current state:', isTTSEnabled.value)
-    isTTSEnabled.value = !isTTSEnabled.value
-    console.log('ErnaehrungView TTS toggled to:', isTTSEnabled.value)
-    
-    if (!isTTSEnabled.value) {
-      speechSynthesis.cancel()
-      console.log('ErnaehrungView TTS cancelled')
-    } else {
-      // Test TTS when enabling
-      speakText('Sprachausgabe aktiviert')
-    }
-  }
-
-  // Auto Mode Funktionen
-  const startAutoMode = () => {
-    if (autoModeInterval.value) return
-    
-    // Stelle sicher, dass wir bei Index 0 starten
-    currentTileIndex.value = 0
-    
-    const cycleTiles = () => {
-      if (!isAutoMode.value || isAutoModePaused.value) {
-        return
-      }
-      currentTileIndex.value = (currentTileIndex.value + 1) % ernaehrungItems.length
-      const currentItem = ernaehrungItems[currentTileIndex.value]
-      speakText(currentItem.text)
-      autoModeInterval.value = window.setTimeout(cycleTiles, 3000) // 3 Sekunden
-    }
-    
-    const firstItem = ernaehrungItems[currentTileIndex.value]
-    speakText(firstItem.text)
-    
-    // Starte den ersten Zyklus nach 3 Sekunden
-    autoModeInterval.value = window.setTimeout(cycleTiles, 3000)
-  }
-
-  const pauseAutoMode = () => {
-    isAutoModePaused.value = true
-    if (autoModeInterval.value) {
-      clearTimeout(autoModeInterval.value)
-      autoModeInterval.value = null
-    }
-    if (restartTimeout.value) {
-      clearTimeout(restartTimeout.value)
-      restartTimeout.value = null
-    }
-    speechSynthesis.cancel()
-  }
-
-  const stopAutoMode = () => {
-    if (autoModeInterval.value) {
-      clearTimeout(autoModeInterval.value)
-      autoModeInterval.value = null
-    }
-    if (restartTimeout.value) {
-      clearTimeout(restartTimeout.value)
-      restartTimeout.value = null
-    }
-    speechSynthesis.cancel()
+  // Zentrale TTS-Funktion über FlowController
+  const speakText = async (text: string) => {
+    console.log('ErnaehrungView: Requesting TTS for:', text)
+    await simpleFlowController.speak(text)
   }
 
   // Ernährung-Item Auswahl
   function selectErnaehrung(ernaehrungId: string) {
-    console.log('selectErnaehrung called with ernaehrungId:', ernaehrungId)
-    pauseAutoMode()
-    
     const selectedItem = ernaehrungItems.find(item => item.id === ernaehrungId)
-    if (selectedItem) {
-      selectedErnaehrung.value = selectedItem.text
-    }
     
+    if (!selectedItem) {
+      console.log('ErnaehrungView: Item not found:', ernaehrungId)
+      return
+    }
+
+    selectedErnaehrung.value = selectedItem.text
+    console.log('ErnaehrungView: Selected item:', selectedItem.text)
+
     switch (ernaehrungId) {
       case 'zurueck':
-        console.log('Navigating back to /ich')
-        stopAutoMode() // Stoppe Auto-Modus komplett vor Navigation
+        console.log('ErnaehrungView: Navigating back to /ich')
         router.push('/ich')
         break
       default:
-        console.log('Selected Ernährung:', ernaehrungId)
-        speakText(`${selectedItem?.text} ausgewählt`)
-        
-        // Auto-Modus nach 10 Sekunden wieder starten
-        restartTimeout.value = window.setTimeout(() => {
-          if (isAutoMode.value) {
-            currentTileIndex.value = 0
-            isAutoModePaused.value = false
-            startAutoMode()
-          }
-        }, 10000)
+        console.log('ErnaehrungView: Selected Ernährung:', ernaehrungId)
+        speakText(`${selectedItem.text} ausgewählt`)
+        // Auto-Mode stoppt bei bewusster Auswahl
+        simpleFlowController.stopAutoMode()
     }
   }
 
@@ -178,17 +101,14 @@ export function useErnaehrungViewLogic() {
   const handleBlink = () => {
     const now = Date.now()
     
-    if (faceRecognition.isBlinking()) {
+    if (faceRecognition.isBlinking.value) {
       closedFrames.value++
-      
-      if (now - lastBlinkTime.value < blinkCooldown.value) {
-        return
-      }
       
       if (closedFrames.value >= blinkThreshold.value && !eyesClosed.value) {
         const currentItem = ernaehrungItems[currentTileIndex.value]
-        console.log('Blink activation for tile:', currentTileIndex.value, 'ernaehrungId:', currentItem.id, 'text:', currentItem.text)
+        console.log('ErnaehrungView: Blink activation for tile:', currentTileIndex.value, 'ernaehrungId:', currentItem.id, 'text:', currentItem.text)
         
+        // TTS + Auswahl - Auto-Mode stoppt bei Interaktion
         speakText(currentItem.text)
         selectErnaehrung(currentItem.id)
         eyesClosed.value = true
@@ -203,60 +123,94 @@ export function useErnaehrungViewLogic() {
     }
   }
 
-  // Rechte Maustaste als Blinzeln-Ersatz
+  // Right Click Handler
   const handleRightClick = (event: MouseEvent) => {
     event.preventDefault()
-    console.log('Right click detected - treating as blink')
+    event.stopPropagation()
+    event.stopImmediatePropagation()
+    console.log('ErnaehrungView: Right click detected! Current tile index:', currentTileIndex.value, 'Items length:', ernaehrungItems.length)
     const currentItem = ernaehrungItems[currentTileIndex.value]
-    console.log('Right click activation for tile:', currentTileIndex.value, 'ernaehrungId:', currentItem.id, 'text:', currentItem.text)
-    
-    speakText(currentItem.text)
-    selectErnaehrung(currentItem.id)
+    if (currentItem) {
+      console.log('ErnaehrungView: Right click activation for tile:', currentTileIndex.value, 'ernaehrungId:', currentItem.id, 'text:', currentItem.text)
+      
+      // TTS + Auswahl - Auto-Mode stoppt bei Interaktion
+      speakText(currentItem.text)
+      selectErnaehrung(currentItem.id)
+    } else {
+      console.log('ErnaehrungView: No current item found for right click')
+    }
+    return false
   }
 
   // Lifecycle
   onMounted(() => {
+    // Setze ErnaehrungView als aktiven View
+    simpleFlowController.setActiveView('/ernaehrung')
+    
     if (!faceRecognition.isActive.value) {
       faceRecognition.start()
     }
     
-    startAutoMode()
+    // Add global event listeners to detect user interaction
+    document.addEventListener('click', enableTTSOnInteraction)
+    document.addEventListener('keydown', enableTTSOnInteraction)
+    document.addEventListener('touchstart', enableTTSOnInteraction)
     
-    const blinkCheckInterval = setInterval(() => {
-      handleBlink()
-    }, 100)
+    // Add right-click handler
+    console.log('ErnaehrungView: Registering right-click handler')
+    document.addEventListener('contextmenu', handleRightClick, { capture: true, passive: false })
     
-    document.addEventListener('contextmenu', handleRightClick)
+    // Start auto-mode automatically über FlowController
+    setTimeout(() => {
+      simpleFlowController.startAutoMode(
+        ernaehrungItems,
+        (currentIndex, currentItem) => {
+          currentTileIndex.value = currentIndex
+          console.log('ErnaehrungView: Auto-mode cycle:', currentItem.text, 'at index:', currentIndex)
+          speakText(currentItem.text)
+        },
+        3000,
+        3000
+      )
+    }, 1000)
+    
+    console.log('ErnaehrungView: mounted - using central controllers')
   })
 
   onUnmounted(() => {
-    document.removeEventListener('contextmenu', handleRightClick)
-    stopAutoMode()
+    // Stoppe Auto-Mode und TTS über FlowController
+    simpleFlowController.stopAutoMode()
+    simpleFlowController.stopTTS()
+    
+    // Clean up event listeners
+    document.removeEventListener('click', enableTTSOnInteraction)
+    document.removeEventListener('keydown', enableTTSOnInteraction)
+    document.removeEventListener('touchstart', enableTTSOnInteraction)
+    document.removeEventListener('contextmenu', handleRightClick, { capture: true })
+    
+    console.log('ErnaehrungView: unmounted - Auto-mode stopped, TTS stopped')
   })
 
   return {
+    // State
     currentTileIndex,
     selectedErnaehrung,
     isAutoMode,
-    autoModeInterval,
     closedFrames,
     eyesClosed,
-    isAutoModePaused,
-    restartTimeout,
     blinkThreshold,
     lastBlinkTime,
     blinkCooldown,
-    speechSynthesis,
-    isTTSEnabled,
     ernaehrungItems,
+    
+    // Methods
     speakText,
-    toggleTTS,
-    startAutoMode,
-    pauseAutoMode,
-    stopAutoMode,
+    enableTTSOnInteraction,
     selectErnaehrung,
     handleBlink,
     handleRightClick,
+    
+    // Stores
     settingsStore,
     faceRecognition
   }

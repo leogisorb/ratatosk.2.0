@@ -48,7 +48,7 @@ export function useTorsoSchmerzViewLogic() {
     { id: 'leber', text: 'Leber', type: 'torsobereich', icon: 'magen.svg' },
     { id: 'niere', text: 'Niere', type: 'torsobereich', icon: 'magen.svg' },
     { id: 'blase', text: 'Blase', type: 'torsobereich', icon: 'blase.svg' },
-    { id: 'zurueck', text: 'zurück', type: 'navigation', icon: 'Goback.svg' }
+    { id: 'zurueck', text: 'zurück', type: 'navigation', icon: 'zurueck.svg' }
   ]
 
   // TTS removed

@@ -2,6 +2,7 @@ import { ref, computed, onMounted, onUnmounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { useSettingsStore } from '../../settings/stores/settings'
 import { useFaceRecognition } from '../../face-recognition/composables/useFaceRecognition'
+import { simpleFlowController } from '../../../core/application/SimpleFlowController'
 
 export function useIchViewLogic() {
   // Router
@@ -21,6 +22,7 @@ export function useIchViewLogic() {
   const closedFrames = ref(0)
   const eyesClosed = ref(false)
   const timeClosed = 2 // 2 Sekunden für Blinzeln
+  const userInteracted = ref(false)
   const isAutoModePaused = ref(false)
 
   // Verbesserte Blink-Detection Parameter - zentral gesteuert
@@ -28,9 +30,20 @@ export function useIchViewLogic() {
   const lastBlinkTime = ref(0)
   const blinkCooldown = computed(() => settingsStore.settings.blinkSensitivity * 1000)
 
-  // Text-to-Speech
-  const speechSynthesis = window.speechSynthesis
-  const isTTSEnabled = ref(true)
+  // User interaction detection - aktiviert TTS
+  const enableTTSOnInteraction = () => {
+    if (!userInteracted.value) {
+      console.log('IchView: User interaction detected - TTS now enabled')
+      userInteracted.value = true
+      simpleFlowController.setUserInteracted(true)
+    }
+  }
+
+  // Zentrale TTS-Funktion über SimpleFlowController
+  const speakText = async (text: string) => {
+    console.log('IchView: Requesting TTS for:', text)
+    await simpleFlowController.speak(text)
+  }
 
   // Menu Items für Ich-Seite - 6 Bereiche
   const menuItems = [
@@ -68,7 +81,7 @@ export function useIchViewLogic() {
       id: 'zurueck',
       title: 'ZURÜCK',
       description: 'Zurück zur Hauptseite',
-      icon: 'Goback.svg'
+      icon: 'zurueck.svg'
     }
   ]
 
@@ -80,21 +93,7 @@ export function useIchViewLogic() {
     settingsStore.isLargeText ? 'large-text' : ''
   ])
 
-  // Text-to-Speech Functions
-  const speakText = (text: string) => {
-    if (!isTTSEnabled.value || !speechSynthesis) return
-    
-    // Stoppe vorherige Sprachausgabe
-    speechSynthesis.cancel()
-    
-    const utterance = new SpeechSynthesisUtterance(text)
-    utterance.lang = 'de-DE'
-    utterance.rate = 0.8 // Etwas langsamer sprechen
-    utterance.pitch = 1.0
-    utterance.volume = 0.8
-    
-    speechSynthesis.speak(utterance)
-  }
+  // Alte TTS-Funktion entfernt - verwende zentrale Version
 
   // Auto Mode Functions
   const startAutoMode = () => {
@@ -131,7 +130,7 @@ export function useIchViewLogic() {
       clearTimeout(autoModeInterval.value)
       autoModeInterval.value = null
     }
-    speechSynthesis.cancel()
+    // TTS wird zentral gesteuert
   }
 
   const resumeAutoMode = () => {
@@ -150,7 +149,7 @@ export function useIchViewLogic() {
       autoModeInterval.value = null
     }
     // Stoppe auch die Sprachausgabe
-    speechSynthesis.cancel()
+    // TTS wird zentral gesteuert
   }
 
   // Methods
@@ -175,31 +174,33 @@ export function useIchViewLogic() {
     // Navigate to corresponding route based on menu ID
     switch (menuId) {
       case 'ernaehrung':
-        console.log('Navigating to /ernaehrung')
+        console.log('IchView: Navigating to /ernaehrung')
         router.push('/ernaehrung')
         break
       case 'gefuehle':
-        console.log('Navigating to /gefuehle')
+        console.log('IchView: Navigating to /gefuehle')
         router.push('/gefuehle')
         break
       case 'kleidung':
-        console.log('Navigating to /kleidung')
+        console.log('IchView: Navigating to /kleidung')
         router.push('/kleidung')
         break
       case 'hygiene':
-        console.log('Navigating to /hygiene')
+        console.log('IchView: Navigating to /hygiene')
         router.push('/hygiene')
         break
       case 'bewegung':
-        console.log('Navigating to /bewegung')
+        console.log('IchView: Navigating to /bewegung')
         router.push('/bewegung')
         break
       case 'zurueck':
-        console.log('Navigating to /app')
+        console.log('IchView: Navigating to /app')
         router.push('/app')
         break
       default:
-        console.log('Unknown menu ID:', menuId)
+        console.log('IchView: Unknown menu ID:', menuId)
+        // Auto-Mode stoppt bei bewusster Auswahl
+        simpleFlowController.stopAutoMode()
     }
   }
 
@@ -247,30 +248,32 @@ export function useIchViewLogic() {
 
   // Rechte Maustaste als Blinzeln-Ersatz
   const handleRightClick = (event: MouseEvent) => {
-    event.preventDefault() // Verhindert Kontextmenü
-    console.log('Right click detected - treating as blink')
+    event.preventDefault()
+    event.stopPropagation()
+    event.stopImmediatePropagation()
+    console.log('IchView: Right click detected! Current tile index:', currentTileIndex.value, 'Items length:', menuItems.length)
     const currentItem = menuItems[currentTileIndex.value]
-    console.log('Right click activation for tile:', currentTileIndex.value, 'menuId:', currentItem.id, 'title:', currentItem.title)
-    
-    // Spreche den Menüpunkt vor, bevor er ausgewählt wird
-    speakText(currentItem.title)
-    
-    selectMenu(currentItem.id)
+    if (currentItem) {
+      console.log('IchView: Right click activation for tile:', currentTileIndex.value, 'menuId:', currentItem.id, 'title:', currentItem.title)
+      
+      // Spreche den Menüpunkt vor, bevor er ausgewählt wird
+      speakText(currentItem.title)
+      
+      selectMenu(currentItem.id)
+    } else {
+      console.log('IchView: No current item found for right click')
+    }
+    return false
   }
 
   // Lifecycle
   onMounted(() => {
+    // Setze IchView als aktiven View
+    simpleFlowController.setActiveView('/ich')
+    
     // Ensure face recognition is active
     if (!faceRecognition.isActive.value) {
       faceRecognition.start()
-    }
-    
-    // Resume Auto Mode if it was paused (e.g., returning from sub-page)
-    if (isAutoModePaused.value) {
-      resumeAutoMode()
-    } else {
-      // Start Auto Mode
-      startAutoMode()
     }
     
     // Watch for blinks using the isBlinking function
@@ -279,31 +282,44 @@ export function useIchViewLogic() {
     }, 100) // Check every 100ms
     
     // Add right click listener
-    document.addEventListener('contextmenu', handleRightClick)
+    document.addEventListener('contextmenu', handleRightClick, { capture: true, passive: false })
     
-    // Listen for stop HomeView events
-    const handleStopHomeView = (event: Event) => {
-      console.log('IchView received stop signal from HomeView')
-      stopAutoMode()
-      speechSynthesis.cancel()
-    }
-    window.addEventListener('stopHomeView', handleStopHomeView as EventListener)
+    // Add global event listeners to detect user interaction
+    document.addEventListener('click', enableTTSOnInteraction)
+    document.addEventListener('keydown', enableTTSOnInteraction)
+    document.addEventListener('touchstart', enableTTSOnInteraction)
     
-    // Listen for stop all auto-mode events
-    const handleStopAllAutoMode = (event: Event) => {
-      console.log('IchView received stop all auto-mode signal')
-      stopAutoMode()
-      speechSynthesis.cancel()
-    }
-    window.addEventListener('stopAllAutoMode', handleStopAllAutoMode as EventListener)
+    // Start auto-mode automatically über FlowController
+    setTimeout(() => {
+      simpleFlowController.startAutoMode(
+        menuItems,
+        (currentIndex, currentItem) => {
+          currentTileIndex.value = currentIndex
+          console.log('IchView: Auto-mode cycle:', currentItem.title, 'at index:', currentIndex)
+          speakText(currentItem.title)
+        },
+        3000,
+        3000
+      )
+    }, 1000)
+    
+    console.log('IchView: mounted - using central controllers')
+    
+    // Event-Handler entfernt - FlowController übernimmt die Koordination
   })
 
   onUnmounted(() => {
+    // Stoppe Auto-Mode und TTS über FlowController
+    simpleFlowController.stopAutoMode()
+    simpleFlowController.stopTTS()
+    
     // Clean up event listeners
-    document.removeEventListener('contextmenu', handleRightClick)
-    window.removeEventListener('stopHomeView', handleStopHomeView as EventListener)
-    window.removeEventListener('stopAllAutoMode', handleStopAllAutoMode as EventListener)
-    stopAutoMode()
+    document.removeEventListener('contextmenu', handleRightClick, { capture: true })
+    document.removeEventListener('click', enableTTSOnInteraction)
+    document.removeEventListener('keydown', enableTTSOnInteraction)
+    document.removeEventListener('touchstart', enableTTSOnInteraction)
+    
+    console.log('IchView: unmounted - Auto-mode stopped, TTS stopped')
   })
 
   return {
@@ -318,16 +334,14 @@ export function useIchViewLogic() {
     blinkThreshold,
     lastBlinkTime,
     blinkCooldown,
-    isTTSEnabled,
+    // isTTSEnabled entfernt - TTS wird zentral gesteuert
     menuItems,
     appClasses,
 
     // Methods
     speakText,
-    startAutoMode,
-    pauseAutoMode,
-    resumeAutoMode,
-    stopAutoMode,
+    enableTTSOnInteraction,
+    // Auto-Mode-Funktionen entfernt - verwende zentrale ViewFlowController-Methoden
     selectMenu,
     formatTime,
     handleBlink,

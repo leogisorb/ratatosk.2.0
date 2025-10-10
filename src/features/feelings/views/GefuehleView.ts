@@ -2,6 +2,7 @@ import { ref, onMounted, onUnmounted, computed } from 'vue'
 import { useRouter } from 'vue-router'
 import { useFaceRecognition } from '../../face-recognition/composables/useFaceRecognition'
 import { useSettingsStore } from '../../settings/stores/settings'
+import { simpleFlowController } from '../../../core/application/SimpleFlowController'
 
 export function useGefuehleViewLogic() {
   // Router
@@ -17,155 +18,75 @@ export function useGefuehleViewLogic() {
   const currentTileIndex = ref(0)
   const selectedGefuehl = ref('')
   const isAutoMode = ref(true)
-  const autoModeInterval = ref<number | null>(null)
   const closedFrames = ref(0)
   const eyesClosed = ref(false)
-  const isAutoModePaused = ref(false)
-  const restartTimeout = ref<number | null>(null)
+  const userInteracted = ref(false)
 
   // Verbesserte Blink-Detection Parameter - zentral gesteuert
-  const blinkThreshold = computed(() => Math.ceil(settingsStore.settings.blinkSensitivity * 10)) // Konvertiere Sekunden zu Frames (10 FPS)
+  const blinkThreshold = computed(() => Math.ceil(settingsStore.settings.blinkSensitivity * 10))
   const lastBlinkTime = ref(0)
   const blinkCooldown = computed(() => settingsStore.settings.blinkSensitivity * 1000)
 
-  // Text-to-Speech
-  const speechSynthesis = window.speechSynthesis
-  const isTTSEnabled = ref(true)
+  // User interaction detection - aktiviert TTS
+  const enableTTSOnInteraction = () => {
+    if (!userInteracted.value) {
+      console.log('GefuehleView: User interaction detected - TTS now enabled')
+      userInteracted.value = true
+      simpleFlowController.setUserInteracted(true)
+    }
+  }
 
   // Gefühle-Items basierend auf dem gezeigten Interface
   const gefuehleItems = [
-    // Zeile 1: Glücklich, Froh, Erleichtert, Traurig
-    { id: 'gluecklich', text: 'glücklich', type: 'emotion', emoji: '😊' },
-    { id: 'froh', text: 'froh', type: 'emotion', emoji: '😄' },
-    { id: 'erleichtert', text: 'erleichtert', type: 'emotion', emoji: '😌' },
-    { id: 'traurig', text: 'traurig', type: 'emotion', emoji: '😢' },
+    // Positive Gefühle
+    { id: 'gluecklich', text: 'Glücklich', type: 'positiv', emoji: '😊' },
+    { id: 'zufrieden', text: 'Zufrieden', type: 'positiv', emoji: '😌' },
+    { id: 'stolz', text: 'Stolz', type: 'positiv', emoji: '😤' },
+    { id: 'liebevoll', text: 'Liebevoll', type: 'positiv', emoji: '🥰' },
     
-    // Zeile 2: Wütend, Einsam, Ängstlich, Gelangweilt
-    { id: 'wuetend', text: 'wütend', type: 'emotion', emoji: '😠' },
-    { id: 'einsam', text: 'einsam', type: 'emotion', emoji: '😔' },
-    { id: 'aengstlich', text: 'ängstlich', type: 'emotion', emoji: '😰' },
-    { id: 'gelangweilt', text: 'gelangweilt', type: 'emotion', emoji: '😑' },
+    // Negative Gefühle
+    { id: 'wuetend', text: 'Wütend', type: 'negativ', emoji: '😠' },
+    { id: 'einsam', text: 'Einsam', type: 'negativ', emoji: '😔' },
+    { id: 'aengstlich', text: 'Ängstlich', type: 'negativ', emoji: '😰' },
+    { id: 'gelangweilt', text: 'Gelangweilt', type: 'negativ', emoji: '😑' },
     
-    // Zeile 3: Aufgeregt, Müde, Gestresst, Zurück
-    { id: 'aufgeregt', text: 'aufgeregt', type: 'emotion', emoji: '🤩' },
-    { id: 'muede', text: 'müde', type: 'emotion', emoji: '😴' },
-    { id: 'gestresst', text: 'gestresst', type: 'emotion', emoji: '😫' },
+    // Neutrale/Andere Gefühle
+    { id: 'aufgeregt', text: 'Aufgeregt', type: 'neutral', emoji: '🤩' },
+    { id: 'muede', text: 'Müde', type: 'neutral', emoji: '😴' },
+    { id: 'gestresst', text: 'Gestresst', type: 'neutral', emoji: '😵' },
+    
+    // Navigation
     { id: 'zurueck', text: 'zurück', type: 'navigation', emoji: '⬅️' }
   ]
 
-  // Text-to-Speech Funktion
-  const speakText = (text: string) => {
-    console.log('GefuehleView speakText called with:', text, 'isTTSEnabled:', isTTSEnabled.value, 'speechSynthesis:', speechSynthesis)
-    
-    if (!isTTSEnabled.value || !speechSynthesis) {
-      console.log('GefuehleView TTS disabled or speechSynthesis not available')
-      return
-    }
-    
-    speechSynthesis.cancel()
-    
-    const utterance = new SpeechSynthesisUtterance(text)
-    utterance.lang = 'de-DE'
-    utterance.rate = 1.0
-    utterance.pitch = 1.0
-    utterance.volume = 1.0
-    
-    console.log('GefuehleView Speaking:', text)
-    speechSynthesis.speak(utterance)
-  }
-
-  // TTS Toggle
-  const toggleTTS = () => {
-    console.log('GefuehleView toggleTTS called, current state:', isTTSEnabled.value)
-    isTTSEnabled.value = !isTTSEnabled.value
-    console.log('GefuehleView TTS toggled to:', isTTSEnabled.value)
-    
-    if (!isTTSEnabled.value) {
-      speechSynthesis.cancel()
-      console.log('GefuehleView TTS cancelled')
-    } else {
-      // Test TTS when enabling
-      speakText('Sprachausgabe aktiviert')
-    }
-  }
-
-  // Auto Mode Funktionen
-  const startAutoMode = () => {
-    if (autoModeInterval.value) return
-    
-    // Stelle sicher, dass wir bei Index 0 starten
-    currentTileIndex.value = 0
-    
-    const cycleTiles = () => {
-      if (!isAutoMode.value || isAutoModePaused.value) {
-        return
-      }
-      currentTileIndex.value = (currentTileIndex.value + 1) % gefuehleItems.length
-      const currentItem = gefuehleItems[currentTileIndex.value]
-      speakText(currentItem.text)
-      autoModeInterval.value = window.setTimeout(cycleTiles, 3000) // 3 Sekunden
-    }
-    
-    const firstItem = gefuehleItems[currentTileIndex.value]
-    speakText(firstItem.text)
-    
-    // Starte den ersten Zyklus nach 3 Sekunden
-    autoModeInterval.value = window.setTimeout(cycleTiles, 3000)
-  }
-
-  const pauseAutoMode = () => {
-    isAutoModePaused.value = true
-    if (autoModeInterval.value) {
-      clearTimeout(autoModeInterval.value)
-      autoModeInterval.value = null
-    }
-    if (restartTimeout.value) {
-      clearTimeout(restartTimeout.value)
-      restartTimeout.value = null
-    }
-    speechSynthesis.cancel()
-  }
-
-  const stopAutoMode = () => {
-    if (autoModeInterval.value) {
-      clearTimeout(autoModeInterval.value)
-      autoModeInterval.value = null
-    }
-    if (restartTimeout.value) {
-      clearTimeout(restartTimeout.value)
-      restartTimeout.value = null
-    }
-    speechSynthesis.cancel()
+  // Zentrale TTS-Funktion über FlowController
+  const speakText = async (text: string) => {
+    console.log('GefuehleView: Requesting TTS for:', text)
+    await simpleFlowController.speak(text)
   }
 
   // Gefühle-Item Auswahl
   function selectGefuehl(gefuehlId: string) {
-    console.log('selectGefuehl called with gefuehlId:', gefuehlId)
-    pauseAutoMode()
-    
     const selectedItem = gefuehleItems.find(item => item.id === gefuehlId)
-    if (selectedItem) {
-      selectedGefuehl.value = selectedItem.text
-    }
     
+    if (!selectedItem) {
+      console.log('GefuehleView: Item not found:', gefuehlId)
+      return
+    }
+
+    selectedGefuehl.value = selectedItem.text
+    console.log('GefuehleView: Selected item:', selectedItem.text)
+
     switch (gefuehlId) {
       case 'zurueck':
-        console.log('Navigating back to /ich')
-        stopAutoMode() // Stoppe Auto-Modus komplett vor Navigation
+        console.log('GefuehleView: Navigating back to /ich')
         router.push('/ich')
         break
       default:
-        console.log('Selected Gefühl:', gefuehlId)
-        speakText(`${selectedItem?.text} ausgewählt`)
-        
-        // Auto-Modus nach 10 Sekunden wieder starten
-        restartTimeout.value = window.setTimeout(() => {
-          if (isAutoMode.value) {
-            currentTileIndex.value = 0
-            isAutoModePaused.value = false
-            startAutoMode()
-          }
-        }, 10000)
+        console.log('GefuehleView: Selected Gefühl:', gefuehlId)
+        speakText(`${selectedItem.text} ausgewählt`)
+        // Auto-Mode stoppt bei bewusster Auswahl
+        simpleFlowController.stopAutoMode()
     }
   }
 
@@ -173,17 +94,14 @@ export function useGefuehleViewLogic() {
   const handleBlink = () => {
     const now = Date.now()
     
-    if (faceRecognition.isBlinking()) {
+    if (faceRecognition.isBlinking.value) {
       closedFrames.value++
-      
-      if (now - lastBlinkTime.value < blinkCooldown.value) {
-        return
-      }
       
       if (closedFrames.value >= blinkThreshold.value && !eyesClosed.value) {
         const currentItem = gefuehleItems[currentTileIndex.value]
-        console.log('Blink activation for tile:', currentTileIndex.value, 'gefuehlId:', currentItem.id, 'text:', currentItem.text)
+        console.log('GefuehleView: Blink activation for tile:', currentTileIndex.value, 'gefuehlId:', currentItem.id, 'text:', currentItem.text)
         
+        // TTS + Auswahl - Auto-Mode stoppt bei Interaktion
         speakText(currentItem.text)
         selectGefuehl(currentItem.id)
         eyesClosed.value = true
@@ -198,60 +116,81 @@ export function useGefuehleViewLogic() {
     }
   }
 
-  // Rechte Maustaste als Blinzeln-Ersatz
+  // Right Click Handler
   const handleRightClick = (event: MouseEvent) => {
     event.preventDefault()
-    console.log('Right click detected - treating as blink')
     const currentItem = gefuehleItems[currentTileIndex.value]
-    console.log('Right click activation for tile:', currentTileIndex.value, 'gefuehlId:', currentItem.id, 'text:', currentItem.text)
+    console.log('GefuehleView: Right click activation for tile:', currentTileIndex.value, 'gefuehlId:', currentItem.id, 'text:', currentItem.text)
     
+    // TTS + Auswahl - Auto-Mode stoppt bei Interaktion
     speakText(currentItem.text)
     selectGefuehl(currentItem.id)
   }
 
   // Lifecycle
   onMounted(() => {
+    // Setze GefuehleView als aktiven View
+    simpleFlowController.setActiveView('/gefuehle')
+    
     if (!faceRecognition.isActive.value) {
       faceRecognition.start()
     }
     
-    startAutoMode()
+    // Add global event listeners to detect user interaction
+    document.addEventListener('click', enableTTSOnInteraction)
+    document.addEventListener('keydown', enableTTSOnInteraction)
+    document.addEventListener('touchstart', enableTTSOnInteraction)
     
-    const blinkCheckInterval = setInterval(() => {
-      handleBlink()
-    }, 100)
+    // Start auto-mode automatically über FlowController
+    setTimeout(() => {
+      simpleFlowController.startAutoMode(
+        gefuehleItems,
+        (currentIndex, currentItem) => {
+          currentTileIndex.value = currentIndex
+          console.log('GefuehleView: Auto-mode cycle:', currentItem.text, 'at index:', currentIndex)
+          speakText(currentItem.text)
+        },
+        3000,
+        3000
+      )
+    }, 1000)
     
-    document.addEventListener('contextmenu', handleRightClick)
+    console.log('GefuehleView: mounted - using central controllers')
   })
 
   onUnmounted(() => {
-    document.removeEventListener('contextmenu', handleRightClick)
-    stopAutoMode()
+    // Stoppe Auto-Mode und TTS über FlowController
+    simpleFlowController.stopAutoMode()
+    simpleFlowController.stopTTS()
+    
+    // Clean up event listeners
+    document.removeEventListener('click', enableTTSOnInteraction)
+    document.removeEventListener('keydown', enableTTSOnInteraction)
+    document.removeEventListener('touchstart', enableTTSOnInteraction)
+    
+    console.log('GefuehleView: unmounted - Auto-mode stopped, TTS stopped')
   })
 
   return {
+    // State
     currentTileIndex,
     selectedGefuehl,
     isAutoMode,
-    autoModeInterval,
     closedFrames,
     eyesClosed,
-    isAutoModePaused,
-    restartTimeout,
     blinkThreshold,
     lastBlinkTime,
     blinkCooldown,
-    speechSynthesis,
-    isTTSEnabled,
     gefuehleItems,
+    
+    // Methods
     speakText,
-    toggleTTS,
-    startAutoMode,
-    pauseAutoMode,
-    stopAutoMode,
+    enableTTSOnInteraction,
     selectGefuehl,
     handleBlink,
     handleRightClick,
+    
+    // Stores
     settingsStore,
     faceRecognition
   }

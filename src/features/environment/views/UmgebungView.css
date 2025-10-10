@@ -9,6 +9,28 @@
 
 .main-content {
   background-color: #f8f9fa;
+  padding: 2rem 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+/* Title Container */
+.title-container {
+  text-align: center;
+  padding: 2rem 0;
+  margin-bottom: 1rem;
+  width: 100%;
+  max-width: 1600px;
+}
+
+.main-title {
+  font-family: 'Source Code Pro', monospace;
+  font-size: 3rem;
+  font-weight: 500;
+  color: #333;
+  margin: 0;
+  line-height: 1.2;
 }
 
 /* Grid Layout - 3x2 Grid für 4 Tiles */
@@ -19,6 +41,10 @@
   gap: 2.4rem;
   justify-items: center;
   align-items: center;
+  width: 100%;
+  max-width: 1200px;
+  padding: 0 2rem;
+  justify-content: center;
 }
 
 /* Menu Tiles - identisch mit SchmerzView */
@@ -27,7 +53,6 @@
   flex-direction: column;
   justify-content: center;
   align-items: center;
-  cursor: pointer;
   padding: 1rem;
   border: 2px solid #9ca3af;
   border-radius: 2rem;
@@ -40,15 +65,6 @@
   user-select: none;
 }
 
-.menu-tile:hover {
-  background-color: #f3f4f6;
-  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
-  transform: scale(1.05);
-}
-
-.menu-tile:active {
-  transform: scale(0.98);
-}
 
 .tile-active {
   background-color: #00B098;
@@ -84,23 +100,16 @@
   object-fit: contain;
   max-width: 8.5rem;
   max-height: 8.5rem;
+  filter: none; /* Standard: keine Filter */
 }
 
-.icon-inverted {
-  filter: brightness(0) invert(1);
-}
-
-/* SVG Farbanpassung für UmgebungView */
-.tile-icon {
-  filter: none;
-}
-
+/* Icon-Farben für aktive/inaktive Zustände */
 .tile-active .tile-icon {
-  filter: brightness(0) invert(1);
+  filter: brightness(0) invert(1) !important; /* Weiß für aktive Tiles */
 }
 
 .tile-inactive .tile-icon {
-  filter: none;
+  filter: none !important; /* Originalfarbe für inaktive Tiles */
 }
 
 .tile-text {

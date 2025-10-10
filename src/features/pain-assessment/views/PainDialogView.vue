@@ -20,6 +20,7 @@
                 v-for="(region, index) in mainRegions.slice(0, 2)"
                 :key="region.id"
                 @click="selectMainRegion(region.id)"
+                @contextmenu.prevent="handleMainRegionRightClick($event, region.id)"
                 class="pain-dialog-item"
                 :class="currentTileIndex === index ? 'active' : 'inactive'"
               >
@@ -34,6 +35,7 @@
                 v-for="(region, index) in mainRegions.slice(2, 4)"
                 :key="region.id"
                 @click="selectMainRegion(region.id)"
+                @contextmenu.prevent="handleMainRegionRightClick($event, region.id)"
                 class="pain-dialog-item"
                 :class="currentTileIndex === index + 2 ? 'active' : 'inactive'"
               >
@@ -55,6 +57,7 @@
               v-for="(subRegion, index) in currentSubRegions"
                 :key="subRegion.id"
                 @click="selectSubRegion(subRegion.id)"
+                @contextmenu.prevent="handleSubRegionRightClick($event, subRegion.id)"
               class="pain-dialog-item sub-region-item"
               :class="currentTileIndex === index ? 'active' : 'inactive'"
             >
@@ -71,16 +74,16 @@
                   Wie stark sind Ihre {{ getSubRegionTitle(selectedSubRegion) }}schmerzen?
               </div>
               <div class="pain-scale-level">
-              {{ currentTileIndex + 1 }}
+              {{ painLevels[currentTileIndex]?.level || (currentTileIndex + 1) }}
               </div>
               <div class="pain-scale-description">
-              {{ getPainDescription(currentTileIndex + 1) }}
+              {{ painLevels[currentTileIndex]?.description || getPainDescription(currentTileIndex + 1) }}
             </div>
           </div>
 
           <div class="pain-scale-bar">
             <div class="pain-scale-progress"
-              :style="{ width: `${Math.max(50, (currentTileIndex * 10) + 5)}%` }"
+              :style="{ width: `${((painLevels[currentTileIndex]?.level || (currentTileIndex + 1)) - 1) * 10 + 5}%` }"
             ></div>
             
             <div class="pain-scale-numbers">
@@ -138,11 +141,10 @@ const hasUserInteracted = ref(false)
 const {
   currentTileIndex,
   isAutoMode,
-  isAutoModePaused,
   startAutoMode,
   pauseAutoMode,
   stopAutoMode,
-  // speakText removed
+  speakText,
   setupLifecycle
 } = usePainAssessment()
 
@@ -156,7 +158,17 @@ const currentSubRegions = computed(() => {
 const getMainRegionTitle = (regionId: string | null) => {
   if (!regionId) return ''
   const region = mainRegions.find(r => r.id === regionId)
-  return region ? region.title : regionId
+  if (!region) return regionId
+  
+  // Korrekte Grammatik für Bereich-Titel
+  switch (region.title) {
+    case 'ARME':
+      return 'Arm'
+    case 'BEINE':
+      return 'Bein'
+    default:
+      return region.title
+  }
 }
 
 const getSubRegionTitle = (subRegionId: string | null) => {
@@ -205,6 +217,24 @@ const selectSubRegion = async (subRegionId: string) => {
   // }, 2000)
 }
 
+const handleMainRegionRightClick = (event: MouseEvent, regionId: string) => {
+  event.preventDefault()
+  event.stopPropagation()
+  event.stopImmediatePropagation()
+  console.log('PainDialogView: Right click detected on main region:', regionId)
+  selectMainRegion(regionId)
+  return false
+}
+
+const handleSubRegionRightClick = (event: MouseEvent, subRegionId: string) => {
+  event.preventDefault()
+  event.stopPropagation()
+  event.stopImmediatePropagation()
+  console.log('PainDialogView: Right click detected on sub-region:', subRegionId)
+  selectSubRegion(subRegionId)
+  return false
+}
+
 const selectPainLevel = async (level: number) => {
   console.log('Selecting pain level:', level)
   selectedPainLevel.value = level
@@ -218,15 +248,24 @@ const selectPainLevel = async (level: number) => {
   
   if (mainRegion && subRegion && painLevel) {
     const confirmationText = `${subRegion.title} Schmerzlevel ${level} - ${painLevel.description}`
-    console.log(confirmationText + ' - TTS removed')
+    console.log('Confirmation:', confirmationText)
+    
+    // TTS für Bestätigung
+    setTimeout(() => {
+      speakText('Schmerz erfasst')
+    }, 500)
+    
+    setTimeout(() => {
+      speakText(confirmationText)
+    }, 2000)
   } else {
     console.error('Missing data for confirmation:', { mainRegion, subRegion, painLevel })
   }
   
-  // After confirmation, return to main view after 3 seconds
+  // After confirmation, return to main view after 6.5 seconds (3.5 seconds more time for TTS)
   setTimeout(() => {
     resetToMainView()
-  }, 3000)
+  }, 6500)
 }
 
 const resetToMainView = async () => {
@@ -257,7 +296,7 @@ const handleSubRegionSelection = (item: any) => {
 
 const handlePainLevelSelection = (item: any) => {
   console.log('Pain level selection handler called with:', item, 'current index:', currentTileIndex.value)
-  const level = currentTileIndex.value + 1
+  const level = item.level || (currentTileIndex.value + 1)
   selectPainLevel(level)
 }
 
@@ -306,11 +345,27 @@ watch(currentState, (newState) => {
       break
     case 'subRegionView':
       console.log('Setting up sub region view with', currentSubRegions.value.length, 'sub-regions')
-      cleanup = setupLifecycle(currentSubRegions.value, handleSubRegionSelection)
+      // Erst den korrekten Titel mit Bereich vorlesen
+      setTimeout(() => {
+        const mainRegionTitle = getMainRegionTitle(selectedMainRegion.value)
+        speakText(`Wählen Sie einen ${mainRegionTitle}bereich aus`)
+      }, 1000)
+      // Dann Auto-Mode für Sub-Regions starten
+      setTimeout(() => {
+        cleanup = setupLifecycle(currentSubRegions.value, handleSubRegionSelection)
+      }, 4000)
       break
     case 'painScaleView':
       console.log('Setting up pain scale view with', painLevels.length, 'levels')
-      cleanup = setupLifecycle(painLevels, handlePainLevelSelection)
+      // Erst den korrekten Titel mit Körperteil vorlesen
+      setTimeout(() => {
+        const subRegionTitle = getSubRegionTitle(selectedSubRegion.value)
+        speakText(`Wie stark sind Ihre ${subRegionTitle}schmerzen?`)
+      }, 1000)
+      // Dann Auto-Mode für Pain Scale starten
+      setTimeout(() => {
+        cleanup = setupLifecycle(painLevels, handlePainLevelSelection)
+      }, 4000)
       break
   }
 })

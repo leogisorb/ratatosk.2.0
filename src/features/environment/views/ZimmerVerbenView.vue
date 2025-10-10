@@ -87,6 +87,17 @@ const startAutoMode = () => {
   
   currentTileIndex.value = 0
   
+  // Erst den Titel vorlesen
+  setTimeout(() => {
+    speakText(`Was soll mit ${selectedZimmerItem.value} gemacht werden?`)
+    // Starte Auto-Mode nach 4 Sekunden (für vollständiges Vorlesen des Titels)
+    setTimeout(() => {
+      const firstItem = zimmerVerbenItems[currentTileIndex.value]
+      speakText(firstItem.text)
+      autoModeInterval.value = window.setTimeout(cycleTiles, 3000)
+    }, 4000)
+  }, 1000)
+  
   const cycleTiles = () => {
     if (!isAutoMode.value || isAutoModePaused.value) {
       return
@@ -96,11 +107,6 @@ const startAutoMode = () => {
     speakText(currentItem.text)
     autoModeInterval.value = window.setTimeout(cycleTiles, 3000) // 3 Sekunden
   }
-  
-  const firstItem = zimmerVerbenItems[currentTileIndex.value]
-  speakText(firstItem.text)
-  
-  autoModeInterval.value = window.setTimeout(cycleTiles, 3000)
 }
 
 const pauseAutoMode = () => {
@@ -142,16 +148,16 @@ function selectVerb(verbId: string) {
       router.push('/zimmer')
       break
     default:
-      speakText(`${selectedItem?.text} ausgewählt`)
+      // "Bitte [Item] [Verb]" anzeigen und vorlesen
+      const pleaseText = `Bitte ${selectedZimmerItem.value} ${selectedItem?.text}`
+      setTimeout(() => {
+        speakText(pleaseText)
+      }, 1000)
       
-      // Kombination anzeigen
-      const combination = `${selectedZimmerItem.value} ${selectedItem?.text}`
-      speakText(`Kombination: ${combination}`)
-      
-      // Nach 3 Sekunden zurück zum Zimmer-View
+      // Nach 4 Sekunden zurück zum Zimmer-View
       restartTimeout.value = window.setTimeout(() => {
         router.push('/zimmer')
-      }, 3000)
+      }, 4000)
   }
 }
 
@@ -241,8 +247,15 @@ onUnmounted(() => {
       <div class="content-wrapper">
         <!-- Ausgewähltes Verb-Item Anzeige -->
         <div class="selected-item-container">
-          <div class="selected-item-text" style="font-size: 3.43rem; font-family: 'Source Code Pro', monospace; font-weight: 500;">
-            {{ selectedZimmerItem }}{{ selectedVerb ? ' ' + selectedVerb : '' }}
+          <div class="selected-item-text">
+            Was soll mit {{ selectedZimmerItem }} gemacht werden?
+          </div>
+        </div>
+        
+        <!-- Ausgewählte Kombination Anzeige -->
+        <div v-if="selectedVerb" class="selected-combination-container">
+          <div class="selected-combination-text">
+            Bitte {{ selectedZimmerItem }} {{ selectedVerb }}
           </div>
         </div>
 

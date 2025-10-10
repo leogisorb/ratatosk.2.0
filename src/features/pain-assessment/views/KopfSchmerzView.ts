@@ -46,7 +46,7 @@ export function useKopfSchmerzViewLogic() {
     { id: 'nacken', text: 'Nacken', type: 'kopfbereich', icon: 'nacken.svg' },
     { id: 'hals', text: 'Hals', type: 'kopfbereich', icon: 'hals.svg' },
     { id: 'nebenhoehlen', text: 'Nebenhöhlen', type: 'kopfbereich', icon: 'nebenhöhlen.svg' },
-    { id: 'zurueck', text: 'zurück', type: 'navigation', icon: 'Goback.svg' }
+    { id: 'zurueck', text: 'zurück', type: 'navigation', icon: 'zurueck.svg' }
   ]
 
   // TTS removed

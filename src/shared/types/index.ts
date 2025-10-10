@@ -39,7 +39,7 @@ export interface UserSettings {
   autoModeSpeed: number // in milliseconds (default: 3000)
   blinkSensitivity: number // in seconds (default: 0.5)
   soundEnabled: boolean
-  // voiceEnabled removed
+  voiceEnabled: boolean // TTS aktiviert
   accessibility: {
     highContrast: boolean
     largeText: boolean

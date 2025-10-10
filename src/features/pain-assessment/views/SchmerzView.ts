@@ -36,7 +36,7 @@ export function useSchmerzViewLogic() {
     { id: 'beine', text: 'Beine', type: 'schmerzbereich', icon: 'Beine.svg' },
     { id: 'arme', text: 'Arme', type: 'schmerzbereich', icon: 'Arme.svg' },
     { id: 'torso', text: 'Torso', type: 'schmerzbereich', icon: 'Torso.svg' },
-    { id: 'zurueck', text: 'zurück', type: 'navigation', icon: 'Goback.svg' }
+    { id: 'zurueck', text: 'zurück', type: 'navigation', icon: 'zurueck.svg' }
   ]
 
   // TTS removed

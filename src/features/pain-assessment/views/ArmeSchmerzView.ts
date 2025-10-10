@@ -35,8 +35,8 @@ export function useArmeSchmerzViewLogic() {
     // Zeile 1: Oberarm, Unterarm, Ellenbogen, Handgelenk
     { id: 'oberarm', text: 'Oberarm', type: 'armbereich', icon: 'oberarm.svg' },
     { id: 'unterarm', text: 'Unterarm', type: 'armbereich', icon: 'unterarm.svg' },
-    { id: 'ellenbogen', text: 'Ellenbogen', type: 'armbereich', icon: 'ellenbogen.svg' },
-    { id: 'handgelenk', text: 'Handgelenk', type: 'armbereich', icon: 'ellebogen.svg' },
+    { id: 'ellenbogen', text: 'Ellenbogen', type: 'armbereich', icon: 'schulter.svg' },
+    { id: 'handgelenk', text: 'Handgelenk', type: 'armbereich', icon: 'handgelenk.svg' },
     
     // Zeile 2: Hand, Finger, Schulter, Daumen
     { id: 'hand', text: 'Hand', type: 'armbereich', icon: 'handfläche.svg' },
@@ -48,7 +48,7 @@ export function useArmeSchmerzViewLogic() {
     { id: 'achsel', text: 'Achsel', type: 'armbereich', icon: 'achsel.svg' },
     { id: 'handruecken', text: 'Handrücken', type: 'armbereich', icon: 'handrücken.svg' },
     { id: 'handflaeche', text: 'Handfläche', type: 'armbereich', icon: 'handfläche.svg' },
-    { id: 'zurueck', text: 'zurück', type: 'navigation', icon: 'Goback.svg' }
+    { id: 'zurueck', text: 'zurück', type: 'navigation', icon: 'zurueck.svg' }
   ]
 
   // TTS removed

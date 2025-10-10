@@ -3,6 +3,7 @@ import { ref, onMounted, onUnmounted, computed } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import { useFaceRecognition } from '../../face-recognition/composables/useFaceRecognition'
 import { useSettingsStore } from '../../settings/stores/settings'
+import { simpleFlowController } from '../../../core/application/SimpleFlowController'
 import AppHeader from '../../../shared/components/AppHeader.vue'
 
 // Props
@@ -30,14 +31,11 @@ const faceRecognition = useFaceRecognition()
 // State
 const currentPainLevel = ref(1)
 const isAutoMode = ref(true)
-const autoModeInterval = ref<number | null>(null)
-const initialTimeout = ref<number | null>(null)
 const closedFrames = ref(0)
 const eyesClosed = ref(false)
-const isAutoModePaused = ref(false)
 const selectedPainLevel = ref<number | null>(null)
 const isSelectionComplete = ref(false)
-const blinkCheckInterval = ref<number | null>(null)
+const userInteracted = ref(false)
 
 // Verbesserte Blink-Detection Parameter - zentral gesteuert
 const blinkThreshold = computed(() => Math.ceil(settingsStore.settings.blinkSensitivity * 10)) // Konvertiere Sekunden zu Frames (10 FPS)
@@ -48,7 +46,7 @@ const blinkCooldown = computed(() => settingsStore.settings.blinkSensitivity * 1
 const markerPosition = computed(() => {
   // Korrekte Berechnung: Level 1 = 5%, Level 2 = 15%, ..., Level 10 = 95%
   const position = ((currentPainLevel.value - 1) * 10) + 5
-  console.log('Current pain level:', currentPainLevel.value, 'Marker position:', position)
+  console.log('PainScaleView: Current pain level:', currentPainLevel.value, 'Marker position:', position + '%')
   return position
 })
 
@@ -84,63 +82,52 @@ const handleVolumeToggle = (event: CustomEvent) => {
   console.log('PainScaleView received volumeToggle event:', event.detail, '- TTS removed')
 }
 
-// Auto Mode Funktionen
-const startAutoMode = () => {
-  if (autoModeInterval.value) return
-  
-  // Stelle sicher, dass wir bei Level 1 starten
-  currentPainLevel.value = 1
-  
-  const cycleLevels = () => {
-    if (!isAutoMode.value || isAutoModePaused.value || isSelectionComplete.value) {
-      return
-    }
-    // Zyklus durch alle 10 Level: 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, dann zurück zu 1
-    currentPainLevel.value = currentPainLevel.value === 10 ? 1 : currentPainLevel.value + 1
-    const currentItem = painLevels.find(item => item.level === currentPainLevel.value)
-    if (currentItem) {
-      console.log(`${currentItem.text} - ${currentItem.description} - TTS removed`)
-    }
-    autoModeInterval.value = window.setTimeout(cycleLevels, 2000) // 2 Sekunden
+// TTS über SimpleFlowController
+const speakText = async (text: string) => {
+  console.log('PainScaleView: Requesting TTS for:', text)
+  await simpleFlowController.speak(text)
+}
+
+// User interaction detection - aktiviert TTS
+const enableTTSOnInteraction = () => {
+  if (!userInteracted.value) {
+    console.log('PainScaleView: User interaction detected - TTS now enabled')
+    userInteracted.value = true
+    simpleFlowController.setUserInteracted(true)
   }
+}
+
+// Auto Mode Funktionen über SimpleFlowController
+const startAutoMode = () => {
+  if (!isAutoMode.value) return
+
+  console.log('PainScaleView: Starting auto-mode with', painLevels.length, 'pain levels')
   
-  // Auto-Modus startet nach 5 Sekunden
-  initialTimeout.value = window.setTimeout(() => {
-    const firstItem = painLevels.find(item => item.level === currentPainLevel.value)
-    if (firstItem) {
-      console.log(`${firstItem.text} - ${firstItem.description} - TTS removed`)
-    }
-    
-    // 2 Sekunden warten, bevor der erste Zyklus startet
-    autoModeInterval.value = window.setTimeout(() => {
-      cycleLevels()
-    }, 2000)
-  }, 5000)
+  const success = simpleFlowController.startAutoMode(
+    painLevels,
+    (currentIndex, currentItem) => {
+      currentPainLevel.value = currentItem.level
+      console.log('PainScaleView: Auto-mode cycle:', currentItem.text, '-', currentItem.description, 'at index:', currentIndex, 'level:', currentItem.level)
+      console.log('PainScaleView: Marker position will be:', ((currentItem.level - 1) * 10) + 5, '%')
+      speakText(`${currentItem.text} - ${currentItem.description}`)
+    },
+    2000, // initial delay
+    2000  // cycle delay
+  )
+
+  if (!success) {
+    console.log('PainScaleView: Auto-mode start failed')
+  }
 }
 
 const pauseAutoMode = () => {
-  isAutoModePaused.value = true
-  if (autoModeInterval.value) {
-    clearTimeout(autoModeInterval.value)
-    autoModeInterval.value = null
-  }
-  if (initialTimeout.value) {
-    clearTimeout(initialTimeout.value)
-    initialTimeout.value = null
-  }
-    // TTS removed
+  console.log('PainScaleView: Pausing auto-mode')
+  simpleFlowController.stopAutoMode()
 }
 
 const stopAutoMode = () => {
-  if (autoModeInterval.value) {
-    clearTimeout(autoModeInterval.value)
-    autoModeInterval.value = null
-  }
-  if (initialTimeout.value) {
-    clearTimeout(initialTimeout.value)
-    initialTimeout.value = null
-  }
-    // TTS removed
+  console.log('PainScaleView: Stopping auto-mode')
+  simpleFlowController.stopAutoMode()
 }
 
 // Pain Level Auswahl

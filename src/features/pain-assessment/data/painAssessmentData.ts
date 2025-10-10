@@ -43,8 +43,8 @@ export const beineSubRegions = [
 export const armeSubRegions = [
   { id: 'oberarm', title: 'Oberarm', icon: '/ratatosk.2.0/oberarm.svg' },
   { id: 'unterarm', title: 'Unterarm', icon: '/ratatosk.2.0/unterarm.svg' },
-  { id: 'ellenbogen', title: 'Ellenbogen', icon: '/ratatosk.2.0/ellenbogen.svg' },
-  { id: 'handgelenk', title: 'Handgelenk', icon: '/ratatosk.2.0/ellebogen.svg' },
+  { id: 'ellenbogen', title: 'Ellenbogen', icon: '/ratatosk.2.0/ellebogen.svg' },
+  { id: 'handgelenk', title: 'Handgelenk', icon: '/ratatosk.2.0/handgelenk.svg' },
   { id: 'hand', title: 'Hand', icon: '/ratatosk.2.0/handfläche.svg' },
   { id: 'finger', title: 'Finger', icon: '/ratatosk.2.0/finger.svg' },
   { id: 'schulter', title: 'Schulter', icon: '/ratatosk.2.0/schulter.svg' },

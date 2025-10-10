@@ -2,6 +2,7 @@ import { ref, onMounted, onUnmounted, computed } from 'vue'
 import { useRouter } from 'vue-router'
 import { useFaceRecognition } from '../../face-recognition/composables/useFaceRecognition'
 import { useSettingsStore } from '../../settings/stores/settings'
+import { simpleFlowController } from '../../../core/application/SimpleFlowController'
 
 export function useHygieneViewLogic() {
   // Router
@@ -17,155 +18,75 @@ export function useHygieneViewLogic() {
   const currentTileIndex = ref(0)
   const selectedHygiene = ref('')
   const isAutoMode = ref(true)
-  const autoModeInterval = ref<number | null>(null)
   const closedFrames = ref(0)
   const eyesClosed = ref(false)
-  const isAutoModePaused = ref(false)
-  const restartTimeout = ref<number | null>(null)
+  const userInteracted = ref(false)
 
   // Verbesserte Blink-Detection Parameter - zentral gesteuert
-  const blinkThreshold = computed(() => Math.ceil(settingsStore.settings.blinkSensitivity * 10)) // Konvertiere Sekunden zu Frames (10 FPS)
+  const blinkThreshold = computed(() => Math.ceil(settingsStore.settings.blinkSensitivity * 10))
   const lastBlinkTime = ref(0)
   const blinkCooldown = computed(() => settingsStore.settings.blinkSensitivity * 1000)
 
-  // Text-to-Speech
-  const speechSynthesis = window.speechSynthesis
-  const isTTSEnabled = ref(true)
+  // User interaction detection - aktiviert TTS
+  const enableTTSOnInteraction = () => {
+    if (!userInteracted.value) {
+      console.log('HygieneView: User interaction detected - TTS now enabled')
+      userInteracted.value = true
+      simpleFlowController.setUserInteracted(true)
+    }
+  }
 
   // Hygiene-Items basierend auf dem gezeigten Interface
   const hygieneItems = [
-    // Zeile 1: Duschen, Baden, Zähneputzen, Händewaschen
-    { id: 'duschen', text: 'duschen', type: 'hygiene', emoji: '🚿' },
-    { id: 'baden', text: 'baden', type: 'hygiene', emoji: '🛁' },
-    { id: 'zaehneputzen', text: 'Zähneputzen', type: 'hygiene', emoji: '🦷' },
-    { id: 'haendewaschen', text: 'Händewaschen', type: 'hygiene', emoji: '🧼' },
+    // Körperpflege
+    { id: 'duschen', text: 'duschen', type: 'koerper', emoji: '🚿' },
+    { id: 'baden', text: 'baden', type: 'koerper', emoji: '🛁' },
+    { id: 'zaehneputzen', text: 'Zähneputzen', type: 'mund', emoji: '🦷' },
+    { id: 'haare_waschen', text: 'Haare waschen', type: 'kopf', emoji: '🧴' },
     
-    // Zeile 2: Haare waschen, Rasieren, Deo, Creme
-    { id: 'haare_waschen', text: 'Haare waschen', type: 'hygiene', emoji: '💇' },
-    { id: 'rasieren', text: 'rasieren', type: 'hygiene', emoji: '🪒' },
-    { id: 'deo', text: 'Deo', type: 'hygiene', emoji: '🧴' },
-    { id: 'creme', text: 'Creme', type: 'hygiene', emoji: '🧴' },
+    // Pflege
+    { id: 'rasieren', text: 'Rasieren', type: 'pflege', emoji: '🪒' },
+    { id: 'deo', text: 'Deo', type: 'pflege', emoji: '🧴' },
+    { id: 'creme', text: 'Creme', type: 'pflege', emoji: '🧴' },
+    { id: 'parfuem', text: 'Parfüm', type: 'pflege', emoji: '🌸' },
     
-    // Zeile 3: Toilette, Windel wechseln, Medikamente, Zurück
-    { id: 'toilette', text: 'Toilette', type: 'hygiene', emoji: '🚽' },
-    { id: 'windel_wechseln', text: 'Windel wechseln', type: 'hygiene', emoji: '👶' },
-    { id: 'medikamente', text: 'Medikamente', type: 'hygiene', emoji: '💊' },
+    // Toilette
+    { id: 'toilette', text: 'Toilette', type: 'toilette', emoji: '🚽' },
+    { id: 'windel_wechseln', text: 'Windel wechseln', type: 'toilette', emoji: '👶' },
+    { id: 'medikamente', text: 'Medikamente', type: 'gesundheit', emoji: '💊' },
+    
+    // Navigation
     { id: 'zurueck', text: 'zurück', type: 'navigation', emoji: '⬅️' }
   ]
 
-  // Text-to-Speech Funktion
-  const speakText = (text: string) => {
-    console.log('HygieneView speakText called with:', text, 'isTTSEnabled:', isTTSEnabled.value, 'speechSynthesis:', speechSynthesis)
-    
-    if (!isTTSEnabled.value || !speechSynthesis) {
-      console.log('HygieneView TTS disabled or speechSynthesis not available')
-      return
-    }
-    
-    speechSynthesis.cancel()
-    
-    const utterance = new SpeechSynthesisUtterance(text)
-    utterance.lang = 'de-DE'
-    utterance.rate = 0.8
-    utterance.pitch = 1.0
-    utterance.volume = 1.0
-    
-    console.log('HygieneView Speaking:', text)
-    speechSynthesis.speak(utterance)
-  }
-
-  // TTS Toggle
-  const toggleTTS = () => {
-    console.log('HygieneView toggleTTS called, current state:', isTTSEnabled.value)
-    isTTSEnabled.value = !isTTSEnabled.value
-    console.log('HygieneView TTS toggled to:', isTTSEnabled.value)
-    
-    if (!isTTSEnabled.value) {
-      speechSynthesis.cancel()
-      console.log('HygieneView TTS cancelled')
-    } else {
-      // Test TTS when enabling
-      speakText('Sprachausgabe aktiviert')
-    }
-  }
-
-  // Auto Mode Funktionen
-  const startAutoMode = () => {
-    if (autoModeInterval.value) return
-    
-    // Stelle sicher, dass wir bei Index 0 starten
-    currentTileIndex.value = 0
-    
-    const cycleTiles = () => {
-      if (!isAutoMode.value || isAutoModePaused.value) {
-        return
-      }
-      currentTileIndex.value = (currentTileIndex.value + 1) % hygieneItems.length
-      const currentItem = hygieneItems[currentTileIndex.value]
-      speakText(currentItem.text)
-      autoModeInterval.value = window.setTimeout(cycleTiles, 3000) // 3 Sekunden
-    }
-    
-    const firstItem = hygieneItems[currentTileIndex.value]
-    speakText(firstItem.text)
-    
-    // Starte den ersten Zyklus nach 3 Sekunden
-    autoModeInterval.value = window.setTimeout(cycleTiles, 3000)
-  }
-
-  const pauseAutoMode = () => {
-    isAutoModePaused.value = true
-    if (autoModeInterval.value) {
-      clearTimeout(autoModeInterval.value)
-      autoModeInterval.value = null
-    }
-    if (restartTimeout.value) {
-      clearTimeout(restartTimeout.value)
-      restartTimeout.value = null
-    }
-    speechSynthesis.cancel()
-  }
-
-  const stopAutoMode = () => {
-    if (autoModeInterval.value) {
-      clearTimeout(autoModeInterval.value)
-      autoModeInterval.value = null
-    }
-    if (restartTimeout.value) {
-      clearTimeout(restartTimeout.value)
-      restartTimeout.value = null
-    }
-    speechSynthesis.cancel()
+  // Zentrale TTS-Funktion über FlowController
+  const speakText = async (text: string) => {
+    console.log('HygieneView: Requesting TTS for:', text)
+    await simpleFlowController.speak(text)
   }
 
   // Hygiene-Item Auswahl
   function selectHygiene(hygieneId: string) {
-    console.log('selectHygiene called with hygieneId:', hygieneId)
-    pauseAutoMode()
-    
     const selectedItem = hygieneItems.find(item => item.id === hygieneId)
-    if (selectedItem) {
-      selectedHygiene.value = selectedItem.text
-    }
     
+    if (!selectedItem) {
+      console.log('HygieneView: Item not found:', hygieneId)
+      return
+    }
+
+    selectedHygiene.value = selectedItem.text
+    console.log('HygieneView: Selected item:', selectedItem.text)
+
     switch (hygieneId) {
       case 'zurueck':
-        console.log('Navigating back to /ich')
-        stopAutoMode() // Stoppe Auto-Modus komplett vor Navigation
+        console.log('HygieneView: Navigating back to /ich')
         router.push('/ich')
         break
       default:
-        console.log('Selected Hygiene:', hygieneId)
-        speakText(`${selectedItem?.text} ausgewählt`)
-        
-        // Auto-Modus nach 10 Sekunden wieder starten
-        restartTimeout.value = window.setTimeout(() => {
-          if (isAutoMode.value) {
-            currentTileIndex.value = 0
-            isAutoModePaused.value = false
-            startAutoMode()
-          }
-        }, 10000)
+        console.log('HygieneView: Selected Hygiene:', hygieneId)
+        speakText(`${selectedItem.text} ausgewählt`)
+        // Auto-Mode stoppt bei bewusster Auswahl
+        simpleFlowController.stopAutoMode()
     }
   }
 
@@ -173,17 +94,14 @@ export function useHygieneViewLogic() {
   const handleBlink = () => {
     const now = Date.now()
     
-    if (faceRecognition.isBlinking()) {
+    if (faceRecognition.isBlinking.value) {
       closedFrames.value++
-      
-      if (now - lastBlinkTime.value < blinkCooldown.value) {
-        return
-      }
       
       if (closedFrames.value >= blinkThreshold.value && !eyesClosed.value) {
         const currentItem = hygieneItems[currentTileIndex.value]
-        console.log('Blink activation for tile:', currentTileIndex.value, 'hygieneId:', currentItem.id, 'text:', currentItem.text)
+        console.log('HygieneView: Blink activation for tile:', currentTileIndex.value, 'hygieneId:', currentItem.id, 'text:', currentItem.text)
         
+        // TTS + Auswahl - Auto-Mode stoppt bei Interaktion
         speakText(currentItem.text)
         selectHygiene(currentItem.id)
         eyesClosed.value = true
@@ -198,60 +116,81 @@ export function useHygieneViewLogic() {
     }
   }
 
-  // Rechte Maustaste als Blinzeln-Ersatz
+  // Right Click Handler
   const handleRightClick = (event: MouseEvent) => {
     event.preventDefault()
-    console.log('Right click detected - treating as blink')
     const currentItem = hygieneItems[currentTileIndex.value]
-    console.log('Right click activation for tile:', currentTileIndex.value, 'hygieneId:', currentItem.id, 'text:', currentItem.text)
+    console.log('HygieneView: Right click activation for tile:', currentTileIndex.value, 'hygieneId:', currentItem.id, 'text:', currentItem.text)
     
+    // TTS + Auswahl - Auto-Mode stoppt bei Interaktion
     speakText(currentItem.text)
     selectHygiene(currentItem.id)
   }
 
   // Lifecycle
   onMounted(() => {
+    // Setze HygieneView als aktiven View
+    simpleFlowController.setActiveView('/hygiene')
+    
     if (!faceRecognition.isActive.value) {
       faceRecognition.start()
     }
     
-    startAutoMode()
+    // Add global event listeners to detect user interaction
+    document.addEventListener('click', enableTTSOnInteraction)
+    document.addEventListener('keydown', enableTTSOnInteraction)
+    document.addEventListener('touchstart', enableTTSOnInteraction)
     
-    const blinkCheckInterval = setInterval(() => {
-      handleBlink()
-    }, 100)
+    // Start auto-mode automatically über FlowController
+    setTimeout(() => {
+      simpleFlowController.startAutoMode(
+        hygieneItems,
+        (currentIndex, currentItem) => {
+          currentTileIndex.value = currentIndex
+          console.log('HygieneView: Auto-mode cycle:', currentItem.text, 'at index:', currentIndex)
+          speakText(currentItem.text)
+        },
+        3000,
+        3000
+      )
+    }, 1000)
     
-    document.addEventListener('contextmenu', handleRightClick)
+    console.log('HygieneView: mounted - using central controllers')
   })
 
   onUnmounted(() => {
-    document.removeEventListener('contextmenu', handleRightClick)
-    stopAutoMode()
+    // Stoppe Auto-Mode und TTS über FlowController
+    simpleFlowController.stopAutoMode()
+    simpleFlowController.stopTTS()
+    
+    // Clean up event listeners
+    document.removeEventListener('click', enableTTSOnInteraction)
+    document.removeEventListener('keydown', enableTTSOnInteraction)
+    document.removeEventListener('touchstart', enableTTSOnInteraction)
+    
+    console.log('HygieneView: unmounted - Auto-mode stopped, TTS stopped')
   })
 
   return {
+    // State
     currentTileIndex,
     selectedHygiene,
     isAutoMode,
-    autoModeInterval,
     closedFrames,
     eyesClosed,
-    isAutoModePaused,
-    restartTimeout,
     blinkThreshold,
     lastBlinkTime,
     blinkCooldown,
-    speechSynthesis,
-    isTTSEnabled,
     hygieneItems,
+    
+    // Methods
     speakText,
-    toggleTTS,
-    startAutoMode,
-    pauseAutoMode,
-    stopAutoMode,
+    enableTTSOnInteraction,
     selectHygiene,
     handleBlink,
     handleRightClick,
+    
+    // Stores
     settingsStore,
     faceRecognition
   }

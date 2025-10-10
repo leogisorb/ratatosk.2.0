@@ -2,6 +2,7 @@ import { ref, computed, onMounted, onUnmounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { useSettingsStore } from '../../settings/stores/settings'
 import { useFaceRecognition } from '../../face-recognition/composables/useFaceRecognition'
+import { simpleFlowController } from '../../../core/application/SimpleFlowController'
 
 // Centralized pain assessment logic
 // This eliminates duplicate auto-mode, TTS, and blink detection implementations
@@ -19,80 +20,86 @@ export function usePainAssessment() {
   // State
   const currentTileIndex = ref(0)
   const isAutoMode = ref(true)
-  const autoModeInterval = ref<number | null>(null)
   const closedFrames = ref(0)
   const eyesClosed = ref(false)
-  const isAutoModePaused = ref(false)
-  const restartTimeout = ref<number | null>(null)
+  const userInteracted = ref(false)
 
   // Blink detection parameters - centralized
   const blinkThreshold = computed(() => Math.ceil(settingsStore.settings.blinkSensitivity * 10))
   const lastBlinkTime = ref(0)
   const blinkCooldown = computed(() => settingsStore.settings.blinkSensitivity * 1000)
 
-  // TTS removed - will be implemented fresh
+  // TTS über SimpleFlowController
+  const speakText = async (text: string) => {
+    console.log('PainAssessment: Requesting TTS for:', text)
+    await simpleFlowController.speak(text)
+  }
 
-  // Centralized auto-mode functions
-  const startAutoMode = async (items: any[], initialDelay: number = 3000, cycleDelay: number = 3000) => {
-    if (autoModeInterval.value || items.length === 0) return
-
-    console.log('Starting auto-mode with items:', items.length, 'initial delay:', initialDelay, 'cycle delay:', cycleDelay)
-
-    // Stop any existing auto-mode
-    stopAutoMode()
-
-    // Reset to first item
-    currentTileIndex.value = 0
-
-    const cycleTiles = async () => {
-      if (!isAutoMode.value || isAutoModePaused.value) {
-        console.log('Auto-mode stopped or paused')
-        return
-      }
-
-      // TTS removed - will be implemented fresh
-      const currentItem = items[currentTileIndex.value]
-      if (currentItem) {
-        console.log('Current item:', currentItem.title || currentItem.description, 'at index:', currentTileIndex.value)
-      }
-
-      // Move to next item
-      currentTileIndex.value = (currentTileIndex.value + 1) % items.length
-      console.log('Moved to next item, new index:', currentTileIndex.value)
-
-      // Schedule next cycle only if auto-mode is still active
-      if (isAutoMode.value && !isAutoModePaused.value) {
-        autoModeInterval.value = window.setTimeout(cycleTiles, cycleDelay)
-      }
+  // User interaction detection - aktiviert TTS
+  const enableTTSOnInteraction = () => {
+    if (!userInteracted.value) {
+      console.log('PainAssessment: User interaction detected - TTS now enabled')
+      userInteracted.value = true
+      simpleFlowController.setUserInteracted(true)
     }
+  }
 
-    // Start after initial delay
-    autoModeInterval.value = window.setTimeout(cycleTiles, initialDelay)
+  // TTS sofort aktivieren für PainDialogView
+  userInteracted.value = true
+  simpleFlowController.setUserInteracted(true)
+
+  // Auto-Mode Funktionen über SimpleFlowController
+  const startAutoMode = async (items: any[], initialDelay: number = 3000, cycleDelay: number = 3000) => {
+    if (!isAutoMode.value) return
+
+    console.log('PainAssessment: Starting auto-mode with', items.length, 'items')
+    
+    // Spezielle Behandlung für PainDialogView: Erst Titel vorlesen
+    const isMainView = items.some(item => item.id === 'kopf' || item.id === 'torso' || item.id === 'arme' || item.id === 'beine')
+    const isSubRegionView = items.some(item => item.id === 'stirn' || item.id === 'nacken' || item.id === 'schulter' || item.id === 'oberarm')
+    const isPainScaleView = items.some(item => item.level !== undefined)
+    
+    if (isMainView) {
+      // Erst "Wo haben Sie Schmerzen?" vorlesen
+      setTimeout(() => {
+        speakText('Wo haben Sie Schmerzen?')
+      }, 1000)
+      // Zusätzliche Pause nach dem Titel
+      initialDelay = initialDelay + 1000
+    } else if (isSubRegionView) {
+      // Sub-Region Titel wird bereits in PainDialogView.vue gesprochen
+      // Kein zusätzlicher TTS hier nötig
+      // Zusätzliche Pause nach dem Titel
+      initialDelay = initialDelay + 1000
+    } else if (isPainScaleView) {
+      // Pain Scale Titel wird bereits in PainDialogView.vue gesprochen
+      // Kein zusätzlicher TTS hier nötig
+    }
+    
+    const success = simpleFlowController.startAutoMode(
+      items,
+      (currentIndex, currentItem) => {
+        currentTileIndex.value = currentIndex
+        console.log('PainAssessment: Auto-mode cycle:', currentItem.title || currentItem.description, 'at index:', currentIndex)
+        speakText(currentItem.title || currentItem.description)
+      },
+      initialDelay,
+      cycleDelay
+    )
+
+    if (!success) {
+      console.log('PainAssessment: Auto-mode start failed')
+    }
   }
 
   const pauseAutoMode = () => {
-    isAutoModePaused.value = true
-    if (autoModeInterval.value) {
-      clearTimeout(autoModeInterval.value)
-      autoModeInterval.value = null
-    }
-    if (restartTimeout.value) {
-      clearTimeout(restartTimeout.value)
-      restartTimeout.value = null
-    }
-    // TTS removed
+    console.log('PainAssessment: Pausing auto-mode')
+    simpleFlowController.stopAutoMode()
   }
 
   const stopAutoMode = () => {
-    if (autoModeInterval.value) {
-      clearTimeout(autoModeInterval.value)
-      autoModeInterval.value = null
-    }
-    if (restartTimeout.value) {
-      clearTimeout(restartTimeout.value)
-      restartTimeout.value = null
-    }
-    // TTS removed
+    console.log('PainAssessment: Stopping auto-mode')
+    simpleFlowController.stopAutoMode()
   }
 
   // Centralized blink detection
@@ -127,11 +134,17 @@ export function usePainAssessment() {
   // Centralized right-click handler
   const handleRightClick = (event: MouseEvent, items: any[], onSelection: (item: any) => void) => {
     event.preventDefault()
+    event.stopPropagation()
+    event.stopImmediatePropagation()
+    console.log('Right click detected! Current tile index:', currentTileIndex.value, 'Items length:', items.length)
     const currentItem = items[currentTileIndex.value]
     if (currentItem) {
       console.log('Right click activation for item:', currentItem.id || currentItem.title)
       onSelection(currentItem)
+    } else {
+      console.log('No current item found for right click')
     }
+    return false
   }
 
   // Volume toggle handler
@@ -155,13 +168,29 @@ export function usePainAssessment() {
 
   // Lifecycle management
   const setupLifecycle = (items: any[], onSelection: (item: any) => void) => {
+    // Setze PainDialogView als aktiven View
+    simpleFlowController.setActiveView('/pain-dialog')
+    
     // Start face recognition if not active
     if (!faceRecognition.isActive.value) {
       faceRecognition.start()
     }
 
-    // Auto-mode disabled to prevent infinite loops
-    // startAutoMode(items)
+    // Add global event listeners to detect user interaction
+    document.addEventListener('click', enableTTSOnInteraction)
+    document.addEventListener('keydown', enableTTSOnInteraction)
+    document.addEventListener('touchstart', enableTTSOnInteraction)
+
+    // Start auto-mode automatically
+    setTimeout(() => {
+      // Für Schmerz-Skala: doppelt so langsam (6 Sekunden statt 3)
+      const isPainScale = items.some(item => item.level !== undefined)
+      if (isPainScale) {
+        startAutoMode(items, 6000, 4500) // 6 Sekunden initial, 4,5 Sekunden cycle
+      } else {
+        startAutoMode(items) // Standard-Geschwindigkeit für andere Views
+      }
+    }, 1000)
 
     // Setup blink detection interval
     const blinkCheckInterval = setInterval(() => {
@@ -172,15 +201,20 @@ export function usePainAssessment() {
     const rightClickHandler = (event: MouseEvent) => handleRightClick(event, items, onSelection)
     const volumeToggleHandler = (event: CustomEvent) => handleVolumeToggle(event)
 
-    document.addEventListener('contextmenu', rightClickHandler)
+    console.log('PainAssessment: Registering right-click handler')
+    document.addEventListener('contextmenu', rightClickHandler, { capture: true, passive: false })
     window.addEventListener('volumeToggle', volumeToggleHandler as EventListener)
 
     // Return cleanup function
     return () => {
       clearInterval(blinkCheckInterval)
-      document.removeEventListener('contextmenu', rightClickHandler)
+      document.removeEventListener('contextmenu', rightClickHandler, { capture: true })
+      document.removeEventListener('click', enableTTSOnInteraction)
+      document.removeEventListener('keydown', enableTTSOnInteraction)
+      document.removeEventListener('touchstart', enableTTSOnInteraction)
       window.removeEventListener('volumeToggle', volumeToggleHandler as EventListener)
       stopAutoMode()
+      simpleFlowController.stopTTS()
     }
   }
 
@@ -188,18 +222,15 @@ export function usePainAssessment() {
     // State
     currentTileIndex,
     isAutoMode,
-    autoModeInterval,
     closedFrames,
     eyesClosed,
-    isAutoModePaused,
-    restartTimeout,
+    userInteracted,
     blinkThreshold,
     lastBlinkTime,
     blinkCooldown,
-    // TTS removed
 
     // Methods
-    // speakText removed
+    speakText,
     startAutoMode,
     pauseAutoMode,
     stopAutoMode,

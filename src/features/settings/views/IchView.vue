@@ -8,21 +8,14 @@ const {
   currentMenu,
   currentTileIndex,
   isAutoMode,
-  autoModeInterval,
   closedFrames,
   eyesClosed,
-  isAutoModePaused,
   blinkThreshold,
   lastBlinkTime,
   blinkCooldown,
-  isTTSEnabled,
   menuItems,
   appClasses,
   speakText,
-  startAutoMode,
-  pauseAutoMode,
-  resumeAutoMode,
-  stopAutoMode,
   selectMenu,
   formatTime,
   handleBlink,
@@ -182,7 +175,7 @@ const {
             :class="currentTileIndex === 5 ? 'icon-active' : 'icon-inactive'"
             >
               <img 
-                src="/Goback.svg" 
+                src="/zurueck.svg" 
                 alt="ZURÜCK" 
               class="tile-icon"
               :class="currentTileIndex === 5 ? 'icon-inverted' : ''"

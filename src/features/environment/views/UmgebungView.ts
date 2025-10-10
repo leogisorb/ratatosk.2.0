@@ -54,7 +54,7 @@ export function useUmgebungViewLogic() {
       id: 'zurueck',
       title: 'ZURÜCK',
       description: 'Zurück zur Hauptansicht',
-      icon: 'Goback.svg'
+      icon: 'zurueck.svg'
     }
   ]
 
@@ -105,7 +105,26 @@ export function useUmgebungViewLogic() {
       if (!isAutoMode.value || isAutoModePaused.value) {
         return
       }
-      currentTileIndex.value = (currentTileIndex.value + 1) % umgebungItems.length
+      
+      // Wenn wir am Ende des Loops sind, warte 2,5s und starte neuen Loop mit Titel
+      if (currentTileIndex.value === umgebungItems.length - 1) {
+        // Warte 2,5 Sekunden nach dem letzten Tile
+        autoModeInterval.value = window.setTimeout(() => {
+          // Lese den Titel vor
+          speakText('Was möchten Sie an ihrer Umgebung verändern?')
+          // Warte 5 Sekunden nach dem Titel (für vollständiges Vorlesen)
+          autoModeInterval.value = window.setTimeout(() => {
+            currentTileIndex.value = 0 // Zurück zum Anfang
+            const currentItem = umgebungItems[currentTileIndex.value]
+            speakText(currentItem.title)
+            autoModeInterval.value = window.setTimeout(cycleTiles, 3000)
+          }, 5000)
+        }, 2500)
+        return
+      } else {
+        currentTileIndex.value = (currentTileIndex.value + 1) % umgebungItems.length
+      }
+      
       const currentItem = umgebungItems[currentTileIndex.value]
       speakText(currentItem.title)
       autoModeInterval.value = window.setTimeout(cycleTiles, 3000) // 3 Sekunden
@@ -227,7 +246,14 @@ export function useUmgebungViewLogic() {
       faceRecognition.start()
     }
     
-    startAutoMode()
+    // Erst den Titel vorlesen und dann Auto-Mode starten
+    setTimeout(() => {
+      speakText('Was möchten Sie an ihrer Umgebung verändern?')
+      // Warte 5 Sekunden nach dem Titel (für vollständiges Vorlesen)
+      setTimeout(() => {
+        startAutoMode()
+      }, 5000)
+    }, 1000)
     
     const blinkCheckInterval = setInterval(() => {
       handleBlink()

@@ -35,22 +35,22 @@ export function useGegenstaendeViewLogic() {
   // Gegenstand-Items basierend auf dem gezeigten Interface
   const gegenstaendeItems = [
     // Zeile 1: Handy, Glas, Brille
-    { id: 'handy', text: 'Handy', type: 'gegenstand', emoji: '📱' },
-    { id: 'glas', text: 'Glas', type: 'gegenstand', emoji: '🥛' },
-    { id: 'brille', text: 'Brille', type: 'gegenstand', emoji: '👓' },
+    { id: 'handy', text: 'Handy', verb: 'benutzen', type: 'gegenstand', emoji: '📱' },
+    { id: 'glas', text: 'Glas', verb: 'holen', type: 'gegenstand', emoji: '🥛' },
+    { id: 'brille', text: 'Brille', verb: 'aufsetzen', type: 'gegenstand', emoji: '👓' },
     
     // Zeile 2: Stift, Papier, Lineal
-    { id: 'stift', text: 'Stift', type: 'gegenstand', emoji: '✏️' },
-    { id: 'papier', text: 'Papier', type: 'gegenstand', emoji: '📄' },
-    { id: 'lineal', text: 'Lineal', type: 'gegenstand', emoji: '📏' },
+    { id: 'stift', text: 'Stift', verb: 'holen', type: 'gegenstand', emoji: '✏️' },
+    { id: 'papier', text: 'Papier', verb: 'holen', type: 'gegenstand', emoji: '📄' },
+    { id: 'lineal', text: 'Lineal', verb: 'holen', type: 'gegenstand', emoji: '📏' },
     
     // Zeile 3: Teller, Besteck, Tisch
-    { id: 'teller', text: 'Teller', type: 'gegenstand', emoji: '🍽️' },
-    { id: 'besteck', text: 'Besteck', type: 'gegenstand', emoji: '🍴' },
-    { id: 'tisch', text: 'Tisch', type: 'gegenstand', emoji: '🪑' },
+    { id: 'teller', text: 'Teller', verb: 'holen', type: 'gegenstand', emoji: '🍽️' },
+    { id: 'besteck', text: 'Besteck', verb: 'holen', type: 'gegenstand', emoji: '🍴' },
+    { id: 'tisch', text: 'Tisch', verb: 'decken', type: 'gegenstand', emoji: '🪑' },
     
     // Zeile 4: Zurück
-    { id: 'zurueck', text: 'zurück', type: 'navigation', emoji: '⬅️' }
+    { id: 'zurueck', text: 'zurück', verb: '', type: 'navigation', emoji: '⬅️' }
   ]
 
   // Text-to-Speech Funktion
@@ -210,7 +210,15 @@ export function useGegenstaendeViewLogic() {
       faceRecognition.start()
     }
     
-    startAutoMode()
+    // Erst den Titel vorlesen
+    setTimeout(() => {
+      speakText('Wählen Sie einen Gegenstand aus')
+    }, 1000)
+    
+    // Starte den Auto-Mode nach 4 Sekunden (1s für Titel + 3s Pause)
+    setTimeout(() => {
+      startAutoMode()
+    }, 4000)
     
     const blinkCheckInterval = setInterval(() => {
       handleBlink()

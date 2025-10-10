@@ -82,6 +82,17 @@ const startAutoMode = () => {
   
   currentTileIndex.value = 0
   
+  // Erst den Titel vorlesen
+  setTimeout(() => {
+    speakText(`Was soll mit ${selectedGegenstand.value} gemacht werden?`)
+    // Starte Auto-Mode nach 4 Sekunden (für vollständiges Vorlesen des Titels)
+    setTimeout(() => {
+      const firstItem = gegenstaendeVerbenItems[currentTileIndex.value]
+      speakText(firstItem.text)
+      autoModeInterval.value = window.setTimeout(cycleTiles, 3000)
+    }, 4000)
+  }, 1000)
+  
   const cycleTiles = () => {
     if (!isAutoMode.value || isAutoModePaused.value) {
       return
@@ -91,11 +102,6 @@ const startAutoMode = () => {
     speakText(currentItem.text)
     autoModeInterval.value = window.setTimeout(cycleTiles, 3000) // 3 Sekunden
   }
-  
-  const firstItem = gegenstaendeVerbenItems[currentTileIndex.value]
-  speakText(firstItem.text)
-  
-  autoModeInterval.value = window.setTimeout(cycleTiles, 3000)
 }
 
 const pauseAutoMode = () => {
@@ -137,16 +143,16 @@ function selectVerb(verbId: string) {
       router.push('/gegenstaende')
       break
     default:
-      speakText(`${selectedItem?.text} ausgewählt`)
+      // "Bitte [Item] [Verb]" anzeigen und vorlesen
+      const pleaseText = `Bitte ${selectedGegenstand.value} ${selectedItem?.text}`
+      setTimeout(() => {
+        speakText(pleaseText)
+      }, 1000)
       
-      // Kombination anzeigen
-      const combination = `${selectedGegenstand.value} ${selectedItem?.text}`
-      speakText(`Kombination: ${combination}`)
-      
-      // Nach 3 Sekunden zurück zum Gegenstände-View
+      // Nach 4 Sekunden zurück zum Gegenstände-View
       restartTimeout.value = window.setTimeout(() => {
         router.push('/gegenstaende')
-      }, 3000)
+      }, 4000)
   }
 }
 
@@ -211,7 +217,15 @@ onMounted(() => {
     faceRecognition.start()
   }
   
-  startAutoMode()
+  // Erst den Titel vorlesen
+  setTimeout(() => {
+    speakText(`Was soll mit ${selectedGegenstand.value} gemacht werden?`)
+  }, 1000)
+  
+  // Starte den Auto-Mode nach 4 Sekunden (1s für Titel + 3s Pause)
+  setTimeout(() => {
+    startAutoMode()
+  }, 4000)
   
   const blinkCheckInterval = setInterval(() => {
     handleBlink()
@@ -236,8 +250,15 @@ onUnmounted(() => {
       <div class="content-wrapper">
         <!-- Ausgewähltes Verb-Item Anzeige -->
         <div class="selected-item-container">
-          <div class="selected-item-text">
-            {{ selectedGegenstand }}{{ selectedVerb ? ' ' + selectedVerb : '' }}
+          <div class="selected-item-text" style="font-size: 3.43rem; font-family: 'Source Code Pro', monospace; font-weight: 500;">
+            Was soll mit {{ selectedGegenstand }} gemacht werden?
+          </div>
+        </div>
+        
+        <!-- Ausgewählte Kombination Anzeige -->
+        <div v-if="selectedVerb" class="selected-combination-container">
+          <div class="selected-combination-text" style="font-size: 2.5rem; font-family: 'Source Code Pro', monospace; font-weight: 500; color: #f97316;">
+            Bitte {{ selectedGegenstand }} {{ selectedVerb }}
           </div>
         </div>
 
@@ -363,7 +384,7 @@ onUnmounted(() => {
 }
 
 .gegenstaende-verben-items-emoji {
-  font-size: 5.2rem; /* 30% größer: 4rem * 1.3 = 5.2rem */
+  font-size: 4rem;
 }
 
 .gegenstaende-verben-items-text {
@@ -441,13 +462,13 @@ onUnmounted(() => {
   
   .gegenstaende-verben-items-item {
     padding: 1rem;
-    font-size: 1.755rem; /* 30% größer: 1.35rem * 1.3 = 1.755rem */
-    width: 254px; /* 30% größer: 195px * 1.3 = 254px */
-    height: 130px; /* 30% größer: 100px * 1.3 = 130px */
+    font-size: 1.35rem;
+    width: 195px;
+    height: 100px;
   }
   
   .gegenstaende-verben-items-emoji {
-    font-size: 3.9rem; /* 30% größer: 3rem * 1.3 = 3.9rem */
+    font-size: 3rem;
   }
   
   .selected-item-title {
@@ -479,13 +500,13 @@ onUnmounted(() => {
   
   .gegenstaende-verben-items-item {
     padding: 0.75rem;
-    font-size: 1.463rem; /* 30% größer: 1.125rem * 1.3 = 1.463rem */
-    width: 203px; /* 30% größer: 156px * 1.3 = 203px */
-    height: 104px; /* 30% größer: 80px * 1.3 = 104px */
+    font-size: 1.125rem;
+    width: 156px;
+    height: 80px;
   }
   
   .gegenstaende-verben-items-emoji {
-    font-size: 3.25rem; /* 30% größer: 2.5rem * 1.3 = 3.25rem */
+    font-size: 2.5rem;
   }
   
   .selected-item-title {
@@ -495,5 +516,23 @@ onUnmounted(() => {
   .selected-item-text {
     font-size: 2.43rem; /* 75% größer: 1.39rem * 1.75 = 2.43rem */
   }
+  
+  .selected-combination-text {
+    font-size: 1.75rem; /* 30% kleiner: 2.5rem * 0.7 = 1.75rem */
+  }
+}
+
+/* Ausgewählte Kombination Anzeige */
+.selected-combination-container {
+  margin-bottom: 1rem;
+  text-align: center;
+}
+
+.selected-combination-text {
+  font-size: 2.5rem;
+  font-weight: 500;
+  color: #f97316;
+  margin: 0;
+  line-height: 1.2;
 }
 </style>

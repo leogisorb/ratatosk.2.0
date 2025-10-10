@@ -35,23 +35,27 @@ const {
 
     <!-- Main Content -->
     <main class="main-content">
+      <!-- Title -->
+      <div class="title-container">
+        <h1 class="main-title">Was möchten Sie an ihrer Umgebung verändern?</h1>
+      </div>
+      
       <!-- Grid Container - 3x2 Grid wie SchmerzView -->
       <div class="grid-container">
         <!-- Bett -->
         <div 
           class="menu-tile"
           :class="currentTileIndex === 0 ? 'tile-active' : 'tile-inactive'"
-          @click="selectUmgebungItem('bett')"
         >
           <div 
             class="tile-icon-container"
             :class="currentTileIndex === 0 ? 'icon-active' : 'icon-inactive'"
           >
             <img 
-              src="/Schmerz.svg" 
+              src="/bett.svg" 
               alt="BETT" 
               class="tile-icon"
-              :class="currentTileIndex === 0 ? 'icon-inverted' : ''"
+              :style="currentTileIndex === 0 ? 'filter: brightness(0) invert(1);' : 'filter: none;'"
             />
           </div>
           <div 
@@ -67,17 +71,16 @@ const {
         <div 
           class="menu-tile"
           :class="currentTileIndex === 1 ? 'tile-active' : 'tile-inactive'"
-          @click="selectUmgebungItem('zimmer')"
         >
           <div 
             class="tile-icon-container"
             :class="currentTileIndex === 1 ? 'icon-active' : 'icon-inactive'"
           >
             <img 
-              src="/Umgebung.svg" 
+              src="/zimmer.svg" 
               alt="ZIMMER" 
               class="tile-icon"
-              :class="currentTileIndex === 1 ? 'icon-inverted' : ''"
+              :style="currentTileIndex === 1 ? 'filter: brightness(0) invert(1);' : 'filter: none;'"
             />
           </div>
           <div 
@@ -93,17 +96,16 @@ const {
         <div 
           class="menu-tile"
           :class="currentTileIndex === 2 ? 'tile-active' : 'tile-inactive'"
-          @click="selectUmgebungItem('gegenstaende')"
         >
           <div 
             class="tile-icon-container"
             :class="currentTileIndex === 2 ? 'icon-active' : 'icon-inactive'"
           >
             <img 
-              src="/house-chimney.svg" 
+              src="/gegenstaende.svg" 
               alt="GEGENSTÄNDE" 
               class="tile-icon"
-              :class="currentTileIndex === 2 ? 'icon-inverted' : ''"
+              :style="currentTileIndex === 2 ? 'filter: brightness(0) invert(1);' : 'filter: none;'"
             />
           </div>
           <div 
@@ -119,17 +121,16 @@ const {
         <div 
           class="menu-tile"
           :class="currentTileIndex === 3 ? 'tile-active' : 'tile-inactive'"
-          @click="selectUmgebungItem('zurueck')"
         >
           <div 
             class="tile-icon-container"
             :class="currentTileIndex === 3 ? 'icon-active' : 'icon-inactive'"
           >
             <img 
-              src="/Goback.svg" 
+              src="/zurueck.svg" 
               alt="ZURÜCK" 
               class="tile-icon"
-              :class="currentTileIndex === 3 ? 'icon-inverted' : ''"
+              :style="currentTileIndex === 3 ? 'filter: brightness(0) invert(1);' : 'filter: none;'"
             />
           </div>
           <div 

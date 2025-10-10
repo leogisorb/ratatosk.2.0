@@ -43,7 +43,7 @@ export function useBeineSchmerzViewLogic() {
     { id: 'fussruecken', text: 'Fußrücken', type: 'beinbereich', icon: 'FUSRÜCKEN.svg' },
     { id: 'fussohle', text: 'Fußsohle', type: 'beinbereich', icon: 'FUSBALLEN.svg' },
     // Zeile 3: Zurück Button
-    { id: 'zurueck', text: 'zurück', type: 'navigation', icon: 'Goback.svg' }
+    { id: 'zurueck', text: 'zurück', type: 'navigation', icon: 'zurueck.svg' }
   ]
 
   // TTS removed

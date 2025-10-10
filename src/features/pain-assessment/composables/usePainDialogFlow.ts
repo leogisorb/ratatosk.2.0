@@ -53,8 +53,8 @@ export const armeSubRegions = [
   // Zeile 1: Oberarm, Unterarm, Ellenbogen, Handgelenk
   { id: 'oberarm', title: 'Oberarm', icon: 'oberarm.svg' },
   { id: 'unterarm', title: 'Unterarm', icon: 'unterarm.svg' },
-  { id: 'ellenbogen', title: 'Ellenbogen', icon: 'ellenbogen.svg' },
-  { id: 'handgelenk', title: 'Handgelenk', icon: 'ellebogen.svg' },
+  { id: 'ellenbogen', title: 'Ellenbogen', icon: 'schulter.svg' },
+  { id: 'handgelenk', title: 'Handgelenk', icon: 'handgelenk.svg' },
   
   // Zeile 2: Hand, Finger, Schulter, Daumen
   { id: 'hand', title: 'Hand', icon: 'handfläche.svg' },
@@ -86,7 +86,7 @@ export const torsoSubRegions = [
   { id: 'leber', title: 'Leber', icon: 'magen.svg' },
   { id: 'niere', title: 'Niere', icon: 'magen.svg' },
   { id: 'blase', title: 'Blase', icon: 'blase.svg' },
-  { id: 'zurueck', title: 'zurück', icon: 'Goback.svg' }
+  { id: 'zurueck', title: 'zurück', icon: 'zurueck.svg' }
 ]
 
 // Schmerzstufen mit numerischen und verbalen Labels

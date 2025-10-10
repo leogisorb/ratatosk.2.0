@@ -8,21 +8,17 @@ const {
   currentMenu,
   currentTileIndex,
   isAutoMode,
-  autoModeInterval,
   closedFrames,
   eyesClosed,
-  isAutoModePaused,
   blinkThreshold,
   lastBlinkTime,
   blinkCooldown,
+  userInteracted,
   // TTS functions
-  isVolumeEnabled,
   speakText,
   menuItems,
   appClasses,
   startAutoMode,
-  pauseAutoMode,
-  resumeAutoMode,
   stopAutoMode,
   selectMenu,
   formatTime,
@@ -103,7 +99,7 @@ const {
             <div 
               class="menu-tile"
               :class="currentTileIndex === 2 ? 'tile-active' : 'tile-inactive'"
-              @click="selectMenu('profile')"
+              @click="selectMenu('ich')"
             >
               <div 
                 class="tile-icon-container"

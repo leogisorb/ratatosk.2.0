@@ -183,12 +183,12 @@ export function useUnterhaltenViewLogic() {
       if (currentStage.value === 'rows') {
         currentRowIndex.value = (currentRowIndex.value + 1) % keyboardLayout.length
         console.log('Moving to row:', currentRowIndex.value)
-        speakCurrentRow()
+        // TTS removed - will be implemented fresh
       } else {
         const currentRow = keyboardLayout[currentRowIndex.value]
         currentLetterIndex.value = (currentLetterIndex.value + 1) % currentRow.length
         console.log('Moving to letter:', currentLetterIndex.value, 'in row:', currentRowIndex.value)
-        speakCurrentLetter()
+        // TTS removed - will be implemented fresh
       }
       
       // Nächster Schritt nach 2 Sekunden

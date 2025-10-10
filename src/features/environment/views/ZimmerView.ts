@@ -35,22 +35,23 @@ export function useZimmerViewLogic() {
   // Zimmer-Items basierend auf dem gezeigten Interface
   const zimmerItems = [
     // Zeile 1: Tür, Fenster, Licht
-    { id: 'tuer', text: 'Tür', type: 'zimmer', emoji: '🚪' },
-    { id: 'fenster', text: 'Fenster', type: 'zimmer', emoji: '🪟' },
-    { id: 'licht', text: 'Licht', type: 'zimmer', emoji: '💡' },
+    { id: 'tuer', text: 'Tür', verb: 'öffnen', type: 'zimmer', emoji: '🚪' },
+    { id: 'fenster', text: 'Fenster', verb: 'öffnen', type: 'zimmer', emoji: '🪟' },
+    { id: 'licht', text: 'Licht', verb: 'anschalten', type: 'zimmer', emoji: '💡' },
     
     // Zeile 2: Bett, Tisch, Stuhl
-    { id: 'bett', text: 'Bett', type: 'zimmer', emoji: '🛏️' },
-    { id: 'tisch', text: 'Tisch', type: 'zimmer', emoji: '🍽️' },
-    { id: 'stuhl', text: 'Stuhl', type: 'zimmer', emoji: '🪑' },
+    { id: 'bett', text: 'Bett', verb: 'machen', type: 'zimmer', emoji: '🛏️' },
+    { id: 'tisch', text: 'Tisch', verb: 'decken', type: 'zimmer', emoji: '🍽️' },
+    { id: 'stuhl', text: 'Stuhl', verb: 'rücken', type: 'zimmer', emoji: '🪑' },
     
     // Zeile 3: Fernseher, Vorhang, Schrank
-    { id: 'fernseher', text: 'Fernseher', type: 'zimmer', emoji: '📺' },
-    { id: 'vorhang', text: 'Vorhang', type: 'zimmer', emoji: '🪟' },
-    { id: 'schrank', text: 'Schrank', type: 'zimmer', emoji: '🚪' },
+    { id: 'fernseher', text: 'Fernseher', verb: 'anschalten', type: 'zimmer', emoji: '📺' },
+    { id: 'vorhang', text: 'Vorhang', verb: 'öffnen', type: 'zimmer', emoji: '🪟' },
+    { id: 'schrank', text: 'Schrank', verb: 'öffnen', type: 'zimmer', emoji: '🚪' },
     
-    // Zeile 4: Zurück
-    { id: 'zurueck', text: 'zurück', type: 'navigation', emoji: '⬅️' }
+    // Zeile 4: Handy, Zurück
+    { id: 'handy', text: 'Handy', verb: 'holen', type: 'zimmer', emoji: '📱' },
+    { id: 'zurueck', text: 'zurück', verb: '', type: 'navigation', emoji: '⬅️' }
   ]
 
   // Text-to-Speech Funktion
@@ -210,7 +211,14 @@ export function useZimmerViewLogic() {
       faceRecognition.start()
     }
     
-    startAutoMode()
+    // Erst den Titel vorlesen und dann Auto-Mode starten
+    setTimeout(() => {
+      speakText('Wählen Sie einen Zimmer-Bereich aus')
+      // Warte 4 Sekunden nach dem Titel (für vollständiges Vorlesen)
+      setTimeout(() => {
+        startAutoMode()
+      }, 4000)
+    }, 1000)
     
     const blinkCheckInterval = setInterval(() => {
       handleBlink()

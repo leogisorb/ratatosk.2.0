@@ -73,7 +73,7 @@ const einstellungsItems = [
   { id: 'farbmodus', title: 'Farbmodus', icon: 'settings-sliders.svg' },
   { id: 'kamera', title: 'Kamera', icon: 'camera.svg' },
   { id: 'impressum', title: 'Impressum', icon: 'settings-sliders.svg' },
-  { id: 'zurueck', title: 'Zurück', icon: 'Goback.svg' }
+  { id: 'zurueck', title: 'Zurück', icon: 'zurueck.svg' }
 ]
 
 // Auto Mode Funktionen
