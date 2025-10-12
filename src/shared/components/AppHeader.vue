@@ -85,6 +85,7 @@
 import { ref, computed, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { useSettingsStore } from '../../features/settings/stores/settings'
+import { simpleFlowController } from '../../core/application/SimpleFlowController'
 
 // Router
 const router = useRouter()
@@ -103,7 +104,10 @@ const toggleVolume = () => {
   isVolumeEnabled.value = !isVolumeEnabled.value
   console.log('Volume button clicked:', isVolumeEnabled.value)
   
-  // Sende Event an alle Views
+  // Steuere globalen TTS über SimpleFlowController
+  simpleFlowController.setTTSMuted(!isVolumeEnabled.value)
+  
+  // Sende Event an alle Views (für Kompatibilität)
   const event = new CustomEvent('volumeToggle', {
     detail: { enabled: isVolumeEnabled.value }
   })
@@ -112,6 +116,9 @@ const toggleVolume = () => {
 
 // Sende initialen Volume-Status beim Mount
 onMounted(() => {
+  // Setze initialen TTS-Status im SimpleFlowController
+  simpleFlowController.setTTSMuted(!isVolumeEnabled.value)
+  
   const event = new CustomEvent('volumeToggle', {
     detail: { enabled: isVolumeEnabled.value }
   })

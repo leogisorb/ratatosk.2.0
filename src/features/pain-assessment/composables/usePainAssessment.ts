@@ -150,7 +150,8 @@ export function usePainAssessment() {
   // Volume toggle handler
   const handleVolumeToggle = (event: CustomEvent) => {
     if (!event.detail.enabled) {
-      speechSynthesis.cancel()
+      // Verwende SimpleFlowController für konsistente TTS-Kontrolle
+      simpleFlowController.stopTTS()
       isSpeaking.value = false
     }
   }

@@ -3,6 +3,7 @@ import { useRouter } from 'vue-router'
 import { useFaceRecognition } from '../../face-recognition/composables/useFaceRecognition'
 import { useSettingsStore } from '../../settings/stores/settings'
 import { simpleFlowController } from '../../../core/application/SimpleFlowController'
+import { generateTTSText, getMainText, getPauseAfterTTS, getAutoStartDelay, getCycleDelay } from '../../../config/ttsConfig'
 
 export function useKleidungViewLogic() {
   // Router
@@ -17,10 +18,12 @@ export function useKleidungViewLogic() {
   // State
   const currentTileIndex = ref(0)
   const selectedKleidung = ref('')
+  const feedbackText = ref('') // Orange Rückmeldung für ausgewählte Items
   const isAutoMode = ref(true)
   const closedFrames = ref(0)
   const eyesClosed = ref(false)
   const userInteracted = ref(false)
+  const isTTSActive = ref(false)
 
   // Verbesserte Blink-Detection Parameter - zentral gesteuert
   const blinkThreshold = computed(() => Math.ceil(settingsStore.settings.blinkSensitivity * 10))
@@ -59,14 +62,26 @@ export function useKleidungViewLogic() {
     { id: 'zurueck', text: 'zurück', type: 'navigation', emoji: '⬅️' }
   ]
 
-  // Zentrale TTS-Funktion über FlowController
+  // Zentrale TTS-Funktion über FlowController mit Event-Handling
   const speakText = async (text: string) => {
     console.log('KleidungView: Requesting TTS for:', text)
-    await simpleFlowController.speak(text)
+    isTTSActive.value = true
+    
+    try {
+      await simpleFlowController.speak(text)
+    } finally {
+      isTTSActive.value = false
+    }
   }
 
   // Kleidung-Item Auswahl
-  function selectKleidung(kleidungId: string) {
+  async function selectKleidung(kleidungId: string) {
+    // Verhindere Interaktion während TTS
+    if (isTTSActive.value) {
+      console.log('KleidungView: Interaction blocked during TTS')
+      return
+    }
+
     const selectedItem = kleidungItems.find(item => item.id === kleidungId)
     
     if (!selectedItem) {
@@ -84,14 +99,38 @@ export function useKleidungViewLogic() {
         break
       default:
         console.log('KleidungView: Selected Kleidung:', kleidungId)
-        speakText(`${selectedItem.text} ausgewählt`)
+        
         // Auto-Mode stoppt bei bewusster Auswahl
         simpleFlowController.stopAutoMode()
+        
+        // Verwende die neue TTS-Konfiguration
+        const ttsText = generateTTSText('kleidung', selectedItem.text)
+        console.log('KleidungView: Generated TTS text:', ttsText, 'for item:', selectedItem.text)
+        
+        // Zeige orange Rückmeldung an
+        feedbackText.value = ttsText
+        console.log('KleidungView: Setting feedback text:', ttsText)
+        console.log('KleidungView: feedbackText.value is now:', feedbackText.value)
+        
+        // Spreche die Rückmeldung
+        await speakText(ttsText)
+        
+        // Pause nach TTS-Ende - länger warten, damit der Benutzer die orange Nachricht sehen kann
+        const pauseAfterTTS = getPauseAfterTTS('kleidung')
+        await new Promise(resolve => setTimeout(resolve, pauseAfterTTS + 2000)) // 2 Sekunden extra
+        
+        // Nach der TTS-Ausgabe zurück zum Ich-View-Hauptgrid
+        router.push('/ich')
     }
   }
 
   // Blink Detection
   const handleBlink = () => {
+    // Verhindere Blink-Interaktion während TTS
+    if (isTTSActive.value) {
+      return
+    }
+
     const now = Date.now()
     
     if (faceRecognition.isBlinking.value) {
@@ -101,8 +140,7 @@ export function useKleidungViewLogic() {
         const currentItem = kleidungItems[currentTileIndex.value]
         console.log('KleidungView: Blink activation for tile:', currentTileIndex.value, 'kleidungId:', currentItem.id, 'text:', currentItem.text)
         
-        // TTS + Auswahl - Auto-Mode stoppt bei Interaktion
-        speakText(currentItem.text)
+        // Nur Auswahl - TTS wird in selectKleidung gemacht
         selectKleidung(currentItem.id)
         eyesClosed.value = true
         lastBlinkTime.value = now
@@ -118,6 +156,12 @@ export function useKleidungViewLogic() {
 
   // Right Click Handler
   const handleRightClick = (event: MouseEvent) => {
+    // Verhindere Right-Click-Interaktion während TTS
+    if (isTTSActive.value) {
+      event.preventDefault()
+      return false
+    }
+
     event.preventDefault()
     event.stopPropagation()
     event.stopImmediatePropagation()
@@ -126,8 +170,7 @@ export function useKleidungViewLogic() {
     if (currentItem) {
       console.log('KleidungView: Right click activation for tile:', currentTileIndex.value, 'kleidungId:', currentItem.id, 'text:', currentItem.text)
       
-      // TTS + Auswahl - Auto-Mode stoppt bei Interaktion
-      speakText(currentItem.text)
+      // Nur Auswahl - TTS wird in selectKleidung gemacht
       selectKleidung(currentItem.id)
     } else {
       console.log('KleidungView: No current item found for right click')
@@ -139,6 +182,9 @@ export function useKleidungViewLogic() {
   onMounted(() => {
     // Setze KleidungView als aktiven View
     simpleFlowController.setActiveView('/kleidung')
+    
+    // Reset feedback text when view is mounted
+    feedbackText.value = ''
     
     if (!faceRecognition.isActive.value) {
       faceRecognition.start()
@@ -154,7 +200,19 @@ export function useKleidungViewLogic() {
     document.addEventListener('contextmenu', handleRightClick, { capture: true, passive: false })
     
     // Start auto-mode automatically über FlowController
-    setTimeout(() => {
+    // Zuerst den Haupttext sprechen, dann nach Pause die automatische Durchlauf-Logik starten
+    const mainText = getMainText('kleidung')
+    const autoStartDelay = getAutoStartDelay('kleidung')
+    const cycleDelay = getCycleDelay('kleidung')
+    
+    setTimeout(async () => {
+      await speakText(mainText)
+      
+      // Pause nach TTS-Ende
+      const pauseAfterTTS = getPauseAfterTTS('kleidung')
+      await new Promise(resolve => setTimeout(resolve, pauseAfterTTS))
+      
+      // Starte automatische Durchlauf-Logik
       simpleFlowController.startAutoMode(
         kleidungItems,
         (currentIndex, currentItem) => {
@@ -162,10 +220,10 @@ export function useKleidungViewLogic() {
           console.log('KleidungView: Auto-mode cycle:', currentItem.text, 'at index:', currentIndex)
           speakText(currentItem.text)
         },
-        3000,
-        3000
+        cycleDelay,
+        cycleDelay
       )
-    }, 1000)
+    }, autoStartDelay)
     
     console.log('KleidungView: mounted - using central controllers')
   })
@@ -188,6 +246,7 @@ export function useKleidungViewLogic() {
     // State
     currentTileIndex,
     selectedKleidung,
+    feedbackText,
     isAutoMode,
     closedFrames,
     eyesClosed,

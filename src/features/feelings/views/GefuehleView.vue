@@ -5,6 +5,7 @@ import AppHeader from '../../../shared/components/AppHeader.vue'
 const {
   currentTileIndex,
   selectedGefuehl,
+  feedbackText,
   isAutoMode,
   closedFrames,
   eyesClosed,
@@ -30,13 +31,15 @@ const {
     <!-- Main Content - Zentriert -->
     <main class="main-content">
       <div class="content-wrapper">
-        <!-- Ausgewähltes Gefühl-Item Anzeige -->
-        <div class="selected-item-container">
-          <h2 class="selected-item-title">
-            Ausgewähltes Item:
-          </h2>
-          <div class="selected-item-text">
-            {{ selectedGefuehl || 'Wählen Sie ein Gefühl-Item aus' }}
+        <!-- Haupttext -->
+        <div class="main-text-container">
+          <h1 class="main-text">Wie fühlen Sie sich?</h1>
+        </div>
+
+        <!-- Orange Rückmeldung -->
+        <div class="feedback-text-container">
+          <div class="feedback-text" :class="{ show: feedbackText && feedbackText.length > 0 }">
+            {{ feedbackText }}
           </div>
         </div>
 
@@ -85,15 +88,6 @@ const {
           </div>
         </div>
 
-        <!-- Instructions -->
-        <div class="instructions-container">
-          <h3 class="instructions-title">Bedienung</h3>
-          <p class="instructions-text">
-            <strong>Kurz blinzeln ({{ settingsStore.settings.blinkSensitivity }}s):</strong> Gefühl-Item auswählen<br>
-            <strong>Rechte Maustaste:</strong> Gefühl-Item auswählen<br>
-            <strong>Auto-Modus:</strong> Automatischer Durchlauf durch alle Items
-          </p>
-        </div>
       </div>
     </main>
   </div>

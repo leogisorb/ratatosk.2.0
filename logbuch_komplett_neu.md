@@ -38,6 +38,68 @@ Ratatosk ist eine Kommunikationshilfe für Menschen mit Behinderungen, die durch
 
 ## 📅 Chronologische Entwicklung
 
+### 2025-01-10 - UmgebungView Layout und TTS-Funktionalität komplett überarbeitet
+
+**Problem:**
+- UmgebungView Titel "Was möchten Sie an ihrer Umgebung verändern?" stand links neben dem Grid statt darüber
+- TTS-Funktionalität funktionierte nicht - alle TTS-Aufrufe schlugen fehl
+- Auto-Mode startete nicht korrekt
+- ZimmerVerbenView und GegenstaendeVerbenView fehlten wichtige Texte
+- "Was soll mit [Item] gemacht werden?" wurde nicht vorgelesen
+- "Bitte [Item] [Verb]" wurde nicht angezeigt oder vorgelesen
+- ZimmerVerbenView CSS war falsch - sah anders aus als BettVerbenView
+- Inline Styles überschrieben CSS-Klassen
+
+**Lösung:**
+- **UmgebungView Layout korrigiert**: 
+  - Titel steht jetzt über dem Grid (flex-direction: column)
+  - Grid ist horizontal und vertikal zentriert
+  - Titel hat ausreichend Breite (max-width: 1600px)
+- **TTS-System repariert**:
+  - TTSController Import entfernt (existierte nicht)
+  - Zurück zur einfachen SpeechSynthesisUtterance Implementierung
+  - Korrekte Timing-Struktur: Titel → 5s Pause → Auto-Mode
+- **Auto-Mode System verbessert**:
+  - Titel wird nach 1s vorgelesen
+  - Auto-Mode startet nach 5s (für vollständiges Vorlesen)
+  - Loop-Ende: Titel wird wieder vorgelesen → 2,5s Pause → neuer Loop
+- **ZimmerVerbenView und GegenstaendeVerbenView erweitert**:
+  - "Was soll mit [Item] gemacht werden?" wird nach 1s vorgelesen
+  - Auto-Mode startet nach 4s
+  - "Bitte [Item] [Verb]" wird nach Verb-Auswahl angezeigt und vorgelesen
+- **ZimmerVerbenView CSS komplett neu geschrieben**:
+  - Identisch mit BettVerbenView CSS
+  - 5x2 Grid für 10 Zimmer-Verben
+  - Gleiche Button-Größen (304px × 156px)
+  - Gleiche Emoji-Größen (5.2rem)
+  - Gleiche Hover-Effekte und Farben
+- **Template bereinigt**:
+  - Alle inline Styles entfernt
+  - Nur noch CSS-Klassen verwendet
+  - Saubere CSS-Import-Struktur
+
+**Technische Details:**
+- **UmgebungView.ts**: TTS-Funktion vereinfacht, Auto-Mode Timing korrigiert
+- **UmgebungView.vue**: Layout auf flex-direction: column umgestellt
+- **UmgebungView.css**: Grid zentriert, Titel-Container erweitert
+- **ZimmerVerbenView.vue**: Template bereinigt, Kombination-Anzeige hinzugefügt
+- **ZimmerVerbenView.css**: Komplett neu geschrieben basierend auf BettVerbenView
+- **GegenstaendeVerbenView.vue**: Template bereinigt, Kombination-Anzeige hinzugefügt
+- **GegenstaendeVerbenView.css**: Kombination-Styles hinzugefügt
+
+**Ergebnis:**
+- UmgebungView: Titel steht korrekt über dem Grid
+- TTS funktioniert in allen Views korrekt
+- Auto-Mode startet und läuft zuverlässig
+- Alle VerbenViews haben konsistentes Verhalten
+- ZimmerVerbenView sieht identisch zu BettVerbenView aus
+- "Bitte [Item] [Verb]" wird korrekt angezeigt und vorgelesen
+
+**Git Commit:**
+- Commit: "Fix UmgebungView layout and TTS functionality"
+- 163 Dateien geändert, 4375 Einfügungen, 1671 Löschungen
+- Erfolgreich gepusht zum Remote Repository
+
 ### 2025-01-31 - Pain Dialog System komplett überarbeitet und Auto-Modus behoben
 
 **Problem:**
@@ -114,6 +176,106 @@ Ratatosk ist eine Kommunikationshilfe für Menschen mit Behinderungen, die durch
 - **Navigation korrigiert**: Zurück-Buttons führen zu /app statt /
 - **Schriftgrößen optimiert**: 50% größer für bessere Lesbarkeit
 - **Überschriften entfernt**: "Ausgewähltes Item:" durch direkte Anzeige ersetzt
+
+### 2025-01-31 - Dark Mode Toggle Button implementiert
+
+**Problem:**
+- User meldet: "warum ist jetzt der hintergund scchwarz? wenn der darkmode aktiviert ist"
+- User möchte einen Toggle-Button im Header, um zwischen Light und Dark Mode zu wechseln
+- Dark Mode war aktiviert, aber es gab keine CSS-Regeln für Dark Mode
+- Keine Möglichkeit, den Dark Mode manuell zu steuern
+
+**Lösung:**
+- **Dark Mode Toggle Button**: Im Header oben rechts hinzugefügt
+- **Dark Mode Styles**: Vollständige CSS-Regeln für alle Komponenten
+- **toggleDarkMode Funktion**: Im Settings Store implementiert
+- **Responsive Icons**: Sonne/Mond Icons je nach aktuellem Modus
+
+**Technische Details:**
+- **Toggle Button**: 
+  - Position: Oben rechts im Header
+  - Icon: Sonne für Light Mode, Mond für Dark Mode
+  - Hover-Effekte: `hover:bg-gray-300 dark:hover:bg-gray-600`
+  - Tooltip: Zeigt aktuellen Modus an
+
+- **Dark Mode Styles**:
+  - **Hintergrund**: `dark:bg-gray-900` für Hauptcontainer
+  - **Header**: `dark:bg-gray-800` für Header
+  - **Text**: `dark:text-white` für alle Texte
+  - **Kacheln**: `rgba(55,65,81,0.3)` Hintergrund im Dark Mode
+  - **Borders**: Weiße Borders im Dark Mode
+  - **Icons**: `dark:invert-0` für korrekte Icon-Farben
+
+- **Settings Store**:
+  - `toggleDarkMode()` Funktion hinzugefügt
+  - Wechselt zwischen 'light' und 'dark' Theme
+  - Speichert Einstellung in localStorage
+
+**Dark Mode Features:**
+- ✅ **Toggle Button** - Einfacher Wechsel zwischen Light/Dark
+- ✅ **Responsive Design** - Funktioniert auf allen Bildschirmgrößen
+- ✅ **Icon-Anpassung** - Icons werden korrekt dargestellt
+- ✅ **Text-Kontrast** - Weißer Text auf dunklem Hintergrund
+- ✅ **Kachel-Styling** - Dunkle Kacheln mit weißen Borders
+- ✅ **Modal-Styling** - Dark Mode für alle Overlays
+- ✅ **Persistierung** - Einstellung wird gespeichert
+
+**Status:**
+✅ **Abgeschlossen** - Dark Mode Toggle Button implementiert
+
+### 2025-01-31 - Konfigurierbares 3×2 Grid mit zentriertem Layout
+
+**Problem:**
+- User benötigte ein konfigurierbares Grid-System
+- Kacheln sollten zentral konfiguriert werden können
+- Grid sollte vertikal und horizontal zentriert sein
+- Ratatosk-Logo fehlte im Header
+
+**Lösung:**
+- **Konfigurierbare Variablen erstellt**: `gridConfig` Objekt mit allen Kachel-Maßen
+- **Zentriertes Layout**: Flexbox mit `items-center justify-center`
+- **3×2 Grid**: Sauberes Grid-Layout ohne doppelte Einträge
+- **Echte SVG-Icons**: Alle 6 Kacheln mit korrekten SVG-Icons
+- **Ratatosk-Logo**: Logo im Header hinzugefügt
+
+**Technische Details:**
+- **Grid-Konfiguration**:
+  - `tileWidth: '422px'` - Kachel-Breite
+  - `iconSize: '125px'` - Icon-Größe
+  - `textSize: '40px'` - Text-Größe
+  - `tilePadding: '67px'` - Seiten-Padding
+  - `tilePaddingVertical: '35px'` - Vertikales Padding
+  - `tileGap: '32px'` - Abstand zwischen Kacheln
+  - `iconWidth: '119.09px'` - Icon-Container-Breite
+  - `iconHeight: '125px'` - Icon-Container-Höhe
+  - `borderRadius: '10px'` - Border-Radius
+  - `outlineWidth: '1.50px'` - Border-Breite
+  - `backgroundColor: 'rgba(217,217,217,0.10)'` - Hintergrund
+  - `iconBackgroundColor: ''` - Icon-Hintergrund (leer)
+  - `textColor: 'black'` - Text-Farbe
+
+**Grid-Layout:**
+```
+┌─────────────┬─────────────┬─────────────┐
+│ WARNGERÄUSCH│ UNTERHALTEN │     ICH     │ ← Top Row
+├─────────────┼─────────────┼─────────────┤
+│   SCHMERZEN │  UMGEBUNG   │EINSTELLUNGEN│ ← Bottom Row
+└─────────────┴─────────────┴─────────────┘
+```
+
+**Kacheln mit Icons:**
+- **WARNGERÄUSCH**: `bell.svg` (Glocke)
+- **UNTERHALTEN**: `comment-dots.svg` (Kommentare)
+- **ICH**: `user.svg` (Benutzer)
+- **SCHMERZEN**: `headache.svg` (Kopfschmerzen)
+- **UMGEBUNG**: `house-chimney.svg` (Haus)
+- **EINSTELLUNGEN**: `settings-sliders.svg` (Einstellungen)
+
+**Zentrierung:**
+- **Container**: `min-h-screen bg-white flex flex-col`
+- **Header**: `flex justify-between items-center`
+- **Main Content**: `flex-1 flex items-center justify-center`
+- **Grid**: `grid grid-cols-3 gap-8`
 
 ### 2025-01-31 - Moderner Neuaufbau: Komplette Migration
 
@@ -585,7 +747,7 @@ Das Ratatosk-Projekt richtet sich an Menschen mit Behinderungen, die auf alterna
 
 ---
 
-*Erstellt am: 2025-01-31*  
+*Erstellt am: 2025-01-10*  
 *Entwickler: Leopold Brosig*  
 *Projekt: Ratatosk - Kommunikationshilfe für Menschen mit Behinderungen*
 

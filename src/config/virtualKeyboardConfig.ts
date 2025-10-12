@@ -1,0 +1,407 @@
+/**
+ * Konfiguration für die virtuelle Tastatur mit Blinzelsteuerung
+ * Steuerung, TTS und UI-Regeln für sprachbehinderte Nutzer
+ */
+
+export interface TTSAction {
+  text: string
+  delay: number // Pause nach TTS in Millisekunden
+  action?: 'startRowScan' | 'startLetterScan' | 'returnToRowScan' | 'none'
+}
+
+export interface KeyboardRow {
+  id: string
+  letters: string[]
+  ttsText: string
+  displayTime: number // Zeit pro Zeile in Millisekunden
+}
+
+export interface KeyboardState {
+  currentRow: number
+  currentLetter: number
+  isRowScanning: boolean
+  isLetterScanning: boolean
+  hasHeardIntro: boolean
+  lastActivity: number
+  currentText: string
+}
+
+export const VIRTUAL_KEYBOARD_CONFIG = {
+  // TTS-Phasen und Texte
+  tts: {
+    // Einmaliger Intro-Text beim ersten Besuch
+    intro: {
+      text: "Willkommen in der virtuellen Tastatur. Blinzeln Sie eine Zeile Ihrer Wahl an. Nachdem Sie eine Zeile ausgewählt haben, laufen die Buchstaben dieser Zeile automatisch durch. Blinzeln Sie erneut, um einen Buchstaben auszuwählen. So können Sie Schritt für Schritt Wörter und Sätze bilden. Die Tastatur läuft in einer Endlosschleife, damit Sie jederzeit weiterschreiben können.",
+      delay: 1000,
+      action: 'startRowScan' as const
+    },
+    
+    // Zeilenauswahl bestätigt
+    rowSelected: {
+      text: "Zeile ausgewählt. Buchstaben laufen.",
+      delay: 1000,
+      action: 'startLetterScan' as const
+    },
+    
+    // Buchstabe ausgewählt
+    letterSelected: (letter: string) => ({
+      text: `Buchstabe ${letter} gewählt.`,
+      delay: 3000,
+      action: 'returnToRowScan' as const
+    }),
+    
+    // Inaktivität erkannt
+    inactivity: {
+      text: "Keine Eingabe erkannt. Zurück zur Zeilenauswahl.",
+      delay: 1000,
+      action: 'startRowScan' as const
+    }
+  },
+
+  // Tastatur-Layout (3 Zeilen)
+  keyboard: [
+    {
+      id: 'row1',
+      letters: ['Q', 'W', 'E', 'R', 'T', 'Z'],
+      ttsText: 'Zeile 1: Q W E R T Z',
+      displayTime: 2000
+    },
+    {
+      id: 'row2', 
+      letters: ['A', 'S', 'D', 'F', 'G', 'H', 'J', 'K', 'L'],
+      ttsText: 'Zeile 2: A S D F G H J K L',
+      displayTime: 2000
+    },
+    {
+      id: 'row3',
+      letters: ['Y', 'X', 'C', 'V', 'B', 'N', 'M', 'ß'],
+      ttsText: 'Zeile 3: Y X C V B N M ß',
+      displayTime: 2000
+    }
+  ],
+
+  // Zeitabstände
+  timing: {
+    rowDisplayTime: 2000,        // 2 Sekunden pro Zeile
+    letterDisplayTime: 1500,     // 1,5 Sekunden pro Buchstabe
+    inactivityTimeout: 10000,    // 10 Sekunden ohne Eingabe
+    pauseAfterIntro: 1000,       // 1 Sekunde nach Intro
+    pauseAfterRowSelection: 1000, // 1 Sekunde nach Zeilenauswahl
+    pauseAfterLetterSelection: 3000 // 3 Sekunden nach Buchstabenauswahl
+  },
+
+  // UI-Standards
+  ui: {
+    defaultText: "Noch kein Text…",
+    activeRowClass: "row-active",      // Orangefarbener Rahmen
+    activeLetterClass: "letter-active", // Leuchtender Rahmen
+    ttsIndicatorClass: "tts-active"     // Audio-Wellen-Animation
+  },
+
+  // Erweiterungsoptionen
+  features: {
+    localStorageKey: "virtualKeyboard_hasHeardIntro",
+    quickWords: ["Ich", "Ja", "Nein", "Danke"], // Optional: Schnellwahl-Wörter
+    enableTextReading: true // Optional: Text vorlesen
+  }
+} as const
+
+/**
+ * Zustandsmanager für die virtuelle Tastatur
+ */
+export class VirtualKeyboardController {
+  private state: KeyboardState
+  private rowScanInterval: number | null = null
+  private letterScanInterval: number | null = null
+  private inactivityTimeout: number | null = null
+  private ttsController: any // SimpleFlowController
+
+  constructor(ttsController: any) {
+    this.ttsController = ttsController
+    this.state = {
+      currentRow: 0,
+      currentLetter: 0,
+      isRowScanning: false,
+      isLetterScanning: false,
+      hasHeardIntro: this.checkIntroStatus(),
+      currentText: VIRTUAL_KEYBOARD_CONFIG.ui.defaultText,
+      lastActivity: Date.now()
+    }
+  }
+
+  /**
+   * Startet die virtuelle Tastatur
+   */
+  public async start(): Promise<void> {
+    console.log('VirtualKeyboard: Starting virtual keyboard')
+    
+    if (!this.state.hasHeardIntro) {
+      await this.playIntro()
+      this.markIntroAsHeard()
+    }
+    
+    this.startRowScanning()
+  }
+
+  /**
+   * Stoppt die virtuelle Tastatur
+   */
+  public stop(): void {
+    console.log('VirtualKeyboard: Stopping virtual keyboard')
+    this.clearAllIntervals()
+  }
+
+  /**
+   * Behandelt Blinzel-/Klick-Eingabe
+   */
+  public async handleUserInput(): Promise<void> {
+    console.log('VirtualKeyboard: User input detected')
+    this.updateActivity()
+    
+    if (this.state.isRowScanning) {
+      await this.selectCurrentRow()
+    } else if (this.state.isLetterScanning) {
+      await this.selectCurrentLetter()
+    }
+  }
+
+  /**
+   * Spielt den Intro-Text ab
+   */
+  private async playIntro(): Promise<void> {
+    const intro = VIRTUAL_KEYBOARD_CONFIG.tts.intro
+    await this.ttsController.speak(intro.text)
+    await this.delay(intro.delay)
+  }
+
+  /**
+   * Startet den Zeilendurchlauf
+   */
+  private startRowScanning(): void {
+    console.log('VirtualKeyboard: Starting row scanning')
+    this.state.isRowScanning = true
+    this.state.isLetterScanning = false
+    this.clearAllIntervals()
+    
+    this.rowScanInterval = window.setInterval(() => {
+      this.scanNextRow()
+    }, VIRTUAL_KEYBOARD_CONFIG.timing.rowDisplayTime)
+    
+    this.setInactivityTimeout()
+  }
+
+  /**
+   * Startet den Buchstabenlauf in der aktuellen Zeile
+   */
+  private startLetterScanning(): void {
+    console.log('VirtualKeyboard: Starting letter scanning for row', this.state.currentRow)
+    this.state.isRowScanning = false
+    this.state.isLetterScanning = true
+    this.state.currentLetter = 0
+    this.clearAllIntervals()
+    
+    this.letterScanInterval = window.setInterval(() => {
+      this.scanNextLetter()
+    }, VIRTUAL_KEYBOARD_CONFIG.timing.letterDisplayTime)
+    
+    this.setInactivityTimeout()
+  }
+
+  /**
+   * Durchläuft die nächste Zeile
+   */
+  private async scanNextRow(): Promise<void> {
+    const row = VIRTUAL_KEYBOARD_CONFIG.keyboard[this.state.currentRow]
+    console.log('VirtualKeyboard: Scanning row', this.state.currentRow, row.ttsText)
+    
+    // TTS für aktuelle Zeile
+    await this.ttsController.speak(row.ttsText)
+    
+    // UI-Update (aktive Zeile hervorheben)
+    this.highlightActiveRow()
+    
+    // Nächste Zeile
+    this.state.currentRow = (this.state.currentRow + 1) % VIRTUAL_KEYBOARD_CONFIG.keyboard.length
+  }
+
+  /**
+   * Durchläuft den nächsten Buchstaben
+   */
+  private async scanNextLetter(): Promise<void> {
+    const row = VIRTUAL_KEYBOARD_CONFIG.keyboard[this.state.currentRow]
+    const letter = row.letters[this.state.currentLetter]
+    console.log('VirtualKeyboard: Scanning letter', letter)
+    
+    // TTS für aktuellen Buchstaben
+    await this.ttsController.speak(letter)
+    
+    // UI-Update (aktive Taste hervorheben)
+    this.highlightActiveLetter()
+    
+    // Nächster Buchstabe
+    this.state.currentLetter = (this.state.currentLetter + 1) % row.letters.length
+  }
+
+  /**
+   * Wählt die aktuelle Zeile aus
+   */
+  private async selectCurrentRow(): Promise<void> {
+    console.log('VirtualKeyboard: Row selected', this.state.currentRow)
+    this.clearAllIntervals()
+    
+    const rowSelected = VIRTUAL_KEYBOARD_CONFIG.tts.rowSelected
+    await this.ttsController.speak(rowSelected.text)
+    await this.delay(rowSelected.delay)
+    
+    this.startLetterScanning()
+  }
+
+  /**
+   * Wählt den aktuellen Buchstaben aus
+   */
+  private async selectCurrentLetter(): Promise<void> {
+    const row = VIRTUAL_KEYBOARD_CONFIG.keyboard[this.state.currentRow]
+    const letter = row.letters[this.state.currentLetter]
+    console.log('VirtualKeyboard: Letter selected', letter)
+    
+    this.clearAllIntervals()
+    
+    // Buchstabe zum Text hinzufügen
+    this.addLetterToText(letter)
+    
+    // TTS-Bestätigung
+    const letterSelected = VIRTUAL_KEYBOARD_CONFIG.tts.letterSelected(letter)
+    await this.ttsController.speak(letterSelected.text)
+    await this.delay(letterSelected.delay)
+    
+    // Zurück zur Zeilenauswahl
+    this.startRowScanning()
+  }
+
+  /**
+   * Fügt einen Buchstaben zum aktuellen Text hinzu
+   */
+  private addLetterToText(letter: string): void {
+    if (this.state.currentText === VIRTUAL_KEYBOARD_CONFIG.ui.defaultText) {
+      this.state.currentText = letter
+    } else {
+      this.state.currentText += letter
+    }
+    console.log('VirtualKeyboard: Text updated to', this.state.currentText)
+    this.updateTextDisplay()
+  }
+
+  /**
+   * Setzt den Inaktivitäts-Timeout
+   */
+  private setInactivityTimeout(): void {
+    this.clearInactivityTimeout()
+    this.inactivityTimeout = window.setTimeout(() => {
+      this.handleInactivity()
+    }, VIRTUAL_KEYBOARD_CONFIG.timing.inactivityTimeout)
+  }
+
+  /**
+   * Behandelt Inaktivität
+   */
+  private async handleInactivity(): Promise<void> {
+    console.log('VirtualKeyboard: Inactivity detected')
+    this.clearAllIntervals()
+    
+    const inactivity = VIRTUAL_KEYBOARD_CONFIG.tts.inactivity
+    await this.ttsController.speak(inactivity.text)
+    await this.delay(inactivity.delay)
+    
+    this.startRowScanning()
+  }
+
+  /**
+   * Aktualisiert die Aktivitätszeit
+   */
+  private updateActivity(): void {
+    this.state.lastActivity = Date.now()
+  }
+
+  /**
+   * Prüft, ob Intro bereits gehört wurde
+   */
+  private checkIntroStatus(): boolean {
+    return localStorage.getItem(VIRTUAL_KEYBOARD_CONFIG.features.localStorageKey) === 'true'
+  }
+
+  /**
+   * Markiert Intro als gehört
+   */
+  private markIntroAsHeard(): void {
+    localStorage.setItem(VIRTUAL_KEYBOARD_CONFIG.features.localStorageKey, 'true')
+    this.state.hasHeardIntro = true
+  }
+
+  /**
+   * UI-Update-Methoden (müssen je nach Framework angepasst werden)
+   */
+  private highlightActiveRow(): void {
+    // TODO: Implementierung je nach UI-Framework
+    console.log('VirtualKeyboard: Highlighting row', this.state.currentRow)
+  }
+
+  private highlightActiveLetter(): void {
+    // TODO: Implementierung je nach UI-Framework
+    console.log('VirtualKeyboard: Highlighting letter', this.state.currentLetter)
+  }
+
+  private updateTextDisplay(): void {
+    // TODO: Implementierung je nach UI-Framework
+    console.log('VirtualKeyboard: Updating text display to', this.state.currentText)
+  }
+
+  /**
+   * Utility-Methoden
+   */
+  private clearAllIntervals(): void {
+    this.clearRowScanInterval()
+    this.clearLetterScanInterval()
+    this.clearInactivityTimeout()
+  }
+
+  private clearRowScanInterval(): void {
+    if (this.rowScanInterval) {
+      clearInterval(this.rowScanInterval)
+      this.rowScanInterval = null
+    }
+  }
+
+  private clearLetterScanInterval(): void {
+    if (this.letterScanInterval) {
+      clearInterval(this.letterScanInterval)
+      this.letterScanInterval = null
+    }
+  }
+
+  private clearInactivityTimeout(): void {
+    if (this.inactivityTimeout) {
+      clearTimeout(this.inactivityTimeout)
+      this.inactivityTimeout = null
+    }
+  }
+
+  private delay(ms: number): Promise<void> {
+    return new Promise(resolve => setTimeout(resolve, ms))
+  }
+
+  /**
+   * Getter für aktuellen Zustand
+   */
+  public getState(): KeyboardState {
+    return { ...this.state }
+  }
+
+  /**
+   * Getter für aktuellen Text
+   */
+  public getCurrentText(): string {
+    return this.state.currentText
+  }
+}
+
+export default VIRTUAL_KEYBOARD_CONFIG

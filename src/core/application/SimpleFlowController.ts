@@ -17,6 +17,7 @@ export class SimpleFlowController {
   private isSpeaking: boolean = false
   private pendingCycle: boolean = false
   private currentCycleDelay: number = 3000
+  private isTTSMuted: boolean = false
 
   private constructor() {
     this.speechSynthesis = window.speechSynthesis
@@ -145,6 +146,11 @@ export class SimpleFlowController {
       return
     }
 
+    if (this.isTTSMuted) {
+      console.log('SimpleFlowController: TTS is muted, not speaking:', text)
+      return
+    }
+
     console.log('SimpleFlowController: Speaking:', text)
     
     // Stoppe vorherige TTS
@@ -235,6 +241,26 @@ export class SimpleFlowController {
   }
 
   /**
+   * Schaltet TTS global stumm/an
+   */
+  public setTTSMuted(muted: boolean): void {
+    this.isTTSMuted = muted
+    console.log('SimpleFlowController: TTS muted set to:', muted)
+    
+    // Wenn TTS stumm geschaltet wird, stoppe aktuelle Wiedergabe
+    if (muted) {
+      this.stopTTS()
+    }
+  }
+
+  /**
+   * Gibt zurück, ob TTS stumm geschaltet ist
+   */
+  public isTTSMuted(): boolean {
+    return this.isTTSMuted
+  }
+
+  /**
    * Setup für Voice-Handling
    */
   private setupVoiceHandling(): void {
@@ -255,7 +281,8 @@ export class SimpleFlowController {
       currentIndex: this.currentIndex,
       userInteracted: this.userInteracted,
       isSpeaking: this.isSpeaking,
-      pendingCycle: this.pendingCycle
+      pendingCycle: this.pendingCycle,
+      isTTSMuted: this.isTTSMuted
     }
   }
 }

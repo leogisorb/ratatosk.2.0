@@ -19,7 +19,7 @@
 .title-container {
   text-align: center;
   padding: 2rem 0;
-  margin-bottom: 1rem;
+  margin-bottom: 0.5rem; /* Reduziert von 1rem auf 0.5rem (50% weniger) */
   width: 100%;
   max-width: 1600px;
 }

@@ -3,6 +3,7 @@ import { useRouter } from 'vue-router'
 import { useFaceRecognition } from '../../face-recognition/composables/useFaceRecognition'
 import { useSettingsStore } from '../../settings/stores/settings'
 import { simpleFlowController } from '../../../core/application/SimpleFlowController'
+import { generateTTSText, getMainText, getPauseAfterTTS, getAutoStartDelay, getCycleDelay } from '../../../config/ttsConfig'
 
 export function useErnaehrungViewLogic() {
   // Router
@@ -17,10 +18,12 @@ export function useErnaehrungViewLogic() {
   // State
   const currentTileIndex = ref(0)
   const selectedErnaehrung = ref('')
+  const feedbackText = ref('')
   const isAutoMode = ref(true)
   const closedFrames = ref(0)
   const eyesClosed = ref(false)
   const userInteracted = ref(false)
+  const isTTSActive = ref(false)
 
   // Verbesserte Blink-Detection Parameter - zentral gesteuert
   const blinkThreshold = computed(() => Math.ceil(settingsStore.settings.blinkSensitivity * 10))
@@ -66,14 +69,26 @@ export function useErnaehrungViewLogic() {
     { id: 'zurueck', text: 'zurück', type: 'navigation', emoji: '⬅️' }
   ]
 
-  // Zentrale TTS-Funktion über FlowController
+  // Zentrale TTS-Funktion über FlowController mit Event-Handling
   const speakText = async (text: string) => {
     console.log('ErnaehrungView: Requesting TTS for:', text)
-    await simpleFlowController.speak(text)
+    isTTSActive.value = true
+    
+    try {
+      await simpleFlowController.speak(text)
+    } finally {
+      isTTSActive.value = false
+    }
   }
 
   // Ernährung-Item Auswahl
-  function selectErnaehrung(ernaehrungId: string) {
+  async function selectErnaehrung(ernaehrungId: string) {
+    // Verhindere Interaktion während TTS
+    if (isTTSActive.value) {
+      console.log('ErnaehrungView: Interaction blocked during TTS')
+      return
+    }
+
     const selectedItem = ernaehrungItems.find(item => item.id === ernaehrungId)
     
     if (!selectedItem) {
@@ -91,14 +106,36 @@ export function useErnaehrungViewLogic() {
         break
       default:
         console.log('ErnaehrungView: Selected Ernährung:', ernaehrungId)
-        speakText(`${selectedItem.text} ausgewählt`)
+        
         // Auto-Mode stoppt bei bewusster Auswahl
         simpleFlowController.stopAutoMode()
+        
+        // Verwende die neue TTS-Konfiguration
+        const ttsText = generateTTSText('ernaehrung', selectedItem.text)
+        
+        // Zeige orange Rückmeldung an
+        feedbackText.value = ttsText
+        console.log('ErnaehrungView: Setting feedback text:', ttsText)
+        
+        // Spreche die Rückmeldung
+        await speakText(ttsText)
+        
+        // Pause nach TTS-Ende - länger warten, damit der Benutzer die orange Nachricht sehen kann
+        const pauseAfterTTS = getPauseAfterTTS('ernaehrung')
+        await new Promise(resolve => setTimeout(resolve, pauseAfterTTS + 2000)) // 2 Sekunden extra
+        
+        // Nach der TTS-Ausgabe zurück zum Ich-View-Hauptgrid
+        router.push('/ich')
     }
   }
 
   // Blink Detection
   const handleBlink = () => {
+    // Verhindere Blink-Interaktion während TTS
+    if (isTTSActive.value) {
+      return
+    }
+
     const now = Date.now()
     
     if (faceRecognition.isBlinking.value) {
@@ -108,8 +145,7 @@ export function useErnaehrungViewLogic() {
         const currentItem = ernaehrungItems[currentTileIndex.value]
         console.log('ErnaehrungView: Blink activation for tile:', currentTileIndex.value, 'ernaehrungId:', currentItem.id, 'text:', currentItem.text)
         
-        // TTS + Auswahl - Auto-Mode stoppt bei Interaktion
-        speakText(currentItem.text)
+        // Nur Auswahl - TTS wird in selectErnaehrung gemacht
         selectErnaehrung(currentItem.id)
         eyesClosed.value = true
         lastBlinkTime.value = now
@@ -125,6 +161,12 @@ export function useErnaehrungViewLogic() {
 
   // Right Click Handler
   const handleRightClick = (event: MouseEvent) => {
+    // Verhindere Right-Click-Interaktion während TTS
+    if (isTTSActive.value) {
+      event.preventDefault()
+      return false
+    }
+
     event.preventDefault()
     event.stopPropagation()
     event.stopImmediatePropagation()
@@ -133,8 +175,7 @@ export function useErnaehrungViewLogic() {
     if (currentItem) {
       console.log('ErnaehrungView: Right click activation for tile:', currentTileIndex.value, 'ernaehrungId:', currentItem.id, 'text:', currentItem.text)
       
-      // TTS + Auswahl - Auto-Mode stoppt bei Interaktion
-      speakText(currentItem.text)
+      // Nur Auswahl - TTS wird in selectErnaehrung gemacht
       selectErnaehrung(currentItem.id)
     } else {
       console.log('ErnaehrungView: No current item found for right click')
@@ -146,6 +187,9 @@ export function useErnaehrungViewLogic() {
   onMounted(() => {
     // Setze ErnaehrungView als aktiven View
     simpleFlowController.setActiveView('/ernaehrung')
+    
+    // Reset feedback text when view is mounted
+    feedbackText.value = ''
     
     if (!faceRecognition.isActive.value) {
       faceRecognition.start()
@@ -161,7 +205,19 @@ export function useErnaehrungViewLogic() {
     document.addEventListener('contextmenu', handleRightClick, { capture: true, passive: false })
     
     // Start auto-mode automatically über FlowController
-    setTimeout(() => {
+    // Zuerst den Haupttext sprechen, dann nach Pause die automatische Durchlauf-Logik starten
+    const mainText = getMainText('ernaehrung')
+    const autoStartDelay = getAutoStartDelay('ernaehrung')
+    const cycleDelay = getCycleDelay('ernaehrung')
+    
+    setTimeout(async () => {
+      await speakText(mainText)
+      
+      // Pause nach TTS-Ende
+      const pauseAfterTTS = getPauseAfterTTS('ernaehrung')
+      await new Promise(resolve => setTimeout(resolve, pauseAfterTTS))
+      
+      // Starte automatische Durchlauf-Logik
       simpleFlowController.startAutoMode(
         ernaehrungItems,
         (currentIndex, currentItem) => {
@@ -169,10 +225,10 @@ export function useErnaehrungViewLogic() {
           console.log('ErnaehrungView: Auto-mode cycle:', currentItem.text, 'at index:', currentIndex)
           speakText(currentItem.text)
         },
-        3000,
-        3000
+        cycleDelay,
+        cycleDelay
       )
-    }, 1000)
+    }, autoStartDelay)
     
     console.log('ErnaehrungView: mounted - using central controllers')
   })
@@ -195,6 +251,7 @@ export function useErnaehrungViewLogic() {
     // State
     currentTileIndex,
     selectedErnaehrung,
+    feedbackText,
     isAutoMode,
     closedFrames,
     eyesClosed,

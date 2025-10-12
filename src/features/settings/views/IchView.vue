@@ -32,6 +32,11 @@ const {
 
     <!-- Hauptinhalt -->
     <main class="main-content">
+      <!-- Haupttext über den Kacheln -->
+      <div class="main-text-container">
+        <h1 class="main-text">Was möchten Sie machen?</h1>
+      </div>
+      
       <!-- Desktop Layout (3×2 Grid) - identisch mit HomeView -->
       <div class="grid-container">
         <!-- ERNÄHRUNG -->
