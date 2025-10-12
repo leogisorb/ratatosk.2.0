@@ -269,7 +269,7 @@ export class VirtualKeyboardStateMachine {
       // Intro-TTS abspielen
       this.context.isTTSActive = true
       try {
-        await this.ttsController.speak(
+        await this.ttsController.speakForVirtualKeyboard(
           "Willkommen in der virtuellen Tastatur. Blinzeln Sie eine Zeile Ihrer Wahl an. Nachdem Sie eine Zeile ausgewählt haben, laufen die Buchstaben dieser Zeile automatisch durch. Blinzeln Sie erneut, um einen Buchstaben auszuwählen. So können Sie Schritt für Schritt Wörter und Sätze bilden. Die Tastatur läuft in einer Endlosschleife, damit Sie jederzeit weiterschreiben können."
         )
         console.log('StateMachine: Intro TTS completed')
@@ -329,7 +329,7 @@ export class VirtualKeyboardStateMachine {
     
     this.context.lastActivity = Date.now()
     this.context.isTTSActive = true
-    await this.ttsController.speak("Zeile ausgewählt")
+    await this.ttsController.speakForVirtualKeyboard("Zeile ausgewählt")
     this.context.isTTSActive = false
     
     // Nach 1 Sekunde → ROW_SELECTED
@@ -351,7 +351,7 @@ export class VirtualKeyboardStateMachine {
     // TTS-Bestätigung
     this.context.isTTSActive = true
     const ttsText = this.getTTSLabel(letter)
-    await this.ttsController.speak(ttsText)
+    await this.ttsController.speakForVirtualKeyboard(ttsText)
     this.context.isTTSActive = false
     
     // Nach 3 Sekunden → LETTER_SELECTED
@@ -381,7 +381,7 @@ export class VirtualKeyboardStateMachine {
     console.log('StateMachine: Handling INACTIVITY')
     
     this.context.isTTSActive = true
-    await this.ttsController.speak("Keine Eingabe erkannt. Zurück zur Zeilenauswahl.")
+    await this.ttsController.speakForVirtualKeyboard("Keine Eingabe erkannt. Zurück zur Zeilenauswahl.")
     this.context.isTTSActive = false
     
     // Nach 1 Sekunde → zurück zu ROW_SCANNING
@@ -406,7 +406,9 @@ export class VirtualKeyboardStateMachine {
    * Timer-Management
    */
   private startRowTimer(): void {
+    console.log('StateMachine: Starting row timer with 2000ms interval')
     this.setIntervalTimer('row', 2000, () => {
+      console.log('StateMachine: Row timer fired - processing ROW_TIMEOUT event')
       this.processEvent(VirtualKeyboardEvent.ROW_TIMEOUT)
     })
   }
@@ -433,11 +435,13 @@ export class VirtualKeyboardStateMachine {
     this.clearTimer(name)
     const timer = window.setInterval(callback, delay)
     this.timers.set(name, timer)
+    console.log(`StateMachine: Set interval timer '${name}' with ${delay}ms delay, timer ID: ${timer}`)
   }
 
   private clearTimer(name: string): void {
     const timer = this.timers.get(name)
     if (timer) {
+      console.log(`StateMachine: Clearing timer '${name}' with ID: ${timer}`)
       clearTimeout(timer)
       clearInterval(timer)
       this.timers.delete(name)
@@ -484,7 +488,10 @@ export class VirtualKeyboardStateMachine {
     ]
     const rowDescription = rowDescriptions[this.context.currentRow]
     console.log('StateMachine: Announcing row:', rowDescription)
-    this.ttsController.speak(rowDescription)
+    // TTS nicht-blockierend aufrufen
+    this.ttsController.speakForVirtualKeyboard(rowDescription).catch(error => {
+      console.log('StateMachine: TTS error ignored:', error)
+    })
   }
 
   private announceCurrentLetter(): void {
@@ -492,7 +499,10 @@ export class VirtualKeyboardStateMachine {
     const letter = row[this.context.currentLetter]
     const ttsText = this.getTTSLabel(letter)
     console.log('StateMachine: Announcing letter:', ttsText, 'at index:', this.context.currentLetter)
-    this.ttsController.speak(ttsText)
+    // TTS nicht-blockierend aufrufen
+    this.ttsController.speakForVirtualKeyboard(ttsText).catch(error => {
+      console.log('StateMachine: TTS error ignored:', error)
+    })
   }
 
   private getCurrentRowLetters(): string[] {
@@ -508,7 +518,9 @@ export class VirtualKeyboardStateMachine {
       // Steuerung
       ['LEERZEICHEN', 'LÖSCHEN', 'ZURÜCK']
     ]
-    return keyboardLayout[this.context.selectedRow || 0]
+    const rowIndex = this.context.selectedRow !== null ? this.context.selectedRow : this.context.currentRow
+    console.log('StateMachine: Getting letters for row:', rowIndex, 'selectedRow:', this.context.selectedRow, 'currentRow:', this.context.currentRow)
+    return keyboardLayout[rowIndex]
   }
 
   private getTTSLabel(letter: string): string {

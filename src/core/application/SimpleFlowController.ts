@@ -151,6 +151,26 @@ export class SimpleFlowController {
       return
     }
 
+    await this.performSpeak(text)
+  }
+
+  /**
+   * TTS sprechen (für virtuelle Tastatur - ohne userInteracted Check)
+   */
+  public async speakForVirtualKeyboard(text: string): Promise<void> {
+    if (this.isTTSMuted) {
+      console.log('SimpleFlowController: TTS is muted, not speaking:', text)
+      return
+    }
+
+    await this.performSpeak(text)
+  }
+
+  /**
+   * TTS ausführen
+   */
+  private async performSpeak(text: string): Promise<void> {
+
     console.log('SimpleFlowController: Speaking:', text)
     
     // Stoppe vorherige TTS
