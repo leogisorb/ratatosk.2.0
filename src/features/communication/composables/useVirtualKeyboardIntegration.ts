@@ -4,11 +4,16 @@
  */
 
 import { ref, computed, onMounted, onUnmounted } from 'vue'
+import { useRouter } from 'vue-router'
 import { VirtualKeyboardStateMachine, VirtualKeyboardState, VirtualKeyboardEvent } from '../../../config/virtualKeyboardStateMachine'
 import { simpleFlowController } from '../../../core/application/SimpleFlowController'
 import { useFaceRecognition } from '../../face-recognition/composables/useFaceRecognition'
+import { VIRTUAL_KEYBOARD_CONFIG } from '../../../config/virtualKeyboardConfig'
 
 export function useVirtualKeyboardIntegration() {
+  // Router für Navigation
+  const router = useRouter()
+  
   // Refs für Vue-Reaktivität
   const currentText = ref("Noch kein Text…")
   const currentState = ref<VirtualKeyboardState>(VirtualKeyboardState.IDLE)
@@ -23,19 +28,8 @@ export function useVirtualKeyboardIntegration() {
   // Face Recognition
   const faceRecognition = useFaceRecognition()
 
-  // Tastatur-Layout (neue alphabetische Reihenfolge)
-  const keyboardLayout = [
-    // Buchstaben von A–Z (inkl. ß und Umlaute)
-    ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K'],
-    ['L', 'M', 'N', 'O', 'P', 'Q', 'R', 'S', 'T', 'U', 'V'],
-    ['W', 'X', 'Y', 'Z', 'Ä', 'Ö', 'Ü', 'ß', '.', ',', '?'],
-    // Häufige Silben und Lautkombinationen
-    ['SCH', 'CH', 'EI', 'IE', 'AU', 'EU', 'ÄU', 'PF', 'PH', 'CK', 'NK'],
-    // Kurze Wörter
-    ['JA', 'NEIN', 'ICH', 'DU', 'ES', 'IST', 'BIN'],
-    // Steuerung
-    ['LEERZEICHEN', 'LÖSCHEN', 'ZURÜCK']
-  ]
+  // Tastatur-Layout aus zentraler Konfiguration
+  const keyboardLayout = VIRTUAL_KEYBOARD_CONFIG.keyboard.map(row => row.letters)
 
   // Computed Properties
   const currentRowLetters = computed(() => {
@@ -82,8 +76,23 @@ export function useVirtualKeyboardIntegration() {
     console.log('VirtualKeyboard: Initializing virtual keyboard integration')
     console.log('VirtualKeyboard: SimpleFlowController available:', !!simpleFlowController)
     
+    // Navigation-Callback für ZURÜCK-Taste
+    const onNavigateBack = () => {
+      console.log('VirtualKeyboard: Navigating back to app, stopping all TTS...')
+      
+      // Stoppe alle laufenden TTS (beide Systeme)
+      speechSynthesis.cancel()  // Direkte TTS-Implementierungen
+      simpleFlowController.stopTTS()  // SimpleFlowController TTS
+      
+      // Stoppe virtuelle Tastatur
+      stopVirtualKeyboard()
+      
+      // Navigiere zurück
+      router.push('/app')
+    }
+
     // State-Machine erstellen
-    stateMachine = new VirtualKeyboardStateMachine(simpleFlowController, onStateChange)
+    stateMachine = new VirtualKeyboardStateMachine(simpleFlowController, onStateChange, onNavigateBack)
     console.log('VirtualKeyboard: State machine created:', !!stateMachine)
     
     // Face Recognition für Blinzelsteuerung (vorerst deaktiviert)
@@ -92,8 +101,12 @@ export function useVirtualKeyboardIntegration() {
     
     // State-Machine starten
     console.log('VirtualKeyboard: Starting state machine...')
-    stateMachine.start()
-    console.log('VirtualKeyboard: State machine started')
+    try {
+      stateMachine.start()
+      console.log('VirtualKeyboard: State machine started successfully')
+    } catch (error) {
+      console.error('VirtualKeyboard: Error starting state machine:', error)
+    }
   }
 
   /**
@@ -102,12 +115,26 @@ export function useVirtualKeyboardIntegration() {
   const stopVirtualKeyboard = () => {
     console.log('VirtualKeyboard: Stopping virtual keyboard integration')
     
+    // Stoppe alle laufenden TTS (beide Systeme)
+    speechSynthesis.cancel()  // Direkte TTS-Implementierungen
+    simpleFlowController.stopTTS()  // SimpleFlowController TTS
+    
     if (stateMachine) {
       stateMachine.stop()
       stateMachine = null
     }
     
     faceRecognition.stop()
+  }
+
+  /**
+   * Setzt den Intro-Status zurück, damit der Begrüßungstext erneut gesprochen wird
+   */
+  const resetIntroStatus = () => {
+    console.log('VirtualKeyboard: Resetting intro status')
+    if (stateMachine) {
+      stateMachine.resetIntroStatus()
+    }
   }
 
   /**
@@ -238,6 +265,7 @@ export function useVirtualKeyboardIntegration() {
     // Methods
     initializeVirtualKeyboard,
     stopVirtualKeyboard,
+    resetIntroStatus,
     handleClick,
     clearText,
     readCurrentText,

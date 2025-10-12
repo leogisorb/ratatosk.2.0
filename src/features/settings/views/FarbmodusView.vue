@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { ref, computed, onMounted, onUnmounted } from 'vue'
 import { useRouter } from 'vue-router'
-import { useSettingsStore } from '../../settings/stores/settings'
+import { useSettingsStore } from '../stores/settings'
 import { useFaceRecognition } from '../../face-recognition/composables/useFaceRecognition'
 import { keyboardGridConfig, getKeyboardTileStyle } from '../../../config/gridConfig'
 import AppHeader from '../../../shared/components/AppHeader.vue'
@@ -28,43 +28,43 @@ const isTTSEnabled = ref(true)
 // Verwende die zentrale Grid-Konfiguration
 const gridConfig = keyboardGridConfig
 
-// Leuchtdauer-Optionen (in Sekunden)
-const leuchtdauerItems = [
+// Farbmodus-Optionen
+const farbmodusItems = [
   {
-    id: 'normal',
-    title: 'NORMAL',
-    description: '3 Sekunden',
-    duration: 3
+    id: 'neutral',
+    title: 'NEUTRAL',
+    description: 'Standard Farben',
+    color: '#6b7280'
   },
   {
-    id: 'langsam',
-    title: 'LANGSAM',
-    description: '4 Sekunden',
-    duration: 4
+    id: 'warm',
+    title: 'WARM',
+    description: 'Warme Farben',
+    color: '#f59e0b'
   },
   {
-    id: 'sehr-langsam',
-    title: 'SEHR LANGSAM',
-    description: '5 Sekunden',
-    duration: 5
+    id: 'cool',
+    title: 'COOL',
+    description: 'Kühle Farben',
+    color: '#3b82f6'
   },
   {
-    id: 'lang',
-    title: 'LANG',
-    description: '6 Sekunden',
-    duration: 6
+    id: 'high-contrast',
+    title: 'HOCHKONTRAST',
+    description: 'Hoher Kontrast',
+    color: '#000000'
   },
   {
-    id: 'sehr-lang',
-    title: 'SEHR LANG',
-    description: '7 Sekunden',
-    duration: 7
+    id: 'dark',
+    title: 'DUNKEL',
+    description: 'Dunkles Design',
+    color: '#1f2937'
   },
   {
     id: 'zurueck',
     title: 'ZURÜCK',
     description: 'Zurück zu Einstellungen',
-    duration: 0
+    color: '#6b7280'
   }
 ]
 
@@ -75,10 +75,10 @@ const appClasses = computed(() => ({
 
 // Text-to-Speech Funktion
 const speakText = (text: string) => {
-  console.log('LeuchtDauerView speakText called with:', text, 'isTTSEnabled:', isTTSEnabled.value, 'speechSynthesis:', speechSynthesis)
+  console.log('FarbmodusView speakText called with:', text, 'isTTSEnabled:', isTTSEnabled.value, 'speechSynthesis:', speechSynthesis)
   
   if (!isTTSEnabled.value || !speechSynthesis) {
-    console.log('LeuchtDauerView TTS disabled or speechSynthesis not available')
+    console.log('FarbmodusView TTS disabled or speechSynthesis not available')
     return
   }
   
@@ -90,19 +90,19 @@ const speakText = (text: string) => {
   utterance.pitch = 1.0
   utterance.volume = 1.0
   
-  console.log('LeuchtDauerView Speaking:', text)
+  console.log('FarbmodusView Speaking:', text)
   speechSynthesis.speak(utterance)
 }
 
 // TTS Toggle
 const toggleTTS = () => {
-  console.log('LeuchtDauerView toggleTTS called, current state:', isTTSEnabled.value)
+  console.log('FarbmodusView toggleTTS called, current state:', isTTSEnabled.value)
   isTTSEnabled.value = !isTTSEnabled.value
-  console.log('LeuchtDauerView TTS toggled to:', isTTSEnabled.value)
+  console.log('FarbmodusView TTS toggled to:', isTTSEnabled.value)
   
   if (!isTTSEnabled.value) {
     speechSynthesis.cancel()
-    console.log('LeuchtDauerView TTS cancelled')
+    console.log('FarbmodusView TTS cancelled')
   } else {
     // Test TTS when enabling
     speakText('Sprachausgabe aktiviert')
@@ -121,17 +121,17 @@ const startAutoMode = () => {
       return
     }
     
-    currentTileIndex.value = (currentTileIndex.value + 1) % leuchtdauerItems.length
+    currentTileIndex.value = (currentTileIndex.value + 1) % farbmodusItems.length
     
     // Spreche den aktuellen Menüpunkt vor
-    const currentItem = leuchtdauerItems[currentTileIndex.value]
+    const currentItem = farbmodusItems[currentTileIndex.value]
     speakText(currentItem.title)
     
     autoModeInterval.value = window.setTimeout(cycleTiles, settingsStore.settings.autoModeSpeed)
   }
   
   // Spreche den ersten Menüpunkt vor
-  const firstItem = leuchtdauerItems[currentTileIndex.value]
+  const firstItem = farbmodusItems[currentTileIndex.value]
   speakText(firstItem.title)
   
   // Starte den ersten Zyklus nach der aktuellen Geschwindigkeit
@@ -151,7 +151,7 @@ const resumeAutoMode = () => {
   isAutoModePaused.value = false
   if (!autoModeInterval.value) {
     // Starte den Auto-Modus bei der aktuellen Kachel
-    const currentItem = leuchtdauerItems[currentTileIndex.value]
+    const currentItem = farbmodusItems[currentTileIndex.value]
     speakText(currentItem.title)
     startAutoMode()
   }
@@ -166,36 +166,36 @@ const stopAutoMode = () => {
   speechSynthesis.cancel()
 }
 
-// Leuchtdauer-Auswahl
-function selectLeuchtdauer(leuchtdauerId: string) {
-  console.log('selectLeuchtdauer called with leuchtdauerId:', leuchtdauerId)
+// Farbmodus-Auswahl
+function selectFarbmodus(farbmodusId: string) {
+  console.log('selectFarbmodus called with farbmodusId:', farbmodusId)
   pauseAutoMode() // Pausiere Auto-Modus statt zu stoppen
   
-  switch (leuchtdauerId) {
-    case 'normal':
-      console.log('Normal selected')
-      speakText('Normal ausgewählt - 3 Sekunden')
-      settingsStore.updateSettings({ leuchtdauer: 3 })
+  switch (farbmodusId) {
+    case 'neutral':
+      console.log('Neutral selected')
+      speakText('Neutral ausgewählt - Standard Farben')
+      settingsStore.updateSettings({ farbmodus: 'neutral' })
       break
-    case 'langsam':
-      console.log('Langsam selected')
-      speakText('Langsam ausgewählt - 4 Sekunden')
-      settingsStore.updateSettings({ leuchtdauer: 4 })
+    case 'warm':
+      console.log('Warm selected')
+      speakText('Warm ausgewählt - Warme Farben')
+      settingsStore.updateSettings({ farbmodus: 'warm' })
       break
-    case 'sehr-langsam':
-      console.log('Sehr langsam selected')
-      speakText('Sehr langsam ausgewählt - 5 Sekunden')
-      settingsStore.updateSettings({ leuchtdauer: 5 })
+    case 'cool':
+      console.log('Cool selected')
+      speakText('Cool ausgewählt - Kühle Farben')
+      settingsStore.updateSettings({ farbmodus: 'cool' })
       break
-    case 'lang':
-      console.log('Lang selected')
-      speakText('Lang ausgewählt - 6 Sekunden')
-      settingsStore.updateSettings({ leuchtdauer: 6 })
+    case 'high-contrast':
+      console.log('High contrast selected')
+      speakText('Hochkontrast ausgewählt - Hoher Kontrast')
+      settingsStore.updateSettings({ farbmodus: 'high-contrast' })
       break
-    case 'sehr-lang':
-      console.log('Sehr lang selected')
-      speakText('Sehr lang ausgewählt - 7 Sekunden')
-      settingsStore.updateSettings({ leuchtdauer: 7 })
+    case 'dark':
+      console.log('Dark selected')
+      speakText('Dunkel ausgewählt - Dunkles Design')
+      settingsStore.updateSettings({ farbmodus: 'dark' })
       break
     case 'zurueck':
       console.log('Zurück selected')
@@ -205,11 +205,13 @@ function selectLeuchtdauer(leuchtdauerId: string) {
       break
   }
   
-  // Starte Auto-Modus nach 10 Sekunden neu
-  setTimeout(() => {
-    isAutoModePaused.value = false
-    startAutoMode()
-  }, 10000)
+  // Nur bei lokalen Aktionen (nicht bei Navigation) Auto-Modus nach 10 Sekunden neu starten
+  if (farbmodusId !== 'zurueck') {
+    setTimeout(() => {
+      isAutoModePaused.value = false
+      startAutoMode()
+    }, 10000)
+  }
 }
 
 // Blink Detection
@@ -224,21 +226,21 @@ const handleBlink = () => {
   }
   
   lastBlinkTime.value = now
-  console.log('LeuchtDauerView Blink detected, selecting current item')
+  console.log('FarbmodusView Blink detected, selecting current item')
   
-  const currentItem = leuchtdauerItems[currentTileIndex.value]
+  const currentItem = farbmodusItems[currentTileIndex.value]
   speakText(currentItem.title)
-  selectLeuchtdauer(currentItem.id)
+  selectFarbmodus(currentItem.id)
 }
 
 // Right Click Handler
 const handleRightClick = (event: MouseEvent) => {
   event.preventDefault()
-  console.log('LeuchtDauerView Right click detected, selecting current item')
+  console.log('FarbmodusView Right click detected, selecting current item')
   
-  const currentItem = leuchtdauerItems[currentTileIndex.value]
+  const currentItem = farbmodusItems[currentTileIndex.value]
   speakText(currentItem.title)
-  selectLeuchtdauer(currentItem.id)
+  selectFarbmodus(currentItem.id)
 }
 
 // Blink Detection Parameter
@@ -287,10 +289,10 @@ onUnmounted(() => {
         <!-- Title -->
         <div class="text-center mb-12">
           <h2 class="text-5xl font-bold text-gray-800">
-            Wählen Sie die Leuchtdauer
+            Wählen Sie den Farbmodus
           </h2>
           <p class="text-gray-600" style="font-size: 2rem;">
-            Aktuelle Leuchtdauer: {{ settingsStore.settings.leuchtdauer || 3 }} Sekunden
+            Aktueller Modus: {{ settingsStore.settings.farbmodus || 'neutral' }}
           </p>
         </div>
 
@@ -305,17 +307,22 @@ onUnmounted(() => {
             maxWidth: '1200px'
           }"
         >
-          <!-- Leuchtdauer-Buttons -->
+          <!-- Farbmodus-Buttons -->
           <button
-            v-for="(item, index) in leuchtdauerItems"
+            v-for="(item, index) in farbmodusItems"
             :key="item.id"
-            @click="selectLeuchtdauer(item.id)"
+            @click="selectFarbmodus(item.id)"
             class="transition-all duration-300 font-medium hover:scale-110 flex flex-col justify-center"
             :style="getKeyboardTileStyle(index, currentTileIndex, gridConfig)"
           >
             <div class="text-center">
               <div class="text-3xl font-bold mb-2">{{ item.title }}</div>
-              <div class="text-xl text-gray-600">{{ item.description }}</div>
+              <div class="text-xl text-gray-600 mb-2">{{ item.description }}</div>
+              <!-- Farbvorschau -->
+              <div 
+                class="w-16 h-16 mx-auto rounded-full border-2 border-gray-300"
+                :style="{ backgroundColor: item.color }"
+              ></div>
             </div>
           </button>
         </div>
@@ -327,9 +334,9 @@ onUnmounted(() => {
         <div class="mt-16 text-center">
           <div class="text-2xl text-gray-600">
             <p><strong>Bedienung:</strong></p>
-            <p>Kurz blinzeln ({{ settingsStore.settings.blinkSensitivity }}s): Leuchtdauer auswählen</p>
-            <p>Rechte Maustaste: Leuchtdauer auswählen</p>
-            <p>Auto-Modus: Automatischer Durchlauf durch alle Leuchtdauern</p>
+            <p>Kurz blinzeln ({{ settingsStore.settings.blinkSensitivity }}s): Farbmodus auswählen</p>
+            <p>Rechte Maustaste: Farbmodus auswählen</p>
+            <p>Auto-Modus: Automatischer Durchlauf durch alle Farbmodi</p>
           </div>
         </div>
 

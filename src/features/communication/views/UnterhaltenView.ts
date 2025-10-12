@@ -4,10 +4,18 @@
  */
 
 import { ref, onMounted, onUnmounted, computed } from 'vue'
+
+// TypeScript declaration for window property
+declare global {
+  interface Window {
+    ttsIntroAbgespielt?: boolean
+  }
+}
 import { useRouter } from 'vue-router'
 import { useSettingsStore } from '../../settings/stores/settings'
 import { useKeyboardDesignStore } from '../stores/keyboardDesign'
 import { useVirtualKeyboardIntegration } from '../composables/useVirtualKeyboardIntegration'
+import { simpleFlowController } from '../../../core/application/SimpleFlowController'
 
 // Export function to be called from Vue component
 export function useUnterhaltenViewLogic() {
@@ -33,6 +41,7 @@ export function useUnterhaltenViewLogic() {
     isLetterSelected,
     initializeVirtualKeyboard,
     stopVirtualKeyboard,
+    resetIntroStatus,
     handleClick,
     clearText,
     readCurrentText,
@@ -92,15 +101,56 @@ export function useUnterhaltenViewLogic() {
   }
 
   // Event Listeners
-  onMounted(() => {
-    console.log('Component mounted, starting virtual keyboard...')
-    
-    // Starte virtuelle Tastatur
-    setTimeout(() => {
-      console.log('Starting virtual keyboard...')
-      initializeVirtualKeyboard()
-    }, 500)
-    
+  onMounted(async () => {
+    console.log('Component mounted, preparing virtual keyboard...')
+
+    // Einführungstext (wird nur einmal pro Sitzung gesprochen)
+    const introText = `Willkommen in der virtuellen Tastatur. 
+    Blinzeln Sie eine Zeile Ihrer Wahl an. 
+    Nachdem Sie eine Zeile ausgewählt haben, 
+    laufen die Buchstaben dieser Zeile automatisch durch. 
+    Blinzeln Sie erneut, um einen Buchstaben auszuwählen. 
+    So können Sie Schritt für Schritt Wörter und Sätze bilden. 
+    Die Tastatur läuft in einer Endlosschleife, 
+    damit Sie jederzeit weiterschreiben können.`
+
+    // Falls noch nicht abgespielt
+    if (!window.ttsIntroAbgespielt) {
+      console.log('Starting TTS introduction...')
+      try {
+        await new Promise<void>((resolve) => {
+          const utterance = new SpeechSynthesisUtterance(introText)
+          utterance.lang = 'de-DE'
+          utterance.rate = 0.9 // etwas langsamer
+          utterance.pitch = 1
+          utterance.onend = () => {
+            console.log('TTS introduction finished.')
+            resolve()
+          }
+          speechSynthesis.cancel()
+          speechSynthesis.speak(utterance)
+        })
+
+        // Markiere als abgespielt
+        window.ttsIntroAbgespielt = true
+
+        // Kleine Pause nach der Einführung
+        await new Promise((r) => setTimeout(r, 1000))
+
+        console.log('Starting virtual keyboard after TTS...')
+        initializeVirtualKeyboard()
+      } catch (error) {
+        console.warn('TTS introduction failed, starting keyboard anyway.', error)
+        initializeVirtualKeyboard()
+      }
+    } else {
+      // Wenn bereits einmal abgespielt → direkt starten
+      console.log('Intro already played — starting keyboard immediately.')
+      setTimeout(() => {
+        initializeVirtualKeyboard()
+      }, 500)
+    }
+
     // Rechtsklick für manuelle Auswahl
     document.addEventListener('contextmenu', (e) => {
       e.preventDefault()
@@ -110,6 +160,13 @@ export function useUnterhaltenViewLogic() {
   })
 
   onUnmounted(() => {
+    console.log('Component unmounting, stopping all TTS and virtual keyboard...')
+    
+    // Stoppe alle laufenden TTS (beide Systeme)
+    speechSynthesis.cancel()  // Direkte TTS-Implementierungen
+    simpleFlowController.stopTTS()  // SimpleFlowController TTS
+    
+    // Stoppe virtuelle Tastatur
     stopVirtualKeyboard()
   })
 
@@ -158,6 +215,7 @@ export function useUnterhaltenViewLogic() {
     handleClick,
     clearText,
     readCurrentText,
+    resetIntroStatus,
     isRowHighlighted,
     isLetterHighlighted,
     isRowSelectedState,

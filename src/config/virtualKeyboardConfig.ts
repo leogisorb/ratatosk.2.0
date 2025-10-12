@@ -100,9 +100,9 @@ export const VIRTUAL_KEYBOARD_CONFIG = {
 
   // Zeitabstände
   timing: {
-    rowDisplayTime: 2000,        // 2 Sekunden pro Zeile
+    rowDisplayTime: 4000,        // 4 Sekunden pro Zeile (verdoppelt)
     letterDisplayTime: 1500,     // 1,5 Sekunden pro Buchstabe
-    inactivityTimeout: 10000,    // 10 Sekunden ohne Eingabe
+    inactivityTimeout: 30000,    // 30 Sekunden ohne Eingabe (verlängert)
     pauseAfterIntro: 1000,       // 1 Sekunde nach Intro
     pauseAfterRowSelection: 1000, // 1 Sekunde nach Zeilenauswahl
     pauseAfterLetterSelection: 3000 // 3 Sekunden nach Buchstabenauswahl

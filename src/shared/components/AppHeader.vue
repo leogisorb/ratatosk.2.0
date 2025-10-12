@@ -83,12 +83,13 @@
 
 <script setup lang="ts">
 import { ref, computed, onMounted } from 'vue'
-import { useRouter } from 'vue-router'
+import { useRouter, useRoute } from 'vue-router'
 import { useSettingsStore } from '../../features/settings/stores/settings'
 import { simpleFlowController } from '../../core/application/SimpleFlowController'
 
 // Router
 const router = useRouter()
+const route = useRoute()
 
 // Stores
 const settingsStore = useSettingsStore()
@@ -132,12 +133,16 @@ const toggleDarkMode = () => {
 }
 
 const goBack = () => {
-  // Zurück zur vorherigen Route oder zur HomeView falls keine Historie vorhanden
-  if (window.history.length > 1) {
-    router.go(-1)
-  } else {
-    router.push('/app')
-  }
+  // Stoppe TTS von allen Seiten beim Zurücknavigieren zu /app
+  console.log(`Header: Navigating back from ${route.path} to /app, stopping all TTS...`)
+  
+  // Stoppe alle laufenden TTS (beide Systeme)
+  speechSynthesis.cancel()  // Direkte TTS-Implementierungen
+  simpleFlowController.stopTTS()  // SimpleFlowController TTS
+  
+  // Immer zurück zu /app
+  console.log('Header: Navigating back to app')
+  router.push('/app')
 }
 </script>
 

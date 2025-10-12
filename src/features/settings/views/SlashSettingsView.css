@@ -1,0 +1,9 @@
+/* SlashSettingsView spezifische Styles - identisch zu HomeView */
+
+/* Verwende die globalen Styles aus main.css - keine Überschreibung nötig */
+/* Die globalen .grid-container und .menu-tile Styles werden automatisch verwendet */
+
+/* Nur spezifische Anpassungen falls nötig */
+.slash-settings-view {
+  /* Spezifische Anpassungen für Settings-View falls nötig */
+}

@@ -25,8 +25,12 @@ import ArmeSchmerzView from '../features/pain-assessment/views/ArmeSchmerzView.v
 import PainScaleView from '../features/pain-assessment/views/PainScaleView.vue'
 import PainDialogView from '../features/pain-assessment/views/PainDialogView.vue'
 import EinstellungenView from '../features/settings/views/EinstellungenView.vue'
+import SlashSettingsView from '../features/settings/views/SlashSettingsView.vue'
 import LeuchtDauerView from '../features/light-duration/views/LeuchtDauerView.vue'
 import BlinzeldauerView from '../features/blink-duration/views/BlinzeldauerView.vue'
+import BlitzdauerView from '../features/settings/views/BlitzdauerView.vue'
+import FarbmodusView from '../features/settings/views/FarbmodusView.vue'
+import ImpressumView from '../features/settings/views/ImpressumView.vue'
 import TastaturdesignView from '../features/communication/views/TastaturdesignView.vue'
 import KamerapositionView from '../features/camera-position/views/KamerapositionView.vue'
 import KameraView from '../features/camera/views/KameraView.vue'
@@ -162,7 +166,37 @@ const router = createRouter({
     {
       path: '/einstellungen',
       name: 'einstellungen',
-      component: EinstellungenView,
+      component: SlashSettingsView,
+    },
+    {
+      path: '/einstellungen/leuchtdauer',
+      name: 'einstellungen-leuchtdauer',
+      component: LeuchtDauerView,
+    },
+    {
+      path: '/einstellungen/blitzdauer',
+      name: 'einstellungen-blitzdauer',
+      component: BlitzdauerView,
+    },
+    {
+      path: '/einstellungen/farbmodus',
+      name: 'einstellungen-farbmodus',
+      component: FarbmodusView,
+    },
+    {
+      path: '/einstellungen/kamera',
+      name: 'einstellungen-kamera',
+      component: KameraView,
+    },
+    {
+      path: '/einstellungen/kamerapositionen',
+      name: 'einstellungen-kamerapositionen',
+      component: KamerapositionView,
+    },
+    {
+      path: '/einstellungen/impressum',
+      name: 'einstellungen-impressum',
+      component: ImpressumView,
     },
     {
       path: '/leucht-dauer',

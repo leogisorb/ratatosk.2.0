@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { ref, computed, onMounted, onUnmounted } from 'vue'
 import { useRouter } from 'vue-router'
-import { useSettingsStore } from '../../settings/stores/settings'
+import { useSettingsStore } from '../stores/settings'
 import { useFaceRecognition } from '../../face-recognition/composables/useFaceRecognition'
 import { keyboardGridConfig, getKeyboardTileStyle } from '../../../config/gridConfig'
 import AppHeader from '../../../shared/components/AppHeader.vue'
@@ -28,37 +28,37 @@ const isTTSEnabled = ref(true)
 // Verwende die zentrale Grid-Konfiguration
 const gridConfig = keyboardGridConfig
 
-// Leuchtdauer-Optionen (in Sekunden)
-const leuchtdauerItems = [
+// Blitzdauer-Optionen (in Sekunden)
+const blitzdauerItems = [
+  {
+    id: 'sehr-kurz',
+    title: 'SEHR KURZ',
+    description: '0,3 s',
+    duration: 0.3
+  },
+  {
+    id: 'kurz',
+    title: 'KURZ',
+    description: '0,5 s',
+    duration: 0.5
+  },
   {
     id: 'normal',
     title: 'NORMAL',
-    description: '3 Sekunden',
-    duration: 3
-  },
-  {
-    id: 'langsam',
-    title: 'LANGSAM',
-    description: '4 Sekunden',
-    duration: 4
-  },
-  {
-    id: 'sehr-langsam',
-    title: 'SEHR LANGSAM',
-    description: '5 Sekunden',
-    duration: 5
+    description: '0,7 s',
+    duration: 0.7
   },
   {
     id: 'lang',
     title: 'LANG',
-    description: '6 Sekunden',
-    duration: 6
+    description: '0,9 s',
+    duration: 0.9
   },
   {
     id: 'sehr-lang',
     title: 'SEHR LANG',
-    description: '7 Sekunden',
-    duration: 7
+    description: '1,0 s',
+    duration: 1.0
   },
   {
     id: 'zurueck',
@@ -75,10 +75,10 @@ const appClasses = computed(() => ({
 
 // Text-to-Speech Funktion
 const speakText = (text: string) => {
-  console.log('LeuchtDauerView speakText called with:', text, 'isTTSEnabled:', isTTSEnabled.value, 'speechSynthesis:', speechSynthesis)
+  console.log('BlitzdauerView speakText called with:', text, 'isTTSEnabled:', isTTSEnabled.value, 'speechSynthesis:', speechSynthesis)
   
   if (!isTTSEnabled.value || !speechSynthesis) {
-    console.log('LeuchtDauerView TTS disabled or speechSynthesis not available')
+    console.log('BlitzdauerView TTS disabled or speechSynthesis not available')
     return
   }
   
@@ -90,19 +90,19 @@ const speakText = (text: string) => {
   utterance.pitch = 1.0
   utterance.volume = 1.0
   
-  console.log('LeuchtDauerView Speaking:', text)
+  console.log('BlitzdauerView Speaking:', text)
   speechSynthesis.speak(utterance)
 }
 
 // TTS Toggle
 const toggleTTS = () => {
-  console.log('LeuchtDauerView toggleTTS called, current state:', isTTSEnabled.value)
+  console.log('BlitzdauerView toggleTTS called, current state:', isTTSEnabled.value)
   isTTSEnabled.value = !isTTSEnabled.value
-  console.log('LeuchtDauerView TTS toggled to:', isTTSEnabled.value)
+  console.log('BlitzdauerView TTS toggled to:', isTTSEnabled.value)
   
   if (!isTTSEnabled.value) {
     speechSynthesis.cancel()
-    console.log('LeuchtDauerView TTS cancelled')
+    console.log('BlitzdauerView TTS cancelled')
   } else {
     // Test TTS when enabling
     speakText('Sprachausgabe aktiviert')
@@ -121,17 +121,17 @@ const startAutoMode = () => {
       return
     }
     
-    currentTileIndex.value = (currentTileIndex.value + 1) % leuchtdauerItems.length
+    currentTileIndex.value = (currentTileIndex.value + 1) % blitzdauerItems.length
     
     // Spreche den aktuellen Menüpunkt vor
-    const currentItem = leuchtdauerItems[currentTileIndex.value]
+    const currentItem = blitzdauerItems[currentTileIndex.value]
     speakText(currentItem.title)
     
     autoModeInterval.value = window.setTimeout(cycleTiles, settingsStore.settings.autoModeSpeed)
   }
   
   // Spreche den ersten Menüpunkt vor
-  const firstItem = leuchtdauerItems[currentTileIndex.value]
+  const firstItem = blitzdauerItems[currentTileIndex.value]
   speakText(firstItem.title)
   
   // Starte den ersten Zyklus nach der aktuellen Geschwindigkeit
@@ -151,7 +151,7 @@ const resumeAutoMode = () => {
   isAutoModePaused.value = false
   if (!autoModeInterval.value) {
     // Starte den Auto-Modus bei der aktuellen Kachel
-    const currentItem = leuchtdauerItems[currentTileIndex.value]
+    const currentItem = blitzdauerItems[currentTileIndex.value]
     speakText(currentItem.title)
     startAutoMode()
   }
@@ -166,36 +166,36 @@ const stopAutoMode = () => {
   speechSynthesis.cancel()
 }
 
-// Leuchtdauer-Auswahl
-function selectLeuchtdauer(leuchtdauerId: string) {
-  console.log('selectLeuchtdauer called with leuchtdauerId:', leuchtdauerId)
+// Blitzdauer-Auswahl
+function selectBlitzdauer(blitzdauerId: string) {
+  console.log('selectBlitzdauer called with blitzdauerId:', blitzdauerId)
   pauseAutoMode() // Pausiere Auto-Modus statt zu stoppen
   
-  switch (leuchtdauerId) {
+  switch (blitzdauerId) {
+    case 'sehr-kurz':
+      console.log('Sehr kurz selected')
+      speakText('Sehr kurz ausgewählt - 0,3 Sekunden')
+      settingsStore.updateSettings({ blitzDuration: 0.3 })
+      break
+    case 'kurz':
+      console.log('Kurz selected')
+      speakText('Kurz ausgewählt - 0,5 Sekunden')
+      settingsStore.updateSettings({ blitzDuration: 0.5 })
+      break
     case 'normal':
       console.log('Normal selected')
-      speakText('Normal ausgewählt - 3 Sekunden')
-      settingsStore.updateSettings({ leuchtdauer: 3 })
-      break
-    case 'langsam':
-      console.log('Langsam selected')
-      speakText('Langsam ausgewählt - 4 Sekunden')
-      settingsStore.updateSettings({ leuchtdauer: 4 })
-      break
-    case 'sehr-langsam':
-      console.log('Sehr langsam selected')
-      speakText('Sehr langsam ausgewählt - 5 Sekunden')
-      settingsStore.updateSettings({ leuchtdauer: 5 })
+      speakText('Normal ausgewählt - 0,7 Sekunden')
+      settingsStore.updateSettings({ blitzDuration: 0.7 })
       break
     case 'lang':
       console.log('Lang selected')
-      speakText('Lang ausgewählt - 6 Sekunden')
-      settingsStore.updateSettings({ leuchtdauer: 6 })
+      speakText('Lang ausgewählt - 0,9 Sekunden')
+      settingsStore.updateSettings({ blitzDuration: 0.9 })
       break
     case 'sehr-lang':
       console.log('Sehr lang selected')
-      speakText('Sehr lang ausgewählt - 7 Sekunden')
-      settingsStore.updateSettings({ leuchtdauer: 7 })
+      speakText('Sehr lang ausgewählt - 1,0 Sekunden')
+      settingsStore.updateSettings({ blitzDuration: 1.0 })
       break
     case 'zurueck':
       console.log('Zurück selected')
@@ -205,11 +205,13 @@ function selectLeuchtdauer(leuchtdauerId: string) {
       break
   }
   
-  // Starte Auto-Modus nach 10 Sekunden neu
-  setTimeout(() => {
-    isAutoModePaused.value = false
-    startAutoMode()
-  }, 10000)
+  // Nur bei lokalen Aktionen (nicht bei Navigation) Auto-Modus nach 10 Sekunden neu starten
+  if (blitzdauerId !== 'zurueck') {
+    setTimeout(() => {
+      isAutoModePaused.value = false
+      startAutoMode()
+    }, 10000)
+  }
 }
 
 // Blink Detection
@@ -224,21 +226,21 @@ const handleBlink = () => {
   }
   
   lastBlinkTime.value = now
-  console.log('LeuchtDauerView Blink detected, selecting current item')
+  console.log('BlitzdauerView Blink detected, selecting current item')
   
-  const currentItem = leuchtdauerItems[currentTileIndex.value]
+  const currentItem = blitzdauerItems[currentTileIndex.value]
   speakText(currentItem.title)
-  selectLeuchtdauer(currentItem.id)
+  selectBlitzdauer(currentItem.id)
 }
 
 // Right Click Handler
 const handleRightClick = (event: MouseEvent) => {
   event.preventDefault()
-  console.log('LeuchtDauerView Right click detected, selecting current item')
+  console.log('BlitzdauerView Right click detected, selecting current item')
   
-  const currentItem = leuchtdauerItems[currentTileIndex.value]
+  const currentItem = blitzdauerItems[currentTileIndex.value]
   speakText(currentItem.title)
-  selectLeuchtdauer(currentItem.id)
+  selectBlitzdauer(currentItem.id)
 }
 
 // Blink Detection Parameter
@@ -287,10 +289,10 @@ onUnmounted(() => {
         <!-- Title -->
         <div class="text-center mb-12">
           <h2 class="text-5xl font-bold text-gray-800">
-            Wählen Sie die Leuchtdauer
+            Wählen Sie die Blitzdauer
           </h2>
           <p class="text-gray-600" style="font-size: 2rem;">
-            Aktuelle Leuchtdauer: {{ settingsStore.settings.leuchtdauer || 3 }} Sekunden
+            Aktuelle Blitzdauer: {{ settingsStore.settings.blitzDuration || 0.7 }} Sekunden
           </p>
         </div>
 
@@ -305,11 +307,11 @@ onUnmounted(() => {
             maxWidth: '1200px'
           }"
         >
-          <!-- Leuchtdauer-Buttons -->
+          <!-- Blitzdauer-Buttons -->
           <button
-            v-for="(item, index) in leuchtdauerItems"
+            v-for="(item, index) in blitzdauerItems"
             :key="item.id"
-            @click="selectLeuchtdauer(item.id)"
+            @click="selectBlitzdauer(item.id)"
             class="transition-all duration-300 font-medium hover:scale-110 flex flex-col justify-center"
             :style="getKeyboardTileStyle(index, currentTileIndex, gridConfig)"
           >
@@ -327,9 +329,9 @@ onUnmounted(() => {
         <div class="mt-16 text-center">
           <div class="text-2xl text-gray-600">
             <p><strong>Bedienung:</strong></p>
-            <p>Kurz blinzeln ({{ settingsStore.settings.blinkSensitivity }}s): Leuchtdauer auswählen</p>
-            <p>Rechte Maustaste: Leuchtdauer auswählen</p>
-            <p>Auto-Modus: Automatischer Durchlauf durch alle Leuchtdauern</p>
+            <p>Kurz blinzeln ({{ settingsStore.settings.blinkSensitivity }}s): Blitzdauer auswählen</p>
+            <p>Rechte Maustaste: Blitzdauer auswählen</p>
+            <p>Auto-Modus: Automatischer Durchlauf durch alle Blitzdauern</p>
           </div>
         </div>
 

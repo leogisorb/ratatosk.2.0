@@ -2,7 +2,7 @@
 import { ref, computed, onMounted, onUnmounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { useSettingsStore } from '../../settings/stores/settings'
-import GlobalHeader from '../../../shared/components/GlobalHeader.vue'
+import AppHeader from '../../../shared/components/AppHeader.vue'
 
 // Router
 const router = useRouter()
@@ -138,96 +138,8 @@ onUnmounted(() => {
   <div id="app" :class="appClasses">
     <!-- Responsive Layout -->
     <div class="min-h-screen bg-white">
-      <!-- Global Header -->
-      <GlobalHeader>
-        <div class="flex items-center space-x-4">
-          <button @click="$router.push('/einstellungen')" class="p-2 rounded-lg bg-gray-300">
-            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
-            </svg>
-          </button>
-          <h1 class="text-2xl font-bold text-black">
-            KAMERA
-          </h1>
-        </div>
-        
-        <!-- Control Buttons -->
-        <div class="flex space-x-2">
-              <!-- TTS Toggle Button -->
-              <button
-                @click="toggleTTS"
-                class="p-2 rounded-lg transition-colors"
-                :class="isTTSEnabled ? 'bg-green-300 hover:bg-green-400' : 'bg-gray-300 hover:bg-gray-400'"
-                :title="isTTSEnabled ? 'Sprachausgabe deaktivieren' : 'Sprachausgabe aktivieren'"
-              >
-                <!-- Speaker Icon für TTS aktiv -->
-                <svg
-                  v-if="isTTSEnabled"
-                  class="w-6 h-6"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    stroke-linecap="round"
-                    stroke-linejoin="round"
-                    stroke-width="2"
-                    d="M15.536 8.464a5 5 0 010 7.072m2.828-9.9a9 9 0 010 12.728M5.586 15H4a1 1 0 01-1-1v-4a1 1 0 011-1h1.586l4.707-4.707C10.923 3.663 12 4.109 12 5v14c0 .891-1.077 1.337-1.707.707L5.586 15z"
-                  />
-                </svg>
-                <!-- Muted Speaker Icon für TTS deaktiviert -->
-                <svg
-                  v-else
-                  class="w-6 h-6"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    stroke-linecap="round"
-                    stroke-linejoin="round"
-                    stroke-width="2"
-                    d="M5.586 15H4a1 1 0 01-1-1v-4a1 1 0 011-1h1.586l4.707-4.707C10.923 3.663 12 4.109 12 5v14c0 .891-1.077 1.337-1.707.707L5.586 15z"
-                  />
-                  <path
-                    stroke-linecap="round"
-                    stroke-linejoin="round"
-                    stroke-width="2"
-                    d="M17 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2"
-                  />
-                </svg>
-              </button>
-              
-              <!-- Kamera Toggle Button -->
-              <button
-                @click="isCameraActive ? stopCamera() : startCamera()"
-                class="p-2 rounded-lg transition-colors"
-                :class="isCameraActive ? 'bg-red-300 hover:bg-red-400' : 'bg-green-300 hover:bg-green-400'"
-                :title="isCameraActive ? 'Kamera deaktivieren' : 'Kamera aktivieren'"
-              >
-                <!-- Camera Icon -->
-                <svg
-                  class="w-6 h-6"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    stroke-linecap="round"
-                    stroke-linejoin="round"
-                    stroke-width="2"
-                    d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z"
-                  />
-                  <path
-                    stroke-linecap="round"
-                    stroke-linejoin="round"
-                    stroke-width="2"
-                    d="M15 13a3 3 0 11-6 0 3 3 0 016 0z"
-                  />
-                </svg>
-              </button>
-        </div>
-      </GlobalHeader>
+      <!-- App Header -->
+      <AppHeader />
 
       <!-- Main Content -->
       <main class="flex-1 flex flex-col items-center justify-center p-8">

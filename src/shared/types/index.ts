@@ -40,6 +40,11 @@ export interface UserSettings {
   blinkSensitivity: number // in seconds (default: 0.5)
   soundEnabled: boolean
   voiceEnabled: boolean // TTS aktiviert
+  // Neue Einstellungen
+  leuchtdauer: number // in seconds (default: 3)
+  blitzDuration: number // in seconds (default: 0.7)
+  farbmodus: string // color mode (default: 'neutral')
+  kamera: string // camera setting (default: 'back')
   accessibility: {
     highContrast: boolean
     largeText: boolean

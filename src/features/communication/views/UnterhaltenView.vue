@@ -2,6 +2,47 @@
 // Import external JavaScript logic
 import { useUnterhaltenViewLogic } from './UnterhaltenView.ts'
 import AppHeader from '../../../shared/components/AppHeader.vue'
+import { ref, onMounted, onUnmounted, watch } from 'vue'
+
+// Satz-für-Satz Anzeige Daten
+const welcomeSentences = [
+  "Willkommen in der virtuellen Tastatur.",
+  "Blinzeln Sie eine Zeile Ihrer Wahl an.",
+  "Nachdem Sie eine Zeile ausgewählt haben, laufen die Buchstaben dieser Zeile automatisch durch.",
+  "Blinzeln Sie erneut, um einen Buchstaben auszuwählen.",
+  "So können Sie Schritt für Schritt Wörter und Sätze bilden.",
+  "Die Tastatur läuft in einer Endlosschleife, damit Sie jederzeit weiterschreiben können."
+]
+
+const currentSentenceIndex = ref(0)
+let sentenceInterval: number | null = null
+
+// Satz-Rotation starten
+const startSentenceRotation = () => {
+  console.log('Starting sentence rotation')
+  sentenceInterval = setInterval(() => {
+    currentSentenceIndex.value = (currentSentenceIndex.value + 1) % welcomeSentences.length
+    console.log('Sentence changed to index:', currentSentenceIndex.value, 'Text:', welcomeSentences[currentSentenceIndex.value])
+  }, 6000) // 6 Sekunden pro Satz (halb so schnell)
+}
+
+// Satz-Rotation stoppen
+const stopSentenceRotation = () => {
+  console.log('Stopping sentence rotation')
+  if (sentenceInterval) {
+    clearInterval(sentenceInterval)
+    sentenceInterval = null
+  }
+}
+
+// Lifecycle
+onMounted(() => {
+  startSentenceRotation()
+})
+
+onUnmounted(() => {
+  stopSentenceRotation()
+})
 
 // Use the composable function
 const {
@@ -50,8 +91,21 @@ const {
   isRowSelectedState,
   getRowClass,
   getLetterClass,
-  getTTSIndicatorClass
+  getTTSIndicatorClass,
+  resetIntroStatus
 } = useUnterhaltenViewLogic()
+
+// Pausiere Satz-Rotation wenn TTS aktiv ist oder Tastatur aktiv ist
+watch([isTTSActive, isKeyboardActive], ([ttsActive, keyboardActive]) => {
+  console.log('Watch triggered - TTS:', ttsActive, 'Keyboard:', keyboardActive)
+  if (ttsActive) {
+    console.log('Stopping sentence rotation due to TTS')
+    stopSentenceRotation()
+  } else if (!keyboardActive) {
+    console.log('Starting sentence rotation')
+    startSentenceRotation()
+  }
+}, { immediate: false })
 </script>
 
 <template>
@@ -61,10 +115,19 @@ const {
 
     <!-- Main Content -->
     <main class="main-content">
-      <!-- 1. Überschrift -->
-      <h1 class="page-title">
-        Virtuelle Tastatur
-      </h1>
+      <!-- 1. Satz-für-Satz Anzeige -->
+      <div class="sentence-display-container">
+        <div class="sentence-display" :class="{ 'sentence-paused': isTTSActive }">
+          <div 
+            v-for="(sentence, index) in welcomeSentences" 
+            :key="index"
+            class="sentence-item"
+            :class="{ 'sentence-active': index === currentSentenceIndex }"
+          >
+            {{ sentence }}
+          </div>
+        </div>
+      </div>
 
       <!-- 2. Textfeld -->
       <div class="text-display-container">
