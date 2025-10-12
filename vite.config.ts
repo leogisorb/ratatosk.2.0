@@ -17,12 +17,15 @@ export default defineConfig({
     rollupOptions: {
       output: {
         manualChunks: undefined,
-      },
-      external: (id) => {
-        // Don't try to bundle static assets that are referenced with absolute paths
-        return id.startsWith('/ratatosk.2.0/')
+        assetFileNames: 'assets/[name]-[hash][extname]',
+        chunkFileNames: 'assets/[name]-[hash].js',
+        entryFileNames: 'assets/[name]-[hash].js',
       },
     },
+  },
+  server: {
+    host: true,
+    port: 5173,
   },
   resolve: {
     alias: {

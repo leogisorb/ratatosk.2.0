@@ -71,6 +71,11 @@ export const useSettingsStore = defineStore('settings', () => {
       blinkSensitivity: 0.7,
       soundEnabled: true,
       voiceEnabled: true, // TTS aktiviert
+      // Neue Einstellungen
+      leuchtdauer: 3, // 3 Sekunden
+      blitzDuration: 0.7, // 0.7 Sekunden
+      farbmodus: 'neutral', // neutral color mode
+      kamera: 'back', // back camera
       accessibility: {
         highContrast: false,
         largeText: false,

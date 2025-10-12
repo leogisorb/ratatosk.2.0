@@ -276,7 +276,7 @@ export class SimpleFlowController {
   /**
    * Gibt zurück, ob TTS stumm geschaltet ist
    */
-  public isTTSMuted(): boolean {
+  public getTTSMuted(): boolean {
     return this.isTTSMuted
   }
 
