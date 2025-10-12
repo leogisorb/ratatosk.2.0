@@ -286,3 +286,77 @@
     padding: 0 0.125rem;
   }
 }
+
+/* Virtuelle Tastatur State-Machine CSS-Klassen */
+
+/* TTS-Indikator */
+.tts-indicator {
+  position: absolute;
+  top: 1rem;
+  right: 1rem;
+  font-size: 1.5rem;
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+
+.tts-indicator.tts-active {
+  opacity: 1;
+  animation: tts-pulse 1s infinite;
+}
+
+@keyframes tts-pulse {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.1); }
+}
+
+/* Zeilen-Hervorhebung */
+.keyboard-row.row-active {
+  border: 3px solid #f97316; /* Orange Rahmen */
+  border-radius: 8px;
+  background-color: rgba(249, 115, 22, 0.1);
+  transition: all 0.3s ease;
+}
+
+.keyboard-row.row-selected {
+  border: 3px solid #10b981; /* Grün für ausgewählte Zeile */
+  border-radius: 8px;
+  background-color: rgba(16, 185, 129, 0.1);
+  transition: all 0.3s ease;
+}
+
+.keyboard-row.row-inactive {
+  border: 2px solid transparent;
+  transition: all 0.3s ease;
+}
+
+/* Buchstaben-Hervorhebung - türkise Farbe #00B098 */
+.keyboard-key.letter-active {
+  border: 3px solid #f97316 !important; /* Orange Rahmen */
+  background-color: #00B098 !important; /* Türkise Farbe #00B098 */
+  color: #ffffff !important; /* Weiße Schrift für besseren Kontrast */
+  transform: scale(1.05);
+  box-shadow: 0 4px 12px rgba(0, 176, 152, 0.3);
+  transition: all 0.3s ease;
+}
+
+.keyboard-key.letter-inactive {
+  transition: all 0.3s ease;
+}
+
+/* Verbesserte Hervorhebung für aktive Elemente */
+.keyboard-key.keyboard-key-active {
+  border: 3px solid #f97316 !important;
+  background-color: rgba(249, 115, 22, 0.2) !important;
+  transform: scale(1.05);
+  box-shadow: 0 4px 12px rgba(249, 115, 22, 0.3);
+  transition: all 0.3s ease;
+}
+
+.keyboard-key.keyboard-key-inactive {
+  transition: all 0.3s ease;
+}
+
+/* Textfeld-Container für TTS-Indikator */
+.text-display-container {
+  position: relative;
+}

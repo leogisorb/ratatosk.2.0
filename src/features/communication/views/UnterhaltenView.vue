@@ -13,27 +13,44 @@ const {
   isKeyboardActive,
   keyboardInterval,
   selectedText,
-  isTTSEnabled,
   keyboardLayout,
   currentRowIndex,
   currentLetterIndex,
   currentStage,
   letterPassCount,
-  speakText,
   handleBlink,
   startKeyboard,
   stopKeyboard,
-  speakCurrentRow,
-  speakCurrentLetter,
   isCurrentRow,
   isCurrentLetter,
   selectCurrentElement,
-  speakSelectedText,
   testFunction,
   startKeyboardNavigation,
   settingsStore,
   keyboardDesignStore,
-  faceRecognition
+  faceRecognition,
+  // New virtual keyboard properties
+  currentText,
+  currentState,
+  activeRowIndex,
+  activeLetterIndex,
+  isTTSActive,
+  showCurrentText,
+  isRowActive,
+  isLetterActive,
+  isRowSelected,
+  isLetterSelected,
+  initializeVirtualKeyboard,
+  stopVirtualKeyboard,
+  handleClick,
+  clearText,
+  readCurrentText,
+  isRowHighlighted,
+  isLetterHighlighted,
+  isRowSelectedState,
+  getRowClass,
+  getLetterClass,
+  getTTSIndicatorClass
 } = useUnterhaltenViewLogic()
 </script>
 
@@ -53,8 +70,12 @@ const {
       <div class="text-display-container">
         <div class="text-display-box">
           <p class="text-display-text">
-            {{ selectedText || 'Noch kein Text...' }}
+            {{ currentText || 'Noch kein Text...' }}
           </p>
+        </div>
+        <!-- TTS-Indikator -->
+        <div class="tts-indicator" :class="getTTSIndicatorClass()">
+          <span v-if="isTTSActive">🔊</span>
         </div>
       </div>
 
@@ -68,24 +89,25 @@ const {
             v-for="(row, rowIndex) in keyboardLayout"
             :key="`row-${rowIndex}`"
             class="keyboard-row"
+            :class="getRowClass(rowIndex)"
           >
             <div
               v-for="(letter, letterIndex) in row"
               :key="letter"
               class="keyboard-key"
-              :class="(currentStage === 'rows' && isCurrentRow(rowIndex)) || (currentStage === 'letters' && isCurrentLetter(letter, rowIndex)) ? 'keyboard-key-active' : 'keyboard-key-inactive'"
+              :class="getLetterClass(rowIndex, letterIndex)"
               :style="{
                 width: keyboardDesignStore.keyWidth + 'px',
                 height: keyboardDesignStore.keyHeight + 'px',
                 borderRadius: keyboardDesignStore.borderRadius + 'px',
-                backgroundColor: (currentStage === 'rows' && isCurrentRow(rowIndex)) || (currentStage === 'letters' && isCurrentLetter(letter, rowIndex))
+                backgroundColor: isRowHighlighted(rowIndex) || isLetterHighlighted(rowIndex, letterIndex)
                   ? keyboardDesignStore.activeKeyBackground
                   : '#ffffff',
-                borderColor: (currentStage === 'rows' && isCurrentRow(rowIndex)) || (currentStage === 'letters' && isCurrentLetter(letter, rowIndex))
+                borderColor: isRowHighlighted(rowIndex) || isLetterHighlighted(rowIndex, letterIndex)
                   ? keyboardDesignStore.activeKeyBorder
                   : '#d1d5db',
                 borderWidth: '2px',
-                color: (currentStage === 'rows' && isCurrentRow(rowIndex)) || (currentStage === 'letters' && isCurrentLetter(letter, rowIndex))
+                color: isRowHighlighted(rowIndex) || isLetterHighlighted(rowIndex, letterIndex)
                   ? keyboardDesignStore.activeKeyText
                   : '#374151'
               }"
@@ -101,15 +123,7 @@ const {
       <!-- 6. Abstandshalter nach der Tastatur -->
       <div class="spacer"></div>
 
-      <!-- 8. Bedienungsanleitung -->
-      <div class="instructions-section">
-        <h3 class="instructions-title">Bedienung</h3>
-        <p class="instructions-text">
-          <strong>Kurz blinzeln ({{ settingsStore.settings.blinkSensitivity }}s):</strong> Aktion auswählen<br>
-          <strong>Rechte Maustaste:</strong> Aktion auswählen<br>
-          <strong>Auto-Modus:</strong> Automatischer Durchlauf durch alle Aktionen
-        </p>
-      </div>
+      <!-- Bedienungsanleitung entfernt - wird durch TTS ersetzt -->
     </main>
   </div>
 </template>

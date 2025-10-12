@@ -58,24 +58,42 @@ export const VIRTUAL_KEYBOARD_CONFIG = {
     }
   },
 
-  // Tastatur-Layout (3 Zeilen)
+  // Tastatur-Layout (6 Zeilen - neue alphabetische Reihenfolge)
   keyboard: [
     {
       id: 'row1',
-      letters: ['Q', 'W', 'E', 'R', 'T', 'Z'],
-      ttsText: 'Zeile 1: Q W E R T Z',
+      letters: ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K'],
+      ttsText: 'Zeile eins – Buchstaben A bis K',
       displayTime: 2000
     },
     {
       id: 'row2', 
-      letters: ['A', 'S', 'D', 'F', 'G', 'H', 'J', 'K', 'L'],
-      ttsText: 'Zeile 2: A S D F G H J K L',
+      letters: ['L', 'M', 'N', 'O', 'P', 'Q', 'R', 'S', 'T', 'U', 'V'],
+      ttsText: 'Zeile zwei – Buchstaben L bis V',
       displayTime: 2000
     },
     {
       id: 'row3',
-      letters: ['Y', 'X', 'C', 'V', 'B', 'N', 'M', 'ß'],
-      ttsText: 'Zeile 3: Y X C V B N M ß',
+      letters: ['W', 'X', 'Y', 'Z', 'Ä', 'Ö', 'Ü', 'ß', '.', ',', '?'],
+      ttsText: 'Zeile drei – Buchstaben W bis Fragezeichen',
+      displayTime: 2000
+    },
+    {
+      id: 'row4',
+      letters: ['SCH', 'CH', 'EI', 'IE', 'AU', 'EU', 'ÄU', 'PF', 'PH', 'CK', 'NK'],
+      ttsText: 'Zeile vier – Silben und Lautkombinationen',
+      displayTime: 2000
+    },
+    {
+      id: 'row5',
+      letters: ['JA', 'NEIN', 'ICH', 'DU', 'ES', 'IST', 'BIN'],
+      ttsText: 'Zeile fünf – kurze Wörter',
+      displayTime: 2000
+    },
+    {
+      id: 'row6',
+      letters: ['LEERZEICHEN', 'LÖSCHEN', 'ZURÜCK'],
+      ttsText: 'Zeile sechs – Steuerungstasten',
       displayTime: 2000
     }
   ],
