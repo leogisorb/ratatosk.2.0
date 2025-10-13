@@ -1,62 +1,53 @@
 <template>
-  <div class="min-h-screen flex flex-col items-center justify-center bg-gradient-to-br from-blue-50 to-indigo-100">
+  <div class="start-container">
     <!-- Header -->
-    <header class="w-full max-w-4xl px-6 py-8">
-      <div class="text-center">
-        <div class="flex items-center justify-center space-x-4 mb-6">
-          <h1 class="text-4xl font-bold text-gray-900">
-            RATATOSK
-          </h1>
-          <img src="/rattenkopf.svg" alt="Ratatosk Logo" class="w-16 h-16" />
-          <div class="w-2.5 h-1.5 bg-[#00796B]"></div>
-        </div>
+    <header class="start-header">
+      <div class="start-header-content">
+        <h1 class="start-title">RATATOSK</h1>
+        <img src="/rattenkopf.svg" alt="Ratatosk Logo" class="start-logo" />
       </div>
     </header>
 
     <!-- Main Content -->
-    <main class="flex-1 flex items-center justify-center w-full max-w-4xl px-6">
-      <div class="text-center space-y-12">
+    <main class="start-main">
+      <div class="start-content">
         <!-- Status Display -->
-        <div class="space-y-4">
+        <div class="status-container">
           <!-- Camera Status -->
-          <div class="flex items-center justify-center space-x-3">
+          <div class="status-item">
             <div 
               :class="[
-                'w-4 h-4 rounded-full transition-colors duration-300',
-                cameraStatus === 'active' ? 'bg-green-500 animate-pulse' : 
-                cameraStatus === 'loading' ? 'bg-yellow-500 animate-spin' : 
-                'bg-red-500'
+                'status-indicator',
+                cameraStatus === 'active' ? 'active' : 
+                cameraStatus === 'loading' ? 'loading' : 
+                'inactive'
               ]"
             ></div>
-            <span class="text-lg font-medium text-gray-700">
-              {{ cameraStatusText }}
-            </span>
+            <span class="status-text">{{ cameraStatusText }}</span>
           </div>
 
           <!-- Face Detection Status -->
-          <div v-if="cameraStatus === 'active'" class="flex items-center justify-center space-x-3">
+          <div v-if="cameraStatus === 'active'" class="status-item">
             <div 
               :class="[
-                'w-4 h-4 rounded-full transition-colors duration-300',
-                faceRecognition.isDetected ? 'bg-green-500' : 'bg-gray-400'
+                'status-indicator',
+                faceRecognition.isDetected ? 'detected' : 'searching'
               ]"
             ></div>
-            <span class="text-lg font-medium text-gray-700">
+            <span class="status-text">
               {{ faceRecognition.isDetected ? 'Gesicht erkannt' : 'Gesicht suchen...' }}
             </span>
           </div>
         </div>
 
-        <!-- Start Button -->
-        <div class="space-y-6">
-          <div 
-            v-if="cameraStatus === 'inactive'"
-            class="max-w-md mx-auto"
-          >
+        <!-- Button Container -->
+        <div class="button-container">
+          <!-- Start Button -->
+          <div v-if="cameraStatus === 'inactive'">
             <button
               @click="startCamera"
               :disabled="cameraStatus === 'loading'"
-              class="w-full btn-primary text-lg py-4 px-8 flex items-center justify-center space-x-3"
+              class="btn-primary"
             >
               <svg v-if="cameraStatus === 'loading'" class="animate-spin h-6 w-6" fill="none" viewBox="0 0 24 24">
                 <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
@@ -70,66 +61,58 @@
           </div>
 
           <!-- Blink to Start -->
-          <div 
-            v-if="cameraStatus === 'active' && faceRecognition.isDetected"
-            class="max-w-md mx-auto"
-          >
-            <div class="bg-white">
-              <div class="text-center space-y-4">
-                <div class="text-6xl mb-4">👁️</div>
-                <h2 class="text-2xl font-bold text-gray-900">
-                  Blinzeln Sie zum Starten
-                </h2>
-                <p class="text-gray-600">
+          <div v-if="cameraStatus === 'active' && faceRecognition.isDetected">
+            <div class="blink-container">
+              <div class="blink-content">
+                <div class="blink-icon">👁️</div>
+                <h2 class="blink-title">Blinzeln Sie zum Starten</h2>
+                <p class="blink-description">
                   Halten Sie beide Augen für {{ blinkDuration }} Sekunden geschlossen
                 </p>
                 
                 <!-- Blink Progress -->
-                <div class="w-full bg-gray-200">
+                <div class="progress-container">
                   <div 
-                    class="bg-primary-600 h-3 rounded-full transition-all duration-300"
+                    class="progress-bar"
                     :style="{ width: `${blinkProgress}%` }"
                   ></div>
                 </div>
                 
-                <p class="text-sm text-gray-500">
+                <p class="progress-text">
                   {{ blinkProgress.toFixed(1) }}% / 100%
                 </p>
               </div>
             </div>
           </div>
 
-          <!-- Abstandshalter -->
-          <div style="height: 3rem;"></div>
+          <!-- Spacer -->
+          <div class="spacer"></div>
 
           <!-- Manual Start Option -->
-          <div v-if="cameraStatus === 'active'" class="max-w-md mx-auto">
+          <div v-if="cameraStatus === 'active'">
             <button
               @click="startWithoutBlink"
-              class="w-full text-white rounded-lg"
-              style="background-color: #00796B; font-size: 16px; height: 40px; padding: 8px 16px; border: none;"
+              class="btn-secondary"
             >
               Ohne Blinzeln starten
             </button>
           </div>
         </div>
 
-        <!-- Abstandshalter -->
-        <div style="height: 3rem;"></div>
+        <!-- Spacer -->
+        <div class="spacer"></div>
 
         <!-- Error Message -->
-        <div v-if="error" class="max-w-md mx-auto p-4 bg-red-50">
-          <p class="text-red-800">
-            {{ error }}
-          </p>
+        <div v-if="error" class="error-container">
+          <p class="error-text">{{ error }}</p>
         </div>
 
         <!-- Help Text -->
-        <div class="max-w-2xl mx-auto text-center text-sm text-gray-500">
-          <p>
+        <div class="help-container">
+          <p class="help-text">
             <strong>Tipp:</strong> Stellen Sie sich vor die Kamera und blinzeln Sie langsam
           </p>
-          <p>
+          <p class="help-text">
             Falls die Kamera nicht funktioniert, können Sie auch ohne Gesichtserkennung starten
           </p>
         </div>
@@ -139,7 +122,7 @@
     <!-- Hidden Video Element -->
     <video 
       ref="videoElement"
-      class="hidden"
+      class="hidden-video"
       autoplay 
       muted 
       playsinline
@@ -151,6 +134,7 @@
 import { ref, computed, onMounted, onUnmounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { useFaceRecognition } from '../../face-recognition/composables/useFaceRecognition'
+import './StartView.css'
 
 // Router
 const router = useRouter()
@@ -242,11 +226,18 @@ function startWithoutBlink() {
 }
 
 // Lifecycle
-onMounted(() => {
+onMounted(async () => {
   // Auto-start camera if possible
   if (typeof navigator !== 'undefined' && navigator.mediaDevices && typeof navigator.mediaDevices.getUserMedia === 'function') {
-    // Don't auto-start, let user click button
-    console.log('Kamera verfügbar - warte auf Benutzerinteraktion')
+    console.log('Kamera verfügbar - starte automatisch')
+    // Auto-start camera after a short delay
+    setTimeout(async () => {
+      try {
+        await startCamera()
+      } catch (error) {
+        console.log('Auto-start failed, user can still click button')
+      }
+    }, 1000) // 1 Sekunde Verzögerung
   }
 })
 
@@ -258,32 +249,3 @@ onUnmounted(() => {
   faceRecognition.stop()
 })
 </script>
-
-<style scoped>
-/* Custom animations */
-@keyframes pulse {
-  0%, 100% {
-    opacity: 1;
-  }
-  50% {
-    opacity: 0.5;
-  }
-}
-
-.animate-pulse {
-  animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
-}
-
-@keyframes spin {
-  from {
-    transform: rotate(0deg);
-  }
-  to {
-    transform: rotate(360deg);
-  }
-}
-
-.animate-spin {
-  animation: spin 1s linear infinite;
-}
-</style> 
