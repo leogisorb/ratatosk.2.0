@@ -27,7 +27,7 @@ import PainDialogView from '../features/pain-assessment/views/PainDialogView.vue
 import SlashSettingsView from '../features/settings/views/SlashSettingsView.vue'
 import LeuchtDauerView from '../features/light-duration/views/LeuchtDauerView.vue'
 import BlinzeldauerView from '../features/blink-duration/views/BlinzeldauerView.vue'
-import BlitzdauerView from '../features/settings/views/BlitzdauerView.vue'
+import BlitzdauerView from '../features/blink-duration/views/BlitzdauerView.vue'
 import FarbmodusView from '../features/settings/views/FarbmodusView.vue'
 import ImpressumView from '../features/settings/views/ImpressumView.vue'
 import KamerapositionView from '../features/camera-position/views/KamerapositionView.vue'
