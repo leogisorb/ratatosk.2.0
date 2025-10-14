@@ -43,7 +43,7 @@
         <!-- Button Container -->
         <div class="button-container">
           <!-- Start Button -->
-          <div v-if="cameraStatus === 'inactive'">
+          <div v-if="cameraStatus === 'inactive' || cameraStatus === 'error'">
             <button
               @click="startCamera"
               :disabled="cameraStatus === 'loading'"
@@ -56,7 +56,7 @@
               <svg v-else class="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z"></path>
               </svg>
-              <span>Kamera aktivieren</span>
+              <span>{{ cameraStatus === 'error' ? 'Kamera starten' : 'Kamera aktivieren' }}</span>
             </button>
           </div>
 
@@ -134,6 +134,7 @@
 import { ref, computed, onMounted, onUnmounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { useFaceRecognition } from '../../face-recognition/composables/useFaceRecognition'
+import { simpleFlowController } from '../../../core/application/SimpleFlowController'
 import './StartView.css'
 
 // Router
@@ -176,13 +177,26 @@ async function startCamera() {
     if (faceRecognition.isActive.value) {
       cameraStatus.value = 'active'
       startBlinkDetection()
+      
+      // WICHTIG: Aktiviere TTS nach erfolgreicher Kamera-Aktivierung
+      console.log('StartView: Kamera erfolgreich aktiviert - aktiviere TTS seitenübergreifend')
+      simpleFlowController.setUserInteracted(true)
     } else {
       throw new Error('Kamera konnte nicht gestartet werden')
     }
   } catch (err) {
+    console.error('Kamera-Start Fehler:', err)
     cameraStatus.value = 'error'
     error.value = err instanceof Error ? err.message : 'Unbekannter Fehler'
-    console.error('Kamera-Start Fehler:', err)
+    
+    // Fallback: Setze trotzdem als aktiv, damit User weiter kann
+    console.log('Kamera-Fallback: Setze als aktiv für Navigation')
+    cameraStatus.value = 'active'
+    error.value = null
+    
+    // Auch im Fallback-Modus TTS aktivieren
+    console.log('StartView: Kamera-Fallback - aktiviere TTS seitenübergreifend')
+    simpleFlowController.setUserInteracted(true)
   }
 }
 
@@ -216,17 +230,27 @@ function startApp() {
     blinkInterval = null
   }
   
+  // Aktiviere TTS beim Start durch Blinzeln
+  console.log('StartView: Start durch Blinzeln - aktiviere TTS seitenübergreifend')
+  simpleFlowController.setUserInteracted(true)
+  
   // Navigate to main app
   router.push('/app')
 }
 
 function startWithoutBlink() {
+  // Aktiviere TTS auch beim Start ohne Blinzeln
+  console.log('StartView: Start ohne Blinzeln - aktiviere TTS seitenübergreifend')
+  simpleFlowController.setUserInteracted(true)
+  
   // Navigate to main app without blink detection
   router.push('/app')
 }
 
 // Lifecycle
 onMounted(async () => {
+  console.log('StartView: Mounted')
+  
   // Auto-start camera if possible
   if (typeof navigator !== 'undefined' && navigator.mediaDevices && typeof navigator.mediaDevices.getUserMedia === 'function') {
     console.log('Kamera verfügbar - starte automatisch')
@@ -236,8 +260,13 @@ onMounted(async () => {
         await startCamera()
       } catch (error) {
         console.log('Auto-start failed, user can still click button')
+        // Setze Status auf error, damit User den Button verwenden kann
+        cameraStatus.value = 'error'
       }
     }, 1000) // 1 Sekunde Verzögerung
+  } else {
+    console.log('Kamera nicht verfügbar - User kann trotzdem den Button verwenden')
+    cameraStatus.value = 'error'
   }
 })
 
@@ -246,6 +275,7 @@ onUnmounted(() => {
   if (blinkInterval) {
     clearInterval(blinkInterval)
   }
-  faceRecognition.stop()
+  // Face Recognition NICHT stoppen - sie soll seitenübergreifend laufen
+  // faceRecognition.stop()
 })
 </script>

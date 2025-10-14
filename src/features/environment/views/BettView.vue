@@ -23,7 +23,7 @@ const {
   pauseAutoMode,
   stopAutoMode,
   selectBettItem,
-  handleBlink,
+  handleFaceBlink,
   handleRightClick,
   settingsStore,
   faceRecognition

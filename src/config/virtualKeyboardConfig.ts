@@ -39,13 +39,13 @@ export const VIRTUAL_KEYBOARD_CONFIG = {
     // Zeilenauswahl bestätigt
     rowSelected: {
       text: "Zeile ausgewählt. Buchstaben laufen.",
-      delay: 1000,
+      delay: 2000,
       action: 'startLetterScan' as const
     },
     
     // Buchstabe ausgewählt
     letterSelected: (letter: string) => ({
-      text: `Buchstabe ${letter} gewählt.`,
+      text: `${letter} gewählt.`,
       delay: 3000,
       action: 'returnToRowScan' as const
     }),
@@ -64,48 +64,48 @@ export const VIRTUAL_KEYBOARD_CONFIG = {
       id: 'row1',
       letters: ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K'],
       ttsText: 'Zeile eins – Buchstaben A bis K',
-      displayTime: 2000
+      displayTime: 2500  // 25% langsamer: 2000 * 1.25
     },
     {
       id: 'row2', 
       letters: ['L', 'M', 'N', 'O', 'P', 'Q', 'R', 'S', 'T', 'U', 'V'],
       ttsText: 'Zeile zwei – Buchstaben L bis V',
-      displayTime: 2000
+      displayTime: 2500  // 25% langsamer: 2000 * 1.25
     },
     {
       id: 'row3',
       letters: ['W', 'X', 'Y', 'Z', 'Ä', 'Ö', 'Ü', 'ß', '.', ',', '?'],
       ttsText: 'Zeile drei – Buchstaben W bis Fragezeichen',
-      displayTime: 2000
+      displayTime: 2500  // 25% langsamer: 2000 * 1.25
     },
     {
       id: 'row4',
       letters: ['SCH', 'CH', 'EI', 'IE', 'AU', 'EU', 'ÄU', 'PF', 'PH', 'CK', 'NK'],
       ttsText: 'Zeile vier – Silben und Lautkombinationen',
-      displayTime: 2000
+      displayTime: 2500  // 25% langsamer: 2000 * 1.25
     },
     {
       id: 'row5',
       letters: ['JA', 'NEIN', 'ICH', 'DU', 'ES', 'IST', 'BIN'],
       ttsText: 'Zeile fünf – kurze Wörter',
-      displayTime: 2000
+      displayTime: 2500  // 25% langsamer: 2000 * 1.25
     },
     {
       id: 'row6',
       letters: ['LEERZEICHEN', 'LÖSCHEN', 'ZURÜCK'],
       ttsText: 'Zeile sechs – Steuerungstasten',
-      displayTime: 2000
+      displayTime: 2500  // 25% langsamer: 2000 * 1.25
     }
   ],
 
-  // Zeitabstände
+  // Zeitabstände (25% langsamer)
   timing: {
-    rowDisplayTime: 4000,        // 4 Sekunden pro Zeile (verdoppelt)
-    letterDisplayTime: 1500,     // 1,5 Sekunden pro Buchstabe
-    inactivityTimeout: 30000,    // 30 Sekunden ohne Eingabe (verlängert)
-    pauseAfterIntro: 1000,       // 1 Sekunde nach Intro
-    pauseAfterRowSelection: 1000, // 1 Sekunde nach Zeilenauswahl
-    pauseAfterLetterSelection: 3000 // 3 Sekunden nach Buchstabenauswahl
+    rowDisplayTime: 5000,        // 5 Sekunden pro Zeile (25% langsamer: 4000 * 1.25)
+    letterDisplayTime: 1875,     // 1,875 Sekunden pro Buchstabe (25% langsamer: 1500 * 1.25)
+    inactivityTimeout: 37500,    // 37,5 Sekunden ohne Eingabe (25% langsamer: 30000 * 1.25)
+    pauseAfterIntro: 1250,       // 1,25 Sekunden nach Intro (25% langsamer: 1000 * 1.25)
+    pauseAfterRowSelection: 1250, // 1,25 Sekunden nach Zeilenauswahl (25% langsamer: 1000 * 1.25)
+    pauseAfterLetterSelection: 3750 // 3,75 Sekunden nach Buchstabenauswahl (25% langsamer: 3000 * 1.25)
   },
 
   // UI-Standards
@@ -188,7 +188,7 @@ export class VirtualKeyboardController {
    */
   private async playIntro(): Promise<void> {
     const intro = VIRTUAL_KEYBOARD_CONFIG.tts.intro
-    await this.ttsController.speak(intro.text)
+    await this.ttsController.speakForVirtualKeyboard(intro.text)
     await this.delay(intro.delay)
   }
 
@@ -233,7 +233,7 @@ export class VirtualKeyboardController {
     console.log('VirtualKeyboard: Scanning row', this.state.currentRow, row.ttsText)
     
     // TTS für aktuelle Zeile
-    await this.ttsController.speak(row.ttsText)
+    await this.ttsController.speakForVirtualKeyboard(row.ttsText)
     
     // UI-Update (aktive Zeile hervorheben)
     this.highlightActiveRow()
@@ -251,7 +251,7 @@ export class VirtualKeyboardController {
     console.log('VirtualKeyboard: Scanning letter', letter)
     
     // TTS für aktuellen Buchstaben
-    await this.ttsController.speak(letter)
+    await this.ttsController.speakForVirtualKeyboard(letter)
     
     // UI-Update (aktive Taste hervorheben)
     this.highlightActiveLetter()
@@ -268,7 +268,7 @@ export class VirtualKeyboardController {
     this.clearAllIntervals()
     
     const rowSelected = VIRTUAL_KEYBOARD_CONFIG.tts.rowSelected
-    await this.ttsController.speak(rowSelected.text)
+    await this.ttsController.speakForVirtualKeyboard(rowSelected.text)
     await this.delay(rowSelected.delay)
     
     this.startLetterScanning()
@@ -289,7 +289,7 @@ export class VirtualKeyboardController {
     
     // TTS-Bestätigung
     const letterSelected = VIRTUAL_KEYBOARD_CONFIG.tts.letterSelected(letter)
-    await this.ttsController.speak(letterSelected.text)
+    await this.ttsController.speakForVirtualKeyboard(letterSelected.text)
     await this.delay(letterSelected.delay)
     
     // Zurück zur Zeilenauswahl
@@ -327,7 +327,7 @@ export class VirtualKeyboardController {
     this.clearAllIntervals()
     
     const inactivity = VIRTUAL_KEYBOARD_CONFIG.tts.inactivity
-    await this.ttsController.speak(inactivity.text)
+    await this.ttsController.speakForVirtualKeyboard(inactivity.text)
     await this.delay(inactivity.delay)
     
     this.startRowScanning()

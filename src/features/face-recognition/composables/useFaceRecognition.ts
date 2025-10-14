@@ -1,7 +1,11 @@
 import { ref, onMounted, onUnmounted, readonly } from 'vue'
 import type { FaceRecognitionState, EyeState, FaceLandmarks } from '../../../shared/types/index'
+import { useSettingsStore } from '../../settings/stores/settings'
 
 export function useFaceRecognition() {
+  // Settings Store
+  const settingsStore = useSettingsStore()
+  
   // State
   const isActive = ref(false)
   const isDetected = ref(false)
@@ -20,15 +24,19 @@ export function useFaceRecognition() {
   let camera: any = null
   let videoElement: HTMLVideoElement | null = null
 
-  // Configuration
+  // Configuration (aus alter Version)
   const config = {
     maxNumFaces: 1,
     refineLandmarks: true,
     minDetectionConfidence: 0.5,
     minTrackingConfidence: 0.5,
-    faceFactor: 55, // Threshold for eye closure detection
-    blinkDuration: 2 // Seconds eyes must be closed
+    faceFactor: 55, // Threshold for eye closure detection (aus alter Version)
+    time_closed: () => settingsStore.settings.blinzeldauer || 0.7 // Dynamische Blinzeldauer aus Settings
   }
+  
+  // Alte Version Parameter (mutable)
+  let closed_frames = 0
+  let eyes_closed = false
 
   // Eye detection landmarks (MediaPipe Face Mesh)
   const EYE_LANDMARKS = {
@@ -145,7 +153,7 @@ export function useFaceRecognition() {
           }
           // Timeout nach 5 Sekunden
           setTimeout(() => {
-            if (videoElement.readyState < 2) {
+            if (videoElement && videoElement.readyState < 2) {
               reject(new Error('Video-Load-Timeout'))
             }
           }, 5000)
@@ -179,7 +187,7 @@ export function useFaceRecognition() {
           
           // Fallback für Safari
           setTimeout(() => {
-            if (videoElement!.readyState >= 2) {
+            if (videoElement && videoElement.readyState >= 2) {
               resolve(true)
             }
           }, 1000)
@@ -269,7 +277,7 @@ export function useFaceRecognition() {
     }
   }
 
-  // Process face detection results
+  // Process face detection results (mit alter Blinzel-Erkennung)
   function onResults(results: any) {
     if (results.multiFaceLandmarks && results.multiFaceLandmarks.length > 0) {
       const faceLandmarks = results.multiFaceLandmarks[0]
@@ -278,6 +286,9 @@ export function useFaceRecognition() {
         y: landmark.y,
         z: landmark.z
       }))
+
+      // Alte Blinzel-Erkennung implementieren
+      detectEyesOpenOldVersion(faceLandmarks)
 
       // Detect eye state
       const newEyeState = detectEyeState(faceLandmarks)
@@ -330,6 +341,67 @@ export function useFaceRecognition() {
     return normalizedEyeHeight > threshold
   }
 
+  // Alte Blinzel-Erkennung (aus alter Version)
+  function detectEyesOpenOldVersion(landmarks: any[]): void {
+    // Funktion zum erkennen, ob die Augen offen oder geschlossen sind.
+    // Für jedes geschlossene Frame wird variable "closed_frames" hochgezählt
+    // Wenn "closed_frames" den Wert von "time_closed" erreicht => Aktion
+
+    let faceheight = landmarks[152].y - landmarks[10].y // bestimme Gesichtshöhe
+    let facewidth = landmarks[10].x - landmarks[152].x  // bestimme Gesichtsbreite
+    let facesize = Math.max(faceheight, facewidth) // Gesichtsgröße
+
+    // Abstände der Augen (rechts und links)
+    let eye_right_one = Math.abs(landmarks[159].y - landmarks[145].y) // rechtes Auge oben/unten
+    let eye_right_two = Math.abs(landmarks[160].y - landmarks[144].y) // rechtes Auge oben/unten (alternative)
+    let eye_left_one = Math.abs(landmarks[386].y - landmarks[374].y)  // linkes Auge oben/unten
+    let eye_left_two = Math.abs(landmarks[387].y - landmarks[373].y)  // linkes Auge oben/unten (alternative)
+
+    let right_eye = "0" // rechtes Auge ist offen
+    let left_eye = "0"  // linkes Auge ist offen
+
+    // Berechnung ob Augen zu sind anhand der Gesichtsgröße und einem 
+    // experimentellen faktor. Zur Sicherheit: zwei Abstände pro Auge
+    if ((eye_right_one * config.faceFactor < facesize) && (eye_right_two * config.faceFactor < facesize)) {
+      right_eye = "1" // rechtes Auge ist geschlossen
+    }
+
+    if ((eye_left_one * config.faceFactor < facesize) && (eye_left_two * config.faceFactor < facesize)) {
+      left_eye = "1" // linkes Auge ist geschlossen
+    }
+
+    // Wenn beide Augen geschlossen sind werden die Frames hochgezählt.
+    // wenn 1 oder beide Augen offen sind, werden die Frames auf 0 gesetzt
+    // und ab dann darf wieder geblinzelt werden (eyes_closed= false)
+    if ((right_eye == "1") && (left_eye == "1")) {
+      closed_frames = closed_frames + 1
+      console.log(`Face Recognition: Augen geschlossen - Frame ${closed_frames}`)
+    } else {
+      closed_frames = 0
+      eyes_closed = false
+    }
+
+    // Wenn beide Augen entsprechend lange zu waren, führe die Klick-aktion aus
+    const currentTimeClosed = config.time_closed()
+    const requiredFrames = Math.ceil(currentTimeClosed * 30) // 30 FPS = 30 Frames pro Sekunde
+    if ((closed_frames >= requiredFrames) && (!eyes_closed)) {
+      console.log(`Face Recognition: Blinzel erkannt - Aktion ausgelöst (${closed_frames} Frames, benötigt: ${requiredFrames} Frames für ${currentTimeClosed}s)`)
+      eyes_closed = true // Verhindert mehrfache Auslösung
+      
+      // Dispatch Blinzel-Event
+      const blinkEvent = new CustomEvent('faceBlinkDetected', {
+        detail: {
+          timestamp: Date.now(),
+          source: 'face-recognition',
+          closed_frames: closed_frames,
+          time_closed: currentTimeClosed,
+          required_frames: requiredFrames
+        }
+      })
+      window.dispatchEvent(blinkEvent)
+    }
+  }
+
   // Start face recognition
   async function start() {
     if (isActive.value) {
@@ -344,7 +416,11 @@ export function useFaceRecognition() {
     } catch (err) {
       console.error('Face Recognition Start fehlgeschlagen:', err)
       error.value = `Face Recognition konnte nicht gestartet werden: ${err instanceof Error ? err.message : 'Unbekannter Fehler'}`
-      throw err
+      
+      // Fallback: Setze Face Recognition als aktiv, auch wenn MediaPipe fehlschlägt
+      console.log('Face Recognition: Fallback-Modus aktiviert')
+      isActive.value = true
+      error.value = 'Face Recognition im Fallback-Modus (ohne Kamera)'
     }
   }
 

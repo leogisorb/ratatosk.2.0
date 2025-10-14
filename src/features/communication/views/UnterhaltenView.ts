@@ -70,6 +70,12 @@ export function useUnterhaltenViewLogic() {
     handleClick()
   }
 
+  // Face Blinzel-Handler für globale Face Recognition
+  const handleFaceBlink = (event: any) => {
+    console.log('UnterhaltenView: Face blink received:', event.detail)
+    handleClick()
+  }
+
   const startKeyboard = () => {
     initializeVirtualKeyboard()
   }
@@ -118,18 +124,8 @@ export function useUnterhaltenViewLogic() {
     if (!window.ttsIntroAbgespielt) {
       console.log('Starting TTS introduction...')
       try {
-        await new Promise<void>((resolve) => {
-          const utterance = new SpeechSynthesisUtterance(introText)
-          utterance.lang = 'de-DE'
-          utterance.rate = 0.9 // etwas langsamer
-          utterance.pitch = 1
-          utterance.onend = () => {
-            console.log('TTS introduction finished.')
-            resolve()
-          }
-          speechSynthesis.cancel()
-          speechSynthesis.speak(utterance)
-        })
+        // Verwende SimpleFlowController für Volume-Toggle-Kompatibilität
+        await simpleFlowController.speakForVirtualKeyboard(introText)
 
         // Markiere als abgespielt
         window.ttsIntroAbgespielt = true
@@ -201,6 +197,7 @@ export function useUnterhaltenViewLogic() {
     
     // Functions (Legacy compatibility)
     handleBlink,
+    handleFaceBlink,
     startKeyboard,
     stopKeyboard,
     isCurrentRow,

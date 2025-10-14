@@ -192,7 +192,7 @@ const toggleDarkMode = () => {
 }
 
 // Blink Detection
-const handleBlink = () => {
+const handleFaceBlink = () => {
   const now = Date.now()
   
   if (faceRecognition.isBlinking()) {
@@ -239,7 +239,7 @@ onMounted(() => {
   }
 
   // Setup blink detection interval
-  const blinkCheckInterval = setInterval(handleBlink, 100)
+  const blinkCheckInterval = setInterval(handleFaceBlink, 100)
 
   // Setup event listeners
   const rightClickHandler = (event: MouseEvent) => handleRightClick(event)

@@ -20,15 +20,24 @@ export function useGefuehleViewLogic() {
   const selectedGefuehl = ref('')
   const feedbackText = ref('') // Orange Rückmeldung für ausgewählte Items
   const isAutoMode = ref(true)
-  const closedFrames = ref(0)
-  const eyesClosed = ref(false)
   const userInteracted = ref(false)
   const isTTSActive = ref(false)
 
-  // Verbesserte Blink-Detection Parameter - zentral gesteuert
-  const blinkThreshold = computed(() => Math.ceil(settingsStore.settings.blinkSensitivity * 10))
-  const lastBlinkTime = ref(0)
-  const blinkCooldown = computed(() => settingsStore.settings.blinkSensitivity * 1000)
+  // Alte Blinzel-Erkennung (aus alter Version)
+  const handleFaceBlink = (event: any) => {
+    console.log('GefuehleView: Face blink received:', event.detail)
+    
+    if (isTTSActive.value) {
+      console.log('GefuehleView: TTS aktiv - Blinzel ignoriert')
+      return
+    }
+    
+    const currentItem = gefuehleItems[currentTileIndex.value]
+    if (currentItem) {
+      console.log('GefuehleView: Blinzel für Item:', currentItem.text)
+      selectGefuehl(currentItem.id)
+    }
+  }
 
   // User interaction detection - aktiviert TTS
   const enableTTSOnInteraction = () => {
@@ -188,6 +197,10 @@ export function useGefuehleViewLogic() {
       faceRecognition.start()
     }
     
+    // Event Listener für Face Blinzel-Erkennung
+    window.addEventListener('faceBlinkDetected', handleFaceBlink)
+    console.log('GefuehleView: Face Recognition mit alter Blinzel-Erkennung gestartet')
+    
     // Add global event listeners to detect user interaction
     document.addEventListener('click', enableTTSOnInteraction)
     document.addEventListener('keydown', enableTTSOnInteraction)
@@ -237,6 +250,10 @@ export function useGefuehleViewLogic() {
     document.removeEventListener('touchstart', enableTTSOnInteraction)
     document.removeEventListener('contextmenu', handleRightClick, { capture: true })
     
+    // Clean up Face Recognition
+    faceRecognition.stop()
+    window.removeEventListener('faceBlinkDetected', handleFaceBlink)
+    
     console.log('GefuehleView: unmounted - Auto-mode stopped, TTS stopped')
   })
 
@@ -246,18 +263,13 @@ export function useGefuehleViewLogic() {
     selectedGefuehl,
     feedbackText,
     isAutoMode,
-    closedFrames,
-    eyesClosed,
-    blinkThreshold,
-    lastBlinkTime,
-    blinkCooldown,
     gefuehleItems,
     
     // Methods
     speakText,
     enableTTSOnInteraction,
     selectGefuehl,
-    handleBlink,
+    handleFaceBlink,
     handleRightClick,
     
     // Stores

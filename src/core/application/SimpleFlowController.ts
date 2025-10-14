@@ -18,6 +18,8 @@ export class SimpleFlowController {
   private pendingCycle: boolean = false
   private currentCycleDelay: number = 3000
   private isTTSMuted: boolean = false
+  private ttsQueue: string[] = []
+  private isProcessingQueue: boolean = false
 
   private constructor() {
     this.speechSynthesis = window.speechSynthesis
@@ -36,9 +38,21 @@ export class SimpleFlowController {
    */
   public setActiveView(viewName: string): void {
     console.log('SimpleFlowController: Setting active view to:', viewName)
+    
+    // Stoppe alle laufenden Prozesse
     this.stopAutoMode()
     this.stopTTS()
+    
+    // Setze View sofort
     this.currentView = viewName
+    console.log('SimpleFlowController: Active view set to:', viewName)
+  }
+
+  /**
+   * Prüft, ob der angegebene View der aktive ist
+   */
+  public isActiveView(viewName: string): boolean {
+    return this.currentView === viewName
   }
 
   /**
@@ -151,7 +165,7 @@ export class SimpleFlowController {
       return
     }
 
-    await this.performSpeak(text)
+    await this.queueAndSpeak(text)
   }
 
   /**
@@ -163,7 +177,51 @@ export class SimpleFlowController {
       return
     }
 
-    await this.performSpeak(text)
+    await this.queueAndSpeak(text)
+  }
+
+  /**
+   * TTS in Queue einreihen und verarbeiten
+   */
+  private async queueAndSpeak(text: string): Promise<void> {
+    // Füge Text zur Queue hinzu
+    this.ttsQueue.push(text)
+    console.log('SimpleFlowController: Added to TTS queue:', text, 'Queue length:', this.ttsQueue.length)
+    
+    // Starte Queue-Verarbeitung, falls nicht bereits aktiv
+    if (!this.isProcessingQueue) {
+      this.processQueue()
+    }
+  }
+
+  /**
+   * TTS-Queue verarbeiten
+   */
+  private async processQueue(): Promise<void> {
+    if (this.isProcessingQueue || this.ttsQueue.length === 0) {
+      return
+    }
+
+    this.isProcessingQueue = true
+    console.log('SimpleFlowController: Processing TTS queue, length:', this.ttsQueue.length)
+
+    while (this.ttsQueue.length > 0) {
+      const text = this.ttsQueue.shift()!
+      console.log('SimpleFlowController: Processing queue item:', text)
+      
+      await this.performSpeak(text)
+      
+      // Warte bis TTS fertig ist
+      while (this.isSpeaking) {
+        await new Promise(resolve => setTimeout(resolve, 100))
+      }
+      
+      // Pause zwischen TTS-Items um Browser-Abbrüche zu vermeiden
+      await new Promise(resolve => setTimeout(resolve, 500))
+    }
+
+    this.isProcessingQueue = false
+    console.log('SimpleFlowController: TTS queue processing completed')
   }
 
   /**
@@ -173,8 +231,9 @@ export class SimpleFlowController {
 
     console.log('SimpleFlowController: Speaking:', text)
     
-    // Stoppe vorherige TTS
+    // Stoppe vorherige TTS und warte kurz
     this.stopTTS()
+    await new Promise(resolve => setTimeout(resolve, 200)) // 200ms Pause
     
     // Prüfe ob Speech Synthesis verfügbar ist
     if (!this.speechSynthesis) {
@@ -190,7 +249,7 @@ export class SimpleFlowController {
     this.currentUtterance.lang = 'de-DE'
     this.currentUtterance.rate = 0.8
     this.currentUtterance.pitch = 1.0
-    this.currentUtterance.volume = 0.8
+    this.currentUtterance.volume = this.isTTSMuted ? 0 : 0.8  // Lautstärke basierend auf Mute-Status
 
     // Wähle Stimme
     const voices = this.speechSynthesis.getVoices()
@@ -250,6 +309,11 @@ export class SimpleFlowController {
       this.pendingCycle = false
       console.log('SimpleFlowController: TTS stopped')
     }
+    
+    // Leere auch die TTS-Queue
+    this.ttsQueue = []
+    this.isProcessingQueue = false
+    console.log('SimpleFlowController: TTS queue cleared')
   }
 
   /**
@@ -261,16 +325,45 @@ export class SimpleFlowController {
   }
 
   /**
-   * Schaltet TTS global stumm/an
+   * Schaltet TTS global stumm/an (durch sanftes Ausfaden)
    */
   public setTTSMuted(muted: boolean): void {
     this.isTTSMuted = muted
     console.log('SimpleFlowController: TTS muted set to:', muted)
     
-    // Wenn TTS stumm geschaltet wird, stoppe aktuelle Wiedergabe
-    if (muted) {
-      this.stopTTS()
+    // Sanftes Ausfaden der aktuellen TTS
+    if (this.currentUtterance) {
+      this.fadeVolume(muted ? 0 : 0.8)
     }
+  }
+
+  /**
+   * Sanftes Ausfaden der Lautstärke
+   */
+  private fadeVolume(targetVolume: number): void {
+    if (!this.currentUtterance) return
+    
+    const currentVolume = this.currentUtterance.volume
+    const volumeStep = (targetVolume - currentVolume) / 20 // 20 Schritte für sanftes Fading
+    const fadeInterval = 50 // 50ms pro Schritt = 1 Sekunde total
+    
+    let step = 0
+    const fadeIntervalId = setInterval(() => {
+      step++
+      const newVolume = currentVolume + (volumeStep * step)
+      
+      if (this.currentUtterance) {
+        this.currentUtterance.volume = Math.max(0, Math.min(1, newVolume))
+      }
+      
+      if (step >= 20 || !this.currentUtterance) {
+        clearInterval(fadeIntervalId)
+        if (this.currentUtterance) {
+          this.currentUtterance.volume = targetVolume
+        }
+        console.log('SimpleFlowController: Volume fade completed to:', targetVolume)
+      }
+    }, fadeInterval)
   }
 
   /**

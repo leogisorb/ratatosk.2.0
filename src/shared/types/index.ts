@@ -42,7 +42,7 @@ export interface UserSettings {
   voiceEnabled: boolean // TTS aktiviert
   // Neue Einstellungen
   leuchtdauer: number // in seconds (default: 3)
-  blitzDuration: number // in seconds (default: 0.7)
+  blinzeldauer: number // in seconds (default: 0.7) - wie lange man blinzeln muss
   farbmodus: string // color mode (default: 'neutral')
   kamera: string // camera setting (default: 'back')
   accessibility: {

@@ -22,7 +22,7 @@ const {
   pauseAutoMode,
   stopAutoMode,
   selectArmBereich,
-  handleBlink,
+  handleFaceBlink,
   handleRightClick,
   settingsStore,
   faceRecognition

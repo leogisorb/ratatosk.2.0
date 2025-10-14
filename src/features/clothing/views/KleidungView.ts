@@ -20,15 +20,24 @@ export function useKleidungViewLogic() {
   const selectedKleidung = ref('')
   const feedbackText = ref('') // Orange Rückmeldung für ausgewählte Items
   const isAutoMode = ref(true)
-  const closedFrames = ref(0)
-  const eyesClosed = ref(false)
   const userInteracted = ref(false)
   const isTTSActive = ref(false)
 
-  // Verbesserte Blink-Detection Parameter - zentral gesteuert
-  const blinkThreshold = computed(() => Math.ceil(settingsStore.settings.blinkSensitivity * 10))
-  const lastBlinkTime = ref(0)
-  const blinkCooldown = computed(() => settingsStore.settings.blinkSensitivity * 1000)
+  // Alte Blinzel-Erkennung (aus alter Version)
+  const handleFaceBlink = (event: any) => {
+    console.log('KleidungView: Face blink received:', event.detail)
+    
+    if (isTTSActive.value) {
+      console.log('KleidungView: TTS aktiv - Blinzel ignoriert')
+      return
+    }
+    
+    const currentItem = kleidungItems[currentTileIndex.value]
+    if (currentItem) {
+      console.log('KleidungView: Blinzel für Item:', currentItem.text)
+      selectKleidung(currentItem.id)
+    }
+  }
 
   // User interaction detection - aktiviert TTS
   const enableTTSOnInteraction = () => {

@@ -274,7 +274,7 @@ export class VirtualKeyboardStateMachine {
       console.log('StateMachine: Playing intro TTS...')
       // Intro-TTS abspielen
       this.context.isTTSActive = true
-      await this.ttsController.speak(VIRTUAL_KEYBOARD_CONFIG.tts.intro.text)
+      await this.ttsController.speakForVirtualKeyboard(VIRTUAL_KEYBOARD_CONFIG.tts.intro.text)
       this.context.isTTSActive = false
       this.markIntroAsHeard()
       
@@ -335,7 +335,7 @@ export class VirtualKeyboardStateMachine {
     
     this.context.lastActivity = Date.now()
     this.context.isTTSActive = true
-    await this.ttsController.speak(VIRTUAL_KEYBOARD_CONFIG.tts.rowSelected.text)
+    await this.ttsController.speakForVirtualKeyboard(VIRTUAL_KEYBOARD_CONFIG.tts.rowSelected.text)
     this.context.isTTSActive = false
     
     // Nach 1 Sekunde → ROW_SELECTED
@@ -357,7 +357,7 @@ export class VirtualKeyboardStateMachine {
     // TTS-Bestätigung
     this.context.isTTSActive = true
     const ttsText = this.getTTSLabel(letter)
-    await this.ttsController.speak(ttsText)
+    await this.ttsController.speakForVirtualKeyboard(ttsText)
     this.context.isTTSActive = false
     
     // Nach 3 Sekunden → LETTER_SELECTED
@@ -392,7 +392,7 @@ export class VirtualKeyboardStateMachine {
     console.log('StateMachine: Handling INACTIVITY')
     
     this.context.isTTSActive = true
-    await this.ttsController.speak(VIRTUAL_KEYBOARD_CONFIG.tts.inactivity.text)
+    await this.ttsController.speakForVirtualKeyboard(VIRTUAL_KEYBOARD_CONFIG.tts.inactivity.text)
     this.context.isTTSActive = false
     
     // Nach 1 Sekunde → zurück zu ROW_SCANNING
@@ -538,7 +538,7 @@ export class VirtualKeyboardStateMachine {
       console.log('StateMachine: Announcing row:', rowDescription)
       
       this.context.isTTSActive = true
-      await this.ttsController.speak(rowDescription)
+      await this.ttsController.speakForVirtualKeyboard(rowDescription)
       this.context.isTTSActive = false
     } catch (error) {
       console.log('StateMachine: Error in announceCurrentRow:', error)
@@ -566,7 +566,7 @@ export class VirtualKeyboardStateMachine {
       console.log('StateMachine: Announcing letter:', ttsText, 'at index:', this.context.currentLetter)
       
       this.context.isTTSActive = true
-      await this.ttsController.speak(ttsText)
+      await this.ttsController.speakForVirtualKeyboard(ttsText)
       this.context.isTTSActive = false
     } catch (error) {
       console.log('StateMachine: Error in announceCurrentLetter:', error)
@@ -618,11 +618,40 @@ export class VirtualKeyboardStateMachine {
       }
       
       if (letter.length === 1 && /[A-Z]/.test(letter)) {
-        return `Buchstabe ${letter}`
+        // Verwende alternative Aussprache, um "Großbuchstabe" zu vermeiden
+        const letterMap: Record<string, string> = {
+          'A': 'ah',
+          'B': 'beh', 
+          'C': 'zeh',
+          'D': 'deh',
+          'E': 'eh',
+          'F': 'eff',
+          'G': 'geh',
+          'H': 'hah',
+          'I': 'ih',
+          'J': 'jott',
+          'K': 'kah',
+          'L': 'ell',
+          'M': 'emm',
+          'N': 'enn',
+          'O': 'oh',
+          'P': 'peh',
+          'Q': 'kuh',
+          'R': 'err',
+          'S': 'ess',
+          'T': 'teh',
+          'U': 'uh',
+          'V': 'fau',
+          'W': 'weh',
+          'X': 'iks',
+          'Y': 'üpsilon',
+          'Z': 'zett'
+        }
+        return letterMap[letter] || letter
       } else if (['SCH', 'CH', 'EI', 'AU', 'EU', 'IE', 'ÄU', 'PF', 'PH', 'CK', 'NK'].includes(letter)) {
-        return `Silbe ${letter}`
+        return letter  // Nur die Silbe selbst, ohne "Silbe"
       } else if (['JA', 'NEIN', 'ICH', 'DU', 'ES', 'IST', 'BIN'].includes(letter)) {
-        return `Wort ${letter}`
+        return letter  // Nur das Wort selbst, ohne "Wort"
       } else {
         return ttsLabels[letter] || letter
       }

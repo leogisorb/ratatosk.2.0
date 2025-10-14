@@ -220,7 +220,7 @@ function selectSensibilitaet(sensibilitaetId: string) {
 }
 
 // Blink Detection
-const handleBlink = () => {
+const handleFaceBlink = () => {
   if (!faceRecognition.isBlinking()) return
   
   const now = Date.now()
@@ -269,7 +269,7 @@ onMounted(() => {
   
   // Watch for blinks using the isBlinking function
   blinkCheckInterval.value = window.setInterval(() => {
-    handleBlink()
+    handleFaceBlink()
   }, 100) // Check every 100ms
   
   // Add right click listener

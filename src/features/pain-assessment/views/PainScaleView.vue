@@ -157,7 +157,7 @@ function selectPainLevel(level: number) {
 }
 
 // Blink Detection
-const handleBlink = () => {
+const handleFaceBlink = () => {
   const now = Date.now()
   
   if (faceRecognition.isBlinking()) {
@@ -224,7 +224,7 @@ onMounted(() => {
   
   // Blink-Check Interval starten
   blinkCheckInterval.value = window.setInterval(() => {
-    handleBlink()
+    handleFaceBlink()
   }, 100)
   
   // Auto-Modus nach 5 Sekunden starten

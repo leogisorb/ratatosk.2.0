@@ -2,6 +2,8 @@
 import { ref, computed, onMounted, onUnmounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { useSettingsStore } from '../../settings/stores/settings'
+import { simpleFlowController } from '../../../core/application/SimpleFlowController'
+import { getAutoModeLeuchtdauer } from '../../../core/utils/leuchtdauerUtils'
 import AppHeader from '../../../shared/components/AppHeader.vue'
 
 // Router
@@ -11,262 +13,264 @@ const router = useRouter()
 const settingsStore = useSettingsStore()
 
 // State
-const videoRef = ref<HTMLVideoElement | null>(null)
-const stream = ref<MediaStream | null>(null)
-const isCameraActive = ref(false)
+const currentTileIndex = ref(0)
+const isAutoMode = ref(true)
+const autoModeInterval = ref<number | null>(null)
+const isAutoModePaused = ref(false)
 
-// Kamera-Einstellungen
-const brightness = ref(50)
-const contrast = ref(50)
-const zoom = ref(100)
-const saturation = ref(50)
-
-// Text-to-Speech
-const speechSynthesis = window.speechSynthesis
-const isTTSEnabled = ref(true)
+// Kamera-Optionen
+const kameraItems = [
+  {
+    id: 'ein',
+    title: 'Ein',
+    description: 'Kamera aktivieren',
+    value: true
+  },
+  {
+    id: 'aus',
+    title: 'Aus',
+    description: 'Kamera deaktivieren',
+    value: false
+  },
+  {
+    id: 'zurueck',
+    title: 'Zurück',
+    description: 'Zurück zu Einstellungen',
+    value: null
+  }
+]
 
 // Computed
 const appClasses = computed(() => ({
   'dark': settingsStore.isDarkMode
 }))
 
-// Text-to-Speech Funktion
-const speakText = (text: string) => {
-  if (!isTTSEnabled.value || !speechSynthesis) return
+// Text-to-Speech Funktion - verwende SimpleFlowController
+const speakText = async (text: string) => {
+  console.log('KameraView speakText called with:', text)
+  await simpleFlowController.speak(text)
+}
+
+// Auto Mode Functions - verwende globalen Durchlauf-Algorithmus
+const startAutoMode = () => {
+  if (autoModeInterval.value) return
   
-  speechSynthesis.cancel()
-  const utterance = new SpeechSynthesisUtterance(text)
-  utterance.lang = 'de-DE'
-  utterance.rate = 0.8
-  utterance.pitch = 1.0
-  utterance.volume = 0.8
-  speechSynthesis.speak(utterance)
-}
-
-// TTS Toggle
-const toggleTTS = () => {
-  isTTSEnabled.value = !isTTSEnabled.value
-  if (!isTTSEnabled.value) {
-    speechSynthesis.cancel()
-  } else {
-    speakText('Sprachausgabe aktiviert')
+  // Prüfe, ob dieser View der aktive ist
+  if (!simpleFlowController.isActiveView('/einstellungen/kamera')) {
+    console.log('KameraView: Not active view, skipping auto-mode start')
+    return
   }
-}
-
-// Kamera-Funktionen
-const startCamera = async () => {
-  try {
-    const mediaStream = await navigator.mediaDevices.getUserMedia({
-      video: {
-        width: { ideal: 1280 },
-        height: { ideal: 720 },
-        facingMode: 'user'
-      }
-    })
-    
-    stream.value = mediaStream
-    if (videoRef.value) {
-      videoRef.value.srcObject = mediaStream
-      isCameraActive.value = true
-      speakText('Kamera aktiviert')
+  
+  // Stelle sicher, dass wir bei Index 0 starten
+  currentTileIndex.value = 0
+  
+  const cycleTiles = async () => {
+    if (!isAutoMode.value || isAutoModePaused.value) {
+      return
     }
-  } catch (error) {
-    console.error('Error accessing camera:', error)
-    speakText('Kamera konnte nicht aktiviert werden')
+    
+    // Prüfe erneut, ob dieser View noch aktiv ist
+    if (!simpleFlowController.isActiveView('/einstellungen/kamera')) {
+      console.log('KameraView: Not active view, stopping auto-mode')
+      return
+    }
+    
+    currentTileIndex.value = (currentTileIndex.value + 1) % kameraItems.length
+    
+    // Spreche den aktuellen Menüpunkt vor
+    const currentItem = kameraItems[currentTileIndex.value]
+    await speakText(`${currentItem.title}, ${currentItem.description}`)
+    
+    autoModeInterval.value = window.setTimeout(cycleTiles, getAutoModeLeuchtdauer('KameraView'))
+  }
+  
+  // Spreche den ersten Menüpunkt vor
+  const firstItem = kameraItems[currentTileIndex.value]
+  speakText(`${firstItem.title}, ${firstItem.description}`)
+  
+  // Starte den ersten Zyklus nach der aktuellen Geschwindigkeit
+  autoModeInterval.value = window.setTimeout(cycleTiles, getAutoModeLeuchtdauer('KameraView'))
+}
+
+const pauseAutoMode = () => {
+  isAutoModePaused.value = true
+  if (autoModeInterval.value) {
+    clearTimeout(autoModeInterval.value)
+    autoModeInterval.value = null
+  }
+  simpleFlowController.stopTTS()
+}
+
+const resumeAutoMode = () => {
+  isAutoModePaused.value = false
+  if (!autoModeInterval.value) {
+    // Starte den Auto-Modus bei der aktuellen Kachel
+    const currentItem = kameraItems[currentTileIndex.value]
+    speakText(currentItem.title)
+    startAutoMode()
   }
 }
 
-const stopCamera = () => {
-  if (stream.value) {
-    stream.value.getTracks().forEach(track => track.stop())
-    stream.value = null
+const stopAutoMode = () => {
+  if (autoModeInterval.value) {
+    clearTimeout(autoModeInterval.value)
+    autoModeInterval.value = null
   }
-  isCameraActive.value = false
-  speakText('Kamera deaktiviert')
+  // Stoppe auch die Sprachausgabe
+  simpleFlowController.stopTTS()
 }
 
-// Kamera-Einstellungen anwenden
-const applyCameraSettings = () => {
-  if (!stream.value) return
+// Kamera-Auswahl
+async function selectKamera(kameraId: string) {
+  console.log('selectKamera called with kameraId:', kameraId)
+  pauseAutoMode() // Pausiere Auto-Modus statt zu stoppen
   
-  const videoTrack = stream.value.getVideoTracks()[0]
-  if (!videoTrack) return
-  
-  const constraints: MediaTrackConstraints = {
-    // Note: These properties may not be supported by all browsers
-    // @ts-ignore - Browser-specific camera constraints
-    brightness: brightness.value / 100,
-    // @ts-ignore
-    contrast: contrast.value / 100,
-    // @ts-ignore
-    saturation: saturation.value / 100,
-    // @ts-ignore
-    zoom: zoom.value / 100
+  switch (kameraId) {
+    case 'ein':
+      console.log('Ein selected')
+      await speakText('Die Kamera wurde aktiviert.')
+      settingsStore.updateSettings({ kameraAktiv: true })
+      // Automatisch zurück zu Einstellungen
+      setTimeout(() => {
+        router.push('/einstellungen')
+      }, 2000)
+      break
+    case 'aus':
+      console.log('Aus selected')
+      await speakText('Die Kamera wurde deaktiviert.')
+      settingsStore.updateSettings({ kameraAktiv: false })
+      // Automatisch zurück zu Einstellungen
+      setTimeout(() => {
+        router.push('/einstellungen')
+      }, 2000)
+      break
+    case 'zurueck':
+      console.log('Zurück selected')
+      await speakText('Zurück zu Einstellungen')
+      stopAutoMode() // Stoppe Auto-Modus komplett vor Navigation
+      router.push('/einstellungen')
+      break
   }
   
-  videoTrack.applyConstraints(constraints)
-    .then(() => {
-      speakText('Kamera-Einstellungen angewendet')
-    })
-    .catch((error) => {
-      console.error('Error applying camera settings:', error)
-      speakText('Einstellungen konnten nicht angewendet werden')
-    })
+  // Starte Auto-Modus nach 10 Sekunden neu
+  setTimeout(() => {
+    isAutoModePaused.value = false
+    startAutoMode()
+  }, 10000)
 }
 
-// Einstellungen zurücksetzen
-const resetSettings = () => {
-  brightness.value = 50
-  contrast.value = 50
-  zoom.value = 100
-  saturation.value = 50
-  applyCameraSettings()
-  speakText('Einstellungen zurückgesetzt')
+// Blink Detection - verwende globale Blinzel-Erkennung
+const handleFaceBlink = async (event: any) => {
+  console.log('KameraView: Face blink received:', event.detail)
+  
+  const currentItem = kameraItems[currentTileIndex.value]
+  await selectKamera(currentItem.id)
+}
+
+// Right Click Handler
+const handleRightClick = async (event: MouseEvent) => {
+  event.preventDefault()
+  console.log('KameraView: Right click detected')
+  
+  const currentItem = kameraItems[currentTileIndex.value]
+  await selectKamera(currentItem.id)
 }
 
 // Lifecycle
-onMounted(() => {
-  startCamera()
+onMounted(async () => {
+  // Setze diesen View als aktiv
+  simpleFlowController.setActiveView('/einstellungen/kamera')
+  
+  // Event Listener für globale Blinzel-Erkennung
+  window.addEventListener('faceBlinkDetected', handleFaceBlink)
+  
+  // Add right click listener
+  document.addEventListener('contextmenu', handleRightClick)
+  
+  // Warte auf echte User-Interaktion (Klick, Blinzel, etc.)
+  const waitForUserInteraction = () => {
+    console.log('KameraView: Waiting for user interaction to enable TTS...')
+    
+    // Setze User-Interaktion beim ersten echten Event
+    const enableTTS = () => {
+      simpleFlowController.setUserInteracted(true)
+      console.log('KameraView: User interaction detected, TTS enabled')
+      
+      // Spreche Intro-TTS
+      speakText('Wählen Sie im Folgenden eine Kamera-Einstellung aus.')
+      
+      // Warte 5 Sekunden nach Intro, dann starte Auto Mode
+      setTimeout(() => {
+        startAutoMode()
+      }, 5000)
+      
+      // Entferne Event Listener
+      document.removeEventListener('click', enableTTS)
+      document.removeEventListener('touchstart', enableTTS)
+      window.removeEventListener('faceBlinkDetected', enableTTS)
+    }
+    
+    // Event Listener für User-Interaktion
+    document.addEventListener('click', enableTTS)
+    document.addEventListener('touchstart', enableTTS)
+    window.addEventListener('faceBlinkDetected', enableTTS)
+    
+    // Fallback: Starte Auto-Mode ohne TTS nach 3 Sekunden
+    setTimeout(() => {
+      if (!simpleFlowController.userInteracted) {
+        console.log('KameraView: No user interaction detected, starting auto-mode without TTS')
+        startAutoMode()
+      }
+    }, 3000)
+  }
+  
+  // Starte User-Interaktion-Waiting
+  waitForUserInteraction()
 })
 
 onUnmounted(() => {
-  stopCamera()
+  // Cleanup
+  if (autoModeInterval.value) {
+    clearTimeout(autoModeInterval.value)
+  }
+  
+  // Entferne Event Listener
+  window.removeEventListener('faceBlinkDetected', handleFaceBlink)
+  document.removeEventListener('contextmenu', handleRightClick)
+  
+  // Stoppe Auto-Modus
+  stopAutoMode()
 })
 </script>
 
 <template>
   <div id="app" :class="appClasses">
-    <!-- Responsive Layout -->
     <div class="min-h-screen bg-white">
-      <!-- App Header -->
       <AppHeader />
 
-      <!-- Main Content -->
-      <main class="flex-1 flex flex-col items-center justify-center p-8">
-        <!-- Livebild und Einstellungen Grid -->
-        <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 w-full max-w-6xl">
-          <!-- Livebild -->
-          <div class="bg-white">
-            <h2 class="text-2xl font-bold text-gray-800">
-              Livebild
-            </h2>
-            <div class="relative">
-              <video
-                ref="videoRef"
-                autoplay
-                muted
-                playsinline
-                class="w-full h-auto rounded-lg shadow-lg"
-                style="transform: scaleX(-1);"
-              ></video>
-              <div v-if="!isCameraActive" class="absolute inset-0 flex items-center justify-center bg-gray-200">
-                <div class="text-center">
-                  <svg class="w-16 h-16 mx-auto mb-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" />
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 13a3 3 0 11-6 0 3 3 0 016 0z" />
-                  </svg>
-                  <p class="text-gray-500">Kamera nicht aktiv</p>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <!-- Einstellungen -->
-          <div class="bg-white">
-            <h2 class="text-2xl font-bold text-gray-800">
-              Kamera-Einstellungen
-            </h2>
-            
-            <!-- Helligkeit -->
-            <div class="mb-6">
-              <label class="block text-lg font-medium text-gray-700">
-                Helligkeit: {{ brightness }}%
-              </label>
-              <input
-                v-model="brightness"
-                type="range"
-                min="0"
-                max="100"
-                class="w-full h-2 bg-gray-200"
-                @input="applyCameraSettings"
-              />
-            </div>
-
-            <!-- Kontrast -->
-            <div class="mb-6">
-              <label class="block text-lg font-medium text-gray-700">
-                Kontrast: {{ contrast }}%
-              </label>
-              <input
-                v-model="contrast"
-                type="range"
-                min="0"
-                max="100"
-                class="w-full h-2 bg-gray-200"
-                @input="applyCameraSettings"
-              />
-            </div>
-
-            <!-- Zoom -->
-            <div class="mb-6">
-              <label class="block text-lg font-medium text-gray-700">
-                Zoom: {{ zoom }}%
-              </label>
-              <input
-                v-model="zoom"
-                type="range"
-                min="50"
-                max="200"
-                class="w-full h-2 bg-gray-200"
-                @input="applyCameraSettings"
-              />
-            </div>
-
-            <!-- Sättigung -->
-            <div class="mb-8">
-              <label class="block text-lg font-medium text-gray-700">
-                Sättigung: {{ saturation }}%
-              </label>
-              <input
-                v-model="saturation"
-                type="range"
-                min="0"
-                max="100"
-                class="w-full h-2 bg-gray-200"
-                @input="applyCameraSettings"
-              />
-            </div>
-
-            <!-- Buttons -->
-            <div class="flex gap-4 justify-center">
-              <button
-                @click="applyCameraSettings"
-                class="px-6 py-3 bg-blue-500 hover:bg-blue-600 text-white font-bold rounded-lg transition-colors font-source-code"
-              >
-                Anwenden
-              </button>
-              <button
-                @click="resetSettings"
-                class="px-6 py-3 bg-gray-500 hover:bg-gray-600 text-white font-bold rounded-lg transition-colors font-source-code"
-              >
-                Zurücksetzen
-              </button>
-            </div>
-          </div>
+      <!-- Main Content - Zentriert -->
+      <main class="main-content">
+        <!-- Title Section -->
+        <div class="title-section">
+          <h1 class="main-title">Wählen Sie im Folgenden eine Kamera-Einstellung aus.</h1>
+          <p class="current-duration">
+            Kamera-Status: {{ settingsStore.settings.kameraAktiv ? 'Aktiv' : 'Inaktiv' }}
+          </p>
         </div>
 
-        <!-- Bedienung -->
-        <div class="mt-8 text-center">
-          <div class="bg-blue-100">
-            <h3 class="text-2xl font-semibold text-blue-800">
-              Bedienung
-            </h3>
-            <p class="text-lg text-blue-700">
-              <strong>Kurz blinzeln ({{ settingsStore.settings.blinkSensitivity }}s):</strong> Einstellung auswählen<br>
-              <strong>Rechte Maustaste:</strong> Einstellung auswählen<br>
-              <strong>Auto-Modus:</strong> Automatischer Durchlauf durch alle Einstellungen
-            </p>
-          </div>
+        <!-- Options Grid -->
+        <div class="options-grid">
+          <button
+            v-for="(item, index) in kameraItems"
+            :key="item.id"
+            @click="selectKamera(item.id)"
+            class="option-button"
+            :class="{ 'active': index === currentTileIndex }"
+          >
+            <div class="option-content">
+              <div class="option-title">{{ item.title }} – {{ item.description }}</div>
+            </div>
+          </button>
         </div>
       </main>
     </div>
@@ -274,28 +278,180 @@ onUnmounted(() => {
 </template>
 
 <style scoped>
-.font-source-code {
-  font-family: 'Source Code Pro', monospace;
+/* Dark Mode Support */
+.dark {
+  background-color: #1f2937;
+  color: #f9fafb;
 }
 
-/* Slider Styling */
-.slider::-webkit-slider-thumb {
-  appearance: none;
-  height: 20px;
-  width: 20px;
-  border-radius: 50%;
-  background: #3B82F6;
-  cursor: pointer;
-  box-shadow: 0 0 2px 0 #555;
+.dark .main-content {
+  background-color: #1f2937;
 }
 
-.slider::-moz-range-thumb {
-  height: 20px;
-  width: 20px;
-  border-radius: 50%;
-  background: #3B82F6;
+.dark .main-title {
+  color: #f9fafb;
+}
+
+.dark .current-duration {
+  color: #d1d5db;
+}
+
+.dark .option-button {
+  background: #374151;
+  border-color: #4b5563;
+  color: #f9fafb;
+}
+
+.dark .option-button:hover {
+  background: #4b5563;
+  border-color: #60a5fa;
+}
+
+.dark .option-button.active {
+  background: linear-gradient(135deg, #00B098, #00a085);
+  border-color: #00B098;
+  color: white;
+}
+
+/* Main Layout */
+.main-content {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: calc(100vh - 80px); /* Abzug für Header */
+  padding: 2rem;
+  gap: 3rem;
+}
+
+/* Title Section */
+.title-section {
+  text-align: center;
+  margin-bottom: 2rem;
+}
+
+.main-title {
+  font-size: 3rem;
+  font-weight: bold;
+  color: #1f2937;
+  margin-bottom: 1rem;
+  line-height: 1.2;
+}
+
+.current-duration {
+  font-size: 1.5rem;
+  color: #6b7280;
+  margin: 0;
+}
+
+/* Options Grid */
+.options-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr); /* Immer 3 Spalten */
+  gap: 1.8rem; /* 1.5rem * 1.20 = 1.8rem */
+  max-width: 1200px; /* Feste Breite für 3 Spalten */
+  width: 100%;
+  justify-items: center;
+  justify-content: center; /* Zentriert das Grid selbst */
+  place-items: center; /* Zentriert sowohl horizontal als auch vertikal */
+}
+
+/* Option Buttons - 20% größer */
+.option-button {
+  width: 100%;
+  max-width: 360px; /* 300px * 1.20 = 360px */
+  min-height: 144px; /* 120px * 1.20 = 144px */
+  padding: 1.8rem; /* 1.5rem * 1.20 = 1.8rem */
+  border: 3px solid #e5e7eb;
+  border-radius: 12px;
+  background: white;
   cursor: pointer;
-  border: none;
-  box-shadow: 0 0 2px 0 #555;
+  transition: all 0.3s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.option-button:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+  border-color: #3b82f6;
+}
+
+.option-button.active {
+  border-color: #00B098;
+  background: linear-gradient(135deg, #00B098, #00a085);
+  color: white;
+  transform: scale(1.05);
+  box-shadow: 0 6px 12px rgba(0, 176, 152, 0.3);
+}
+
+.option-content {
+  text-align: center;
+  width: 100%;
+}
+
+.option-title {
+  font-size: 1.8rem; /* 1.5rem * 1.20 = 1.8rem */
+  font-weight: bold;
+  margin-bottom: 0.5rem;
+  line-height: 1.2;
+}
+
+/* Option description removed - now using combined title */
+
+/* Responsive Design */
+@media (max-width: 1024px) {
+  .options-grid {
+    grid-template-columns: repeat(2, 1fr); /* 2 Spalten auf Tablets */
+  }
+}
+
+@media (max-width: 768px) {
+  .main-content {
+    padding: 1rem;
+    gap: 2rem;
+  }
+  
+  .main-title {
+    font-size: 2rem;
+  }
+  
+  .current-duration {
+    font-size: 1.2rem;
+  }
+  
+  .options-grid {
+    grid-template-columns: 1fr; /* 1 Spalte auf Mobile */
+    gap: 1rem;
+  }
+  
+  .option-button {
+    max-width: 100%;
+    min-height: 120px;
+    padding: 1.5rem;
+  }
+  
+  .option-title {
+    font-size: 1.5rem;
+  }
+}
+
+/* Animation für aktive Kachel */
+@keyframes pulse {
+  0% {
+    box-shadow: 0 0 0 0 rgba(0, 176, 152, 0.7);
+  }
+  70% {
+    box-shadow: 0 0 0 10px rgba(0, 176, 152, 0);
+  }
+  100% {
+    box-shadow: 0 0 0 0 rgba(0, 176, 152, 0);
+  }
+}
+
+.option-button.active {
+  animation: pulse 2s infinite;
 }
 </style>

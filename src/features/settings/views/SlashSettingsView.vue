@@ -21,7 +21,7 @@ const {
   stopAutoMode,
   selectSetting,
   formatTime,
-  handleBlink,
+  handleFaceBlink,
   handleRightClick,
   handleVolumeToggle,
   settingsStore,

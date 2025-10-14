@@ -20,15 +20,24 @@ export function useErnaehrungViewLogic() {
   const selectedErnaehrung = ref('')
   const feedbackText = ref('')
   const isAutoMode = ref(true)
-  const closedFrames = ref(0)
-  const eyesClosed = ref(false)
   const userInteracted = ref(false)
   const isTTSActive = ref(false)
 
-  // Verbesserte Blink-Detection Parameter - zentral gesteuert
-  const blinkThreshold = computed(() => Math.ceil(settingsStore.settings.blinkSensitivity * 10))
-  const lastBlinkTime = ref(0)
-  const blinkCooldown = computed(() => settingsStore.settings.blinkSensitivity * 1000)
+  // Alte Blinzel-Erkennung (aus alter Version)
+  const handleFaceBlink = (event: any) => {
+    console.log('ErnaehrungView: Face blink received:', event.detail)
+    
+    if (isTTSActive.value) {
+      console.log('ErnaehrungView: TTS aktiv - Blinzel ignoriert')
+      return
+    }
+    
+    const currentItem = ernaehrungItems[currentTileIndex.value]
+    if (currentItem) {
+      console.log('ErnaehrungView: Blinzel für Item:', currentItem.name)
+      selectErnaehrung(currentItem.name)
+    }
+  }
 
   // User interaction detection - aktiviert TTS
   const enableTTSOnInteraction = () => {
@@ -129,35 +138,7 @@ export function useErnaehrungViewLogic() {
     }
   }
 
-  // Blink Detection
-  const handleBlink = () => {
-    // Verhindere Blink-Interaktion während TTS
-    if (isTTSActive.value) {
-      return
-    }
-
-    const now = Date.now()
-    
-    if (faceRecognition.isBlinking.value) {
-      closedFrames.value++
-      
-      if (closedFrames.value >= blinkThreshold.value && !eyesClosed.value) {
-        const currentItem = ernaehrungItems[currentTileIndex.value]
-        console.log('ErnaehrungView: Blink activation for tile:', currentTileIndex.value, 'ernaehrungId:', currentItem.id, 'text:', currentItem.text)
-        
-        // Nur Auswahl - TTS wird in selectErnaehrung gemacht
-        selectErnaehrung(currentItem.id)
-        eyesClosed.value = true
-        lastBlinkTime.value = now
-        closedFrames.value = 0
-      }
-    } else {
-      if (closedFrames.value > 0) {
-        closedFrames.value = 0
-        eyesClosed.value = false
-      }
-    }
-  }
+  // Blink Detection (ersetzt durch handleFaceBlink - alte Version)
 
   // Right Click Handler
   const handleRightClick = (event: MouseEvent) => {
@@ -204,6 +185,13 @@ export function useErnaehrungViewLogic() {
     console.log('ErnaehrungView: Registering right-click handler')
     document.addEventListener('contextmenu', handleRightClick, { capture: true, passive: false })
     
+    // Start Face Recognition mit alter Blinzel-Erkennung
+    faceRecognition.start()
+    
+    // Event Listener für Face Blinzel-Erkennung
+    window.addEventListener('faceBlinkDetected', handleFaceBlink)
+    console.log('ErnaehrungView: Face Recognition mit alter Blinzel-Erkennung gestartet')
+    
     // Start auto-mode automatically über FlowController
     // Zuerst den Haupttext sprechen, dann nach Pause die automatische Durchlauf-Logik starten
     const mainText = getMainText('ernaehrung')
@@ -244,6 +232,10 @@ export function useErnaehrungViewLogic() {
     document.removeEventListener('touchstart', enableTTSOnInteraction)
     document.removeEventListener('contextmenu', handleRightClick, { capture: true })
     
+    // Clean up Face Recognition
+    faceRecognition.stop()
+    window.removeEventListener('faceBlinkDetected', handleFaceBlink)
+    
     console.log('ErnaehrungView: unmounted - Auto-mode stopped, TTS stopped')
   })
 
@@ -253,18 +245,13 @@ export function useErnaehrungViewLogic() {
     selectedErnaehrung,
     feedbackText,
     isAutoMode,
-    closedFrames,
-    eyesClosed,
-    blinkThreshold,
-    lastBlinkTime,
-    blinkCooldown,
     ernaehrungItems,
     
     // Methods
     speakText,
     enableTTSOnInteraction,
     selectErnaehrung,
-    handleBlink,
+    handleFaceBlink,
     handleRightClick,
     
     // Stores

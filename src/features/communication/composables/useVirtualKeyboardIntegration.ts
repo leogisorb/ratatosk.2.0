@@ -95,13 +95,25 @@ export function useVirtualKeyboardIntegration() {
     stateMachine = new VirtualKeyboardStateMachine(simpleFlowController, onStateChange, onNavigateBack)
     console.log('VirtualKeyboard: State machine created:', !!stateMachine)
     
-    // Face Recognition für Blinzelsteuerung (vorerst deaktiviert)
-    // faceRecognition.start()
-    console.log('VirtualKeyboard: Face Recognition temporarily disabled - using right-click only')
+    // Face Recognition für Blinzelsteuerung aktivieren
+    if (!faceRecognition.isActive.value) {
+      console.log('VirtualKeyboard: Face Recognition nicht aktiv - starte sie')
+      await faceRecognition.start()
+    } else {
+      console.log('VirtualKeyboard: Face Recognition bereits aktiv - verwende bestehende Instanz')
+    }
     
-    // State-Machine starten
-    console.log('VirtualKeyboard: Starting state machine...')
+    // Event Listener für Face Blinzel-Erkennung
+    window.addEventListener('faceBlinkDetected', handleFaceBlink)
+    console.log('VirtualKeyboard: Face Recognition mit Blinzel-Erkennung aktiviert')
+    
+    // State-Machine starten (Intro bereits abgespielt, daher direkt starten)
+    console.log('VirtualKeyboard: Starting state machine (intro already played)...')
     try {
+      // Markiere Intro als bereits gehört, damit State Machine es überspringt
+      if (stateMachine && typeof stateMachine.markIntroAsHeard === 'function') {
+        stateMachine.markIntroAsHeard()
+      }
       stateMachine.start()
       console.log('VirtualKeyboard: State machine started successfully')
     } catch (error) {
@@ -124,7 +136,9 @@ export function useVirtualKeyboardIntegration() {
       stateMachine = null
     }
     
-    faceRecognition.stop()
+    // Face Recognition Event Listener entfernen (aber Face Recognition nicht stoppen)
+    window.removeEventListener('faceBlinkDetected', handleFaceBlink)
+    // faceRecognition.stop() - NICHT stoppen, da sie seitenübergreifend laufen soll
   }
 
   /**
@@ -135,6 +149,14 @@ export function useVirtualKeyboardIntegration() {
     if (stateMachine) {
       stateMachine.resetIntroStatus()
     }
+  }
+
+  /**
+   * Behandelt Face Blinzel-Erkennung
+   */
+  const handleFaceBlink = (event: any) => {
+    console.log('VirtualKeyboard: Face blink received:', event.detail)
+    handleUserInput()
   }
 
   /**
@@ -267,6 +289,7 @@ export function useVirtualKeyboardIntegration() {
     stopVirtualKeyboard,
     resetIntroStatus,
     handleClick,
+    handleFaceBlink,
     clearText,
     readCurrentText,
     

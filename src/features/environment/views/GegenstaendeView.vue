@@ -23,7 +23,7 @@ const {
   pauseAutoMode,
   stopAutoMode,
   selectGegenstaendeItem,
-  handleBlink,
+  handleFaceBlink,
   handleRightClick,
   settingsStore,
   faceRecognition

@@ -28,7 +28,7 @@ const {
   playSingleAlarmSound,
   startContinuousAlarm,
   stopContinuousAlarm,
-  handleBlink,
+  handleFaceBlink,
   handleRightClick,
   settingsStore,
   faceRecognition

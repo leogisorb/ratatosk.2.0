@@ -15,7 +15,7 @@ export const useSettingsStore = defineStore('settings', () => {
     voiceEnabled: true, // TTS aktiviert
     // Neue Einstellungen
     leuchtdauer: 3, // 3 Sekunden
-    blitzDuration: 0.7, // 0.7 Sekunden
+    blinzeldauer: 0.7, // 0.7 Sekunden - wie lange man blinzeln muss
     farbmodus: 'neutral', // neutral color mode
     kamera: 'back', // back camera
     accessibility: {
@@ -73,7 +73,7 @@ export const useSettingsStore = defineStore('settings', () => {
       voiceEnabled: true, // TTS aktiviert
       // Neue Einstellungen
       leuchtdauer: 3, // 3 Sekunden
-      blitzDuration: 0.7, // 0.7 Sekunden
+      blinzeldauer: 0.7, // 0.7 Sekunden - wie lange man blinzeln muss
       farbmodus: 'neutral', // neutral color mode
       kamera: 'back', // back camera
       accessibility: {

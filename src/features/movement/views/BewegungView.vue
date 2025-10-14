@@ -16,7 +16,7 @@ const {
   speakText,
   enableTTSOnInteraction,
   selectBewegung,
-  handleBlink,
+  handleFaceBlink,
   handleRightClick,
   settingsStore,
   faceRecognition

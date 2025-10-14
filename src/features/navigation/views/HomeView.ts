@@ -15,25 +15,29 @@ export function useHomeViewLogic() {
 
   // Face Recognition
   const faceRecognition = useFaceRecognition()
+  
+  // Alte Blinzel-Erkennung (aus alter Version)
+  const handleFaceBlink = (event: any) => {
+    console.log('HomeView: Face blink received:', event.detail)
+    
+    const currentItem = menuItems[currentTileIndex.value]
+    if (currentItem) {
+      console.log('HomeView: Blinzel für Item:', currentItem.title)
+      
+      // TTS + Navigation - Auto-Mode stoppt bei Interaktion
+      speakText(currentItem.title)
+      selectMenu(currentItem.id)
+    }
+  }
 
   // State
   const currentTileIndex = ref(0)
   const isAutoMode = ref(true)
-  const closedFrames = ref(0)
-  const eyesClosed = ref(false)
   const userInteracted = ref(false)
   
   // Instanz-ID für bessere Kontrolle
   const instanceId = Math.random().toString(36).substr(2, 9)
   console.log('HomeViewSimple instance created:', instanceId)
-  
-  // Blinzel-Timer
-  let blinkTimer: number | null = null
-  
-  // Verbesserte Blink-Detection Parameter - zentral gesteuert
-  const blinkThreshold = computed(() => Math.ceil(settingsStore.settings.blinkSensitivity * 10))
-  const lastBlinkTime = ref(0)
-  const blinkCooldown = computed(() => settingsStore.settings.blinkSensitivity * 1000)
   
   // Computed
   const currentMenu = computed(() => {
@@ -161,64 +165,6 @@ export function useHomeViewLogic() {
     router.push(selectedItem?.route || '/app')
   }
 
-  // Blink detection - verbessert mit Fallback
-  const handleBlink = () => {
-    const now = Date.now()
-    
-    // Debug-Log für Blinzel-Status
-    console.log('HomeView: handleBlink called - isBlinking:', faceRecognition.isBlinking(), 'closedFrames:', closedFrames.value, 'eyesClosed:', eyesClosed.value)
-    
-    // Fallback: Wenn Face Recognition nicht funktioniert, verwende Zeit-basierte Simulation
-    if (!faceRecognition.isActive.value || !faceRecognition.isDetected.value) {
-      console.log('HomeView: Face Recognition nicht aktiv - verwende Fallback-Modus')
-      // Simuliere Blinzel alle 3 Sekunden für Testzwecke
-      const fallbackBlinkInterval = 3000
-      const lastFallbackBlink = (window as any).lastFallbackBlink || 0
-      
-      if (now - lastFallbackBlink > fallbackBlinkInterval) {
-        (window as any).lastFallbackBlink = now
-        console.log('HomeView: Fallback-Blinzel ausgelöst')
-        
-        const currentItem = menuItems[currentTileIndex.value]
-        if (currentItem) {
-          console.log('HomeView: Fallback-Blinzel für Item:', currentItem.title)
-          speakText(currentItem.title)
-          selectMenu(currentItem.id)
-        }
-      }
-      return
-    }
-    
-    if (faceRecognition.isBlinking()) {
-      closedFrames.value++
-      console.log('HomeView: Blinzel erkannt - closedFrames:', closedFrames.value, 'threshold:', blinkThreshold.value)
-      
-      if (now - lastBlinkTime.value < blinkCooldown.value) {
-        console.log('HomeView: Blinzel zu früh - Cooldown aktiv')
-        return
-      }
-      
-      if (closedFrames.value >= blinkThreshold.value && !eyesClosed.value) {
-        const currentItem = menuItems[currentTileIndex.value]
-        if (currentItem) {
-          console.log('HomeView: Blinzel-Schwelle erreicht für Item:', currentItem.title)
-          
-          // TTS + Navigation - Auto-Mode stoppt bei Interaktion
-          speakText(currentItem.title)
-          selectMenu(currentItem.id)
-          eyesClosed.value = true
-          lastBlinkTime.value = now
-          closedFrames.value = 0
-        }
-      }
-    } else {
-      if (closedFrames.value > 0) {
-        console.log('HomeView: Augen geöffnet - reset closedFrames')
-        closedFrames.value = 0
-        eyesClosed.value = false
-      }
-    }
-  }
 
   // Right-click handler
   const handleRightClick = (event: MouseEvent) => {
@@ -244,10 +190,9 @@ export function useHomeViewLogic() {
     const customEvent = event as CustomEvent
     console.log(`[${instanceId}] Volume toggle received:`, customEvent.detail.enabled)
     
-    // Stoppe TTS wenn deaktiviert
-    if (!customEvent.detail.enabled) {
-      simpleFlowController.stopTTS()
-    }
+    // TTS wird automatisch über SimpleFlowController gesteuert
+    // Keine manuelle TTS-Stoppung mehr nötig
+    console.log(`[${instanceId}] Volume toggle handled by SimpleFlowController`)
   }
 
   // Funktion um Leuchtdauer dynamisch zu aktualisieren
@@ -274,8 +219,12 @@ export function useHomeViewLogic() {
     // Setze HomeView als aktiven View
     simpleFlowController.setActiveView('/home')
     
+    // Prüfe ob Face Recognition bereits aktiv ist (von StartView)
     if (!faceRecognition.isActive.value) {
+      console.log('HomeView: Face Recognition nicht aktiv - starte sie')
       faceRecognition.start()
+    } else {
+      console.log('HomeView: Face Recognition bereits aktiv - verwende bestehende Instanz')
     }
     
     // Add global event listeners to detect user interaction
@@ -296,11 +245,9 @@ export function useHomeViewLogic() {
       startAutoMode()
     }, 1000)
     
-    // Start blink detection timer
-    console.log(`[${instanceId}] Starting blink detection timer`)
-    blinkTimer = window.setInterval(() => {
-      handleBlink()
-    }, 100) // Check every 100ms
+    // Event Listener für Face Blinzel-Erkennung
+    window.addEventListener('faceBlinkDetected', handleFaceBlink)
+    console.log('HomeView: Face Recognition Event Listener registriert')
     
     console.log(`[${instanceId}] HomeViewSimple mounted - using simple controller`)
   })
@@ -310,12 +257,9 @@ export function useHomeViewLogic() {
     stopAutoMode()
     simpleFlowController.stopTTS()
     
-    // Clean up blink timer
-    if (blinkTimer) {
-      clearInterval(blinkTimer)
-      blinkTimer = null
-      console.log(`[${instanceId}] Blink timer stopped`)
-    }
+    // Clean up Face Recognition Event Listener (aber nicht die Face Recognition selbst)
+    window.removeEventListener('faceBlinkDetected', handleFaceBlink)
+    // faceRecognition.stop() - NICHT stoppen, da sie seitenübergreifend laufen soll
     
     // Clean up event listeners
     document.removeEventListener('click', enableTTSOnInteraction)
@@ -332,11 +276,6 @@ export function useHomeViewLogic() {
     currentMenu,
     currentTileIndex,
     isAutoMode,
-    closedFrames,
-    eyesClosed,
-    blinkThreshold,
-    lastBlinkTime,
-    blinkCooldown,
     userInteracted,
     
     // TTS functions
@@ -351,7 +290,7 @@ export function useHomeViewLogic() {
     // Methods
     selectMenu,
     formatTime,
-    handleBlink,
+    handleFaceBlink,
     handleRightClick,
     handleVolumeToggle,
     updateLeuchtdauer,

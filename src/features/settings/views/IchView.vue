@@ -18,7 +18,7 @@ const {
   speakText,
   selectMenu,
   formatTime,
-  handleBlink,
+  handleFaceBlink,
   handleRightClick,
   settingsStore,
   faceRecognition

@@ -2,7 +2,9 @@
 import { ref, computed, onMounted, onUnmounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { useSettingsStore } from '../../settings/stores/settings'
-import { useFaceRecognition } from '../../face-recognition/composables/useFaceRecognition'
+import { simpleFlowController } from '../../../core/application/SimpleFlowController'
+import { getAutoModeLeuchtdauer } from '../../../core/utils/leuchtdauerUtils'
+import AppHeader from '../../../shared/components/AppHeader.vue'
 
 // Router
 const router = useRouter()
@@ -10,359 +12,461 @@ const router = useRouter()
 // Stores
 const settingsStore = useSettingsStore()
 
-// Face Recognition
-const faceRecognition = useFaceRecognition()
-
 // State
-const videoRef = ref<HTMLVideoElement | null>(null)
-const canvasRef = ref<HTMLCanvasElement | null>(null)
-const stream = ref<MediaStream | null>(null)
-const isCameraActive = ref(false)
-const faceDetected = ref(false)
-const facePosition = ref({ x: 0, y: 0, width: 0, height: 0 })
-const isInFocus = ref(false)
+const currentTileIndex = ref(0)
+const isAutoMode = ref(true)
+const autoModeInterval = ref<number | null>(null)
+const isAutoModePaused = ref(false)
 
-// Text-to-Speech
-const speechSynthesis = window.speechSynthesis
-const isTTSEnabled = ref(true)
+// Kamera-Position-Optionen
+const kamerapositionItems = [
+  {
+    id: 'links',
+    title: 'Links',
+    description: 'Kamera links positionieren',
+    value: 'left'
+  },
+  {
+    id: 'mitte',
+    title: 'Mitte',
+    description: 'Kamera zentrieren',
+    value: 'center'
+  },
+  {
+    id: 'rechts',
+    title: 'Rechts',
+    description: 'Kamera rechts positionieren',
+    value: 'right'
+  },
+  {
+    id: 'zurueck',
+    title: 'Zurück',
+    description: 'Zurück zu Einstellungen',
+    value: null
+  }
+]
 
 // Computed
 const appClasses = computed(() => ({
   'dark': settingsStore.isDarkMode
 }))
 
-const focusStatus = computed(() => {
-  if (!faceDetected.value) return 'Kein Gesicht erkannt'
-  if (isInFocus.value) return 'Perfekt positioniert'
-  return 'Positionierung anpassen'
-})
+// Text-to-Speech Funktion - verwende SimpleFlowController
+const speakText = async (text: string) => {
+  console.log('KamerapositionView speakText called with:', text)
+  await simpleFlowController.speak(text)
+}
 
-const focusStatusColor = computed(() => {
-  if (!faceDetected.value) return 'text-red-600'
-  if (isInFocus.value) return 'text-green-600'
-  return 'text-yellow-600'
-})
-
-// Text-to-Speech Funktion
-const speakText = (text: string) => {
-  console.log('KamerapositionView speakText called with:', text, 'isTTSEnabled:', isTTSEnabled.value, 'speechSynthesis:', speechSynthesis)
+// Auto Mode Functions - verwende globalen Durchlauf-Algorithmus
+const startAutoMode = () => {
+  if (autoModeInterval.value) return
   
-  if (!isTTSEnabled.value || !speechSynthesis) {
-    console.log('KamerapositionView TTS disabled or speechSynthesis not available')
+  // Prüfe, ob dieser View der aktive ist
+  if (!simpleFlowController.isActiveView('/einstellungen/kameraposition')) {
+    console.log('KamerapositionView: Not active view, skipping auto-mode start')
     return
   }
   
-  speechSynthesis.cancel()
+  // Stelle sicher, dass wir bei Index 0 starten
+  currentTileIndex.value = 0
   
-  const utterance = new SpeechSynthesisUtterance(text)
-  utterance.lang = 'de-DE'
-  utterance.rate = 0.8
-  utterance.pitch = 1.0
-  utterance.volume = 0.8
-  
-  console.log('KamerapositionView Speaking:', text)
-  speechSynthesis.speak(utterance)
-}
-
-// TTS Toggle
-const toggleTTS = () => {
-  console.log('KamerapositionView toggleTTS called, current state:', isTTSEnabled.value)
-  isTTSEnabled.value = !isTTSEnabled.value
-  console.log('KamerapositionView TTS toggled to:', isTTSEnabled.value)
-  
-  if (!isTTSEnabled.value) {
-    speechSynthesis.cancel()
-    console.log('KamerapositionView TTS cancelled')
-  } else {
-    // Test TTS when enabling
-    speakText('Sprachausgabe aktiviert')
-  }
-}
-
-// Kamera-Funktionen
-const startCamera = async () => {
-  try {
-    const mediaStream = await navigator.mediaDevices.getUserMedia({
-      video: {
-        width: { ideal: 640 },
-        height: { ideal: 480 },
-        facingMode: 'user'
-      }
-    })
+  const cycleTiles = async () => {
+    if (!isAutoMode.value || isAutoModePaused.value) {
+      return
+    }
     
-    stream.value = mediaStream
-    if (videoRef.value) {
-      videoRef.value.srcObject = mediaStream
-      isCameraActive.value = true
-      speakText('Kamera aktiviert')
+    // Prüfe erneut, ob dieser View noch aktiv ist
+    if (!simpleFlowController.isActiveView('/einstellungen/kameraposition')) {
+      console.log('KamerapositionView: Not active view, stopping auto-mode')
+      return
     }
-  } catch (error) {
-    console.error('Error accessing camera:', error)
-    speakText('Kamera konnte nicht aktiviert werden')
+    
+    currentTileIndex.value = (currentTileIndex.value + 1) % kamerapositionItems.length
+    
+    // Spreche den aktuellen Menüpunkt vor
+    const currentItem = kamerapositionItems[currentTileIndex.value]
+    await speakText(`${currentItem.title}, ${currentItem.description}`)
+    
+    autoModeInterval.value = window.setTimeout(cycleTiles, getAutoModeLeuchtdauer('KamerapositionView'))
+  }
+  
+  // Spreche den ersten Menüpunkt vor
+  const firstItem = kamerapositionItems[currentTileIndex.value]
+  speakText(`${firstItem.title}, ${firstItem.description}`)
+  
+  // Starte den ersten Zyklus nach der aktuellen Geschwindigkeit
+  autoModeInterval.value = window.setTimeout(cycleTiles, getAutoModeLeuchtdauer('KamerapositionView'))
+}
+
+const pauseAutoMode = () => {
+  isAutoModePaused.value = true
+  if (autoModeInterval.value) {
+    clearTimeout(autoModeInterval.value)
+    autoModeInterval.value = null
+  }
+  simpleFlowController.stopTTS()
+}
+
+const resumeAutoMode = () => {
+  isAutoModePaused.value = false
+  if (!autoModeInterval.value) {
+    // Starte den Auto-Modus bei der aktuellen Kachel
+    const currentItem = kamerapositionItems[currentTileIndex.value]
+    speakText(currentItem.title)
+    startAutoMode()
   }
 }
 
-const stopCamera = () => {
-  if (stream.value) {
-    stream.value.getTracks().forEach(track => track.stop())
-    stream.value = null
+const stopAutoMode = () => {
+  if (autoModeInterval.value) {
+    clearTimeout(autoModeInterval.value)
+    autoModeInterval.value = null
   }
-  isCameraActive.value = false
-  faceDetected.value = false
-  isInFocus.value = false
-  speakText('Kamera deaktiviert')
+  // Stoppe auch die Sprachausgabe
+  simpleFlowController.stopTTS()
 }
 
-// Face Detection und Fokus-Bewertung
-const checkFaceFocus = () => {
-  if (!videoRef.value || !canvasRef.value) return
+// Kamera-Position-Auswahl
+async function selectKameraposition(kamerapositionId: string) {
+  console.log('selectKameraposition called with kamerapositionId:', kamerapositionId)
+  pauseAutoMode() // Pausiere Auto-Modus statt zu stoppen
   
-  const video = videoRef.value
-  const canvas = canvasRef.value
-  const ctx = canvas.getContext('2d')
+  switch (kamerapositionId) {
+    case 'links':
+      console.log('Links selected')
+      await speakText('Die Kamera-Position wurde auf links gesetzt.')
+      settingsStore.updateSettings({ kameraposition: 'left' })
+      // Automatisch zurück zu Einstellungen
+      setTimeout(() => {
+        router.push('/einstellungen')
+      }, 2000)
+      break
+    case 'mitte':
+      console.log('Mitte selected')
+      await speakText('Die Kamera-Position wurde auf mitte gesetzt.')
+      settingsStore.updateSettings({ kameraposition: 'center' })
+      // Automatisch zurück zu Einstellungen
+      setTimeout(() => {
+        router.push('/einstellungen')
+      }, 2000)
+      break
+    case 'rechts':
+      console.log('Rechts selected')
+      await speakText('Die Kamera-Position wurde auf rechts gesetzt.')
+      settingsStore.updateSettings({ kameraposition: 'right' })
+      // Automatisch zurück zu Einstellungen
+      setTimeout(() => {
+        router.push('/einstellungen')
+      }, 2000)
+      break
+    case 'zurueck':
+      console.log('Zurück selected')
+      await speakText('Zurück zu Einstellungen')
+      stopAutoMode() // Stoppe Auto-Modus komplett vor Navigation
+      router.push('/einstellungen')
+      break
+  }
   
-  if (!ctx) return
-  
-  // Canvas auf Video-Größe setzen
-  canvas.width = video.videoWidth
-  canvas.height = video.videoHeight
-  
-  // Video-Frame auf Canvas zeichnen
-  ctx.drawImage(video, 0, 0, canvas.width, canvas.height)
-  
-  // Hier würde normalerweise die Face Detection API verwendet werden
-  // Für Demo-Zwecke simulieren wir eine Gesichtserkennung
-  const centerX = canvas.width / 2
-  const centerY = canvas.height / 2
-  const faceSize = Math.min(canvas.width, canvas.height) * 0.3
-  
-  // Simuliere Gesichtserkennung (in der echten App würde hier die Face API verwendet)
-  const faceX = centerX - faceSize / 2
-  const faceY = centerY - faceSize / 2
-  
-  faceDetected.value = true
-  facePosition.value = { x: faceX, y: faceY, width: faceSize, height: faceSize }
-  
-  // Bewerte Fokus
-  const idealSize = Math.min(canvas.width, canvas.height) * 0.25
-  const sizeDiff = Math.abs(faceSize - idealSize) / idealSize
-  const positionDiff = Math.sqrt(
-    Math.pow(faceX + faceSize/2 - centerX, 2) + 
-    Math.pow(faceY + faceSize/2 - centerY, 2)
-  ) / Math.min(canvas.width, canvas.height)
-  
-  isInFocus.value = sizeDiff < 0.2 && positionDiff < 0.1
-  
-  // Zeichne Fokus-Kreis
-  ctx.strokeStyle = isInFocus.value ? '#00ff00' : '#ff0000'
-  ctx.lineWidth = 3
-  ctx.beginPath()
-  ctx.arc(faceX + faceSize/2, faceY + faceSize/2, faceSize/2, 0, 2 * Math.PI)
-  ctx.stroke()
+  // Starte Auto-Modus nach 10 Sekunden neu
+  setTimeout(() => {
+    isAutoModePaused.value = false
+    startAutoMode()
+  }, 10000)
 }
 
-// Animation Loop
-let animationId: number | null = null
-
-const startFaceDetection = () => {
-  const animate = () => {
-    if (isCameraActive.value) {
-      checkFaceFocus()
-      animationId = requestAnimationFrame(animate)
-    }
-  }
-  animate()
+// Blink Detection - verwende globale Blinzel-Erkennung
+const handleFaceBlink = async (event: any) => {
+  console.log('KamerapositionView: Face blink received:', event.detail)
+  
+  const currentItem = kamerapositionItems[currentTileIndex.value]
+  await selectKameraposition(currentItem.id)
 }
 
-const stopFaceDetection = () => {
-  if (animationId) {
-    cancelAnimationFrame(animationId)
-    animationId = null
-  }
+// Right Click Handler
+const handleRightClick = async (event: MouseEvent) => {
+  event.preventDefault()
+  console.log('KamerapositionView: Right click detected')
+  
+  const currentItem = kamerapositionItems[currentTileIndex.value]
+  await selectKameraposition(currentItem.id)
 }
 
 // Lifecycle
-onMounted(() => {
-  if (!faceRecognition.isActive.value) {
-    faceRecognition.start()
+onMounted(async () => {
+  // Setze diesen View als aktiv
+  simpleFlowController.setActiveView('/einstellungen/kameraposition')
+  
+  // Event Listener für globale Blinzel-Erkennung
+  window.addEventListener('faceBlinkDetected', handleFaceBlink)
+  
+  // Add right click listener
+  document.addEventListener('contextmenu', handleRightClick)
+  
+  // Warte auf echte User-Interaktion (Klick, Blinzel, etc.)
+  const waitForUserInteraction = () => {
+    console.log('KamerapositionView: Waiting for user interaction to enable TTS...')
+    
+    // Setze User-Interaktion beim ersten echten Event
+    const enableTTS = () => {
+      simpleFlowController.setUserInteracted(true)
+      console.log('KamerapositionView: User interaction detected, TTS enabled')
+      
+      // Spreche Intro-TTS
+      speakText('Wählen Sie im Folgenden eine Kamera-Position aus.')
+      
+      // Warte 5 Sekunden nach Intro, dann starte Auto Mode
+      setTimeout(() => {
+        startAutoMode()
+      }, 5000)
+      
+      // Entferne Event Listener
+      document.removeEventListener('click', enableTTS)
+      document.removeEventListener('touchstart', enableTTS)
+      window.removeEventListener('faceBlinkDetected', enableTTS)
+    }
+    
+    // Event Listener für User-Interaktion
+    document.addEventListener('click', enableTTS)
+    document.addEventListener('touchstart', enableTTS)
+    window.addEventListener('faceBlinkDetected', enableTTS)
+    
+    // Fallback: Starte Auto-Mode ohne TTS nach 3 Sekunden
+    setTimeout(() => {
+      if (!simpleFlowController.userInteracted) {
+        console.log('KamerapositionView: No user interaction detected, starting auto-mode without TTS')
+        startAutoMode()
+      }
+    }, 3000)
   }
   
-  startCamera()
-  startFaceDetection()
+  // Starte User-Interaktion-Waiting
+  waitForUserInteraction()
 })
 
 onUnmounted(() => {
-  stopCamera()
-  stopFaceDetection()
+  // Cleanup
+  if (autoModeInterval.value) {
+    clearTimeout(autoModeInterval.value)
+  }
+  
+  // Entferne Event Listener
+  window.removeEventListener('faceBlinkDetected', handleFaceBlink)
+  document.removeEventListener('contextmenu', handleRightClick)
+  
+  // Stoppe Auto-Modus
+  stopAutoMode()
 })
 </script>
 
 <template>
   <div id="app" :class="appClasses">
-    <!-- Responsive Layout -->
     <div class="min-h-screen bg-white">
-      <!-- Header -->
-      <header class="bg-gray-200 shadow-2xl flex-shrink-0" style="box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div class="flex justify-between items-center py-4">
-            <div class="flex items-center space-x-4">
-              <button @click="$router.push('/einstellungen')" class="p-2 rounded-lg bg-gray-300 hover:bg-gray-400 transition-colors">
-                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
-                </svg>
-              </button>
-              <h1 class="text-2xl font-bold text-black font-source-code font-light">
-                KAMERAPOSITION
-              </h1>
-              <img src="/rattenkopf.svg" alt="Ratatosk Logo" class="w-12 h-12" />
-              <div class="w-2.5 h-1.5 bg-[#00796B]"></div>
+      <AppHeader />
+
+      <!-- Main Content - Zentriert -->
+      <main class="main-content">
+        <!-- Title Section -->
+        <div class="title-section">
+          <h1 class="main-title">Wählen Sie im Folgenden eine Kamera-Position aus.</h1>
+          <p class="current-duration">
+            Aktuelle Position: {{ settingsStore.settings.kameraposition || 'Mitte' }}
+          </p>
+        </div>
+
+        <!-- Options Grid -->
+        <div class="options-grid">
+          <button
+            v-for="(item, index) in kamerapositionItems"
+            :key="item.id"
+            @click="selectKameraposition(item.id)"
+            class="option-button"
+            :class="{ 'active': index === currentTileIndex }"
+          >
+            <div class="option-content">
+              <div class="option-title">{{ item.title }} – {{ item.description }}</div>
             </div>
-            
-            <!-- Control Buttons -->
-            <div class="flex space-x-2">
-              <!-- Camera Toggle Button -->
-              <button
-                @click="isCameraActive ? stopCamera() : startCamera()"
-                class="p-2 rounded-lg transition-colors"
-                :class="isCameraActive ? 'bg-green-300 hover:bg-green-400' : 'bg-gray-300 hover:bg-gray-400'"
-                :title="isCameraActive ? 'Kamera deaktivieren' : 'Kamera aktivieren'"
-              >
-                <!-- Camera Icon -->
-                <svg
-                  class="w-6 h-6"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    stroke-linecap="round"
-                    stroke-linejoin="round"
-                    stroke-width="2"
-                    d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z"
-                  />
-                  <path
-                    stroke-linecap="round"
-                    stroke-linejoin="round"
-                    stroke-width="2"
-                    d="M15 13a3 3 0 11-6 0 3 3 0 016 0z"
-                  />
-                </svg>
-              </button>
-              
-              <!-- TTS Toggle Button -->
-              <button
-                @click="toggleTTS"
-                class="p-2 rounded-lg transition-colors"
-                :class="isTTSEnabled ? 'bg-green-300 hover:bg-green-400' : 'bg-gray-300 hover:bg-gray-400'"
-                :title="isTTSEnabled ? 'Sprachausgabe deaktivieren' : 'Sprachausgabe aktivieren'"
-              >
-                <!-- Speaker Icon für TTS aktiv -->
-                <svg
-                  v-if="isTTSEnabled"
-                  class="w-6 h-6"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    stroke-linecap="round"
-                    stroke-linejoin="round"
-                    stroke-width="2"
-                    d="M15.536 8.464a5 5 0 010 7.072m2.828-9.9a9 9 0 010 12.728M5.586 15H4a1 1 0 01-1-1v-4a1 1 0 011-1h1.586l4.707-4.707C10.923 3.663 12 4.109 12 5v14c0 .891-1.077 1.337-1.707.707L5.586 15z"
-                  />
-                </svg>
-                <!-- Muted Speaker Icon für TTS deaktiviert -->
-                <svg
-                  v-else
-                  class="w-6 h-6"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    stroke-linecap="round"
-                    stroke-linejoin="round"
-                    stroke-width="2"
-                    d="M5.586 15H4a1 1 0 01-1-1v-4a1 1 0 011-1h1.586l4.707-4.707C10.923 3.663 12 4.109 12 5v14c0 .891-1.077 1.337-1.707.707L5.586 15z"
-                  />
-                  <path
-                    stroke-linecap="round"
-                    stroke-linejoin="round"
-                    stroke-width="2"
-                    d="M17 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2"
-                  />
-                </svg>
-              </button>
-            </div>
-          </div>
+          </button>
         </div>
-      </header>
-
-      <!-- Main Content -->
-      <main class="flex-1 flex flex-col items-center justify-center p-8">
-        <!-- Instructions -->
-        <div class="text-center mb-8 max-w-4xl">
-          <h2 class="text-3xl font-bold text-gray-800">
-            Kamera-Positionierung
-          </h2>
-          <div class="text-lg text-gray-600">
-            <p><strong>Die Kamera ist richtig positioniert, wenn um das vollständige Gesicht ein orangener Kreis abgebildet ist.</strong></p>
-            <p>Sollte der Kreis zu klein oder nicht vorhanden sein, drehen Sie Ihr Endgerät so, dass Ihr Kopf mit der Stirn zu diesem Text zeigt.</p>
-            <p>Zudem kann es helfen das automatische Drehen des Endgerätes an zu schalten.</p>
-            <p>Die Videoqualität kann von der tatsächlichen Qualität der Kamera stark abweichen.</p>
-          </div>
-        </div>
-
-        <!-- Camera Feed -->
-        <div class="relative mb-8">
-          <div class="relative inline-block">
-            <!-- Video Element -->
-            <video
-              ref="videoRef"
-              autoplay
-              muted
-              playsinline
-              class="w-full max-w-2xl h-auto rounded-lg shadow-lg"
-              style="transform: scaleX(-1);" <!-- Mirror effect -->
-            ></video>
-            
-            <!-- Canvas für Face Detection Overlay -->
-            <canvas
-              ref="canvasRef"
-              class="absolute top-0 left-0 w-full h-full rounded-lg pointer-events-none"
-              style="transform: scaleX(-1);" <!-- Mirror effect -->
-            ></canvas>
-          </div>
-        </div>
-
-        <!-- Status -->
-        <div class="text-center">
-          <div class="text-2xl font-bold mb-4" :class="focusStatusColor">
-            {{ focusStatus }}
-          </div>
-          
-          <div class="text-lg text-gray-600">
-            <p v-if="!faceDetected" class="text-red-600">
-              Bitte positionieren Sie Ihr Gesicht vor der Kamera
-            </p>
-            <p v-else-if="!isInFocus" class="text-yellow-600">
-              Gesicht erkannt - Positionierung anpassen
-            </p>
-            <p v-else class="text-green-600">
-              Perfekt! Die Kamera ist optimal positioniert
-            </p>
-          </div>
-        </div>
-
-        <!-- Abstandshalter -->
-        <div style="height: 4rem;"></div>
       </main>
     </div>
   </div>
 </template>
 
 <style scoped>
-.font-source-code {
-  font-family: 'Source Code Pro', monospace;
+/* Dark Mode Support */
+.dark {
+  background-color: #1f2937;
+  color: #f9fafb;
+}
+
+.dark .main-content {
+  background-color: #1f2937;
+}
+
+.dark .main-title {
+  color: #f9fafb;
+}
+
+.dark .current-duration {
+  color: #d1d5db;
+}
+
+.dark .option-button {
+  background: #374151;
+  border-color: #4b5563;
+  color: #f9fafb;
+}
+
+.dark .option-button:hover {
+  background: #4b5563;
+  border-color: #60a5fa;
+}
+
+.dark .option-button.active {
+  background: linear-gradient(135deg, #00B098, #00a085);
+  border-color: #00B098;
+  color: white;
+}
+
+/* Main Layout */
+.main-content {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: calc(100vh - 80px); /* Abzug für Header */
+  padding: 2rem;
+  gap: 3rem;
+}
+
+/* Title Section */
+.title-section {
+  text-align: center;
+  margin-bottom: 2rem;
+}
+
+.main-title {
+  font-size: 3rem;
+  font-weight: bold;
+  color: #1f2937;
+  margin-bottom: 1rem;
+  line-height: 1.2;
+}
+
+.current-duration {
+  font-size: 1.5rem;
+  color: #6b7280;
+  margin: 0;
+}
+
+/* Options Grid */
+.options-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr); /* Immer 3 Spalten */
+  gap: 1.8rem; /* 1.5rem * 1.20 = 1.8rem */
+  max-width: 1200px; /* Feste Breite für 3 Spalten */
+  width: 100%;
+  justify-items: center;
+  justify-content: center; /* Zentriert das Grid selbst */
+  place-items: center; /* Zentriert sowohl horizontal als auch vertikal */
+}
+
+/* Option Buttons - 20% größer */
+.option-button {
+  width: 100%;
+  max-width: 360px; /* 300px * 1.20 = 360px */
+  min-height: 144px; /* 120px * 1.20 = 144px */
+  padding: 1.8rem; /* 1.5rem * 1.20 = 1.8rem */
+  border: 3px solid #e5e7eb;
+  border-radius: 12px;
+  background: white;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.option-button:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+  border-color: #3b82f6;
+}
+
+.option-button.active {
+  border-color: #00B098;
+  background: linear-gradient(135deg, #00B098, #00a085);
+  color: white;
+  transform: scale(1.05);
+  box-shadow: 0 6px 12px rgba(0, 176, 152, 0.3);
+}
+
+.option-content {
+  text-align: center;
+  width: 100%;
+}
+
+.option-title {
+  font-size: 1.8rem; /* 1.5rem * 1.20 = 1.8rem */
+  font-weight: bold;
+  margin-bottom: 0.5rem;
+  line-height: 1.2;
+}
+
+/* Option description removed - now using combined title */
+
+/* Responsive Design */
+@media (max-width: 1024px) {
+  .options-grid {
+    grid-template-columns: repeat(2, 1fr); /* 2 Spalten auf Tablets */
+  }
+}
+
+@media (max-width: 768px) {
+  .main-content {
+    padding: 1rem;
+    gap: 2rem;
+  }
+  
+  .main-title {
+    font-size: 2rem;
+  }
+  
+  .current-duration {
+    font-size: 1.2rem;
+  }
+  
+  .options-grid {
+    grid-template-columns: 1fr; /* 1 Spalte auf Mobile */
+    gap: 1rem;
+  }
+  
+  .option-button {
+    max-width: 100%;
+    min-height: 120px;
+    padding: 1.5rem;
+  }
+  
+  .option-title {
+    font-size: 1.5rem;
+  }
+}
+
+/* Animation für aktive Kachel */
+@keyframes pulse {
+  0% {
+    box-shadow: 0 0 0 0 rgba(0, 176, 152, 0.7);
+  }
+  70% {
+    box-shadow: 0 0 0 10px rgba(0, 176, 152, 0);
+  }
+  100% {
+    box-shadow: 0 0 0 0 rgba(0, 176, 152, 0);
+  }
+}
+
+.option-button.active {
+  animation: pulse 2s infinite;
 }
 </style>

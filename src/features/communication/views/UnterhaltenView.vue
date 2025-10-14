@@ -59,7 +59,7 @@ const {
   currentLetterIndex,
   currentStage,
   letterPassCount,
-  handleBlink,
+  handleFaceBlink,
   startKeyboard,
   stopKeyboard,
   isCurrentRow,

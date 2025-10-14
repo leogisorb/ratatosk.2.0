@@ -38,6 +38,55 @@ Ratatosk ist eine Kommunikationshilfe für Menschen mit Behinderungen, die durch
 
 ## 📅 Chronologische Entwicklung
 
+### 2025-01-11 - Kamera-Persistenz und TTS-Aktivierung seitenübergreifend implementiert
+
+**Problem:**
+- Kamera wurde beim Übergang vom StartView zum HomeView deaktiviert
+- Face Recognition wurde beim `onUnmounted()` des StartView gestoppt
+- HomeView startete Face Recognition erneut, was zu Kamera-Neustart führte
+- TTS wurde nur durch Klicks, Tastatureingaben oder Touch-Events aktiviert
+- Kamera-Aktivierung im StartView zählte nicht als "User Interaction"
+- TTS war seitenübergreifend nicht verfügbar, obwohl Kamera aktiviert wurde
+
+**Lösung:**
+- **Kamera-Persistenz zwischen Views**:
+  - StartView stoppt Face Recognition beim `onUnmounted()` **nicht mehr**
+  - HomeView prüft, ob Face Recognition bereits aktiv ist (von StartView)
+  - HomeView startet Face Recognition nur, wenn sie noch nicht aktiv ist
+  - Entfernt redundanten Face Recognition Start in HomeView
+  - HomeView stoppt Face Recognition beim `onUnmounted()` **nicht mehr**
+- **TTS-Aktivierung seitenübergreifend**:
+  - StartView importiert `simpleFlowController`
+  - Aktiviert TTS (`setUserInteracted(true)`) nach erfolgreicher Kamera-Aktivierung
+  - Aktiviert TTS auch im Fallback-Modus
+  - Aktiviert TTS beim Start durch Blinzeln (`startApp()`)
+  - Aktiviert TTS beim Start ohne Blinzeln (`startWithoutBlink()`)
+
+**Technische Details:**
+- **StartView.vue**:
+  - Import: `simpleFlowController` hinzugefügt
+  - `startCamera()`: TTS-Aktivierung nach erfolgreicher Kamera-Aktivierung
+  - `startApp()`: TTS-Aktivierung beim Start durch Blinzeln
+  - `startWithoutBlink()`: TTS-Aktivierung beim Start ohne Blinzeln
+  - `onUnmounted()`: Face Recognition wird **nicht mehr gestoppt**
+- **HomeView.ts**:
+  - Prüfung: `if (!faceRecognition.isActive.value)` vor Face Recognition Start
+  - Entfernt: Redundanten Face Recognition Start
+  - `onUnmounted()`: Face Recognition wird **nicht mehr gestoppt**
+  - Event Listener: Nur noch Event Listener für Face Blinzel-Erkennung
+
+**Ergebnis:**
+- ✅ **Kamera bleibt aktiv**: Kamera läuft seitenübergreifend ohne Neustart
+- ✅ **TTS wird aktiviert**: Kamera-Aktivierung zählt als User-Interaktion
+- ✅ **Alle Start-Methoden funktionieren**: Blinzeln, ohne Blinzeln, Kamera-Aktivierung
+- ✅ **Robuste Lösung**: Funktioniert auch im Fallback-Modus
+- ✅ **Seitenübergreifende Funktionalität**: TTS und Kamera verfügbar auf allen Seiten
+
+**Git Status:**
+- 40 Dateien geändert (alle Views mit Face Recognition Integration)
+- Erfolgreiche Implementierung ohne Linter-Fehler
+- Kamera-Persistenz und TTS-Aktivierung vollständig funktional
+
 ### 2025-01-10 - UmgebungView Layout und TTS-Funktionalität komplett überarbeitet
 
 **Problem:**

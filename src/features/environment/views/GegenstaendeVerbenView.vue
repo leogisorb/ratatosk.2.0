@@ -157,7 +157,7 @@ function selectVerb(verbId: string) {
 }
 
 // Blink Detection
-const handleBlink = () => {
+const handleFaceBlink = () => {
   const now = Date.now()
   
   if (faceRecognition.isBlinking()) {
@@ -228,7 +228,7 @@ onMounted(() => {
   }, 4000)
   
   const blinkCheckInterval = setInterval(() => {
-    handleBlink()
+    handleFaceBlink()
   }, 100)
   
   document.addEventListener('contextmenu', handleRightClick)

@@ -23,7 +23,7 @@ const {
   pauseAutoMode,
   stopAutoMode,
   selectZimmerItem,
-  handleBlink,
+  handleFaceBlink,
   handleRightClick,
   settingsStore,
   faceRecognition
