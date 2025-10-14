@@ -210,12 +210,15 @@ export function useTorsoSchmerzViewLogic() {
     lastBlinkTime,
     blinkCooldown,
     // TTS removed
+    speechSynthesis: null,
+    isTTSEnabled: false,
+    speakText: () => {},
     torsoBereiche,
     startAutoMode,
     pauseAutoMode,
     stopAutoMode,
     selectTorsoBereich,
-    handleBlink,
+    handleFaceBlink: handleBlink,
     handleRightClick,
     settingsStore,
     faceRecognition

@@ -210,12 +210,15 @@ export function useArmeSchmerzViewLogic() {
     lastBlinkTime,
     blinkCooldown,
     // TTS removed
+    speechSynthesis: null,
+    isTTSEnabled: false,
+    speakText: () => {},
     armBereiche,
     startAutoMode,
     pauseAutoMode,
     stopAutoMode,
     selectArmBereich,
-    handleBlink,
+    handleFaceBlink: handleBlink,
     handleRightClick,
     settingsStore,
     faceRecognition
