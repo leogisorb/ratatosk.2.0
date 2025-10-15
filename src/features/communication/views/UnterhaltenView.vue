@@ -1,12 +1,16 @@
 <script setup lang="ts">
 import AppHeader from '../../../shared/components/AppHeader.vue'
-import { ref, onMounted, onUnmounted } from 'vue'
+import { ref, onMounted, onUnmounted, computed } from 'vue'
 import { useRouter } from 'vue-router'
 import { useKeyboardDesignStore } from '../stores/keyboardDesign'
+import { useSettingsStore } from '../../settings/stores/settings'
+import { useFaceRecognition } from '../../face-recognition/composables/useFaceRecognition'
 import { simpleFlowController } from '../../../core/application/SimpleFlowController'
 
 // ===== STORES & ROUTER =====
 const keyboardDesignStore = useKeyboardDesignStore()
+const settingsStore = useSettingsStore()
+const faceRecognition = useFaceRecognition()
 const router = useRouter()
 
 // ===== STATE MACHINE =====
@@ -26,6 +30,10 @@ const selectedRowIndex = ref<number | null>(null)
 const isTTSActive = ref(false)
 const letterCycleCount = ref(0)
 const isLetterDisplay = ref(false)
+const isIntroductionActive = ref(false)
+
+// ===== BLINK DETECTION =====
+// Verwendet die gleiche Event-basierte Logik wie HomeView
 
 // ===== CONTROL FLOW SAFETY =====
 let scanSessionId = 0
@@ -153,6 +161,7 @@ const delay = (ms: number): Promise<void> => {
 const startPhase1 = async () => {
   console.log('Phase 1: Starting initialization')
   currentPhase.value = VirtualKeyboardPhase.INIT
+  isIntroductionActive.value = true // Einführung aktiv - Input ignorieren
   clearAllTimers()
   
   // Begrüßungstext anzeigen
@@ -168,13 +177,13 @@ const startPhase1 = async () => {
   await speakText("Dazu sehen Sie jetzt verschiedene Zeilen mit Buchstaben und Wörtern.")
   await delay(3000)
   
-  await speakText("Ich lese Ihnen die Zeilen vor. Wenn Sie eine Zeile auswählen möchten, blinzeln Sie bitte einmal oder tippen Sie kurz.")
-  await delay(4000)
+ 
   
   await speakText("Wählen Sie jetzt zuerst eine Zeile aus, die einen Buchstaben Ihrer Wahl enthält.")
   
   // Nach TTS-Ende + 4 Sekunden → Phase 2
   currentTimer = window.setTimeout(() => {
+    isIntroductionActive.value = false // Einführung beendet - Input wieder erlaubt
     startPhase2()
   }, 4000)
 }
@@ -295,8 +304,26 @@ const scanNextLetter = async (sessionId: number) => {
   scanNextLetter(sessionId) // rekursiver Aufruf nur, wenn gültig
 }
 
+// ===== BLINK DETECTION HANDLER =====
+const handleBlink = (event: any) => {
+  // Ignoriere Blinzeln während der Einführung
+  if (isIntroductionActive.value) {
+    console.log('👁️ Blink ignored during introduction phase')
+    return
+  }
+  
+  console.log('👁️ Blink detected in UnterhaltenView:', event.detail)
+  handleUserInput()
+}
+
 // ===== USER INTERACTION HANDLING =====
 const handleUserInput = async () => {
+  // Ignoriere User Input während der Einführung
+  if (isIntroductionActive.value) {
+    console.log('User input ignored during introduction phase')
+    return
+  }
+  
   console.log('User input detected in phase:', currentPhase.value)
   
   // Stoppe alle Timer und TTS
@@ -407,13 +434,15 @@ const addLetterToText = (letter: string) => {
 
 // ===== EVENT LISTENERS =====
 const handleRightClick = (event: MouseEvent) => {
+  // Ignoriere Rechtsklick während der Einführung
+  if (isIntroductionActive.value) {
+    console.log('Right click ignored during introduction phase')
+    event.preventDefault()
+    return
+  }
+  
   event.preventDefault()
   console.log('Right click detected')
-  handleUserInput()
-}
-
-const handleBlink = (event: any) => {
-  console.log('Blink detected:', event.detail)
   handleUserInput()
 }
 
@@ -421,11 +450,20 @@ const handleBlink = (event: any) => {
 onMounted(() => {
   console.log('UnterhaltenView mounted - starting virtual keyboard')
   
-  // Event Listener für Rechtsklick
-  document.addEventListener('contextmenu', handleRightClick)
+  // Event Listener für Rechtsklick (wie in HomeView)
+  document.addEventListener('contextmenu', handleRightClick, { capture: true, passive: false })
   
-  // Event Listener für Blink (falls verfügbar)
+  // Event Listener für Face Blinzel-Erkennung (wie in HomeView)
   window.addEventListener('faceBlinkDetected', handleBlink)
+  console.log('UnterhaltenView: Face Recognition Event Listener registriert')
+  
+  // Starte Face Recognition (wie in HomeView)
+  if (!faceRecognition.isActive.value) {
+    console.log('UnterhaltenView: Face Recognition nicht aktiv - starte sie')
+    faceRecognition.start()
+  } else {
+    console.log('UnterhaltenView: Face Recognition bereits aktiv - verwende bestehende Instanz')
+  }
   
   // Starte mit Phase 1
   startPhase1()
@@ -434,13 +472,16 @@ onMounted(() => {
 onUnmounted(() => {
   console.log('UnterhaltenView unmounted - cleaning up')
   
-  // Event Listener entfernen
-  document.removeEventListener('contextmenu', handleRightClick)
+  // Event Listener entfernen (wie in HomeView)
+  document.removeEventListener('contextmenu', handleRightClick, { capture: true })
   window.removeEventListener('faceBlinkDetected', handleBlink)
   
   // Timer und TTS aufräumen
   clearAllTimers()
   speechSynthesis.cancel()
+  
+  // Face Recognition nicht stoppen (läuft seitenübergreifend)
+  console.log('Face Recognition continues running for other views')
 })
 </script>
 
