@@ -25,6 +25,16 @@ const currentLetterIndex = ref(0)
 const selectedRowIndex = ref<number | null>(null)
 const isTTSActive = ref(false)
 const letterCycleCount = ref(0)
+const isLetterDisplay = ref(false)
+
+// ===== CONTROL FLOW SAFETY =====
+let scanSessionId = 0
+
+const newScanSession = () => {
+  scanSessionId++
+  console.log("🔄 Neue Scan-Session gestartet:", scanSessionId)
+  return scanSessionId
+}
 
 // ===== TIMER MANAGEMENT =====
 let currentTimer: number | null = null
@@ -174,14 +184,16 @@ const startPhase2 = () => {
   console.log('Phase 2: Starting row scanning')
   currentPhase.value = VirtualKeyboardPhase.ROW_SCANNING
   clearAllTimers()
+  const mySession = newScanSession() // ⬅️ eigene Lauf-ID merken
   currentRowIndex.value = 0
   selectedRowIndex.value = null
   
   // Starte Zeilendurchlauf
-  scanNextRow()
+  scanNextRow(mySession)
 }
 
-const scanNextRow = async () => {
+const scanNextRow = async (sessionId: number) => {
+  if (sessionId !== scanSessionId) return // Abbruch, wenn Session ungültig
   if (currentPhase.value !== VirtualKeyboardPhase.ROW_SCANNING) return
   
   const rowDescriptions = [
@@ -193,7 +205,7 @@ const scanNextRow = async () => {
     "Sechste Zeile, Steuerungstasten."
   ]
   
-  console.log('Scanning row:', currentRowIndex.value, rowDescriptions[currentRowIndex.value])
+  console.log('🎯 Scanning row:', currentRowIndex.value, rowDescriptions[currentRowIndex.value])
   
   // TTS mit visueller Hervorhebung
   await speakText(
@@ -211,10 +223,11 @@ const scanNextRow = async () => {
   // Nach TTS-Ende + 3 Sekunden → nächste Zeile
   await delay(3000)
   
-  if (currentPhase.value === VirtualKeyboardPhase.ROW_SCANNING) {
-    currentRowIndex.value = (currentRowIndex.value + 1) % keyboardLayout.length
-    scanNextRow()
-  }
+  // Prüfen, ob Session oder Phase sich geändert haben
+  if (sessionId !== scanSessionId || currentPhase.value !== VirtualKeyboardPhase.ROW_SCANNING) return
+  
+  currentRowIndex.value = (currentRowIndex.value + 1) % keyboardLayout.length
+  scanNextRow(sessionId) // rekursiver Aufruf nur, wenn gültig
 }
 
 // ===== PHASE 3: LETTER SCANNING =====
@@ -222,6 +235,7 @@ const startPhase3 = async () => {
   console.log('Phase 3: Starting letter scanning')
   currentPhase.value = VirtualKeyboardPhase.LETTER_SCANNING
   clearAllTimers()
+  const mySession = newScanSession() // ⬅️ eigene Lauf-ID merken
   currentLetterIndex.value = 0
   letterCycleCount.value = 0
   
@@ -231,16 +245,17 @@ const startPhase3 = async () => {
   await delay(3000)
   
   // Starte Buchstabendurchlauf
-  scanNextLetter()
+  scanNextLetter(mySession)
 }
 
-const scanNextLetter = async () => {
+const scanNextLetter = async (sessionId: number) => {
+  if (sessionId !== scanSessionId) return // Abbruch, wenn Session ungültig
   if (currentPhase.value !== VirtualKeyboardPhase.LETTER_SCANNING || selectedRowIndex.value === null) return
   
         const row = keyboardLayout[selectedRowIndex.value]
         const letter = row.letters[currentLetterIndex.value]
   
-  console.log('Scanning letter:', letter)
+  console.log('🎯 Scanning letter:', letter)
   
   // TTS mit visueller Hervorhebung
   await speakText(
@@ -258,25 +273,26 @@ const scanNextLetter = async () => {
   // Nach TTS-Ende + 2 Sekunden → nächster Buchstabe
   await delay(2000)
   
-  if (currentPhase.value === VirtualKeyboardPhase.LETTER_SCANNING) {
-    const currentRow = keyboardLayout[selectedRowIndex.value!]
-    currentLetterIndex.value = (currentLetterIndex.value + 1) % currentRow.letters.length
+  // Prüfen, ob Session oder Phase sich geändert haben
+  if (sessionId !== scanSessionId || currentPhase.value !== VirtualKeyboardPhase.LETTER_SCANNING) return
+  
+  const currentRow = keyboardLayout[selectedRowIndex.value!]
+  currentLetterIndex.value = (currentLetterIndex.value + 1) % currentRow.letters.length
+  
+  // Prüfe ob wir am Ende der Zeile angekommen sind
+  if (currentLetterIndex.value === 0) {
+    letterCycleCount.value++
+    console.log('Completed cycle', letterCycleCount.value, 'for row', selectedRowIndex.value)
     
-    // Prüfe ob wir am Ende der Zeile angekommen sind
-    if (currentLetterIndex.value === 0) {
-      letterCycleCount.value++
-      console.log('Completed cycle', letterCycleCount.value, 'for row', selectedRowIndex.value)
-      
-      // Nach 2 Durchläufen zurück zu Phase 2
-      if (letterCycleCount.value >= 2) {
-        console.log('Reached 2 cycles - returning to row scanning')
-        handleNoLetterSelected()
-        return
-      }
+    // Nach 2 Durchläufen zurück zu Phase 2
+    if (letterCycleCount.value >= 2) {
+      console.log('Reached 2 cycles - returning to row scanning')
+      handleNoLetterSelected()
+      return
     }
-    
-    scanNextLetter()
   }
+  
+  scanNextLetter(sessionId) // rekursiver Aufruf nur, wenn gültig
 }
 
 // ===== USER INTERACTION HANDLING =====
@@ -286,6 +302,7 @@ const handleUserInput = async () => {
   // Stoppe alle Timer und TTS
   clearAllTimers()
   speechSynthesis.cancel()
+  newScanSession() // ⬅️ ALLES sofort stoppen (alte Scans laufen nicht mehr weiter)
   
   switch (currentPhase.value) {
     case VirtualKeyboardPhase.ROW_SCANNING:
@@ -321,14 +338,16 @@ const handleLetterSelection = async () => {
   // Buchstabe zum Text hinzufügen
   addLetterToText(letter)
   
-  // Status-Text aktualisieren
-  statusText.value = `Gewählt: ${getOriginalLetter(letter)}`
+  // Status-Text aktualisieren und Letter Display aktivieren
+  statusText.value = getOriginalLetter(letter)
+  isLetterDisplay.value = true
   
   // TTS-Bestätigung
   await speakText(`${letter} gewählt.`)
   await delay(3000)
   
-  // Zurück zu Phase 2 (Zeile 1)
+  // Letter Display deaktivieren und zurück zu Phase 2
+  isLetterDisplay.value = false
   startPhase2()
 }
 
@@ -435,7 +454,7 @@ onUnmounted(() => {
       <!-- 1. Status-Anzeige -->
       <div class="sentence-display-container">
         <div class="sentence-display">
-          <div class="sentence-item sentence-active">
+          <div class="sentence-item sentence-active" :class="{ 'letter-display': isLetterDisplay }">
             {{ statusText }}
           </div>
         </div>
