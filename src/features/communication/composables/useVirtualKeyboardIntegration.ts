@@ -76,13 +76,17 @@ export function useVirtualKeyboardIntegration() {
     console.log('VirtualKeyboard: Initializing virtual keyboard integration')
     console.log('VirtualKeyboard: SimpleFlowController available:', !!simpleFlowController)
     
+    // Stelle sicher, dass TTS für virtuelle Tastatur aktiviert ist
+    simpleFlowController.setUserInteracted(true)
+    console.log('VirtualKeyboard: TTS enabled for virtual keyboard')
+    
     // Navigation-Callback für ZURÜCK-Taste
     const onNavigateBack = () => {
       console.log('VirtualKeyboard: Navigating back to app, stopping all TTS...')
       
       // Stoppe alle laufenden TTS (beide Systeme)
       speechSynthesis.cancel()  // Direkte TTS-Implementierungen
-      simpleFlowController.stopTTS()  // SimpleFlowController TTS
+      simpleFlowController.stopTTSOnly()  // SimpleFlowController TTS (ohne Queue zu leeren)
       
       // Stoppe virtuelle Tastatur
       stopVirtualKeyboard()
@@ -129,7 +133,7 @@ export function useVirtualKeyboardIntegration() {
     
     // Stoppe alle laufenden TTS (beide Systeme)
     speechSynthesis.cancel()  // Direkte TTS-Implementierungen
-    simpleFlowController.stopTTS()  // SimpleFlowController TTS
+    simpleFlowController.stopTTSOnly()  // SimpleFlowController TTS (ohne Queue zu leeren)
     
     if (stateMachine) {
       stateMachine.stop()

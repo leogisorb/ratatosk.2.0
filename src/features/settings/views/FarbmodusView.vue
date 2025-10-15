@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { ref, computed, onMounted, onUnmounted } from 'vue'
 import { useRouter } from 'vue-router'
-import { useSettingsStore } from '../stores/settings'
+import { useSettingsStore } from '../../settings/stores/settings'
 import { simpleFlowController } from '../../../core/application/SimpleFlowController'
 import { getAutoModeLeuchtdauer } from '../../../core/utils/leuchtdauerUtils'
 import AppHeader from '../../../shared/components/AppHeader.vue'
@@ -129,7 +129,7 @@ async function selectFarbmodus(farbmodusId: string) {
     case 'hell':
       console.log('Hell selected')
       await speakText('Der Farbmodus wurde auf hell gesetzt.')
-      settingsStore.updateSettings({ isDarkMode: false })
+      settingsStore.updateSettings({ theme: 'light' })
       // Automatisch zurück zu Einstellungen
       setTimeout(() => {
         router.push('/einstellungen')
@@ -138,7 +138,7 @@ async function selectFarbmodus(farbmodusId: string) {
     case 'dunkel':
       console.log('Dunkel selected')
       await speakText('Der Farbmodus wurde auf dunkel gesetzt.')
-      settingsStore.updateSettings({ isDarkMode: true })
+      settingsStore.updateSettings({ theme: 'dark' })
       // Automatisch zurück zu Einstellungen
       setTimeout(() => {
         router.push('/einstellungen')
@@ -362,9 +362,9 @@ onUnmounted(() => {
   max-width: 360px; /* 300px * 1.20 = 360px */
   min-height: 144px; /* 120px * 1.20 = 144px */
   padding: 1.8rem; /* 1.5rem * 1.20 = 1.8rem */
-  border: 3px solid #e5e7eb;
+  border: 3px solid var(--border-primary);
   border-radius: 12px;
-  background: white;
+  background: var(--bg-primary);
   cursor: pointer;
   transition: all 0.3s ease;
   display: flex;

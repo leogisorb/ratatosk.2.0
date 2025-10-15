@@ -366,9 +366,9 @@ onUnmounted(() => {
   max-width: 360px; /* 300px * 1.20 = 360px */
   min-height: 144px; /* 120px * 1.20 = 144px */
   padding: 1.8rem; /* 1.5rem * 1.20 = 1.8rem */
-  border: 3px solid #e5e7eb;
+  border: 3px solid var(--border-primary);
   border-radius: 12px;
-  background: white;
+  background: var(--bg-primary);
   cursor: pointer;
   transition: all 0.3s ease;
   display: flex;

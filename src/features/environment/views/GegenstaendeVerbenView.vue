@@ -287,7 +287,7 @@ onUnmounted(() => {
 /* App Container */
 .gegenstaende-verben-app {
   min-height: 100vh;
-  background-color: white;
+  background-color: var(--bg-primary);
   display: flex;
   flex-direction: column;
 }
@@ -354,9 +354,9 @@ onUnmounted(() => {
   justify-content: center;
   gap: 0.2rem; /* Noch weniger Abstand unter Emoji */
   padding: 1.5rem;
-  border: 2px solid #d1d5db;
+  border: 2px solid var(--border-secondary);
   border-radius: 15px;
-  background: white;
+  background: var(--bg-primary);
   cursor: pointer;
   transition: all 0.3s ease;
   font-size: 2.145rem; /* 30% größer: 1.65rem * 1.3 = 2.145rem */

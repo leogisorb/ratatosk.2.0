@@ -317,7 +317,7 @@ onUnmounted(() => {
 /* Pain Scale View Specific Styles */
 .pain-assessment-app {
   min-height: 100vh;
-  background-color: white;
+  background-color: var(--bg-primary);
   display: flex;
   flex-direction: column;
 }
@@ -438,7 +438,7 @@ onUnmounted(() => {
   width: 6rem;
   height: 6rem;
   background: rgba(255, 255, 255, 0.8);
-  border: 2px solid #d1d5db;
+  border: 2px solid var(--border-secondary);
   border-radius: 50%;
   transform: translateX(-50%);
   z-index: 15;
@@ -465,8 +465,8 @@ onUnmounted(() => {
   transition: all 0.3s ease;
   font-weight: 500;
   font-size: 2.5rem;
-  background: white;
-  border: 2px solid #d1d5db;
+  background: var(--bg-primary);
+  border: 2px solid var(--border-secondary);
   border-radius: 15px;
   outline: none;
   box-shadow: none;

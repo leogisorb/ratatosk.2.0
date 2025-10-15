@@ -46,7 +46,7 @@ export function useHomeViewLogic() {
   
   const appClasses = computed(() => {
     return {
-      'dark-mode': settingsStore.isDarkMode,
+      'dark': settingsStore.isDarkMode,
       'auto-mode': isAutoMode.value,
       'auto-mode-paused': !isAutoMode.value
     }

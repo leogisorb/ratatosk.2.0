@@ -136,9 +136,8 @@ const goBack = () => {
   // Stoppe TTS von allen Seiten beim Zurücknavigieren zu /app
   console.log(`Header: Navigating back from ${route.path} to /app, stopping all TTS...`)
   
-  // Stoppe alle laufenden TTS (beide Systeme)
-  speechSynthesis.cancel()  // Direkte TTS-Implementierungen
-  simpleFlowController.stopTTS()  // SimpleFlowController TTS
+  // Stoppe alle laufenden TTS komplett (nicht nur Volume)
+  simpleFlowController.stopTTS()  // SimpleFlowController TTS komplett beenden
   
   // Immer zurück zu /app
   console.log('Header: Navigating back to app')

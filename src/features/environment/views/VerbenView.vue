@@ -307,8 +307,8 @@ onUnmounted(() => {
               class="transition-all duration-300 font-medium hover:scale-110 flex flex-col items-center space-y-4"
               :style="{
                 fontSize: '2.2rem',
-                background: currentTileIndex === index ? '#f3f4f6' : 'white',
-                border: '2px solid #d1d5db',
+                background: currentTileIndex === index ? 'var(--bg-secondary)' : 'var(--bg-primary)',
+                border: '2px solid var(--border-secondary)',
                 borderRadius: '15px',
                 outline: 'none',
                 boxShadow: 'none',
@@ -332,8 +332,8 @@ onUnmounted(() => {
               class="transition-all duration-300 font-medium hover:scale-110 flex flex-col items-center space-y-4"
               :style="{
                 fontSize: '2.2rem',
-                background: currentTileIndex === index + 4 ? '#f3f4f6' : 'white',
-                border: '2px solid #d1d5db',
+                background: currentTileIndex === index + 4 ? 'var(--bg-secondary)' : 'var(--bg-primary)',
+                border: '2px solid var(--border-secondary)',
                 borderRadius: '15px',
                 outline: 'none',
                 boxShadow: 'none',
@@ -357,8 +357,8 @@ onUnmounted(() => {
               class="transition-all duration-300 font-medium hover:scale-110 flex flex-col items-center space-y-4"
               :style="{
                 fontSize: '2.2rem',
-                background: currentTileIndex === index + 8 ? '#f3f4f6' : 'white',
-                border: '2px solid #d1d5db',
+                background: currentTileIndex === index + 8 ? 'var(--bg-secondary)' : 'var(--bg-primary)',
+                border: '2px solid var(--border-secondary)',
                 borderRadius: '15px',
                 outline: 'none',
                 boxShadow: 'none',

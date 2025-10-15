@@ -1,5 +1,50 @@
 /* Pure CSS - No Tailwind */
 
+/* CSS Variables for Theme System */
+:root {
+  /* Light Theme Colors */
+  --bg-primary: #ffffff;
+  --bg-secondary: #f3f4f6;
+  --bg-tertiary: #e5e7eb;
+  --text-primary: #111827;
+  --text-secondary: #374151;
+  --text-tertiary: #6b7280;
+  --border-primary: #e5e7eb;
+  --border-secondary: #d1d5db;
+  --shadow-primary: rgba(0, 0, 0, 0.1);
+  --shadow-secondary: rgba(0, 0, 0, 0.05);
+  --accent-primary: #00B098;
+  --accent-hover: #008a7a;
+  --accent-secondary: #6b7280;
+  --accent-secondary-hover: #4b5563;
+  --success: #10b981;
+  --warning: #f59e0b;
+  --error: #ef4444;
+  --info: #3b82f6;
+}
+
+/* Dark Theme Colors */
+.dark {
+  --bg-primary: #1f2937;
+  --bg-secondary: #374151;
+  --bg-tertiary: #4b5563;
+  --text-primary: #f9fafb;
+  --text-secondary: #e5e7eb;
+  --text-tertiary: #9ca3af;
+  --border-primary: #374151;
+  --border-secondary: #4b5563;
+  --shadow-primary: rgba(0, 0, 0, 0.3);
+  --shadow-secondary: rgba(0, 0, 0, 0.2);
+  --accent-primary: #00B098;
+  --accent-hover: #00d4aa;
+  --accent-secondary: #6b7280;
+  --accent-secondary-hover: #9ca3af;
+  --success: #10b981;
+  --warning: #f59e0b;
+  --error: #ef4444;
+  --info: #3b82f6;
+}
+
 /* Global TTS Activation */
 .tts-activation-overlay {
   position: fixed;
@@ -17,30 +62,34 @@
 }
 
 .tts-activation-box {
-  background: white;
-  color: #1f2937;
+  background: var(--bg-primary);
+  color: var(--text-primary);
   padding: 2rem;
   border-radius: 1rem;
   text-align: center;
   max-width: 400px;
-  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 20px 25px -5px var(--shadow-primary);
+  border: 1px solid var(--border-primary);
+  transition: background-color 0.3s ease, color 0.3s ease, border-color 0.3s ease;
 }
 
 .tts-activation-title {
   font-size: 1.5rem;
   font-weight: bold;
   margin-bottom: 1rem;
-  color: #1f2937;
+  color: var(--text-primary);
+  transition: color 0.3s ease;
 }
 
 .tts-activation-text {
   margin-bottom: 1.5rem;
   line-height: 1.6;
-  color: #374151;
+  color: var(--text-secondary);
+  transition: color 0.3s ease;
 }
 
 .tts-activation-button {
-  background: #00B098;
+  background: var(--accent-primary);
   color: white;
   border: none;
   padding: 1rem 2rem;
@@ -52,7 +101,7 @@
 }
 
 .tts-activation-button:hover {
-  background: #008a7a;
+  background: var(--accent-hover);
 }
 
 /* Global Reset and Base Styles */
@@ -63,11 +112,14 @@
 body {
   font-family: 'Source Code Pro', monospace;
   margin: 0;
+  background-color: var(--bg-primary);
+  color: var(--text-primary);
+  transition: background-color 0.3s ease, color 0.3s ease;
 }
 
 /* Custom Component Styles */
 .btn-primary {
-  background-color: #00B098;
+  background-color: var(--accent-primary);
   color: white;
   font-weight: 500;
   padding: 0.5rem 1rem;
@@ -78,11 +130,11 @@ body {
 }
 
 .btn-primary:hover {
-  background-color: #008a7a;
+  background-color: var(--accent-hover);
 }
 
 .btn-secondary {
-  background-color: #6b7280;
+  background-color: var(--accent-secondary);
   color: white;
   font-weight: 500;
   padding: 0.5rem 1rem;
@@ -93,41 +145,32 @@ body {
 }
 
 .btn-secondary:hover {
-  background-color: #4b5563;
+  background-color: var(--accent-secondary-hover);
 }
 
 .card {
-  background-color: white;
+  background-color: var(--bg-primary);
   border-radius: 0.5rem;
-  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 4px 6px -1px var(--shadow-primary);
   padding: 1.5rem;
-  border: 1px solid #e5e7eb;
-}
-
-.dark .card {
-  background-color: #1f2937;
-  border-color: #374151;
+  border: 1px solid var(--border-primary);
+  transition: background-color 0.3s ease, border-color 0.3s ease;
 }
 
 .input-field {
   width: 100%;
   padding: 0.5rem 0.75rem;
-  border: 1px solid #d1d5db;
+  border: 1px solid var(--border-secondary);
   border-radius: 0.375rem;
-  background-color: white;
-  color: #111827;
+  background-color: var(--bg-primary);
+  color: var(--text-primary);
+  transition: background-color 0.3s ease, border-color 0.3s ease, color 0.3s ease;
 }
 
 .input-field:focus {
   outline: none;
-  border-color: #00B098;
+  border-color: var(--accent-primary);
   box-shadow: 0 0 0 3px rgba(0, 176, 152, 0.1);
-}
-
-.dark .input-field {
-  background-color: #374151;
-  border-color: #4b5563;
-  color: white;
 }
 
 /* Animation Classes */
@@ -183,11 +226,12 @@ body {
 
 /* Header Styles */
 .global-header {
-  background-color: white;
-  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+  background-color: var(--bg-primary);
+  box-shadow: 0 10px 15px -3px var(--shadow-primary), 0 4px 6px -2px var(--shadow-secondary);
   flex-shrink: 0;
   width: 100%;
-  border-bottom: 1px solid #e5e7eb;
+  border-bottom: 1px solid var(--border-primary);
+  transition: background-color 0.3s ease, border-color 0.3s ease;
 }
 
 .header-content {
@@ -222,17 +266,17 @@ body {
   display: flex;
   align-items: center;
   justify-content: center;
-  background-color: #f3f4f6;
-  color: #374151;
+  background-color: var(--bg-secondary);
+  color: var(--text-secondary);
 }
 
 .header-button:hover {
-  background-color: #e5e7eb;
+  background-color: var(--bg-tertiary);
   transform: translateY(-1px);
 }
 
 .header-button.active {
-  background-color: #00B098;
+  background-color: var(--accent-primary);
   color: white;
 }
 
@@ -244,10 +288,11 @@ body {
 .header-title {
   font-size: 1.5rem;
   font-weight: bold;
-  color: #1f2937;
+  color: var(--text-primary);
   font-family: 'Source Code Pro', monospace;
   font-weight: 300;
   margin: 0;
+  transition: color 0.3s ease;
 }
 
 .header-logo {
@@ -259,7 +304,7 @@ body {
 
 /* Button Styles */
 .btn-primary {
-  background-color: #00B098;
+  background-color: var(--accent-primary);
   color: white;
   font-weight: 500;
   padding: 0.5rem 1rem;
@@ -271,11 +316,11 @@ body {
 }
 
 .btn-primary:hover {
-  background-color: #008a7a;
+  background-color: var(--accent-hover);
 }
 
 .btn-secondary {
-  background-color: #6b7280;
+  background-color: var(--accent-secondary);
   color: white;
   font-weight: 500;
   padding: 0.5rem 1rem;
@@ -287,26 +332,26 @@ body {
 }
 
 .btn-secondary:hover {
-  background-color: #b45309;
+  background-color: var(--accent-secondary-hover);
 }
 
 .btn-back {
   padding: 0.5rem;
   border-radius: 0.5rem;
-  background-color: #d1d5db;
+  background-color: var(--bg-secondary);
   border: none;
   cursor: pointer;
   transition: background-color 0.2s;
 }
 
 .btn-back:hover {
-  background-color: #9ca3af;
+  background-color: var(--bg-tertiary);
 }
 
 .btn-back-icon {
   width: 1.5rem;
   height: 1.5rem;
-  color: #374151;
+  color: var(--text-secondary);
 }
 
 /* TTS Button Styles */
@@ -356,17 +401,21 @@ body {
 /* Layout Styles */
 .page-container {
   min-height: 100vh;
-  background-color: white;
+  background-color: var(--bg-primary);
   display: flex;
   flex-direction: column;
+  transition: background-color 0.3s ease;
 }
 
+/* Ensure main content also uses dark mode */
 .main-content {
   flex: 1;
   display: flex;
   align-items: center;
   justify-content: center;
   padding: 2rem;
+  background-color: var(--bg-primary);
+  transition: background-color 0.3s ease;
 }
 
 .content-wrapper {
@@ -396,11 +445,11 @@ body {
   align-items: center;
   cursor: pointer;
   padding: 1rem;
-  border: 2px solid #9ca3af;
+  border: 2px solid var(--border-secondary);
   border-radius: 2rem;
   width: 32rem;
   height: 20rem;
-  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 4px 6px -1px var(--shadow-primary);
   transition: all 0.3s ease;
   position: relative;
   z-index: 1;
@@ -408,8 +457,8 @@ body {
 }
 
 .menu-tile:hover {
-  background-color: #f3f4f6;
-  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
+  background-color: var(--bg-secondary);
+  box-shadow: 0 20px 25px -5px var(--shadow-primary);
   transform: scale(1.05);
 }
 
@@ -418,13 +467,13 @@ body {
 }
 
 .tile-active {
-  background-color: #00B098;
+  background-color: var(--accent-primary);
   color: white;
 }
 
 .tile-inactive {
-  background-color: white;
-  color: black;
+  background-color: var(--bg-primary);
+  color: var(--text-primary);
 }
 
 .tile-icon-container {
@@ -442,7 +491,7 @@ body {
 }
 
 .icon-inactive {
-  background-color: #e5e7eb;
+  background-color: var(--bg-tertiary);
 }
 
 .tile-icon {
@@ -469,7 +518,7 @@ body {
 }
 
 .text-inactive {
-  color: black;
+  color: var(--text-primary);
 }
 
 /* Modal Styles */
@@ -487,7 +536,7 @@ body {
 }
 
 .modal-content {
-  background-color: white;
+  background-color: var(--bg-primary);
   border-radius: 0.5rem;
   padding: 2rem;
   max-width: 32rem;
@@ -495,6 +544,7 @@ body {
   margin: 0 1rem;
   max-height: 80vh;
   overflow-y: auto;
+  transition: background-color 0.3s ease;
 }
 
 .modal-header {
@@ -507,19 +557,21 @@ body {
 .modal-title {
   font-size: 1.5rem;
   font-weight: bold;
-  color: #111827;
+  color: var(--text-primary);
+  transition: color 0.3s ease;
 }
 
 .modal-close {
-  color: #6b7280;
+  color: var(--text-tertiary);
   cursor: pointer;
   border: none;
   background: none;
   font-size: 1.2rem;
+  transition: color 0.3s ease;
 }
 
 .modal-close:hover {
-  color: #374151;
+  color: var(--text-secondary);
 }
 
 /* Form Elements */
@@ -550,37 +602,42 @@ body {
 
 /* Instructions Box */
 .instructions-box {
-  background-color: #dbeafe;
+  background-color: var(--bg-secondary);
   border-radius: 12px;
   padding: 3rem;
   max-width: 800px;
   width: 100%;
   text-align: center;
+  border: 1px solid var(--border-primary);
+  transition: background-color 0.3s ease, border-color 0.3s ease;
 }
 
 .instructions-title {
   font-size: 2.25rem;
   font-weight: 600;
-  color: #1e40af;
+  color: var(--text-primary);
   margin-bottom: 1rem;
   font-family: 'Source Code Pro', monospace;
   font-weight: 300;
+  transition: color 0.3s ease;
 }
 
 .instructions-text {
   font-size: 1.5rem;
-  color: #1d4ed8;
+  color: var(--text-secondary);
   font-family: 'Source Code Pro', monospace;
   font-weight: 300;
   line-height: 1.6;
+  transition: color 0.3s ease;
 }
 
 /* Section Styles */
 .section-title {
   font-size: 1.125rem;
   font-weight: 600;
-  color: #111827;
+  color: var(--text-primary);
   font-family: 'Source Code Pro', monospace;
+  transition: color 0.3s ease;
 }
 
 /* Responsive Design */

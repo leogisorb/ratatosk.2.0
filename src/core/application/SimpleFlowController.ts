@@ -20,6 +20,7 @@ export class SimpleFlowController {
   private isTTSMuted: boolean = false
   private ttsQueue: string[] = []
   private isProcessingQueue: boolean = false
+  private ttsEndListeners: (() => void)[] = []
 
   private constructor() {
     this.speechSynthesis = window.speechSynthesis
@@ -41,7 +42,7 @@ export class SimpleFlowController {
     
     // Stoppe alle laufenden Prozesse
     this.stopAutoMode()
-    this.stopTTS()
+    this.stopTTSOnly() // Nur TTS stoppen, Queue nicht leeren
     
     // Setze View sofort
     this.currentView = viewName
@@ -155,6 +156,11 @@ export class SimpleFlowController {
    * TTS sprechen
    */
   public async speak(text: string): Promise<void> {
+    if (!this.isTTSAvailable()) {
+      console.log('SimpleFlowController: TTS not available:', text)
+      return
+    }
+
     if (!this.userInteracted) {
       console.log('SimpleFlowController: TTS not allowed yet - user must interact first:', text)
       return
@@ -172,6 +178,11 @@ export class SimpleFlowController {
    * TTS sprechen (für virtuelle Tastatur - ohne userInteracted Check)
    */
   public async speakForVirtualKeyboard(text: string): Promise<void> {
+    if (!this.isTTSAvailable()) {
+      console.log('SimpleFlowController: TTS not available for virtual keyboard:', text)
+      return
+    }
+
     if (this.isTTSMuted) {
       console.log('SimpleFlowController: TTS is muted, not speaking:', text)
       return
@@ -222,22 +233,34 @@ export class SimpleFlowController {
 
     this.isProcessingQueue = false
     console.log('SimpleFlowController: TTS queue processing completed')
+    
+    // Triggere TTS-Ende-Listener wenn Queue komplett abgearbeitet ist
+    if (this.ttsQueue.length === 0 && this.ttsEndListeners.length > 0) {
+      this.triggerTTSEndListeners()
+    }
   }
 
   /**
    * TTS ausführen
    */
   private async performSpeak(text: string): Promise<void> {
-
     console.log('SimpleFlowController: Speaking:', text)
     
-    // Stoppe vorherige TTS und warte kurz
-    this.stopTTS()
+    // Stoppe nur die aktuelle TTS, aber leere nicht die Queue
+    this.stopTTSOnly()
     await new Promise(resolve => setTimeout(resolve, 200)) // 200ms Pause
     
     // Prüfe ob Speech Synthesis verfügbar ist
     if (!this.speechSynthesis) {
       console.warn('SimpleFlowController: Speech synthesis not available')
+      this.isSpeaking = false
+      return
+    }
+
+    // Prüfe Browser-Unterstützung
+    if (!('speechSynthesis' in window)) {
+      console.warn('SimpleFlowController: Speech synthesis not supported by browser')
+      this.isSpeaking = false
       return
     }
 
@@ -281,17 +304,79 @@ export class SimpleFlowController {
           }
         }, 1000)
       }
+      
+      // Prüfe ob TTS-Queue leer ist und triggere Listener
+      if (this.ttsQueue.length === 0 && this.ttsEndListeners.length > 0) {
+        this.triggerTTSEndListeners()
+      }
     }
 
     this.currentUtterance.onerror = (event) => {
-      console.warn('SimpleFlowController: TTS error (browser restriction):', event.error)
+      console.warn('SimpleFlowController: TTS error:', event.error, 'for text:', text)
       this.isSpeaking = false
-      // Ignoriere Browser-Beschränkungen, das ist normal
+      
+      // Behandle verschiedene Fehlertypen
+      switch (event.error) {
+        case 'not-allowed':
+          console.warn('SimpleFlowController: TTS not allowed - user interaction required')
+          // Versuche User-Interaktion zu triggern
+          this.requestUserInteraction()
+          break
+        case 'canceled':
+          console.warn('SimpleFlowController: TTS canceled by browser')
+          break
+        case 'interrupted':
+          console.warn('SimpleFlowController: TTS interrupted')
+          break
+        case 'audio-busy':
+          console.warn('SimpleFlowController: Audio system busy')
+          break
+        case 'audio-hardware':
+          console.warn('SimpleFlowController: Audio hardware error')
+          break
+        case 'network':
+          console.warn('SimpleFlowController: Network error')
+          break
+        case 'synthesis-unavailable':
+          console.warn('SimpleFlowController: Synthesis unavailable')
+          break
+        case 'synthesis-failed':
+          console.warn('SimpleFlowController: Synthesis failed')
+          break
+        case 'language-unavailable':
+          console.warn('SimpleFlowController: Language unavailable')
+          break
+        case 'voice-unavailable':
+          console.warn('SimpleFlowController: Voice unavailable')
+          break
+        case 'text-too-long':
+          console.warn('SimpleFlowController: Text too long')
+          break
+        case 'invalid-argument':
+          console.warn('SimpleFlowController: Invalid argument')
+          break
+        default:
+          console.warn('SimpleFlowController: Unknown TTS error:', event.error)
+      }
+      
+      // Auch bei Fehlern prüfen ob TTS-Queue leer ist und Listener triggern
+      if (this.ttsQueue.length === 0 && this.ttsEndListeners.length > 0) {
+        this.triggerTTSEndListeners()
+      }
     }
 
     // Starte TTS mit Fehlerbehandlung
     try {
       this.speechSynthesis.speak(this.currentUtterance)
+      
+      // Fallback: Wenn TTS nach 100ms nicht startet, markiere als fehlgeschlagen
+      setTimeout(() => {
+        if (this.isSpeaking && !this.speechSynthesis.speaking) {
+          console.warn('SimpleFlowController: TTS failed to start, marking as failed')
+          this.isSpeaking = false
+        }
+      }, 100)
+      
     } catch (error) {
       console.warn('SimpleFlowController: TTS blocked by browser:', error)
       this.isSpeaking = false
@@ -299,7 +384,7 @@ export class SimpleFlowController {
   }
 
   /**
-   * Stoppt TTS
+   * Stoppt TTS und leert die Queue (nur bei explizitem Stoppen)
    */
   public stopTTS(): void {
     if (this.speechSynthesis.speaking) {
@@ -310,10 +395,26 @@ export class SimpleFlowController {
       console.log('SimpleFlowController: TTS stopped')
     }
     
-    // Leere auch die TTS-Queue
+    // Leere auch die TTS-Queue nur bei explizitem Stoppen
     this.ttsQueue = []
     this.isProcessingQueue = false
-    console.log('SimpleFlowController: TTS queue cleared')
+    console.log('SimpleFlowController: TTS queue cleared (explicit stop)')
+    
+    // Entferne alle Listener bei explizitem Stoppen
+    this.clearTTSEndListeners()
+  }
+
+  /**
+   * Stoppt TTS ohne Queue zu leeren (für sanfte Übergänge)
+   */
+  public stopTTSOnly(): void {
+    if (this.speechSynthesis.speaking) {
+      this.speechSynthesis.cancel()
+      this.currentUtterance = null
+      this.isSpeaking = false
+      this.pendingCycle = false
+      console.log('SimpleFlowController: TTS stopped (queue preserved)')
+    }
   }
 
   /**
@@ -322,6 +423,41 @@ export class SimpleFlowController {
   public setUserInteracted(interacted: boolean): void {
     this.userInteracted = interacted
     console.log('SimpleFlowController: User interaction set to:', interacted)
+  }
+
+  /**
+   * Fordert Benutzer-Interaktion an (für TTS-Fehler)
+   */
+  private requestUserInteraction(): void {
+    if (this.userInteracted) return
+    
+    console.log('SimpleFlowController: Requesting user interaction for TTS...')
+    
+    // Erstelle temporären Event Listener für User-Interaktion
+    const enableTTS = () => {
+      this.userInteracted = true
+      console.log('SimpleFlowController: User interaction detected, TTS enabled')
+      
+      // Entferne Event Listener
+      document.removeEventListener('click', enableTTS)
+      document.removeEventListener('touchstart', enableTTS)
+      document.removeEventListener('keydown', enableTTS)
+      window.removeEventListener('faceBlinkDetected', enableTTS)
+    }
+    
+    // Event Listener für User-Interaktion
+    document.addEventListener('click', enableTTS, { once: true })
+    document.addEventListener('touchstart', enableTTS, { once: true })
+    document.addEventListener('keydown', enableTTS, { once: true })
+    window.addEventListener('faceBlinkDetected', enableTTS, { once: true })
+    
+    // Fallback: Entferne Event Listener nach 10 Sekunden
+    setTimeout(() => {
+      document.removeEventListener('click', enableTTS)
+      document.removeEventListener('touchstart', enableTTS)
+      document.removeEventListener('keydown', enableTTS)
+      window.removeEventListener('faceBlinkDetected', enableTTS)
+    }, 10000)
   }
 
   /**
@@ -385,6 +521,54 @@ export class SimpleFlowController {
   }
 
   /**
+   * Prüft TTS-Verfügbarkeit
+   */
+  public isTTSAvailable(): boolean {
+    return !!(this.speechSynthesis && 'speechSynthesis' in window)
+  }
+
+  /**
+   * Prüft ob TTS bereit ist (User-Interaktion + nicht stumm)
+   */
+  public isTTSReady(): boolean {
+    return this.isTTSAvailable() && this.userInteracted && !this.isTTSMuted
+  }
+
+  /**
+   * Registriert einen Listener für TTS-Ende
+   */
+  public onTTSEnd(callback: () => void): void {
+    this.ttsEndListeners.push(callback)
+    console.log('SimpleFlowController: TTS end listener registered, total listeners:', this.ttsEndListeners.length)
+  }
+
+  /**
+   * Entfernt alle TTS-Ende-Listener
+   */
+  public clearTTSEndListeners(): void {
+    this.ttsEndListeners = []
+    console.log('SimpleFlowController: All TTS end listeners cleared')
+  }
+
+  /**
+   * Triggert alle TTS-Ende-Listener
+   */
+  private triggerTTSEndListeners(): void {
+    console.log('SimpleFlowController: Triggering TTS end listeners, count:', this.ttsEndListeners.length)
+    this.ttsEndListeners.forEach((listener, index) => {
+      try {
+        console.log(`SimpleFlowController: Executing TTS end listener ${index + 1}`)
+        listener()
+      } catch (error) {
+        console.warn('SimpleFlowController: Error in TTS end listener:', error)
+      }
+    })
+    // Leere die Listener nach dem Ausführen
+    this.ttsEndListeners = []
+    console.log('SimpleFlowController: TTS end listeners executed and cleared')
+  }
+
+  /**
    * Gibt den aktuellen Zustand zurück
    */
   public getState() {
@@ -395,7 +579,9 @@ export class SimpleFlowController {
       userInteracted: this.userInteracted,
       isSpeaking: this.isSpeaking,
       pendingCycle: this.pendingCycle,
-      isTTSMuted: this.isTTSMuted
+      isTTSMuted: this.isTTSMuted,
+      isTTSAvailable: this.isTTSAvailable(),
+      isTTSReady: this.isTTSReady()
     }
   }
 }

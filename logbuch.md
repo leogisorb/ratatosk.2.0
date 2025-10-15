@@ -38,6 +38,83 @@ Ratatosk ist eine Kommunikationshilfe für Menschen mit Behinderungen, die durch
 
 ## 📅 Chronologische Entwicklung
 
+### 2025-01-15 - Virtuelle Tastatur komplett überarbeitet mit Callback-basierter TTS-Implementierung
+
+**Problem:**
+- Virtuelle Tastatur hatte komplexe TTS- und State-Machine-Implementierung
+- Timing-Probleme zwischen TTS und visueller Hervorhebung
+- System war zu schnell für Benutzer mit Behinderungen
+- Fehleranfällige Timer-basierte Synchronisation
+- Komplexe State-Machine mit vielen Zuständen
+
+**Lösung:**
+- **Komplette Neuimplementierung**: Virtuelle Tastatur von Grund auf neu entwickelt
+- **Callback-basierte TTS**: Robuste TTS-Implementierung mit Start/End-Callbacks
+- **Verlangsamung**: Alle Zeitwerte verdoppelt für bessere Benutzerfreundlichkeit
+- **Drei-Phasen-System**: INIT → ROW_SCANNING → LETTER_SCANNING
+- **Native SpeechSynthesis**: Direkte Browser-API statt komplexer Controller
+
+**Technische Details:**
+- **TTS-Funktion mit Callbacks**:
+  ```typescript
+  const speakText = (text: string, onStart?: () => void, onEnd?: () => void): Promise<void>
+  ```
+- **Phase 1 - Begrüßung**: "Hallo." → "Ich helfe Ihnen..." → "Wählen Sie jetzt..."
+- **Phase 2 - Zeilenmodus**: Automatischer Durchlauf mit visueller Hervorhebung
+- **Phase 3 - Buchstabenmodus**: Buchstabendurchlauf mit Auswahl
+- **Verlangsamte Zeiten**: 1,5s → 3s, 2s → 4s, 2,5s → 5s
+
+**Ergebnis:**
+- ✅ **Perfekte Synchronisation**: TTS und visuelle Hervorhebung laufen synchron
+- ✅ **Robuste Implementierung**: Keine Timing-Probleme mehr
+- ✅ **Benutzerfreundlich**: Doppelt so langsam für bessere Verständlichkeit
+- ✅ **Klinisch sicher**: Callback-basierte Architektur für medizinische Anwendung
+- ✅ **Sauberer Code**: Elegante Implementierung ohne komplexe State-Machine
+
+**Git Status:**
+- `virtualKeyboardConfig.ts` gelöscht (nicht mehr benötigt)
+- `UnterhaltenView.vue` komplett überarbeitet
+- CSS-Styles in separate `UnterhaltenView.css` ausgelagert
+- Alle Linting-Fehler behoben
+
+### 2025-01-14 - Tastatur-Überarbeitung und Code-Bereinigung
+
+**Problem:**
+- Tastatur-Implementierung war zu komplex und fehleranfällig
+- TTS-Integration funktionierte nicht zuverlässig
+- Code war schwer wartbar und unübersichtlich
+- Inline-Styles machten CSS unübersichtlich
+
+**Lösung:**
+- **TTS-Implementierung entfernt**: Komplette TTS-Logik aus UnterhaltenView.vue entfernt
+- **Keyboard-Algorithmus gelöscht**: Komplexe State-Machine entfernt
+- **Einfache Click-Handler**: Basis-Funktionalität mit einfachen Click-Events
+- **CSS-Bereinigung**: Inline-Styles in separate CSS-Datei ausgelagert
+- **Navigation verbessert**: useRouter() statt console.log für saubere Navigation
+
+**Technische Details:**
+- **Entfernte Komponenten**:
+  - `TTSSynchronizedController` Klasse
+  - `VirtualKeyboardState` Enum
+  - Komplexe Timer-Management
+  - TTS-driven scanning logic
+- **Behaltene Komponenten**:
+  - Basis-Keyboard-Layout
+  - Text-Management-Funktionen
+  - Keyboard-Design-Store Integration
+- **CSS-Verbesserungen**:
+  - Press-Animationen für bessere UX
+  - Hover-Effekte mit sanften Übergängen
+  - Responsive Design für mobile Geräte
+  - Accessibility-Features (Focus-Styles)
+
+**Ergebnis:**
+- ✅ **Vereinfachte Architektur**: Sauberer, wartbarer Code
+- ✅ **Bessere UX**: Press-Animationen und Hover-Effekte
+- ✅ **Responsive Design**: Funktioniert auf allen Geräten
+- ✅ **Accessibility**: Focus-Styles für Tastaturnavigation
+- ✅ **Wartbarkeit**: CSS getrennt von Vue-Logik
+
 ### 2025-01-11 - Kamera-Persistenz und TTS-Aktivierung seitenübergreifend implementiert
 
 **Problem:**

@@ -287,9 +287,9 @@ onUnmounted(() => {
   max-width: 350px;
   min-height: 120px;
   padding: 2rem;
-  border: 3px solid #e5e7eb;
+  border: 3px solid var(--border-primary);
   border-radius: 16px;
-  background: white;
+  background: var(--bg-primary);
   cursor: pointer;
   transition: all 0.3s ease;
   box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);

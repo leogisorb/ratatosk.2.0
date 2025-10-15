@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { ref, computed, onMounted, onUnmounted } from 'vue'
 import { useRouter } from 'vue-router'
-import { useSettingsStore } from '../stores/settings'
+import { useSettingsStore } from '../../settings/stores/settings'
 import { simpleFlowController } from '../../../core/application/SimpleFlowController'
 import { getAutoModeLeuchtdauer } from '../../../core/utils/leuchtdauerUtils'
 import AppHeader from '../../../shared/components/AppHeader.vue'

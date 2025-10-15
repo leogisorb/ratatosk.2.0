@@ -431,7 +431,7 @@ watch(currentState, (newState) => {
   align-items: center;
   cursor: pointer;
   padding: 1rem;
-  border: 2px solid #9ca3af;
+  border: 2px solid var(--border-secondary);
   border-radius: 2rem;
   width: 32rem;
   height: 20rem;
@@ -458,8 +458,8 @@ watch(currentState, (newState) => {
 }
 
 .pain-dialog-item.inactive {
-  background-color: white;
-  color: black;
+  background-color: var(--bg-primary);
+  color: var(--text-primary);
 }
 
 .pain-dialog-icon {
@@ -600,8 +600,8 @@ watch(currentState, (newState) => {
 
 /* Confirmation Styles */
 .confirmation-container {
-  background-color: white;
-  border: 2px solid #9ca3af;
+  background-color: var(--bg-primary);
+  border: 2px solid var(--border-secondary);
   border-radius: 2rem;
   padding: 3rem;
   text-align: center;
