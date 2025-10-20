@@ -1,0 +1,311 @@
+/**
+ * Integration der virtuellen Tastatur in bestehende Views
+ * Ersetzt bestehende Tastatur-Logik mit State-Machine
+ */
+
+import { ref, computed, onMounted, onUnmounted } from 'vue'
+import { useRouter } from 'vue-router'
+import { VirtualKeyboardStateMachine, VirtualKeyboardState, VirtualKeyboardEvent } from '../../../config/virtualKeyboardStateMachine'
+import { simpleFlowController } from '../../../core/application/SimpleFlowController'
+import { useFaceRecognition } from '../../face-recognition/composables/useFaceRecognition'
+import { VIRTUAL_KEYBOARD_CONFIG } from '../../../config/virtualKeyboardConfig'
+
+export function useVirtualKeyboardIntegration() {
+  // Router für Navigation
+  const router = useRouter()
+  
+  // Refs für Vue-Reaktivität
+  const currentText = ref("Noch kein Text…")
+  const currentState = ref<VirtualKeyboardState>(VirtualKeyboardState.IDLE)
+  const activeRowIndex = ref(0)
+  const activeLetterIndex = ref(0)
+  const isTTSActive = ref(false)
+  const showCurrentText = ref(false)
+
+  // State-Machine
+  let stateMachine: VirtualKeyboardStateMachine | null = null
+
+  // Face Recognition
+  const faceRecognition = useFaceRecognition()
+
+  // Tastatur-Layout aus zentraler Konfiguration
+  const keyboardLayout = VIRTUAL_KEYBOARD_CONFIG.keyboard.map(row => row.letters)
+
+  // Computed Properties
+  const currentRowLetters = computed(() => {
+    return keyboardLayout[activeRowIndex.value] || []
+  })
+
+  const isRowActive = computed(() => {
+    return currentState.value === VirtualKeyboardState.ROW_SCANNING
+  })
+
+  const isLetterActive = computed(() => {
+    return currentState.value === VirtualKeyboardState.LETTER_SCANNING
+  })
+
+  const isRowSelected = computed(() => {
+    return currentState.value === VirtualKeyboardState.ROW_SELECTED
+  })
+
+  const isLetterSelected = computed(() => {
+    return currentState.value === VirtualKeyboardState.LETTER_SELECTED
+  })
+
+  /**
+   * State-Change Callback für die State-Machine
+   */
+  const onStateChange = (state: VirtualKeyboardState, context: any) => {
+    console.log('VirtualKeyboard: State changed to', state)
+    console.log('VirtualKeyboard: Context:', context)
+    
+    currentState.value = state
+    currentText.value = context.currentText
+    activeRowIndex.value = context.currentRow
+    activeLetterIndex.value = context.currentLetter
+    isTTSActive.value = context.isTTSActive
+    showCurrentText.value = context.currentText !== "Noch kein Text…"
+    
+    console.log('VirtualKeyboard: Updated state - row:', activeRowIndex.value, 'letter:', activeLetterIndex.value)
+  }
+
+  /**
+   * Initialisiert die virtuelle Tastatur
+   */
+  const initializeVirtualKeyboard = async () => {
+    console.log('VirtualKeyboard: Initializing virtual keyboard integration')
+    console.log('VirtualKeyboard: SimpleFlowController available:', !!simpleFlowController)
+    
+    // Stelle sicher, dass TTS für virtuelle Tastatur aktiviert ist
+    simpleFlowController.setUserInteracted(true)
+    console.log('VirtualKeyboard: TTS enabled for virtual keyboard')
+    
+    // Navigation-Callback für ZURÜCK-Taste
+    const onNavigateBack = () => {
+      console.log('VirtualKeyboard: Navigating back to app, stopping all TTS...')
+      
+      // Stoppe alle laufenden TTS (beide Systeme)
+      speechSynthesis.cancel()  // Direkte TTS-Implementierungen
+      simpleFlowController.stopTTSOnly()  // SimpleFlowController TTS (ohne Queue zu leeren)
+      
+      // Stoppe virtuelle Tastatur
+      stopVirtualKeyboard()
+      
+      // Navigiere zurück
+      router.push('/app')
+    }
+
+    // State-Machine erstellen
+    stateMachine = new VirtualKeyboardStateMachine(simpleFlowController, onStateChange, onNavigateBack)
+    console.log('VirtualKeyboard: State machine created:', !!stateMachine)
+    
+    // Face Recognition für Blinzelsteuerung aktivieren
+    if (!faceRecognition.isActive.value) {
+      console.log('VirtualKeyboard: Face Recognition nicht aktiv - starte sie')
+      await faceRecognition.start()
+    } else {
+      console.log('VirtualKeyboard: Face Recognition bereits aktiv - verwende bestehende Instanz')
+    }
+    
+    // Event Listener für Face Blinzel-Erkennung
+    window.addEventListener('faceBlinkDetected', handleFaceBlink)
+    console.log('VirtualKeyboard: Face Recognition mit Blinzel-Erkennung aktiviert')
+    
+    // State-Machine starten (Intro bereits abgespielt, daher direkt starten)
+    console.log('VirtualKeyboard: Starting state machine (intro already played)...')
+    try {
+      // Markiere Intro als bereits gehört, damit State Machine es überspringt
+      if (stateMachine && typeof stateMachine.markIntroAsHeard === 'function') {
+        stateMachine.markIntroAsHeard()
+      }
+      stateMachine.start()
+      console.log('VirtualKeyboard: State machine started successfully')
+    } catch (error) {
+      console.error('VirtualKeyboard: Error starting state machine:', error)
+    }
+  }
+
+  /**
+   * Stoppt die virtuelle Tastatur
+   */
+  const stopVirtualKeyboard = () => {
+    console.log('VirtualKeyboard: Stopping virtual keyboard integration')
+    
+    // Stoppe alle laufenden TTS (beide Systeme)
+    speechSynthesis.cancel()  // Direkte TTS-Implementierungen
+    simpleFlowController.stopTTSOnly()  // SimpleFlowController TTS (ohne Queue zu leeren)
+    
+    if (stateMachine) {
+      stateMachine.stop()
+      stateMachine = null
+    }
+    
+    // Face Recognition Event Listener entfernen (aber Face Recognition nicht stoppen)
+    window.removeEventListener('faceBlinkDetected', handleFaceBlink)
+    // faceRecognition.stop() - NICHT stoppen, da sie seitenübergreifend laufen soll
+  }
+
+  /**
+   * Setzt den Intro-Status zurück, damit der Begrüßungstext erneut gesprochen wird
+   */
+  const resetIntroStatus = () => {
+    console.log('VirtualKeyboard: Resetting intro status')
+    if (stateMachine) {
+      stateMachine.resetIntroStatus()
+    }
+  }
+
+  /**
+   * Behandelt Face Blinzel-Erkennung
+   */
+  const handleFaceBlink = (event: any) => {
+    console.log('VirtualKeyboard: Face blink received:', event.detail)
+    handleUserInput()
+  }
+
+  /**
+   * Behandelt Benutzereingabe (Blinzeln oder Klick)
+   */
+  const handleUserInput = () => {
+    if (!stateMachine) return
+    
+    console.log('VirtualKeyboard: User input detected')
+    stateMachine.handleUserInput()
+  }
+
+  /**
+   * Manueller Klick-Handler (für Maus/Touch-Eingabe)
+   */
+  const handleClick = () => {
+    handleUserInput()
+  }
+
+  /**
+   * Text zurücksetzen
+   */
+  const clearText = () => {
+    currentText.value = "Noch kein Text…"
+    showCurrentText.value = false
+    // State-Machine zurücksetzen
+    if (stateMachine) {
+      stateMachine.stop()
+      stateMachine.start()
+    }
+  }
+
+  /**
+   * Aktuellen Text vorlesen
+   */
+  const readCurrentText = async () => {
+    if (currentText.value !== "Noch kein Text…") {
+      isTTSActive.value = true
+      await simpleFlowController.speak(`Ihr aktueller Text: ${currentText.value}`)
+      isTTSActive.value = false
+    }
+  }
+
+  /**
+   * Hilfsfunktion: Prüft ob eine Zeile aktiv ist
+   */
+  const isRowHighlighted = (rowIndex: number): boolean => {
+    return isRowActive.value && activeRowIndex.value === rowIndex
+  }
+
+  /**
+   * Hilfsfunktion: Prüft ob ein Buchstabe aktiv ist
+   */
+  const isLetterHighlighted = (rowIndex: number, letterIndex: number): boolean => {
+    return isLetterActive.value && 
+           activeRowIndex.value === rowIndex && 
+           activeLetterIndex.value === letterIndex
+  }
+
+  /**
+   * Hilfsfunktion: Prüft ob eine Zeile ausgewählt ist
+   */
+  const isRowSelectedState = (rowIndex: number): boolean => {
+    return isRowSelected.value && activeRowIndex.value === rowIndex
+  }
+
+  /**
+   * CSS-Klassen für UI-Hervorhebung
+   */
+  const getRowClass = (rowIndex: number): string => {
+    const isHighlighted = isRowHighlighted(rowIndex)
+    const isSelected = isRowSelectedState(rowIndex)
+    console.log(`getRowClass(${rowIndex}): highlighted=${isHighlighted}, selected=${isSelected}`)
+    
+    if (isHighlighted) {
+      return 'row-active' // Orangefarbener Rahmen
+    }
+    if (isSelected) {
+      return 'row-selected' // Zeile ausgewählt
+    }
+    return 'row-inactive'
+  }
+
+  const getLetterClass = (rowIndex: number, letterIndex: number): string => {
+    const isHighlighted = isLetterHighlighted(rowIndex, letterIndex)
+    console.log(`getLetterClass(${rowIndex}, ${letterIndex}): highlighted=${isHighlighted}`)
+    
+    if (isHighlighted) {
+      return 'letter-active' // Leuchtender Rahmen
+    }
+    return 'letter-inactive'
+  }
+
+  const getTTSIndicatorClass = (): string => {
+    return isTTSActive.value ? 'tts-active' : 'tts-inactive'
+  }
+
+  /**
+   * Lifecycle-Hooks
+   */
+  onMounted(() => {
+    console.log('VirtualKeyboard: Integration mounted')
+  })
+
+  onUnmounted(() => {
+    stopVirtualKeyboard()
+  })
+
+  return {
+    // State
+    currentText,
+    currentState,
+    activeRowIndex,
+    activeLetterIndex,
+    isTTSActive,
+    showCurrentText,
+    
+    // Computed
+    currentRowLetters,
+    isRowActive,
+    isLetterActive,
+    isRowSelected,
+    isLetterSelected,
+    
+    // Layout
+    keyboardLayout,
+    
+    // Methods
+    initializeVirtualKeyboard,
+    stopVirtualKeyboard,
+    resetIntroStatus,
+    handleClick,
+    handleFaceBlink,
+    clearText,
+    readCurrentText,
+    
+    // UI-Helpers
+    isRowHighlighted,
+    isLetterHighlighted,
+    isRowSelectedState,
+    getRowClass,
+    getLetterClass,
+    getTTSIndicatorClass,
+    
+    // Face Recognition
+    faceRecognition
+  }
+}

@@ -1,0 +1,1268 @@
+<!-- 
+Quellen: 
+Facemesh-input: https://github.com/google/mediapipe/blob/master/docs/solutions/face_mesh.md 
+Service-Glocke: https://soundbible.com/1599-Store-Door-Chime.html von Mike Koenig, Attribution 3.0
+tastatur-layout: https://www.youtube.com/watch?v=3yq6vCjswaE
+Farbfilter: https://codepen.io/sosuke/pen/Pjoqqp
+Kontratanalyse: https://color.adobe.com/de/create/color-contrast-analyzer
+Icons: https://www.flaticon.com/icon-fonts-most-downloaded
+
+für dieses Dokument wichtige Landmarks von MediaPipe: 
+Gesichtsgröße oben/unten(10/152); Rechtes Auge(160,159/ 144,145); linkes Auge(387,386/ 374,373)
+
+interessante Anmerkungen:
+    - Selbst wenn nur die Stirn und die Augen auf dem Bild zu erkennen sind funktioniert das Programm (-> gute KI?)
+
+To-Do:
+    - OK: Variable für Augen-zu-Zeit-Messung
+    - OK: Augen-Aktion etwas ausführen lassen
+    - OK: Aufleuchtende Symbole einfügen
+    - OK: je nach aufgeleichtetem Symbol während augen-aktion ausführen lassen
+    - OK: Design von Voca-app "borgen"
+    - OK: Überall Wo-bin-ich-gerade einfügen
+    - OK: schmerz-skala einfügen
+
+    - Das ganze auf einen Server klatschen
+    - OK: Abhängigkeit von Displaygröße / Autoscrolling
+    - 25 / x : Bericht schreiben
+    - Feiern
+
+Known Bugs:
+    - buttons in divs führen beim anklicken die klick-Funktionen von beidem
+    - Mesagebox kann bis zur unkenntlichkeit beschrieben werden (nicht lesbar)
+
+Bearbeitet von Barbara Kammerl
+-->
+
+
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+   <link rel="shortcut icon" type="image/svg" href="public/Ratatosk_smol.svg"/>
+   <link rel="stylesheet" type="text/css" href="pageStyle.css"/>
+   <meta content="width=device-width, height=device-height, initial-scale=1.0">
+
+  <title>Ratatosk-Testseite</title>
+  <!-- Import für facemesh im Web -->
+  <script src="https://cdn.jsdelivr.net/npm/@mediapipe/camera_utils/camera_utils.js" crossorigin="anonymous"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@mediapipe/control_utils/control_utils.js" crossorigin="anonymous"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@mediapipe/drawing_utils/drawing_utils.js" crossorigin="anonymous"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@mediapipe/face_mesh/face_mesh.js" crossorigin="anonymous"></script>
+
+  <!-- Import für facemesh ohne Web (auskommentiert) -->
+  <!-- <script src="./public/camera_utils.js" crossorigin="anonymous"></script>
+  <script src="./public/control_utils.js" crossorigin="anonymous"></script>
+  <script src="./public/drawing_utils.js" crossorigin="anonymous"></script>
+  <script src="./public/face_mesh.js" crossorigin="anonymous"></script> -->
+</head>
+
+<body>
+  <script type="module">  
+    // Video-Element Variable (wird später erstellt)
+    let videoElement = null;
+    
+    // facefactor bestimmt ab welchem Großenfaktor ein geschlossenes Auge erkannt wird.
+    // Die Höhe des Gesichtes wird hiermit multipliziert um einen Grenzwert festzulegen.
+    // Aus Selbstets ergab sich ein Faktor von 35 bis 60 als ideal für niedrigen und hohen Abstand zwischen Gesicht und Kamera.
+    var facefactor = 55; 
+    //time_closed gibt an, wie viele Sekunden die Augen geschlossen sein müssen, um es als Aktion zählen zu lassen.
+    var time_closed = 2;
+
+    //pre-load Images
+    var images=[];
+    function vorladen(...BilderSrc){
+      for(var i=0; i<BilderSrc.length; i++){
+        images[i]=new Image();
+        images[i].src= BilderSrc[i];
+      }
+    }
+
+    // Audio-Initialisierung
+    let serviceBell = null;
+    let audioContext = null;
+    
+    // Audio-Kontext erstellen
+    try {
+      audioContext = new (window.AudioContext || window.webkitAudioContext)();
+      console.log('Audio-Kontext erstellt');
+    } catch (error) {
+      console.error('Audio-Kontext Fehler:', error);
+    }
+    
+    // Audio-Datei laden
+    try {
+      serviceBell = new Audio('./public/ServiceGlocke.wav');
+      serviceBell.addEventListener('canplaythrough', () => {
+        console.log('Audio-Datei erfolgreich geladen');
+      });
+      serviceBell.addEventListener('error', (error) => {
+        console.error('Audio-Datei Fehler:', error);
+      });
+    } catch (error) {
+      console.error('Audio-Initialisierung Fehler:', error);
+    }
+    import { createApp } from 'https://unpkg.com/vue@3/dist/vue.esm-browser.js';
+    
+    const element_click = createApp({
+      el:"#element_click",
+      data: () => {return { 
+        auswahl: "Nichts Ausgewählt", //Auswahl des schmerzenden Körperteiles (Menü 2)
+        nachricht: "",                //Auswahl der gedrückten Buchstaben (Menü 3)
+        selectedElement: "Start",    //Auswahl des momentan aufleuchtenden Symboles (überall)
+        element: "Start",
+        selectedKeyboard : 0,
+       
+
+        Keyboards: [
+          //Alphabetisch:
+        [["a","ä","b","c","ch","d","1","2"],
+          ["e","f","g","h","i","j","3","4"],
+          ["k","l","m","n","o","ö","p","q"],
+          ["r","s","sch","ß","t","u","ü","v"],
+          ["w","x","y","z",".",",","!","?"]],
+          //Qwertz:
+        [["1","2","3","4","5","6","7","8","9","0","ß"],
+         ["q","w","e","r","t","z","u","i","o","p","ü"],
+         ["a","s","d","f","g","h","j","k","l","ö","ä"],
+         ["y","x","c","v","b","n","m",",",".","-","+"]],
+          //Häufigkeit:
+        [["E","S","L","B","P","Ö"],
+          ["N","A","G","F","V","ß"],
+          ["I","D","M","K","Ü","Y"],
+          ["R","H","C","W","Ä","X"],
+          ["T","U","O","Z","J","Q"]],
+        ],
+
+        Schmerz:[
+          //Kopf
+        [["Stirn","Hinterkopf","Schläfe"],
+          ["Ohr","Auge","Nebenhölen"],
+          ["Nase", "Mund", "Kiefer"],
+          ["Nacken", "Hals", "Speiseröhre"]],
+        //Torso
+        [["Herz","Brust","Schultern"],
+          ["Lunge","Magen","Blase","Hüfte"],
+          ["Schulterblätter","Wirbelsäule"]],
+        //Arme
+        [["Finger","Handfläche","Handrücken"],
+          ["Unterarm","Ellenbogen","Ellenbeuge"],
+          ["Oberarm","Schulter", "Achsel"]],
+        //Beine
+        [["Zehen","Fußballen","Fußrücken"],
+          ["Knöchel","Unterschenkel","Knie"],
+          ["Oberschenkel","Hüfte","Geschl.organ"]],
+        ],
+
+        ZahlenMenu:[
+          ["1","2","3"],
+          ["4","5","6"],
+          ["7","8","9"],
+          ["+","0","-"]],
+
+        UmgebungMenu:[
+          //Gespraeche:
+        [["Hallo! ","Guten Abend! ","Gute Nacht! "],
+          ["Wie geht es dir? ","Wie fühlst du dich? ","Wie geht es der Familie? "],
+          ["Wo? ","Warum? ","Weshalb? "],
+          ["Was ist passiert? ","Wann kommst du wieder? "],
+          ["Auf Wieder sehen! ","Schön, dass du da warst! ","Besuche mich bald! "]],
+          //Gegenstände:
+        [["Handy ","Glas ","Brille "],
+          ["Stift ","Papier ","Lineal "],
+          ["Teller ","Besteck ","Tisch "]],
+          //Im Zimmer:
+        [["Tür ","Fenster ","Licht "],
+          ["Bett ","Tisch ","Stuhl "],
+          ["Fernseher ","Vorhang ","Schrank "]],
+          //Im Bett:
+        [["Decke ","Kissen ","Bezug "],
+          ["Veschieben ","Wechseln ","Fernbedienung "]],
+        ],
+
+        IchMenu:[
+          //Ernährung:
+        [["Essen ","Trinken "],
+         ["süß ","herzhaft ","scharf "],
+         ["kalt ","warm ","lauwarm "],
+         ["trocken ","nass ","breiig "],
+         ["Wasser ","Saft ","Milch "]],
+          //Gefühle:
+        [["glücklich ","froh ","erleichtert "],
+          ["traurig ","wütend ","einsam ","ängstlich "],
+          ["gelangweilt ","gestresst ","unsicher "],
+          ['\u{1F44D}','\u{1F44E}','\u{1F44F}','\u{1F44B}','\u{1F634}'],
+          ['\u{1F495}','\u{1F4A7}','\u{1F60E}','\u{1F614}','\u{1F618}']],
+          //Kleidung:
+        [["Mütze ","Ohrstöpsel ","Schaal "],
+          ["Hemd ","T-Shirt ","Pullover "],
+          ["Hose ","Gürtel ","Socken "]],
+          //Hygiene:
+        [["auf die Toilette ","Zähne putzen ","duschen ","baden "],
+          ["Hände waschen ","Haare kämmen ","umziehen "]],
+          //Bewegung:
+        [["drehen ","legen ","stützen ","schieben "],
+          ["Arm ","Bein ","Kopf ","Körper ","Bett "],
+          ["rechts ","links ","oben ","unten ","vorne ","hinten "],
+          ["anwinkeln ","zur Seite "]],
+        ],
+
+        Schmerzskala:
+        ["10","9","8","7","6","5","4","3","2","1","0"],
+
+        Blinkzeiten:
+        ["1","1.5","2","4","5","8"],
+
+        waittime: 2000,       // Zeit die Symbole aufblinken
+        closed_frames: 0,     // Anzahl der "frames"(Geräteabhängig) die Augen zu sind
+
+        cngTime_closed: false,  //Orientierung ob closed_frames geändert werden darf
+        showMenu: -1,         // Orientierung welches Menü angezeigt wird 
+        eyes_closed: false,       // Orientierung für eine Aktion pro augen-zu 
+        black_design : false,
+        dbug: false,
+      } },
+      methods: {
+        playBell(){
+          //spielt das Geräusch der Schwesternglocke
+          try {
+            // Audio-Kontext erstellen (falls nötig)
+            if (!window.audioContext) {
+              window.audioContext = new (window.AudioContext || window.webkitAudioContext)();
+            }
+            
+            serviceBell.volume = 0.9;
+            serviceBell.loop = true;
+            
+            // Audio-Kontext resume (falls suspended)
+            if (window.audioContext.state === 'suspended') {
+              window.audioContext.resume();
+            }
+            
+            serviceBell.play().catch(error => {
+              console.error('Audio play error:', error);
+              // Fallback: Einfacher Beep-Ton
+              this.playFallbackBeep();
+            });
+          } catch (error) {
+            console.error('Audio error:', error);
+            // Fallback: Einfacher Beep-Ton
+            this.playFallbackBeep();
+          }
+        },
+        
+        playFallbackBeep() {
+          // Fallback: Einfacher Beep-Ton mit Web Audio API
+          try {
+            const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+            const oscillator = audioContext.createOscillator();
+            const gainNode = audioContext.createGain();
+            
+            oscillator.connect(gainNode);
+            gainNode.connect(audioContext.destination);
+            
+            oscillator.frequency.setValueAtTime(800, audioContext.currentTime);
+            gainNode.gain.setValueAtTime(0.3, audioContext.currentTime);
+            
+            oscillator.start();
+            oscillator.stop(audioContext.currentTime + 0.5);
+            
+            console.log('Fallback Beep-Ton abgespielt');
+          } catch (error) {
+            console.error('Fallback Beep error:', error);
+            alert('Audio konnte nicht abgespielt werden.');
+          }
+        },
+        stopBell(){
+          //stoppt das abspielen des Geräusches
+          serviceBell.pause();
+        },
+        cngAusw(text){
+          //Ändert die Auswahl des Körperteiles im Schmerz-Menü (Menü 2 AUA)
+          let ausgabe = document.getElementById("Auswahl");
+          ausgabe.innerHTML = text;
+        },
+        cngGrad(text){
+          let ausgabe = document.getElementById("GradSchmerz");
+          ausgabe.innerHTML = text;
+        },
+        cngLeuchtgsw(sekunden){
+          this.waittime = sekunden*1000;
+        },
+        cngHinweis(text){
+          let meldung = document.getElementById("Hinweis");
+          meldung.innerHTML = text + "wurde erfolgreich geändert.";
+        },
+        cngOrientierung(text){
+          let aktuellesMenue = document.getElementById("orientierung");
+          aktuellesMenue.innerHTML = text;
+        },
+        addChar(character){
+          //Fügt einen Buchstaben/Zahl/Wort an die Nachricht an (Menü 3 NAC)
+          let nachricht = document.getElementById("msg");
+          nachricht.value += character;
+        },
+        delChar(){
+          //löscht den letzten Buchstaben(!) der Nachricht (Menü 3 NAC)
+          let nachricht = document.getElementById("msg");
+          nachricht.value = nachricht.value.slice(0, -1);
+        },
+        delallChar(){
+          //löscht die gesamte eingegebene Nachricht (Menü 3 NAC)
+          let nachricht = document.getElementById("msg");
+          nachricht.value = "";
+        },
+        dayNight(){
+          //Ändert den Farbmodus zum dunklen Design und wieder zurück (Menü 5 EIN)
+          var element = document.body;
+          element.classList.toggle("dark");
+          this.black_design = !(this.black_design);
+        },
+        colorElement(elementID,menuValue){
+          //Setzt einen Filter über ein Element, damit es von schwarz zu Chocolate wird
+          this.selectedElement = elementID;
+          let elementToColour = document.getElementById(elementID);
+          if((elementToColour) && (this.showMenu == menuValue)){
+            //filter für die Farbe chocolate (#D2691E)
+            elementToColour.style.filter= 'invert(59%) sepia(34%) saturate(5314%) hue-rotate(350deg) brightness(86%) contrast(90%)'; 
+          }
+        },
+        colorDiv(elementID,menuValue){
+          this.selectedElement = elementID;
+          let elementToColour = document.getElementById(elementID);
+          if((elementToColour) && (this.showMenu == menuValue)){
+            //elementToColour.className += ' button_div'; 
+            elementToColour.classList.add('button_div'); 
+          }
+        },
+        colorButton(elementID, menuValue){
+          this.selectedElement = elementID;
+          let elementToColour= document.getElementById(elementID);
+          if((elementToColour)&&(this.showMenu == menuValue)){
+            elementToColour.style.backgroundColor='#D2691E';
+          }
+        },
+        blancElement(elementID, menuValue){
+          //löscht alle Filter über einem Element
+          let elementToBlanc = document.getElementById(elementID);
+          if(elementToBlanc){
+            if((this.showMenu == menuValue)){
+              elementToBlanc.style.filter = 'none';
+            }
+            if((this.black_design)){
+              elementToBlanc.style.filter='invert(100%)';
+            }
+          }
+        },
+        blancDiv(elementID, menuValue){
+          //löscht alle Filter über einem Element
+          let elementToBlanc = document.getElementById(elementID);
+          if((elementToBlanc) && (this.showMenu == menuValue)){
+            elementToBlanc.classList.remove('button_div');
+          }
+        },
+        blancButton(elementID,menuValue){
+          let elementToBlanc=document.getElementById(elementID);
+          if((elementToBlanc) && (this.showMenu == menuValue)){
+            elementToBlanc.style.backgroundColor = '#00B098';
+          }
+        },
+        colorListDiv(rows,listID , goBackID, menuValue){
+          if (menuValue != this.showMenu){ return;}
+          if(listID==(-1)){
+            if(this.showMenu==3){
+              if(this.selectedKeyboard==1){
+                this.buttons=[];
+                this.buttons.push("zuUmgebung","zuIch");
+                this.colorListKeys(this.buttons,0,3,"row6",3);
+                setTimeout(()=>{
+                  if (menuValue != this.showMenu){ return;}
+                  this.colorElement(goBackID,menuValue);
+                  setTimeout(()=>{
+                    if (menuValue != this.showMenu){ return;}
+                    this.blancElement(goBackID,menuValue);
+                    this.colorListDiv(rows,listID+1,goBackID,menuValue);
+                  },this.waittime);
+                },2*this.waittime);
+              }else{
+                this.buttons=[];
+                this.buttons.push("Zahlen","zuUmgebung","zuIch");
+                this.colorListKeys(this.buttons,0,3,"row7",3);
+                setTimeout(()=>{
+                  if (menuValue != this.showMenu){ return;}
+                  this.colorElement(goBackID,menuValue);
+                  setTimeout(()=>{
+                    if (menuValue != this.showMenu){ return;}
+                    this.blancElement(goBackID,menuValue);
+                    this.colorListDiv(rows,listID+1,goBackID,menuValue);
+                  },this.waittime);
+                },3*this.waittime);
+              }
+            }else{
+              this.colorElement(goBackID,menuValue);
+                setTimeout(()=>{
+                  this.blancElement(goBackID,menuValue);
+                  this.colorListDiv(rows,listID+1,goBackID,menuValue);
+                },this.waittime);
+              }
+          }
+          if (menuValue != this.showMenu){ return;}
+          if(rows.length==listID-1){
+            listID=-1;
+            this.colorListDiv(rows,listID,goBackID,menuValue);
+          }
+          if (menuValue != this.showMenu){ return;}
+          if(listID!=(-1)){
+            this.colorDiv(rows[listID-1],menuValue);
+            setTimeout(()=>{
+              this.blancListDiv(rows, listID, goBackID, menuValue);
+            },this.waittime)
+          }
+        },
+        blancListDiv(rows, listID, goBackID, menuValue){
+          this.blancDiv(rows[listID-1],menuValue);
+
+          this.colorListDiv(rows, listID +1 , goBackID, menuValue);
+        },
+        colorListKeys(keys,listID,menuValue,outsideDiv,menuBack){
+          if (menuValue != this.showMenu){ return;}
+
+          if(keys.length==listID){
+            this.blancDiv(outsideDiv,menuValue);
+            this.showMenu=menuBack;
+          }
+
+          if (menuValue != this.showMenu){ return;}
+
+          this.colorButton(keys[listID],menuValue);
+          setTimeout(()=>{
+            this.blancButton(keys[listID], menuValue);
+            this.colorListKeys(keys, listID +1 , menuValue, outsideDiv, menuBack);
+          },this.waittime)
+          
+        },
+        colorListButtons(buttons,listID,goBackID,menuValue){
+          if(listID==(-1)){
+            this.colorElement(goBackID,menuValue);
+            setTimeout(()=>{
+              this.blancElement(goBackID,menuValue);
+              this.colorListButtons(buttons,listID+1,goBackID,menuValue);
+            },(this.waittime));
+          };
+
+          if (menuValue != this.showMenu){ return;}
+          if(buttons.length==listID-1){
+            listID=-1;
+            this.colorListButtons(buttons,listID,goBackID,menuValue);
+          }
+          if (menuValue != this.showMenu){ return;}
+          if(listID!=(-1)){
+            this.colorButton(buttons[listID-1],menuValue);
+            setTimeout(()=>{
+              this.blancButton(buttons[listID-1], menuValue);
+              this.colorListButtons(buttons,listID+1,goBackID,menuValue);
+            },this.waittime)
+          }
+        },
+        colorListPictures(pictures,listID,menuValue){
+          if (menuValue != this.showMenu){ return;}
+           if(pictures.length==listID-1){
+            listID=-1;
+            this.colorListPictures(pictures,listID+1,menuValue);
+          }
+          if(listID!=(-1)){
+            this.colorElement(pictures[listID-1],menuValue);
+            setTimeout(()=>{
+              this.blancElement(pictures[listID-1], menuValue);
+              this.colorListPictures(pictures, listID +1 , menuValue);
+            },this.waittime)
+          }
+        }, 
+        detectEyesOpen (landmarks){
+          //Funktion zum erkennen, ob die Augen offen oder geschlossen sind.
+          //Für jedes geschlossene Frame wird variable "closed_frames" hochgezählt
+          //Wenn "closed_frames" den Wert von "time_closed" erreicht => Aktion
+
+          let faceheight = landmarks[152].y-landmarks[10].y; //bestimme Gesichtshöhe
+          let facewidth = landmarks[10].x-landmarks[152].x;  //bestimme Gesichtsbreite
+          var facesize; //Orientierung wie groß das gesicht im Bilderrahmen ist
+          var eye_right_one;  //Abstand zwischen den 1. & 2. Punkten rechts
+          var eye_right_two;  //Abstand zwischen den 3. & 4. Punkten rechts
+          var eye_left_one;   //Abstand zwischen den 1. & 2. Punkten links
+          var eye_left_two;   //Abstand zwischen den 3. & 4. Punkten links
+          var right_eye;  //Rechtes Auge Offen (0) oder zu (1)
+          var left_eye;   //Linkes Auge offen (0) oder zu (1)
+
+          //Abstandsberechnung der Gesichts-Landmarks abhängig von Orientierung des Bildes
+          if (faceheight < facewidth){
+            //gesichtsmitte ist parallel zu x-Achse ->
+            facesize = facewidth;
+            eye_right_one = landmarks[160].x-landmarks[144].x;
+            eye_right_two = landmarks[159].x-landmarks[145].x;
+            eye_left_one = landmarks[387].x-landmarks[373].x;
+            eye_left_two = landmarks[386].x-landmarks[374].x;
+          } else {
+            //Gesichtsmitte ist parallel zu y-Achse ^
+            facesize = faceheight;
+            eye_right_one = landmarks[144].y-landmarks[160].y;
+            eye_right_two = landmarks[145].y-landmarks[159].y;
+            eye_left_one = landmarks[373].y-landmarks[387].y;
+            eye_left_two = landmarks[374].y-landmarks[386].y;
+          }
+
+          //Berechnung ob Augen zu sind anhand der Gesichtsgröße und einem 
+          // experimentellen faktor. Zur Sicherheit: zwei Abstände pro Auge
+          if ((eye_right_one*facefactor < facesize)&&(eye_right_two*facefactor < facesize)){
+            right_eye = "1" //rechtes Auge ist geschlossen
+          } else{
+            right_eye = "0" //rechtes Auge ist offen
+          }
+          
+          if ((eye_left_one*facefactor < facesize)&&(eye_left_two*facefactor< facesize)){
+            left_eye = "1" //linkes Auge ist geschlossen
+          } else{
+            left_eye = "0" //linkes Auge ist offen
+          }
+          
+          // Wenn beide Augen geschlossen sind werden die Frames hochgezählt.
+          // wenn 1 oder beide AUgen offen sind, werden die Frames auf 0 gesetzt
+          // und ab dann darf wieder geblinzelt werden (eyes_closed= false)
+          if((right_eye == "1") && (left_eye == "1")){
+            this.closed_frames = this.closed_frames+1;
+            this.wanted_time_closed = this.closed_frames;
+          } else {
+            this.closed_frames =0;
+
+            // wenn gerade die Augenzeit eingestellt werden soll
+            if (this.cngTime_closed){
+              this.time_closed = this.wanted_time_closed;
+              if(this.dbug){
+                console.log(" geänderte tiem_ clsoed: " + this.time_closed);
+              }
+              this.cngTime_closed=false;
+
+                //falls man sich auf der Startseite befindet: 
+                // nach einstellung auf hauptmenü wechseln
+              if(this.showMenu == (-1)){ 
+                this.showMenu=0;
+              }
+            }
+            this.eyes_closed = false;
+          }
+          if(this.closed_frames == 1){
+            this.element = this.selectedElement;
+          }
+
+          if(this.dbug){
+            console.log(this.closed_frames);
+          }
+
+          //Wenn bede Augen entsprechend lange zu waren, führe die Klick-aktion aus,
+          //die hinterlegt ist am ausgewählten Element (@click von vue)
+          if ((this.closed_frames >= time_closed) && (!this.eyes_closed) && (document.getElementById(this.element))){
+            if(this.dbug){
+              console.log("got action at ", this.element);
+            }
+            document.getElementById(this.element).click();
+            this.eyes_closed = true; 
+            // Sobald die Aktion ausgeführt wurde darf nicht sofort eine neue erfolgen
+            // Dies verhindert auch ständiges auswählen beim schlafen (test erforderlich)
+          }
+        },
+        Frame_Abhandlung(results) {
+          //Funktion, die nach jedem empfangenen Frame mit Gesicht dieses analysiert 
+          //mit detectEyesOpen()
+          if (results.multiFaceLandmarks) {
+            for (const landmarks of results.multiFaceLandmarks) {
+              this.detectEyesOpen(landmarks);
+            }
+          }
+        },
+        debug (event) {
+          console.log(event)
+        }
+      },
+      watch:{
+        //Änderung von der Variable showMenu (=> wechseln des Menüs) führt hierher
+        showMenu(){
+          console.log(this.showMenu);
+          switch (this.showMenu){
+          // --- Hauptmenü
+            case 0:  
+              this.cngOrientierung("Ratatosk"); 
+              this.elements=["SOS","AUA","NAC","UMG","SEL","EIN"];
+              this.colorListPictures(this.elements,0,0); break; 
+
+          // --- Warnruf-Menü
+            case 1: 
+              this.cngOrientierung("Warnruf");  
+              this.elements=["Bell_silent","GoHome"];
+              this.colorListPictures(this.elements,0,1); break; 
+            case 101: this.elements=["Bell_active","GoHome"];
+              this.colorListPictures(this.elements,0,101);break;   
+
+          // --- Schmerz-Menü
+            case 2: this.cngOrientierung("Schmerzen"); 
+              this.elements=["Kopf","Torso","Arme","Beine","GoHome"];
+              this.colorListPictures(this.elements,0,2); break;
+
+              //Untermenüs Kopf(201), Torso(202), Arme(203), Beine(204)
+            case 201: case 202: case 203: case 204: 
+              this.rows = []; 
+              for (let i = 0; i < (this.Schmerz[this.showMenu-201].length); i++) 
+                {this.rows.push('Schmerz'+i);};
+              this.rows.push('Skala');
+              this.colorListDiv(this.rows,0,"GoBackAUA", this.showMenu);
+             break; 
+
+              //Zeilen in den Untermenüs
+            case 2011: case 2012: case 2013: case 2014:     //Zeilen in Kopf
+            case 2021: case 2022: case 2023:                //Zeilen in Torso
+            case 2031: case 2032: case 2033:                //Zeilen in Arme
+            case 2041: case 2042: case 2043:                //Zeilen in Beine
+              this.buttons=[];
+              // Berechnet die Zehnerstelle: (welches Untermenü wurde genommen)
+              this.subMenuValue=Math.floor((this.showMenu/10) %10);
+              // berechnet die Einerstelle: (welche Zeile wird genommen)
+              this.LineMenuValue=Math.floor(this.showMenu %10);
+              for (let i = 0; i < (this.Schmerz[this.subMenuValue-1][this.LineMenuValue-1].length ); i++) 
+                {this.buttons.push(this.Schmerz[this.subMenuValue-1][this.LineMenuValue-1][i]);};
+              this.colorListKeys(this.buttons,0,this.showMenu,("Schmerz"+(this.LineMenuValue-1)),this.subMenuValue+200); break;
+
+            case 20001: 
+              this.buttons=[];
+              for (let i = 0; i < (this.Schmerzskala.length ); i++) 
+                {this.buttons.push(this.Schmerzskala[i]);};
+              this.colorListButtons(this.buttons,0,"GoBackAUA",20001);
+              break;
+
+          // --- Nachrichten-Menü
+            case 3: this.cngOrientierung("Nachricht");
+              this.rows = []; 
+              for (let i = 0; i < (this.Keyboards[this.selectedKeyboard].length+2); i++) 
+                {this.rows.push('row'+i);};
+              this.colorListDiv(this.rows,0,"GoHome", 3);  
+              break;
+            case 301: case 302: case 303: case 304: // Erste 4 Zeilen der Tastaturen
+              this.keys =[];           
+              // berechnet die Einerstelle: (welche Zeile wird genommen)
+              this.LineMenuValue=Math.floor(this.showMenu %10);
+              this.Idname="row"+(this.LineMenuValue-1);
+              for (let i = 0; i < (this.Keyboards[this.selectedKeyboard][this.LineMenuValue-1].length ); i++) 
+                {this.keys.push(this.Keyboards[this.selectedKeyboard][this.LineMenuValue-1][i]);};
+              this.colorListKeys(this.keys,0,this.showMenu,this.Idname,3); break;
+            case 305: // Tastatur '1'(QWERTZ) hat als 5. Zeile die Leertaste (kein Untermenü 305)
+              if(this.selectedKeyboard !=1){
+              this.keys=[];
+              for (let i = 0; i < (this.Keyboards[this.selectedKeyboard][4].length ); i++) 
+                {this.keys.push(this.Keyboards[this.selectedKeyboard][4][i]);};
+              this.colorListKeys(this.keys,0,305,"row4",3);
+              }; break;
+            case 306: // Tast. '0'&'2': 6. Zeile Leertaste (kein Untermenü 306), Tast. '1' hat hier'Löschen'
+              if(this.selectedKeyboard == 1){
+              this.keys=[];
+              this.keys.push("Löschen","AllesLoschen");
+              this.colorListKeys(this.keys,0,306,"row5",3); 
+              this.blancDiv("row5",306);};
+              break;
+
+            case 307: //Tast. '0'&'2': 6. Zeile 'Löschen', Tastatur '1' hat Schnellbau-Buttons (kein Untermenü)
+              if(this.selectedKeyboard != 1){
+              this.keys=[];
+              this.keys.push("Löschen","AllesLoschen");
+              this.colorListKeys(this.keys,0,307,"row6",3);};
+              break;
+
+            case 3071: this.rows=[]; 
+              for (let i = 0; i < (this.ZahlenMenu .length ); i++) 
+                {this.rows.push("numpad"+ i);};
+              this.colorListDiv(this.rows,0,"GoBackNachricht", 3071); 
+              break;
+            case 30711: case 30712: case 30713: case 30714:
+              this.keys =[];           
+              // berechnet die Einerstelle: (welche Zeile wird genommen)
+              this.LineMenuValue=Math.floor(this.showMenu %10);
+              this.Idname="numpad"+(this.LineMenuValue-1);
+              for (let i = 0; i < (this.ZahlenMenu[this.LineMenuValue-1].length ); i++) 
+                {this.keys.push(this.ZahlenMenu[this.LineMenuValue-1][i]);};
+              this.colorListKeys(this.keys,0,this.showMenu,this.Idname,3071); break;
+
+          // --- Schnellbausteine 'Umgebung'-Menü
+            case 4: this.cngOrientierung("Schnellbausteine 'Umgebung'"); 
+              this.buttons=[]; 
+              this.buttons.push("Gespräch","Gegenstände","ImZimmer","ImBett");
+              this.colorListButtons(this.buttons,0,"GoHome",4); break;
+
+              // Untermenüs Gespräch(401), Gegenstände(402), Im_Zimmer(403), Im_Bett(404)
+            case 401: case 402: case 403: case 404: 
+              this.rows = []; 
+              for (let i = 0; i < (this.UmgebungMenu[this.showMenu-401].length); i++) 
+                {this.rows.push('Umwelt'+i);};
+              this.rows.push("GoToNachricht");
+              this.colorListDiv(this.rows,0,"GoBackUmgebung", this.showMenu);
+              break;
+
+              //Zeilen in den Untermenüs
+            case 4011: case 4012: case 4013: case 4014: case 4015: //Gespräch-Zeilen
+            case 4021: case 4022: case 4023:                       //Gegenstände-Zeilen
+            case 4031: case 4032: case 4033:                       //Im Zimmer-Zeilen
+            case 4041: case 4042:                                  //Im Bett-Zeilen
+              this.buttons=[];
+              // Berechnet die Zehnerstelle: (welches Untermenü wurde genommen)
+              this.subMenuValue=Math.floor((this.showMenu/10) %10);
+              // berechnet die Einerstelle: (welche Zeile wird genommen)
+              this.LineMenuValue=Math.floor(this.showMenu %10);
+              for (let i = 0; i < (this.UmgebungMenu[this.subMenuValue-1][this.LineMenuValue-1].length ); i++) 
+                {this.buttons.push(this.UmgebungMenu[this.subMenuValue-1][this.LineMenuValue-1][i]);};
+              this.colorListKeys(this.buttons,0,this.showMenu,("Umwelt"+(this.LineMenuValue-1)),this.subMenuValue+400); break;
+
+          // --- Schnellbausteine 'Ich'-Menü
+            case 5: this.cngOrientierung("Schnellbausteine 'Ich'"); 
+              this.buttons=[]; 
+              this.buttons.push("Ernährung","Gefühle","Kleidung", "Hygiene","Bewegung");
+              this.colorListButtons(this.buttons,0,"GoHome",5); break;
+
+              // Untermenüs Ernährung(501), Gefühle(502), Kleidung(503), Hygiene(504), Bewegung(505)
+            case 501: case 502: case 503: case 504: case 505:
+              this.rows = []; 
+              for (let i = 0; i < (this.IchMenu[this.showMenu-501].length); i++) 
+                {this.rows.push('Ich'+i);};
+              this.rows.push("GoToNachricht");
+              this.colorListDiv(this.rows,0,"GoBackIch", this.showMenu);
+              break;
+
+              // Zeilen in den Untermenüs
+            case 5011: case 5012: case 5013: case 5014: case 5015: //Ernährung-Zeilen
+            case 5021: case 5022: case 5023: case 5024: case 5025: case 5026: case 5026://Gefühle-Zeilen
+            case 5031: case 5032: case 5033:                       //Kleidung-Zeilen
+            case 5041: case 5042:                                  //Hygiene-Zeilen
+            case 5051: case 5052: case 5053: case 5054:            //Bewegung-Zeilen
+              this.buttons=[];
+              // Berechnet die Zehnerstelle: (welches Untermenü wurde genommen)
+              this.subMenuValue=Math.floor((this.showMenu/10) %10);
+              // berechnet die Einerstelle: (welche Zeile wird genommen)
+              this.LineMenuValue=Math.floor(this.showMenu %10);
+              for (let i = 0; i < (this.IchMenu[this.subMenuValue-1][this.LineMenuValue-1].length ); i++) 
+                {this.buttons.push(this.IchMenu[this.subMenuValue-1][this.LineMenuValue-1][i]);};
+              this.colorListKeys(this.buttons,0,this.showMenu,("Ich"+(this.LineMenuValue-1)),this.subMenuValue+500); break;
+
+          // --- Einstellungs-Menü
+            case 6: this.cngOrientierung("Einstellungen"); this.buttons=[]; 
+              this.buttons.push("Tastaturdesign","Leuchtgeschwindigkeit","Blinzeldauer", "Farbmodus");
+              this.colorListButtons(this.buttons,0,"GoHome",6); break;
+
+            case 601: this.rows = []; 
+              this.rows.push("Alphabetisch","Quertz","Häufigkeit");
+              this.colorListButtons(this.rows,0,"GoHome", 601);  
+              break;
+
+            case 602:  this.rows = []; 
+              for (let i = 0; i < (this.Blinkzeiten.length); i++) 
+                {this.rows.push('speed'+ this.Blinkzeiten[i]);};
+              this.colorListButtons(this.rows,0,"GoHome", 602);
+              break;
+
+            case 603: //this.colorButton("BerechnenBlinzeln",603); 
+              this.buttons=[];
+              this.buttons.push("BerechnenBlinzeln");
+              this.colorListButtons(this.buttons,0,"GoHome",603);
+               break;
+
+            case 6031: this.blancButton("BerechnenBlinzeln",6031); break;
+
+          // --- Für unerwartete/undeffinierte Menü-Werte: zurück zum Hauptmenü (app läuft davon aus normal weiter)
+            default: this.showMenu=0; break;
+          }
+        }
+      }
+    })
+
+    const root = element_click.mount('#element_click'); 
+
+    // iPhone Safari-Erkennung
+    const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
+    const isSafari = /Safari/.test(navigator.userAgent) && !/Chrome/.test(navigator.userAgent);
+    
+    // iPhone Safari: MediaPipe oft problematisch
+    if (isIOS && isSafari) {
+      console.log('iPhone Safari erkannt - MediaPipe wird übersprungen');
+      alert('iPhone Safari erkannt. Die Anwendung funktioniert ohne Face-Erkennung. Verwende Touch-Navigation statt Zwinkern.');
+      
+      // Touch-basierte Navigation für iPhone aktivieren
+      enableTouchNavigation();
+    } 
+
+    // Einfache Kamera-Initialisierung
+    async function initializeCamera() {
+      try {
+        console.log('Kamera-Initialisierung gestartet...');
+        
+        // Video-Element erstellen
+        videoElement = document.createElement('video');
+        videoElement.id = 'input_video';
+        videoElement.style.display = 'none';
+        document.body.appendChild(videoElement);
+        
+        console.log('Video-Element erstellt');
+        
+        // Kamera-Berechtigung anfordern
+        const stream = await navigator.mediaDevices.getUserMedia({ 
+          video: { facingMode: 'user' } 
+        });
+        
+        console.log('Kamera-Stream erhalten');
+        
+        // Video mit Stream verbinden
+        videoElement.srcObject = stream;
+        await videoElement.play();
+        
+        console.log('Kamera erfolgreich gestartet');
+        
+        // MediaPipe nur für Desktop starten
+        
+        if (!(isIOS && isSafari)) {
+          try {
+            console.log('MediaPipe starten...');
+            const faceMesh = new FaceMesh({locateFile: (file) => {
+              return `https://cdn.jsdelivr.net/npm/@mediapipe/face_mesh/${file}`;
+            }});
+            
+            faceMesh.setOptions({
+              maxNumFaces: 1,
+              refineLandmarks: true,
+              minDetectionConfidence: 0.5,
+              minTrackingConfidence: 0.5
+            });
+
+            faceMesh.onResults((results) => {
+              root.Frame_Abhandlung(results);
+            });
+            
+            const camera = new Camera(videoElement, {
+              onFrame: async () => {
+                await faceMesh.send({image: videoElement});
+              }
+            });
+            
+            camera.start();
+            console.log('MediaPipe gestartet');
+          } catch (error) {
+            console.error('MediaPipe Fehler:', error);
+          }
+        } else {
+          console.log('iPhone Safari - MediaPipe übersprungen');
+          enableTouchNavigation();
+        }
+
+      } catch (error) {
+        console.error('Kamera-Fehler:', error);
+        alert('Kamera-Fehler: ' + error.message);
+      }
+    }
+
+    // Touch-Navigation für iPhone Safari
+    function enableTouchNavigation() {
+      // Touch-Buttons für Navigation hinzufügen
+      const touchNav = document.createElement('div');
+      touchNav.id = 'touch-navigation';
+      touchNav.style.cssText = `
+        position: fixed;
+        bottom: 20px;
+        left: 50%;
+        transform: translateX(-50%);
+        z-index: 1000;
+        background: rgba(0,0,0,0.8);
+        padding: 10px;
+        border-radius: 10px;
+        display: flex;
+        gap: 10px;
+      `;
+      
+      const buttons = [
+        { text: 'Start', action: () => root.showMenu = 0 },
+        { text: 'SOS', action: () => root.showMenu = 1 },
+        { text: 'Schmerz', action: () => root.showMenu = 2 },
+        { text: 'Nachricht', action: () => root.showMenu = 3 },
+        { text: 'Umgebung', action: () => root.showMenu = 4 },
+        { text: 'Ich', action: () => root.showMenu = 5 },
+        { text: 'Einstellungen', action: () => root.showMenu = 6 }
+      ];
+      
+      buttons.forEach(btn => {
+        const button = document.createElement('button');
+        button.textContent = btn.text;
+        button.style.cssText = `
+          padding: 8px 12px;
+          background: #D2691E;
+          color: white;
+          border: none;
+          border-radius: 5px;
+          font-size: 12px;
+          cursor: pointer;
+        `;
+        button.onclick = btn.action;
+        touchNav.appendChild(button);
+      });
+      
+      document.body.appendChild(touchNav);
+      console.log('Touch-Navigation für iPhone aktiviert');
+    }
+
+    // Kamera initialisieren nach DOM-Load
+    document.addEventListener('DOMContentLoaded', () => {
+      console.log('DOM geladen - starte Kamera-Initialisierung...');
+      // Sofort starten, keine Verzögerung
+      initializeCamera();
+    });
+    
+    // Manuelle Kamera-Start-Funktion (für Debugging)
+    window.startCamera = function() {
+      console.log('Manuelle Kamera-Initialisierung...');
+      initializeCamera();
+    };
+
+    //Array mit allen Bildern, die vorgeladen werden müssen
+    vorladen("./public/Ratatosk.svg","./public/GoHome.svg","./public/Goback.svg", // Sonstiges
+      "./public/Glocke.svg","./public/Glockenschlag.svg",   //SOS Menü
+      "./public/Arme.svg","./public/Beine.svg","./public/Kopf.svg","./public/Torso.svg", //Schmerz-Menü
+      "./public/Einstellungen.svg","./public/Ich.svg","./public/Nachricht.svg","./public/Schmerz.svg","./public/Umgebung.svg"  //Mainmenü
+      );
+  </script>
+
+  <div>
+
+    <!-- Oberer Teil der Seite -->
+      <header >
+        <img src="./public/Ratatosk.svg" width="80vw" height="20vh" alt="Logo" filter='none' style="color:#00796B"></img> 
+        <!-- <span class="site_name">Ratatosk</span> -->
+        <p id="orientierung" class="site_name" style="margin:auto; font-size: 5.5vmin;">Ratatosk</p>
+        <hr style="color:var(--maincolor);margin-left:0;width:80%;margin:auto;">
+      </header>
+
+    <div id="element_click">
+    <!-- Zurück / Text oben-->
+      <div>
+          <!-- Haus für "Zurück zum Hauptmenü" -->
+            <div class="smallContainer" v-if="(showMenu >= 1 && showMenu < 200) ||((showMenu>300)&&(showMenu<400)) || ((showMenu>600)&&(showMenu<700))">
+              <img id="GoHome" class= "smallPicture" src="./public/GoHome.svg" alt="Hauptmenü" @click="showMenu=0; stopBell()"/>
+            </div>
+
+          <!-- Pfeil für "zurück zum Schmerzmenü / Körper-Untermenü" -->
+            <div class="smallContainer" v-if="((showMenu > 200) && (showMenu < 300))||((showMenu>=2010)&&(showMenu<=2050))||(showMenu==20001)">
+              <img id="GoBackAUA" class= "smallPicture"  src="./public/Goback.svg" alt="Zurück" @click="showMenu=2"/>
+            </div>
+
+            <!-- Pfeil für "zurück zum Nachrichten-Menü" --> 
+            <div class="smallContainer" v-if="((showMenu>30710)&&(showMenu<30720))||((showMenu==3071))">
+              <img id="GoBackNachricht" class="smallPicture"  src="./public/Goback.svg" alt="Zurück" @click="showMenu=3"/>
+            </div>
+
+           <!-- Pfeil für "zurück zum Schnellbaustein-Menü Ich/Umgebung" --> 
+            <div class="smallContainer" v-If="((showMenu>500)&&(showMenu<600))||((showMenu>5000)&&(showMenu<6000))">
+              <img id="GoBackIch" class="smallPicture"  src="./public/Goback.svg" alt="Zurück" @click="showMenu=5"/>
+            </div>
+            <div class="smallContainer" v-If="((showMenu>400)&&(showMenu<500))||((showMenu>4000)&&(showMenu<5000))">
+              <img id="GoBackUmgebung" class="smallPicture"  src="./public/Goback.svg" alt="Zurück" @click="showMenu=4"/>
+            </div>
+
+
+          <!-- Text für Schmerzmenü-Auswahl -->
+            <div v-if="((200 < showMenu)&&(showMenu < 300))||((2010 < showMenu)&&(showMenu < 2050))||(showMenu==20001)" class="site_name" style="width:90%; display:inline-block; text-align: center;">
+              <i>Ursprung des Schmerzes: </i>
+              <i id="Auswahl"></i>
+            </div>
+
+            <div v-if="showMenu==20001" class="site_name" style="width:70%; display:inline-block;text-align: center;">
+              <i> Grad des Schmerzes: </i>
+              <i id="GradSchmerz"></i>
+            </div>
+
+
+          <!-- Textbox & Strich für Nachrichten-Menü und Schnellbausteine-Menüs-->
+            <div v-if="((showMenu>2)&&(showMenu<6)) || ((showMenu >300) && (showMenu < 600))|| ((showMenu>3000)&&(showMenu<6000))||((showMenu > 30710)&&(showMenu<30720))">
+              <textarea id="msg" class="messagebox"></textarea>
+              <hr style="color:var(--maincolor);margin-left:0;width:80%;margin:auto;margin-top:0.4%;margin-bottom:0.4%;">
+            </div>
+
+      </div>
+
+    <!-- Startseite -->
+      <div class="site_name" v-if="showMenu==(-1)" style="text-align: center; display:block; margin: auto;">
+        <div>Blinzeln Sie zum Starten</div>
+          <img id="Start" class="startimage" src="./public/Ratatosk.svg" alt="Logo" @click="cngTime_closed=true; showMenu=0" style="color:white"/>
+        </div>
+
+    <!-- Haupt Menü - Neues Design -->
+    <div v-if="showMenu==0" style="width: 1512px; height: 982px; position: relative; background: white; overflow: hidden">
+      <div style="width: 1512px; height: 896px; left: 0px; top: 86px; position: absolute">
+        <div style="width: 1512px; height: 896px; left: 0px; top: 0px; position: absolute"></div>
+        
+        <!-- WARNGERÄUSCH Button -->
+        <div style="width: 422px; left: 83px; top: 151px; position: absolute; flex-direction: column; justify-content: flex-start; align-items: flex-start; gap: 10px; display: inline-flex">
+          <div id="SOS" :style="showMenu==1 ? 'align-self: stretch; padding-left: 67px; padding-right: 67px; padding-top: 35px; padding-bottom: 35px; background: #00B098; box-shadow: 0px 9px 9px rgba(0, 0, 0, 0.25) inset; border-radius: 10px; outline: 1.50px white solid; outline-offset: -1.50px; flex-direction: column; justify-content: flex-start; align-items: center; gap: 26px; display: flex; cursor: pointer;' : 'align-self: stretch; padding-left: 67px; padding-right: 67px; padding-top: 35px; padding-bottom: 35px; background: rgba(217, 217, 217, 0.10); border-radius: 10px; outline: 1.50px black solid; outline-offset: -1.50px; flex-direction: column; justify-content: flex-start; align-items: center; gap: 26px; display: flex; cursor: pointer;'" @click="showMenu=1">
+            <img src="./public/bell.svg" :style="showMenu==1 ? 'width: 119.09px; height: 125px; object-fit: contain; filter: brightness(0) invert(1);' : 'width: 119.09px; height: 125px; object-fit: contain; filter: invert(48%) sepia(79%) saturate(2476%) hue-rotate(86deg) brightness(118%) contrast(119%);'" alt="Warnung">
+            <div :style="showMenu==1 ? 'color: white; font-size: 40px; font-family: Source Code Pro; font-weight: 500; word-wrap: break-word' : 'color: black; font-size: 40px; font-family: Source Code Pro; font-weight: 400; word-wrap: break-word'">WARNGERÄUSCH</div>
+          </div>
+        </div>
+        
+        <!-- UNTERHALTEN Button -->
+        <div style="width: 422px; left: 545px; top: 151px; position: absolute; flex-direction: column; justify-content: flex-start; align-items: flex-start; gap: 10px; display: inline-flex">
+          <div id="NAC" :style="showMenu==3 ? 'align-self: stretch; padding-left: 67px; padding-right: 67px; padding-top: 35px; padding-bottom: 35px; background: #00B098; box-shadow: 0px 9px 9px rgba(0, 0, 0, 0.25) inset; border-radius: 10px; outline: 1.50px white solid; outline-offset: -1.50px; flex-direction: column; justify-content: flex-start; align-items: center; gap: 26px; display: flex; cursor: pointer;' : 'align-self: stretch; padding-left: 67px; padding-right: 67px; padding-top: 35px; padding-bottom: 35px; background: rgba(217, 217, 217, 0.10); border-radius: 10px; outline: 1.50px black solid; outline-offset: -1.50px; flex-direction: column; justify-content: flex-start; align-items: center; gap: 26px; display: flex; cursor: pointer;'" @click="showMenu=3">
+            <img src="./public/comment-dots.svg" :style="showMenu==3 ? 'width: 125px; height: 125px; object-fit: contain; filter: brightness(0) invert(1);' : 'width: 125px; height: 125px; object-fit: contain; filter: invert(48%) sepia(79%) saturate(2476%) hue-rotate(86deg) brightness(118%) contrast(119%);'" alt="Unterhalten">
+            <div :style="showMenu==3 ? 'color: white; font-size: 40px; font-family: Source Code Pro; font-weight: 500; word-wrap: break-word' : 'color: black; font-size: 40px; font-family: Source Code Pro; font-weight: 400; word-wrap: break-word'">UNTERHALTEN</div>
+          </div>
+        </div>
+        
+        <!-- ICH Button -->
+        <div style="width: 422px; left: 1007px; top: 151px; position: absolute; flex-direction: column; justify-content: flex-start; align-items: flex-start; gap: 10px; display: inline-flex">
+          <div id="SEL" :style="showMenu==5 ? 'align-self: stretch; padding-left: 67px; padding-right: 67px; padding-top: 35px; padding-bottom: 35px; background: #00B098; box-shadow: 0px 9px 9px rgba(0, 0, 0, 0.25) inset; border-radius: 10px; outline: 1.50px white solid; outline-offset: -1.50px; flex-direction: column; justify-content: flex-start; align-items: center; gap: 26px; display: flex; cursor: pointer;' : 'align-self: stretch; padding-left: 67px; padding-right: 67px; padding-top: 35px; padding-bottom: 35px; background: rgba(217, 217, 217, 0.10); border-radius: 10px; outline: 1.50px black solid; outline-offset: -1.50px; flex-direction: column; justify-content: flex-start; align-items: center; gap: 26px; display: flex; cursor: pointer;'" @click="showMenu=5">
+            <img src="./public/user.svg" :style="showMenu==5 ? 'width: 125px; height: 125px; object-fit: contain; filter: brightness(0) invert(1);' : 'width: 125px; height: 125px; object-fit: contain; filter: invert(48%) sepia(79%) saturate(2476%) hue-rotate(86deg) brightness(118%) contrast(119%);'" alt="Ich">
+            <div :style="showMenu==5 ? 'color: white; font-size: 40px; font-family: Source Code Pro; font-weight: 500; word-wrap: break-word' : 'color: black; font-size: 40px; font-family: Source Code Pro; font-weight: 400; word-wrap: break-word'">ICH</div>
+          </div>
+        </div>
+        
+        <!-- SCHMERZEN Button -->
+        <div style="width: 422px; left: 83px; top: 474px; position: absolute; flex-direction: column; justify-content: flex-start; align-items: flex-start; gap: 10px; display: inline-flex">
+          <div id="AUA" :style="showMenu==2 ? 'align-self: stretch; padding-left: 67px; padding-right: 67px; padding-top: 35px; padding-bottom: 35px; background: #00B098; box-shadow: 0px 9px 9px rgba(0, 0, 0, 0.25) inset; border-radius: 10px; outline: 1.50px white solid; outline-offset: -1.50px; flex-direction: column; justify-content: flex-start; align-items: center; gap: 26px; display: flex; cursor: pointer;' : 'align-self: stretch; padding-left: 67px; padding-right: 67px; padding-top: 35px; padding-bottom: 35px; background: rgba(217, 217, 217, 0.10); border-radius: 10px; outline: 1.50px black solid; outline-offset: -1.50px; flex-direction: column; justify-content: flex-start; align-items: center; gap: 26px; display: flex; cursor: pointer;'" @click="showMenu=2">
+            <img src="./public/headache.svg" :style="showMenu==2 ? 'width: 125px; height: 125px; object-fit: contain; filter: brightness(0) invert(1);' : 'width: 125px; height: 125px; object-fit: contain; filter: invert(48%) sepia(79%) saturate(2476%) hue-rotate(86deg) brightness(118%) contrast(119%);'" alt="Schmerzen">
+            <div :style="showMenu==2 ? 'color: white; font-size: 40px; font-family: Source Code Pro; font-weight: 500; word-wrap: break-word' : 'color: black; font-size: 40px; font-family: Source Code Pro; font-weight: 400; word-wrap: break-word'">SCHMERZEN</div>
+          </div>
+        </div>
+        
+        <!-- UMGEBUNG Button -->
+        <div style="width: 422px; left: 545px; top: 474px; position: absolute; flex-direction: column; justify-content: flex-start; align-items: flex-start; gap: 10px; display: inline-flex">
+          <div id="UMG" :style="showMenu==4 ? 'align-self: stretch; padding-left: 67px; padding-right: 67px; padding-top: 35px; padding-bottom: 35px; background: #00B098; box-shadow: 0px 9px 9px rgba(0, 0, 0, 0.25) inset; border-radius: 10px; outline: 1.50px white solid; outline-offset: -1.50px; flex-direction: column; justify-content: flex-start; align-items: center; gap: 26px; display: flex; cursor: pointer;' : 'align-self: stretch; padding-left: 67px; padding-right: 67px; padding-top: 35px; padding-bottom: 35px; background: rgba(217, 217, 217, 0.10); border-radius: 10px; outline: 1.50px black solid; outline-offset: -1.50px; flex-direction: column; justify-content: flex-start; align-items: center; gap: 26px; display: flex; cursor: pointer;'" @click="showMenu=4">
+            <img src="./public/house-chimney.svg" :style="showMenu==4 ? 'width: 125px; height: 125px; object-fit: contain; filter: brightness(0) invert(1);' : 'width: 125px; height: 125px; object-fit: contain; filter: invert(48%) sepia(79%) saturate(2476%) hue-rotate(86deg) brightness(118%) contrast(119%);'" alt="Umgebung">
+            <div :style="showMenu==4 ? 'color: white; font-size: 40px; font-family: Source Code Pro; font-weight: 500; word-wrap: break-word' : 'color: black; font-size: 40px; font-family: Source Code Pro; font-weight: 400; word-wrap: break-word'">UMGEBUNG</div>
+          </div>
+        </div>
+        
+        <!-- EINSTELLUNGEN Button -->
+        <div style="width: 422px; left: 1007px; top: 474px; position: absolute; flex-direction: column; justify-content: flex-start; align-items: flex-start; gap: 10px; display: inline-flex">
+          <div id="EIN" :style="showMenu==6 ? 'align-self: stretch; padding-left: 67px; padding-right: 67px; padding-top: 35px; padding-bottom: 35px; background: #00B098; box-shadow: 0px 9px 9px rgba(0, 0, 0, 0.25) inset; border-radius: 10px; outline: 1.50px white solid; outline-offset: -1.50px; flex-direction: column; justify-content: flex-start; align-items: center; gap: 26px; display: flex; cursor: pointer;' : 'align-self: stretch; padding-left: 67px; padding-right: 67px; padding-top: 35px; padding-bottom: 35px; background: rgba(217, 217, 217, 0.10); border-radius: 10px; outline: 1.50px black solid; outline-offset: -1.50px; flex-direction: column; justify-content: flex-start; align-items: center; gap: 26px; display: flex; cursor: pointer;'" @click="showMenu=6">
+            <img src="./public/settings-sliders.svg" :style="showMenu==6 ? 'width: 125px; height: 125px; object-fit: contain; filter: brightness(0) invert(1);' : 'width: 125px; height: 125px; object-fit: contain; filter: invert(48%) sepia(79%) saturate(2476%) hue-rotate(86deg) brightness(118%) contrast(119%);'" alt="Einstellungen">
+            <div :style="showMenu==6 ? 'color: white; font-size: 40px; font-family: Source Code Pro; font-weight: 500; word-wrap: break-word' : 'color: black; font-size: 40px; font-family: Source Code Pro; font-weight: 400; word-wrap: break-word'">EINSTELLUNGEN</div>
+          </div>
+        </div>
+      </div>
+      
+      <!-- Header -->
+      <div style="width: 1512px; height: 86px; left: 0px; top: 0px; position: absolute">
+        <div style="width: 1512px; height: 86px; left: 0px; top: 0px; position: absolute; background: #D9D9D9; box-shadow: 0px 4px 4px rgba(0, 0, 0, 0.25)"></div>
+        <div style="left: 83px; top: 18px; position: absolute; color: black; font-size: 40px; font-family: Source Code Pro; font-weight: 300; word-wrap: break-word">RATATOSK </div>
+        <img src="./public/Ratatosk.svg" style="width: 48px; height: 50px; left: 294px; top: 18px; position: absolute;" alt="Ratatosk Logo">
+        <div style="width: 10.50px; height: 6.70px; left: 319.42px; top: 44.48px; position: absolute; background: #00796B"></div>
+      </div>
+    </div>
+
+    <!-- Schwesternruf Menü -->
+    <div v-if="(showMenu==1)||(showMenu==101)" class="container" style="columns: 100px 1;">
+      <div style="display:flex; width:80%;margin: auto;" class="group">
+                      <img id="Bell_silent" v-if="showMenu==1" style="width: 20%;margin: auto;align-self: center;" src="./public/Glocke.svg" alt="Lautsprecher" @click="playBell(); showMenu=101"/>
+                  <img id="Bell_active" v-if="showMenu==101" v-if="showMenu==1" style="width: 20%;margin: auto;align-self: center;" src="./public/Glockenschlag.svg" alt="aktiver Lautsprecher" @click="showMenu=1; stopBell()"/>
+      </div>
+    </div>
+
+    <!-- Schmerz Menü -->
+     <div v-if="showMenu==2" class="container" style="display:flex;flex-flow: row wrap;">
+        <div class="group" style="width:40vw; height:35vh">
+          <img id="Kopf" src="./public/Kopf.svg" alt=" Kopf " @click="showMenu=201"/>
+          <p> Kopf </p>
+        </div>
+        <div class="group" style="width:40vw; height:35vh">
+          <img id="Torso" src="./public/Torso.svg" alt=" Torso " @click="showMenu=202"/>
+          <p> Torso </p>
+        </div>
+        <div class="group" style="width:40vw; height:35vh">
+          <img id="Arme" src="./public/Arme.svg" alt=" Arme " @click="showMenu=203"/>
+          <p> Arme </p>
+        </div>
+        <div class="group" style="width:40vw; height:35vh">
+          <img id="Beine" src="./public/Beine.svg" alt=" Beine " @click="showMenu=204"/>
+          <p> Beine </p>
+        </div>
+      </div>
+
+        <!-- KopfSchmerz -->
+      <div v-for="(rows, index) in Schmerz[0]" v-if="(showMenu==201)||((showMenu>2010)&&(showMenu<2020))" :id="'Schmerz' + index" class="SelectRow" @click="showMenu=2010 + (index+1)">
+        <button v-for="symbol in rows" :id="symbol" class="SelectButton" @click="cngAusw(symbol); showMenu=201">{{ symbol }}</button>
+      </div>
+        <!-- TorsoSchmerz -->
+      <div v-for="(rows, index) in Schmerz[1]" v-if="(showMenu==202)||((showMenu>2020)&&(showMenu<2030))" :id="'Schmerz' + index" class="SelectRow" @click="showMenu=2020 + (index+1)">
+        <button v-for="symbol in rows" :id="symbol" class="SelectButton" @click="cngAusw(symbol); showMenu=202">{{ symbol }}</button>
+      </div>
+        <!-- ArmSchmerz -->
+      <div v-for="(rows, index) in Schmerz[2]" v-if="(showMenu==203)||((showMenu>2030)&&(showMenu<2040))" :id="'Schmerz' + index" class="SelectRow" @click="showMenu=2030 + (index+1)">
+        <button v-for="symbol in rows" :id="symbol" class="SelectButton" @click="cngAusw(symbol); showMenu=203">{{ symbol }}</button>
+      </div>
+        <!-- BeinSchmerz -->
+      <div v-for="(rows, index) in Schmerz[3]" v-if="(showMenu==204)||((showMenu>2040)&&(showMenu<2050))" :id="'Schmerz' + index" class="SelectRow" @click="showMenu=2040 + (index+1)">
+        <button v-for="symbol in rows" :id="symbol" class="SelectButton" @click="cngAusw(symbol); showMenu=204">{{ symbol }}</button>
+      </div>
+
+      <div id="Skala" v-if="((200<showMenu)&&(showMenu<300))||((2000<showMenu)&&(showMenu<3000))" class="SelectRow" style="width: 99%"  @click="showMenu=20001">
+        <button @click="showMenu=20001" class="SelectButton">Zur Schmerzskala</button>
+      </div>
+
+    <!-- Schmerzskala-Untermenü -->
+      <hr v-if="showMenu==20001" style="color:var(--maincolor);margin-left:0;width:80%;margin:auto;margin-top:2%;margin-bottom:3%">
+      <div v-if="showMenu==20001" class="keydesign">
+      <button v-for="symbol in Schmerzskala" :id="symbol" class="SelectButton" @click="cngGrad(symbol);">{{ symbol }}</button>
+      </div>
+      <div v-if="showMenu==20001" >
+        <p style="text-align:left" class="site_name">
+          Stark
+          <span style="float:right;">
+            Leicht
+          </span>
+        </p>
+      </div>
+
+    <!-- Nachrichten Menü -->
+      
+      <div v-for="(rows, index) in Keyboards[selectedKeyboard]" v-if="(showMenu==3)||((showMenu>300)&&(showMenu<400))" :id="'row' + index" class="keydesign" @click="showMenu=300 + (index+1); blancDiv('row'+index,300+(index+1))">
+        <button v-for="symbol in rows" :id="symbol" class ="KeyboardButton" @click.stop="addChar(symbol); showMenu=3; blancButton(symbol,3)">{{ symbol }}</button>
+      </div>
+
+      <!-- Letzte 3 Zeilen der Tastatur alpha & fast -->
+      <div v-if="selectedKeyboard!=1">
+        <div id="row5" v-if="(showMenu==3)||((showMenu>300)&&(showMenu<400))" class="keydesign" style="width: 99%" @click="addChar(' ')">
+          <button class ="KeyboardButton">Leerzeichen</button>
+        </div>
+        <div id="row6" v-if="(showMenu==3)||((showMenu>300)&&(showMenu<400))" class="keydesign" style="width: 99%" @click="showMenu=307">
+          <button id="Löschen" class ="KeyboardButton" @click="delChar()">Löschen</button>
+          <button id="AllesLoschen" class ="KeyboardButton" @click="delallChar()">Alles Löschen</button>
+        </div>
+        <div id="row7" v-if="(showMenu==3)||((showMenu>300)&&(showMenu<400))" class="keydesign" style="width: 99%">
+          <button id="Zahlen" class ="KeyboardButton" @click="showMenu=3071">Zahlen</button>
+          <button id="zuUmgebung" class ="KeyboardButton" @click="showMenu=4">Umgebung</button>
+          <button id="zuIch" class ="KeyboardButton" @click="showMenu=5">Ich</button>
+        </div>
+      </div>
+
+      <!-- Letzte 3 Zeilen der Tastatur QWERTZ -->
+      <div v-if="selectedKeyboard==1">
+        <div id="row4" v-if="(showMenu==3)||((showMenu>300)&&(showMenu<400))" class="keydesign" style="width: 99%" @click="addChar(' ')">
+          <button class ="KeyboardButton">Leerzeichen</button>
+        </div>
+        <div id="row5" v-if="(showMenu==3)||((showMenu>300)&&(showMenu<400))" class="keydesign" style="width: 99%" @click="showMenu=306">
+          <button id="Löschen" class ="KeyboardButton" @click="delChar()">Löschen</button>
+          <button id="AllesLoschen" class ="KeyboardButton" @click="delallChar()">Alles Löschen</button>
+        </div>
+        <div id="row6" v-if="(showMenu==3)||((showMenu>300)&&(showMenu<400))" class="keydesign" style="width: 99%">
+          <button id="zuUmgebung" class ="KeyboardButton" @click="showMenu=4">Umgebung</button>
+          <button id="zuIch" class ="KeyboardButton" @click="showMenu=5">Ich</button>
+        </div>
+      </div>
+
+    <!-- Zahlen-Menü in Nachricht-Menü -->
+
+        <div v-for="(rows, index) in ZahlenMenu" v-if="(showMenu==(3071))||((showMenu>30710)&&(showMenu<30720))" :id="'numpad' + index" class="keydesign" @click="showMenu=30710 + (index+1)">
+        <button v-for="symbol in rows" :id="symbol" class ="KeyboardButton" @click="addChar(symbol); showMenu=3071">{{ symbol }}</button>
+      </div>
+      
+    <!-- Umgebung-Schnelbaustein Menü -->
+      <div v-if="showMenu==4" class="buttonstyles">
+        <button id="Gespräch" @click="showMenu=401">Gespräch</button>
+        <button id="Gegenstände" @click="showMenu=402">Gegenstände</button>
+        <button id="ImZimmer" @click="showMenu=403">Im Zimmer</button>
+        <button id="ImBett" @click="showMenu=404">Im Bett</button>
+      </div>
+      <!-- Gespräch-Untermenü -->
+        <div v-for="(rows, index) in UmgebungMenu[0]" v-if="(showMenu==401)||((showMenu>4010)&&(showMenu<4020))" :id="'Umwelt' + index" class="SelectRow" @click="showMenu=4010 + (index+1)">
+          <button v-for="symbol in rows" :id="symbol" class="SelectButton" style="font-size: 3vh" @click="addChar(symbol); showMenu=401">{{ symbol }}</button>
+        </div>
+
+      <!-- Gegenstände-Untermenü -->    
+        <div v-for="(rows, index) in UmgebungMenu[1]" v-if="(showMenu==402)||((showMenu>4020)&&(showMenu<4030))" :id="'Umwelt' + index" class="SelectRow" @click="showMenu=4020 + (index+1)">
+          <button v-for="symbol in rows" :id="symbol" class="SelectButton" @click="addChar(symbol); showMenu=402">{{ symbol }}</button>
+        </div>
+
+      <!-- Im Zimmer-Untermenü -->
+        <div v-for="(rows, index) in UmgebungMenu[2]" v-if="(showMenu==403)||((showMenu>4030)&&(showMenu<4040))" :id="'Umwelt' + index" class="SelectRow" @click="showMenu=4030 + (index+1)">
+          <button v-for="symbol in rows" :id="symbol" class="SelectButton" @click="addChar(symbol);showMenu=403">{{ symbol }}</button>
+        </div>
+      <!-- Im Bett-Untermenü -->
+        <div v-for="(rows, index) in UmgebungMenu[3]" v-if="(showMenu==404)||((showMenu>4040)&&(showMenu<4050))" :id="'Umwelt' + index" class="SelectRow" @click="showMenu=4040 + (index+1)">
+          <button v-for="symbol in rows" :id="symbol" class="SelectButton" @click="addChar(symbol);showMenu=404">{{ symbol }}</button>
+        </div>
+
+    <!-- Ich-Schnellbaustein Menü -->
+
+      <div v-if="showMenu==5" class="buttonstyles">
+        <button id="Ernährung" @click="showMenu=501">Ernährung</button>
+        <button id="Gefühle" @click="showMenu=502">Gefühle</button>
+        <button id="Kleidung" @click="showMenu=503">Kleidung</button>
+        <button id="Hygiene" @click="showMenu=504">Hygiene</button>
+        <button id="Bewegung" @click="showMenu=505">Bewegung</button>
+      </div>
+
+      <!-- Ernährung-Untermenü -->
+        <div v-for="(rows, index) in IchMenu[0]" v-if="(showMenu==501)||((showMenu>5010)&&(showMenu<5020))" :id="'Ich' + index" class="SelectRow" @click="showMenu=5010 + (index+1)">
+          <button v-for="symbol in rows" :id="symbol" class="SelectButton" @click="addChar(symbol); showMenu=501">{{ symbol }}</button>
+        </div>
+      <!-- Gefühle-Untermenü -->
+        <div v-for="(rows, index) in IchMenu[1]" v-if="(showMenu==502)||((showMenu>5020)&&(showMenu<5030))" :id="'Ich' + index" class="SelectRow" @click="showMenu=5020 + (index+1)">
+          <button v-for="symbol in rows" :id="symbol" class="SelectButton" @click="addChar(symbol); showMenu=502">{{ symbol }}</button>
+        </div>
+      <!-- Kleidung-Untermenü -->
+        <div v-for="(rows, index) in IchMenu[2]" v-if="(showMenu==503)||((showMenu>5030)&&(showMenu<5040))" :id="'Ich' + index" class="SelectRow" @click="showMenu=5030 + (index+1)">
+          <button v-for="symbol in rows" :id="symbol" class="SelectButton" @click="addChar(symbol); showMenu=503">{{ symbol }}</button>
+        </div>
+      <!-- Hygiene-Untermenü -->
+        <div v-for="(rows, index) in IchMenu[3]" v-if="(showMenu==504)||((showMenu>5040)&&(showMenu<5050))" :id="'Ich' + index" class="SelectRow" @click="showMenu=5040 + (index+1)">
+          <button v-for="symbol in rows" :id="symbol" class="SelectButton" @click="addChar(symbol); showMenu=504">{{ symbol }}</button>
+        </div>
+      <!-- Bewegung-Untermenü -->
+        <div v-for="(rows, index) in IchMenu[4]" v-if="(showMenu==505)||((showMenu>5050)&&(showMenu<5060))" :id="'Ich' + index" class="SelectRow" @click="showMenu=5050 + (index+1)">
+          <button v-for="symbol in rows" :id="symbol" class="SelectButton" @click="addChar(symbol); showMenu=505">{{ symbol }}</button>
+        </div>
+
+    <!-- Zurück zu Nachricht-Menü in den Schnellmenüs -->
+     <div id="GoToNachricht" v-if="((showMenu>400)&&(showMenu<600))||((showMenu>4000)&&(showMenu<6000))" class="SelectRow" @click="showMenu=3">
+      <button class="SelectButton">Zum Nachrichten-Menü</button>
+     </div>
+
+    <!-- Einstellungs-Menü -->
+    <div  v-if="(showMenu==6)||((600<showMenu)&&(showMenu<700))" >
+      <div class="buttonstyles" style="width:85%">
+        <button id="Tastaturdesign" @click="showMenu=601; blancButton('Tastaturdesign',601)">Tastatur- Design</button>
+        <button id="Leuchtgeschwindigkeit" @click="showMenu=602; blancButton('Leuchtgeschwindigkeit',602)">Leucht- Dauer</button>
+        <button id="Blinzeldauer" @click="showMenu=603; blancButton('Blinzeldauer',603)">Blinzeldauer</button>
+        <button id="Farbmodus" @click="dayNight(); blancButton('Farbmodus',604)">Farbmodus</button>
+      </div>
+      <hr style="color:var(--maincolor);margin-left:0;width:80%;margin:auto;margin-top:10px">
+
+      <div v-if="showMenu==601" class="keydesign">
+        <button id="Alphabetisch" class="SelectButton" @click="selectedKeyboard=0; showMenu=6; cngHinweis('Tastaturdesign ')">Alphabetisch</button>
+        <button id="Quertz" class="SelectButton" @click="selectedKeyboard=1; showMenu=6; cngHinweis('Tastaturdesign ')">Quertz</button>
+        <button id="Häufigkeit" class="SelectButton" @click="selectedKeyboard=2; showMenu=6; cngHinweis('Tastaturdesign ')">Häufigkeit</button>
+      </div>
+
+      <div v-if="showMenu==602" class="keydesign">
+        <button v-for="symbol in Blinkzeiten" :id=" 'speed' + symbol" class="SelectButton" style="font-size: 1.5em"  @click="cngLeuchtgsw(symbol); showMenu=6; cngHinweis('Leuchtgeschwindigkeit ')">{{ symbol }} Sekunde/n</button>
+      </div>
+
+      <div v-if="showMenu==603" class="Keydesign" >
+        <p class="site_name" style="font-size: 1.5em" >Bitte blinzeln Sie so lange, bis eine Aktion von Ihnen registriert werden soll.</p>
+        <div class="keydesign">
+          <button id="BerechnenBlinzeln" class="SelectButton" @click="cngTime_closed=true; cngHinweis('Blinzeldauer '); showMenu=6">Bitte Blinzeln</button>
+        </div>
+      </div>
+        
+    </div>
+
+    <!-- Hinweise für Nachrichten-Menü -->  
+      <div v-if="(showMenu==6)||((600<showMenu)&&(showMenu<700))" class="site_name" style="width:80%; display:inline-block; text-align:center;">
+        <i id="Hinweis"></i>
+      </div>
+  <!-- Programier-Hilfe -->
+    <div v-if="dbug">
+      <hr style="color:var(--maincolor);margin-left:0;width:80%;margin:auto;margin-top:10px">
+      <p>Programier-Hilfe:</p>
+      <p>Aktuelles Menü:{{ this.showMenu }}</p>
+    </div>
+    </div>
+  <!-- Video-Element wird jetzt dynamisch erstellt -->
+</body>
+</html>
