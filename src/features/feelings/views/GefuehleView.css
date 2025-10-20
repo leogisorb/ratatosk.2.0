@@ -1,0 +1,208 @@
+/* GefuehleView - Komplett neu geschriebenes CSS nach Ernährung-Vorbild */
+
+/* App Container */
+.gefuehle-app {
+  min-height: 100vh;
+  background-color: var(--bg-primary);
+  display: flex;
+  flex-direction: column;
+}
+
+/* Main Content - Weniger Abstand unter Header */
+.main-content {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1rem 4rem; /* Weniger Abstand oben/unten: 4rem → 1rem */
+}
+
+.content-wrapper {
+  max-width: 8xl;
+  margin: 0 auto;
+  width: 100%;
+}
+
+/* Haupttext */
+.main-text-container {
+  margin-bottom: 0.25rem; /* Einheitlich: 0.25rem für alle Ich-Views */
+  text-align: center;
+}
+
+.main-text {
+  font-family: 'Source Code Pro', monospace;
+  font-size: 4rem;
+  font-weight: 300;
+  color: var(--text-primary);
+  margin: 0;
+}
+
+/* Orange Rückmeldung unter der Überschrift */
+.feedback-text-container {
+  margin-top: 0.1rem; /* Einheitlich: 0.1rem für alle Ich-Views */
+  margin-bottom: 0.25rem; /* Einheitlich: 0.25rem für alle Ich-Views */
+  text-align: center;
+}
+
+.feedback-text {
+  font-family: 'Source Code Pro', monospace;
+  font-size: 2.5rem;
+  font-weight: 300;
+  color: #f97316; /* Orange Farbe - bleibt orange auch im Dark Mode */
+  margin: 0;
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+
+.feedback-text.show {
+  opacity: 1;
+}
+
+/* Spacer */
+.spacer {
+  height: 4rem;
+}
+
+/* Gefühle Items Grid - Nochmal 5% weiter hoch */
+.gefuehle-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 0.86rem; /* 5% weniger: 0.9rem * 0.95 = 0.86rem */
+  margin: 0 0 0.43rem 0; /* 5% weniger: 0.45rem * 0.95 = 0.43rem */
+}
+
+.gefuehle-row {
+  display: flex;
+  justify-content: center;
+  gap: 0.75rem; /* Noch näher: 1.5rem → 0.75rem */
+}
+
+/* Gefühle Item Buttons - Alle gleich groß */
+.gefuehle-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.75rem;
+  padding: 1.5rem;
+  border: 2px solid var(--border-secondary);
+  border-radius: 15px;
+  background: var(--bg-primary);
+  cursor: pointer;
+  transition: all 0.3s ease;
+  font-size: 2.06rem; /* 25% größer: 1.65rem * 1.25 = 2.06rem */
+  font-weight: 500;
+  width: 234px; /* 25% größer: 187px * 1.25 = 234px */
+  height: 150px; /* 25% größer: 120px * 1.25 = 150px */
+  outline: none;
+  box-shadow: none;
+  margin: 0;
+}
+
+.gefuehle-item:hover {
+  transform: scale(1.1);
+  color: var(--text-tertiary);
+}
+
+.gefuehle-item.active {
+  background: var(--bg-secondary);
+  color: #f97316; /* Orange bleibt orange auch im Dark Mode */
+  transform: scale(1.1);
+}
+
+.gefuehle-item.inactive {
+  color: var(--text-primary);
+}
+
+.gefuehle-emoji {
+  font-size: 3.75rem; /* 25% größer: 3rem * 1.25 = 3.75rem */
+}
+
+.gefuehle-text {
+  font-family: 'Source Code Pro', monospace;
+}
+
+
+/* Custom scrollbar */
+.overflow-y-auto::-webkit-scrollbar {
+  width: 6px;
+}
+
+.overflow-y-auto::-webkit-scrollbar-track {
+  background: var(--bg-secondary);
+}
+
+.overflow-y-auto::-webkit-scrollbar-thumb {
+  background: var(--border-secondary);
+  border-radius: 3px;
+}
+
+.overflow-y-auto::-webkit-scrollbar-thumb:hover {
+  background: var(--text-tertiary);
+}
+
+/* Dark mode scrollbar - now handled by CSS variables */
+
+/* Responsive Design - 25% kleiner angepasst */
+@media (max-width: 768px) {
+  .main-content {
+    padding: 0.5rem 2rem; /* Weniger Abstand oben/unten: 2rem → 0.5rem */
+  }
+  
+  .gefuehle-row {
+    gap: 0.5rem; /* Noch näher: 1rem → 0.5rem */
+  }
+  
+  .gefuehle-item {
+    padding: 1rem;
+    font-size: 1.35rem;
+    width: 156px; /* 30% breiter: 120px * 1.3 = 156px */
+    height: 100px; /* Alle gleich hoch */
+  }
+  
+  .gefuehle-emoji {
+    font-size: 2.25rem; /* 25% kleiner: 3rem * 0.75 = 2.25rem */
+  }
+  
+  .selected-item-title {
+    font-size: 2.25rem; /* 25% kleiner: 3rem * 0.75 = 2.25rem */
+  }
+  
+  .selected-item-text {
+    font-size: 1.5rem; /* 25% kleiner: 2rem * 0.75 = 1.5rem */
+  }
+  
+}
+
+@media (max-width: 480px) {
+  .main-content {
+    padding: 0.25rem 1rem; /* Weniger Abstand oben/unten: 1rem → 0.25rem */
+  }
+  
+  .gefuehle-grid {
+    gap: 0.75rem; /* Noch näher: 1.5rem → 0.75rem */
+  }
+  
+  .gefuehle-row {
+    gap: 0.25rem; /* Noch näher: 0.5rem → 0.25rem */
+  }
+  
+  .gefuehle-item {
+    padding: 0.75rem;
+    font-size: 1.125rem;
+    width: 125px; /* 30% breiter: 96px * 1.3 = 125px */
+    height: 80px; /* Höhe bleibt gleich */
+  }
+  
+  .gefuehle-emoji {
+    font-size: 1.875rem; /* 25% kleiner: 2.5rem * 0.75 = 1.875rem */
+  }
+  
+  .selected-item-title {
+    font-size: 1.875rem; /* 25% kleiner: 2.5rem * 0.75 = 1.875rem */
+  }
+  
+  .selected-item-text {
+    font-size: 1.125rem; /* 25% kleiner: 1.5rem * 0.75 = 1.125rem */
+  }
+}

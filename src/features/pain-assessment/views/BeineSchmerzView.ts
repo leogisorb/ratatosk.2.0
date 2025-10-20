@@ -1,0 +1,230 @@
+import { ref, onMounted, onUnmounted, computed } from 'vue'
+import { useRouter } from 'vue-router'
+import { useFaceRecognition } from '../../face-recognition/composables/useFaceRecognition'
+import { useSettingsStore } from '../../settings/stores/settings'
+
+export function useBeineSchmerzViewLogic() {
+  // Router
+  const router = useRouter()
+
+  // Stores
+  const settingsStore = useSettingsStore()
+
+  // Face Recognition
+  const faceRecognition = useFaceRecognition()
+
+  // State
+  const currentTileIndex = ref(0)
+  const selectedBeinBereich = ref('')
+  const isAutoMode = ref(true)
+  const autoModeInterval = ref<number | null>(null)
+  const closedFrames = ref(0)
+  const eyesClosed = ref(false)
+  const isAutoModePaused = ref(false)
+  const restartTimeout = ref<number | null>(null)
+
+  // Verbesserte Blink-Detection Parameter - zentral gesteuert
+  const blinkThreshold = computed(() => Math.ceil(settingsStore.settings.blinkSensitivity * 10)) // Konvertiere Sekunden zu Frames (10 FPS)
+  const lastBlinkTime = ref(0)
+  const blinkCooldown = computed(() => settingsStore.settings.blinkSensitivity * 1000)
+
+  // TTS removed
+
+  // Bein-Bereiche basierend auf dem gezeigten Interface
+  const beinBereiche = [
+    // Zeile 1: Oberschenkel, Knie, Unterschenkel, Knöchel
+    { id: 'oberschenkel', text: 'Oberschenkel', type: 'beinbereich', icon: 'OBERSCHENKEL.svg' },
+    { id: 'knie', text: 'Knie', type: 'beinbereich', icon: 'KNIE.svg' },
+    { id: 'unterschenkel', text: 'Unterschenkel', type: 'beinbereich', icon: 'UNTERSCHENKEL.svg' },
+    { id: 'knoechel', text: 'Knöchel', type: 'beinbereich', icon: 'KNÖCHEL.svg' },
+    // Zeile 2: Fuß, Zehen, Fußrücken, Fußsohle
+    { id: 'fuss', text: 'Fuß', type: 'beinbereich', icon: 'barefoot.svg' },
+    { id: 'zehen', text: 'Zehen', type: 'beinbereich', icon: 'ZEHEN.svg' },
+    { id: 'fussruecken', text: 'Fußrücken', type: 'beinbereich', icon: 'FUSRÜCKEN.svg' },
+    { id: 'fussohle', text: 'Fußsohle', type: 'beinbereich', icon: 'FUSBALLEN.svg' },
+    // Zeile 3: Zurück Button
+    { id: 'zurueck', text: 'zurück', type: 'navigation', icon: 'zurueck.svg' }
+  ]
+
+  // TTS removed
+
+  // Volume Toggle Event Handler - TTS removed
+  const handleVolumeToggle = (event: CustomEvent) => {
+    console.log('BeineSchmerzView received volumeToggle event:', event.detail, '- TTS removed')
+  }
+
+  // Auto Mode Funktionen
+  const startAutoMode = () => {
+    if (autoModeInterval.value) return
+    
+    console.log('Starting auto-mode with', beinBereiche.length, 'items')
+
+    const cycleTiles = () => {
+      if (!isAutoMode.value || isAutoModePaused.value) {
+        return
+      }
+      currentTileIndex.value = (currentTileIndex.value + 1) % beinBereiche.length
+      const currentItem = beinBereiche[currentTileIndex.value]
+      console.log('Current item:', currentItem.text, '- TTS removed')
+      autoModeInterval.value = window.setTimeout(cycleTiles, 3000) // 3 Sekunden
+    }
+    
+    const firstItem = beinBereiche[currentTileIndex.value]
+    console.log('First item:', firstItem.text, '- TTS removed')
+    
+    // Starte den ersten Zyklus nach 3 Sekunden
+    autoModeInterval.value = window.setTimeout(cycleTiles, 3000)
+  }
+
+  const pauseAutoMode = () => {
+    isAutoModePaused.value = true
+    if (autoModeInterval.value) {
+      clearTimeout(autoModeInterval.value)
+      autoModeInterval.value = null
+    }
+    if (restartTimeout.value) {
+      clearTimeout(restartTimeout.value)
+      restartTimeout.value = null
+    }
+    // TTS removed
+  }
+
+  const stopAutoMode = () => {
+    if (autoModeInterval.value) {
+      clearTimeout(autoModeInterval.value)
+      autoModeInterval.value = null
+    }
+    if (restartTimeout.value) {
+      clearTimeout(restartTimeout.value)
+      restartTimeout.value = null
+    }
+    // TTS removed
+  }
+
+  // Bein-Bereich Auswahl
+  const selectBeinBereich = (beinBereichId: string) => {
+    const selectedItem = beinBereiche.find(item => item.id === beinBereichId)
+    
+    switch (beinBereichId) {
+      case 'zurueck':
+        console.log('Navigating back to main pain view')
+        stopAutoMode() // Stoppe Auto-Modus komplett vor Navigation
+        router.push('/schmerz')
+        break
+      default:
+        console.log('Selected Bein-Bereich:', beinBereichId)
+        console.log(`${selectedItem?.text} ausgewählt - TTS removed`)
+        
+        // Navigation zur Schmerzskala
+        setTimeout(() => {
+          console.log('Navigating to pain scale for:', selectedItem?.text)
+          router.push(`/pain-scale?bodyPart=${encodeURIComponent(selectedItem?.text || '')}&returnRoute=/beine-schmerz`)
+        }, 1000)
+        break
+    }
+  }
+
+  // Blink Detection
+  const handleBlink = () => {
+    const now = Date.now()
+    
+    if (faceRecognition.isBlinking()) {
+      closedFrames.value++
+      
+      if (now - lastBlinkTime.value < blinkCooldown.value) {
+        return
+      }
+      
+      if (closedFrames.value >= blinkThreshold.value && !eyesClosed.value) {
+        const currentItem = beinBereiche[currentTileIndex.value]
+        console.log('Blink activation for tile:', currentTileIndex.value, 'beinBereichId:', currentItem.id, 'text:', currentItem.text)
+        
+        console.log('Selected item:', currentItem.text, '- TTS removed')
+        selectBeinBereich(currentItem.id)
+        eyesClosed.value = true
+        lastBlinkTime.value = now
+        closedFrames.value = 0
+      }
+    } else {
+      if (closedFrames.value > 0) {
+        closedFrames.value = 0
+        eyesClosed.value = false
+      }
+    }
+  }
+
+  // Right-click handler
+  const handleRightClick = (event: MouseEvent) => {
+    event.preventDefault()
+    console.log('Right click detected - treating as blink')
+    const currentItem = beinBereiche[currentTileIndex.value]
+    console.log('Right click activation for tile:', currentTileIndex.value, 'beinBereichId:', currentItem.id, 'text:', currentItem.text)
+    
+    console.log('Selected item:', currentItem.text, '- TTS removed')
+    selectBeinBereich(currentItem.id)
+  }
+
+  // Lifecycle
+  onMounted(() => {
+    // Start face recognition if not active
+    if (!faceRecognition.isActive.value) {
+      faceRecognition.start()
+    }
+
+    // Setup blink detection interval
+    const blinkCheckInterval = setInterval(handleBlink, 100)
+
+    // Setup event listeners
+    const rightClickHandler = (event: MouseEvent) => handleRightClick(event)
+    const volumeToggleHandler = (event: CustomEvent) => handleVolumeToggle(event)
+
+    document.addEventListener('contextmenu', rightClickHandler)
+    window.addEventListener('volumeToggle', volumeToggleHandler as EventListener)
+
+    // Start auto-mode after a short delay
+    setTimeout(() => {
+      startAutoMode()
+    }, 1000)
+
+    // Cleanup function
+    return () => {
+      clearInterval(blinkCheckInterval)
+      document.removeEventListener('contextmenu', rightClickHandler)
+      window.removeEventListener('volumeToggle', volumeToggleHandler as EventListener)
+      stopAutoMode()
+    }
+  })
+
+  onUnmounted(() => {
+    stopAutoMode()
+  })
+
+  return {
+    // State
+    currentTileIndex,
+    selectedBeinBereich,
+    isAutoMode,
+    autoModeInterval,
+    closedFrames,
+    eyesClosed,
+    isAutoModePaused,
+    restartTimeout,
+    blinkThreshold,
+    lastBlinkTime,
+    blinkCooldown,
+    // TTS removed
+    speechSynthesis: null,
+    isTTSEnabled: false,
+    speakText: () => {},
+    beinBereiche,
+    startAutoMode,
+    pauseAutoMode,
+    stopAutoMode,
+    selectBeinBereich,
+    handleFaceBlink: handleBlink,
+    handleRightClick,
+    handleVolumeToggle,
+    settingsStore,
+    faceRecognition
+  }
+}

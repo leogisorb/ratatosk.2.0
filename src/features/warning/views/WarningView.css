@@ -1,0 +1,301 @@
+/* Warnsystem für intubierte Patienten - Styles */
+
+/* ===== MAIN LAYOUT ===== */
+.main-content {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1.5rem; /* 2rem - 25% = 1.5rem */
+  padding: 2rem;
+  min-height: 80vh;
+  justify-content: center;
+}
+
+/* ===== STATUS ANZEIGE (Begrüßungstext) ===== */
+.sentence-display-container {
+  width: 100%;
+  max-width: 100%;
+  height: 9.66rem; /* 8rem + 20% = 9.66rem */
+  overflow: hidden;
+  background-color: transparent;
+  border: none;
+  margin: 0 auto 1.5rem auto; /* 2rem - 25% = 1.5rem */
+  padding: 0 1rem;
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.sentence-display {
+  width: 100%;
+  height: 100%;
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.sentence-item {
+  position: absolute;
+  width: 100%;
+  text-align: center;
+  font-size: 2.5rem;
+  color: #1f2937;
+  font-family: 'Source Code Pro', monospace;
+  font-weight: 600;
+  opacity: 0;
+  transform: translateY(20px);
+  transition: all 0.5s ease-in-out;
+  padding: 0 1rem;
+  line-height: 1.4;
+}
+
+.sentence-item.sentence-active {
+  opacity: 1;
+  transform: translateY(0);
+  color: #1f2937;
+}
+
+/* TTS-Indikator */
+.tts-indicator {
+  position: absolute;
+  top: 1rem;
+  right: 1rem;
+  font-size: 1.5rem;
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+
+.tts-indicator.tts-active {
+  opacity: 1;
+  animation: tts-pulse 1s infinite;
+}
+
+@keyframes tts-pulse {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.1); }
+}
+
+/* ===== GLOCKEN-SYMBOL ===== */
+.bell-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  width: 100%;
+  margin: 1.5rem 0; /* 2rem - 25% = 1.5rem */
+}
+
+.bell-button {
+  background: none;
+  border: 3px solid transparent;
+  border-radius: 50%;
+  outline: none;
+  box-shadow: none;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  padding: 2rem;
+  position: relative;
+}
+
+.bell-button:hover {
+  transform: scale(1.05);
+}
+
+/* Glocke aktiv (wartet auf Start) */
+.bell-active {
+  border: 3px solid #f97316 !important;
+  background-color: rgba(249, 115, 22, 0.1) !important;
+  transform: scale(1.1);
+  animation: bell-active-pulse 2s infinite;
+}
+
+/* Glocke spielt Warnton */
+.bell-playing {
+  border: 3px solid #ef4444 !important;
+  background-color: rgba(239, 68, 68, 0.2) !important;
+  transform: scale(1.1);
+  animation: bell-playing-pulse 0.5s infinite;
+}
+
+/* Glocke mit Alarm-Ton */
+.bell-alarm {
+  box-shadow: 0 0 20px rgba(239, 68, 68, 0.5);
+}
+
+.bell-icon {
+  width: 200px;
+  height: 200px;
+  max-width: 300px;
+  transition: all 0.3s ease;
+  filter: drop-shadow(0 4px 8px rgba(0, 0, 0, 0.1));
+}
+
+/* ===== ZURÜCK-BUTTON ===== */
+.back-section {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  width: 100%;
+  margin: 1.5rem 0; /* 2rem - 25% = 1.5rem */
+}
+
+.back-action-button {
+  font-size: 2rem;
+  font-family: 'Source Code Pro', monospace;
+  font-weight: 600;
+  background: var(--bg-primary);
+  border: 3px solid var(--border-secondary);
+  border-radius: 15px;
+  outline: none;
+  box-shadow: none;
+  padding: 1rem 2rem;
+  margin: 0;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  color: var(--text-primary);
+  min-width: 300px;
+}
+
+.back-action-button:hover {
+  transform: scale(1.05);
+  color: var(--text-tertiary);
+}
+
+/* Zurück-Button aktiv */
+.back-active {
+  background: var(--bg-secondary) !important;
+  color: var(--accent-primary) !important;
+  border: 3px solid var(--accent-primary) !important;
+  transform: scale(1.1);
+  animation: back-active-pulse 2s infinite;
+}
+
+/* ===== ANIMATIONEN ===== */
+@keyframes bell-active-pulse {
+  0%, 100% {
+    transform: scale(1.1);
+    opacity: 1;
+  }
+  50% {
+    transform: scale(1.15);
+    opacity: 0.8;
+  }
+}
+
+@keyframes bell-playing-pulse {
+  0%, 100% {
+    transform: scale(1.1);
+    opacity: 1;
+  }
+  50% {
+    transform: scale(1.2);
+    opacity: 0.7;
+  }
+}
+
+@keyframes back-active-pulse {
+  0%, 100% {
+    transform: scale(1.1);
+    opacity: 1;
+  }
+  50% {
+    transform: scale(1.15);
+    opacity: 0.8;
+  }
+}
+
+/* ===== RESPONSIVE DESIGN ===== */
+@media (max-width: 768px) {
+  .main-content {
+    gap: 1.125rem; /* 1.5rem - 25% = 1.125rem */
+    padding: 1rem;
+  }
+  
+  .sentence-display-container {
+    height: 7.2rem; /* 6rem + 20% = 7.2rem */
+    margin: 0 auto 0.75rem auto; /* 1rem - 25% = 0.75rem */
+    padding: 0 0.5rem;
+  }
+  
+  .sentence-item {
+    font-size: 1.8rem;
+  }
+  
+  .bell-icon {
+    width: 150px;
+    height: 150px;
+    max-width: 200px;
+  }
+  
+  .back-action-button {
+    font-size: 1.5rem;
+    padding: 0.8rem 1.5rem;
+    min-width: 250px;
+  }
+}
+
+@media (max-width: 430px) {
+  .sentence-display-container {
+    height: 6rem; /* 5rem + 20% = 6rem */
+  }
+  
+  .sentence-item {
+    font-size: 1.5rem;
+  }
+  
+  .bell-icon {
+    width: 120px;
+    height: 120px;
+    max-width: 150px;
+  }
+  
+  .back-action-button {
+    font-size: 1.2rem;
+    padding: 0.6rem 1rem;
+    min-width: 200px;
+  }
+}
+
+/* ===== DARK MODE ===== */
+.dark .sentence-item {
+  color: #f9fafb;
+}
+
+.dark .sentence-item.sentence-active {
+  color: #f9fafb;
+}
+
+/* ===== ACCESSIBILITY ===== */
+.bell-button:focus,
+.back-action-button:focus {
+  outline: 2px solid #3b82f6;
+  outline-offset: 2px;
+}
+
+/* ===== STATE INDICATORS ===== */
+.bell-button:disabled,
+.back-action-button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  transform: none !important;
+}
+
+/* ===== SMOOTH TRANSITIONS ===== */
+* {
+  transition: all 0.3s ease;
+}
+
+/* ===== LOADING STATES ===== */
+.sentence-item.loading {
+  animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.5;
+  }
+}

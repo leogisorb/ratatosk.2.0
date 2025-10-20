@@ -1,0 +1,432 @@
+/* HomeView spezifische Styles */
+
+/* Global Box-Sizing für alle Elemente */
+*, *::before, *::after {
+  box-sizing: border-box;
+}
+
+/* App Container */
+#app {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+/* Ensure header styles are not overridden */
+.global-header {
+  background-color: var(--bg-primary) !important;
+  box-shadow: 0 10px 15px -3px var(--shadow-primary), 0 4px 6px -2px var(--shadow-secondary) !important;
+  border-bottom: 1px solid var(--border-primary) !important;
+}
+
+.main-content {
+  background-color: var(--bg-primary);
+  padding: 2rem;
+  min-height: calc(100vh - 80px); /* Abzug für Header */
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Grid Container für die Kacheln */
+.grid-container {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr); /* Fix auf 3 Spalten für Desktop */
+  grid-auto-rows: 1fr; /* Jede Zeile gleich hoch */
+  gap: 1.5rem;
+  max-width: 90%; /* 10% weniger als Bildschirmbreite */
+  width: 100%;
+  height: 100%;
+  min-height: 400px;
+  justify-items: center;
+  margin: 0 auto;
+}
+
+/* Menu Tile Styles */
+.menu-tile {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 2.4rem; /* +20% größer */
+  border-radius: 1rem;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  border: 3px solid transparent;
+  background-color: var(--bg-secondary);
+  width: 100%;
+  max-width: 360px; /* +20% größer */
+  height: 216px; /* +20% größer */
+  box-sizing: border-box;
+}
+
+.menu-tile:hover {
+  transform: scale(1.05);
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+}
+
+.menu-tile:hover .tile-icon-container {
+  background-color: rgba(0, 176, 152, 0.1); /* Schöner Hover-Effekt */
+  border: 2px solid rgba(0, 176, 152, 0.2);
+}
+
+.tile-active {
+  background-color: #00B098 !important;
+  border: 3px solid #00B098 !important;
+  /* transform: scale(1.1); - Entfernt: Kein Zoom bei aktiver Kachel */
+  box-shadow: 0 15px 35px rgba(0, 176, 152, 0.3);
+}
+
+.tile-inactive {
+  background-color: var(--bg-secondary);
+  border: 3px solid var(--border-primary);
+}
+
+/* Icon Container */
+.tile-icon-container {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 96px; /* +20% größer */
+  height: 96px; /* +20% größer */
+  margin-bottom: 1.2rem; /* +20% größer */
+  border-radius: 50%;
+  transition: all 0.3s ease;
+}
+
+.icon-active {
+  background-color: transparent; /* Kein weißer Kreis auch bei aktiven Icons */
+  border: none; /* Kein Border bei aktiven Icons */
+}
+
+.icon-inactive {
+  background-color: transparent; /* Kein weißer Kreis mehr */
+  border: none; /* Kein Border bei inaktiven Icons */
+}
+
+/* Icon Styles */
+.tile-icon {
+  width: 60px; /* +20% größer */
+  height: 60px; /* +20% größer */
+  transition: all 0.3s ease;
+}
+
+.icon-inverted {
+  filter: brightness(0) invert(1);
+}
+
+/* Text Styles */
+.tile-text {
+  font-size: 1.44rem; /* +20% größer */
+  font-weight: 600;
+  text-align: center;
+  font-family: 'Source Code Pro', monospace;
+  transition: all 0.3s ease;
+}
+
+.text-active {
+  color: white !important;
+}
+
+.text-inactive {
+  color: var(--text-primary);
+}
+
+/* Communication Interface - spezifische Styles */
+.communication-interface {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.message-input-section {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.message-textarea {
+  resize: none;
+  height: 6rem;
+}
+
+.message-buttons {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.quick-messages-section,
+.message-history-section {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.quick-messages-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 0.5rem;
+}
+
+.quick-message-button {
+  padding: 0.75rem;
+  text-align: left;
+  border-radius: 0.5rem;
+  border: 1px solid var(--border-primary);
+  background-color: var(--bg-secondary);
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.quick-message-button:hover {
+  background-color: #00B098;
+  color: white;
+  border-color: #00B098;
+}
+
+.quick-message-content {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.quick-message-icon {
+  font-size: 1.125rem;
+}
+
+.quick-message-text {
+  font-size: 0.875rem;
+}
+
+.message-history {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  max-height: 16rem;
+  overflow-y: auto;
+}
+
+.message-item {
+  padding: 0.75rem;
+  border-radius: 0.5rem;
+  background-color: var(--bg-secondary);
+  border-left: 3px solid var(--accent-primary);
+}
+
+.message-content {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+}
+
+.message-text {
+  font-size: 0.875rem;
+  margin: 0;
+}
+
+.message-time {
+  font-size: 0.75rem;
+  color: var(--text-tertiary);
+}
+
+/* Other Menu Content */
+.other-menu-content {
+  text-align: center;
+  padding: 3rem 0;
+}
+
+.other-menu-title {
+  font-size: 1.5rem;
+  font-weight: bold;
+  color: var(--accent-primary);
+  margin-bottom: 1rem;
+}
+
+.other-menu-description {
+  color: var(--text-secondary);
+  margin-bottom: 1rem;
+}
+
+.other-menu-note {
+  font-size: 0.875rem;
+  color: var(--text-tertiary);
+  margin-top: 1rem;
+}
+
+/* TTS Status Indicator */
+.tts-status-indicator {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  background-color: #fef3c7;
+  border: 2px solid #f59e0b;
+  border-radius: 0.75rem;
+  padding: 1rem 1.5rem;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+  z-index: 1000;
+  animation: pulse 2s infinite;
+}
+
+.tts-status-content {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.tts-status-icon {
+  font-size: 1.5rem;
+}
+
+.tts-status-text {
+  font-size: 1rem;
+  font-weight: 500;
+  color: #92400e;
+}
+
+@keyframes pulse {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.7;
+  }
+}
+
+/* ===== RESPONSIVE DESIGN ===== */
+
+/* Tablet (1024px und kleiner) - 2x3 Layout */
+@media (max-width: 1024px) {
+  .main-content {
+    padding: 1rem;
+  }
+  
+  .grid-container {
+    grid-template-columns: repeat(2, 1fr); /* 2 Spalten für Tablet */
+    gap: 1.25rem;
+    max-width: 100%;
+  }
+  
+  .menu-tile {
+    padding: 1.5rem;
+    height: 140px; /* Etwas niedriger für Tablet */
+    max-width: 280px;
+  }
+  
+  .tile-icon-container {
+    width: 60px;
+    height: 60px;
+  }
+  
+  .tile-icon {
+    width: 40px;
+    height: 40px;
+  }
+  
+  .tile-text {
+    font-size: 1rem;
+  }
+}
+
+/* Mobile (600px und kleiner) - 1x6 Layout */
+@media (max-width: 600px) {
+  .main-content {
+    padding: 0.5rem;
+    overflow-x: hidden;
+  }
+  
+  .grid-container {
+    grid-template-columns: 1fr; /* Eine Spalte für Mobile */
+    gap: 0.75rem;
+    width: 100%;
+    padding: 0;
+    margin: 0;
+  }
+  
+  .menu-tile {
+    width: 100%;
+    height: auto; /* Automatische Höhe */
+    max-width: none; /* Keine Breitenbegrenzung */
+    padding: 1rem;
+    border-width: 2px; /* Dünnere Borders */
+    border-radius: 0.75rem;
+    min-height: 60px; /* Mindesthöhe */
+  }
+  
+  .tile-icon-container {
+    width: 50px;
+    height: 50px;
+    margin-bottom: 0.5rem;
+  }
+  
+  .tile-icon {
+    width: 30px;
+    height: 30px;
+  }
+  
+  .tile-text {
+    font-size: 0.9rem;
+  }
+}
+
+/* Sehr kleine Bildschirme (320px und kleiner) */
+@media (max-width: 320px) {
+  .main-content {
+    padding: 0.25rem;
+    overflow-x: hidden;
+  }
+  
+  .grid-container {
+    gap: 0.5rem;
+    padding: 0;
+    margin: 0;
+  }
+  
+  .menu-tile {
+    padding: 0.75rem;
+    min-height: 50px;
+    border-width: 1px; /* Sehr dünne Borders */
+  }
+  
+  .tile-icon-container {
+    width: 40px;
+    height: 40px;
+  }
+  
+  .tile-icon {
+    width: 25px;
+    height: 25px;
+  }
+  
+  .tile-text {
+    font-size: 0.8rem;
+  }
+}
+
+/* Große Bildschirme (1200px und größer) */
+@media (min-width: 1200px) {
+  .grid-container {
+    max-width: 90%; /* 10% weniger als Bildschirmbreite */
+    gap: 3rem; /* +20% größer */
+  }
+  
+  .menu-tile {
+    padding: 3rem; /* +20% größer */
+    height: 240px; /* +20% größer */
+    max-width: 420px; /* +20% größer */
+  }
+  
+  .tile-icon-container {
+    width: 120px; /* +20% größer */
+    height: 120px; /* +20% größer */
+  }
+  
+  .tile-icon {
+    width: 72px; /* +20% größer */
+    height: 72px; /* +20% größer */
+  }
+  
+  .tile-text {
+    font-size: 1.68rem; /* +20% größer */
+  }
+}
