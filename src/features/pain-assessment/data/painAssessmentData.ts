@@ -3,70 +3,75 @@
 
 // Main body regions
 export const mainRegions = [
-  { id: 'kopf', title: 'Kopf', icon: '/ratatosk.2.0/head.png' },
-  { id: 'beine', title: 'Beine', icon: '/ratatosk.2.0/leg.png' },
-  { id: 'arme', title: 'Arme', icon: '/ratatosk.2.0/elbow-2.png' },
-  { id: 'torso', title: 'Torso', icon: '/ratatosk.2.0/living.png' }
+  { id: 'kopf', title: 'Kopf', icon: '/kopf1.svg' },
+  { id: 'beine', title: 'Beine', icon: '/bein1.svg' },
+  { id: 'arme', title: 'Arme', icon: '/arm1.svg' },
+  { id: 'torso', title: 'Torso', icon: '/torso1.svg' },
+  { id: 'zurueck', title: 'Zurück', icon: '/zurueck.svg' }
 ]
 
 // Sub-regions for Kopf
 export const kopfSubRegions = [
-  { id: 'stirn', title: 'Stirn', icon: '/ratatosk.2.0/stirn.svg' },
-  { id: 'hinterkopf', title: 'Hinterkopf', icon: '/ratatosk.2.0/hinterkopf.svg' },
-  { id: 'schlaefe', title: 'Schläfe', icon: '/ratatosk.2.0/schläfe.svg' },
-  { id: 'nacken', title: 'Nacken', icon: '/ratatosk.2.0/nacken.svg' },
-  { id: 'kiefer', title: 'Kiefer', icon: '/ratatosk.2.0/kiefer.svg' },
-  { id: 'nebenhoehlen', title: 'Nebenhöhlen', icon: '/ratatosk.2.0/nebenhoehlen.svg' },
-  { id: 'hals', title: 'Hals', icon: '/ratatosk.2.0/hals.svg' },
-  { id: 'auge', title: 'Auge', icon: '/ratatosk.2.0/auge.svg' },
-  { id: 'nase', title: 'Nase', icon: '/ratatosk.2.0/nase.svg' },
-  { id: 'mund', title: 'Mund', icon: '/ratatosk.2.0/mund.svg' },
-  { id: 'speiseroehre', title: 'Speiseröhre', icon: '/ratatosk.2.0/speiseröhre.svg' }
+  { id: 'stirn', title: 'Stirn', icon: '/stirn.svg' },
+  { id: 'hinterkopf', title: 'Hinterkopf', icon: '/hinterkopf.svg' },
+  { id: 'schlaefe', title: 'Schläfe', icon: '/schläfe.svg' },
+  { id: 'nacken', title: 'Nacken', icon: '/nacken.svg' },
+  { id: 'kiefer', title: 'Kiefer', icon: '/kiefer.svg' },
+  { id: 'nebenhoehlen', title: 'Nebenhöhlen', icon: '/nebenhoehlen.svg' },
+  { id: 'hals', title: 'Hals', icon: '/hals.svg' },
+  { id: 'auge', title: 'Auge', icon: '/auge.svg' },
+  { id: 'nase', title: 'Nase', icon: '/nase.svg' },
+  { id: 'mund', title: 'Mund', icon: '/mund.svg' },
+  { id: 'speiseroehre', title: 'Speiseröhre', icon: '/speiseröhre.svg' },
+  { id: 'zurueck', title: 'Zurück', icon: '/back.svg' }
 ]
 
 // Sub-regions for Beine
 export const beineSubRegions = [
-  { id: 'oberschenkel', title: 'Oberschenkel', icon: '/ratatosk.2.0/OBERSCHENKEL.svg' },
-  { id: 'knie', title: 'Knie', icon: '/ratatosk.2.0/KNIE.svg' },
-  { id: 'unterschenkel', title: 'Unterschenkel', icon: '/ratatosk.2.0/UNTERSCHENKEL.svg' },
-  { id: 'knoechel', title: 'Knöchel', icon: '/ratatosk.2.0/KNÖCHEL.svg' },
-  { id: 'fuss', title: 'Fuß', icon: '/ratatosk.2.0/FUSBALLEN.svg' },
-  { id: 'zehen', title: 'Zehen', icon: '/ratatosk.2.0/ZEHEN.svg' },
-  { id: 'huefte', title: 'Hüfte', icon: '/ratatosk.2.0/hüfte.svg' },
-  { id: 'wade', title: 'Wade', icon: '/ratatosk.2.0/UNTERSCHENKEL.svg' },
-  { id: 'leiste', title: 'Leiste', icon: '/ratatosk.2.0/hüfte.svg' },
-  { id: 'gesaess', title: 'Gesäß', icon: '/ratatosk.2.0/hüfte.svg' },
-  { id: 'sprunggelenk', title: 'Sprunggelenk', icon: '/ratatosk.2.0/KNÖCHEL.svg' }
+  { id: 'oberschenkel', title: 'Oberschenkel', icon: '/OBERSCHENKEL.svg' },
+  { id: 'knie', title: 'Knie', icon: '/KNIE.svg' },
+  { id: 'unterschenkel', title: 'Unterschenkel', icon: '/UNTERSCHENKEL.svg' },
+  { id: 'knoechel', title: 'Knöchel', icon: '/KNÖCHEL.svg' },
+  { id: 'fuss', title: 'Fuß', icon: '/FUSBALLEN.svg' },
+  { id: 'zehen', title: 'Zehen', icon: '/ZEHEN.svg' },
+  { id: 'huefte', title: 'Hüfte', icon: '/hüfte.svg' },
+  { id: 'wade', title: 'Wade', icon: '/UNTERSCHENKEL.svg' },
+  { id: 'leiste', title: 'Leiste', icon: '/hüfte.svg' },
+  { id: 'gesaess', title: 'Gesäß', icon: '/hüfte.svg' },
+  { id: 'sprunggelenk', title: 'Sprunggelenk', icon: '/KNÖCHEL.svg' },
+  { id: 'zurueck', title: 'Zurück', icon: '/back.svg' }
 ]
 
 // Sub-regions for Arme
 export const armeSubRegions = [
-  { id: 'oberarm', title: 'Oberarm', icon: '/ratatosk.2.0/oberarm.svg' },
-  { id: 'unterarm', title: 'Unterarm', icon: '/ratatosk.2.0/unterarm.svg' },
-  { id: 'ellenbogen', title: 'Ellenbogen', icon: '/ratatosk.2.0/ellebogen.svg' },
-  { id: 'handgelenk', title: 'Handgelenk', icon: '/ratatosk.2.0/handgelenk.svg' },
-  { id: 'hand', title: 'Hand', icon: '/ratatosk.2.0/handfläche.svg' },
-  { id: 'finger', title: 'Finger', icon: '/ratatosk.2.0/finger.svg' },
-  { id: 'schulter', title: 'Schulter', icon: '/ratatosk.2.0/schulter.svg' },
-  { id: 'daumen', title: 'Daumen', icon: '/ratatosk.2.0/finger.svg' },
-  { id: 'achsel', title: 'Achsel', icon: '/ratatosk.2.0/achsel.svg' },
-  { id: 'handruecken', title: 'Handrücken', icon: '/ratatosk.2.0/handrücken.svg' },
-  { id: 'handflaeche', title: 'Handfläche', icon: '/ratatosk.2.0/handfläche.svg' }
+  { id: 'oberarm', title: 'Oberarm', icon: '/oberarm.svg' },
+  { id: 'unterarm', title: 'Unterarm', icon: '/unterarm.svg' },
+  { id: 'ellenbogen', title: 'Ellenbogen', icon: '/ellebogen.svg' },
+  { id: 'handgelenk', title: 'Handgelenk', icon: '/handgelenk.svg' },
+  { id: 'hand', title: 'Hand', icon: '/handfläche.svg' },
+  { id: 'finger', title: 'Finger', icon: '/finger.svg' },
+  { id: 'schulter', title: 'Schulter', icon: '/schulter.svg' },
+  { id: 'daumen', title: 'Daumen', icon: '/finger.svg' },
+  { id: 'achsel', title: 'Achsel', icon: '/achsel.svg' },
+  { id: 'handruecken', title: 'Handrücken', icon: '/handrücken.svg' },
+  { id: 'handflaeche', title: 'Handfläche', icon: '/handfläche.svg' },
+  { id: 'zurueck', title: 'Zurück', icon: '/back.svg' }
 ]
 
 // Sub-regions for Torso
 export const torsoSubRegions = [
-  { id: 'brust', title: 'Brust', icon: '/ratatosk.2.0/brust.svg' },
-  { id: 'ruecken', title: 'Rücken', icon: '/ratatosk.2.0/schulterblätter.svg' },
-  { id: 'schulterblatt', title: 'Schulterblatt', icon: '/ratatosk.2.0/schulterblätter.svg' },
-  { id: 'wirbelsaeule', title: 'Wirbelsäule', icon: '/ratatosk.2.0/wirbelsaule.svg' },
-  { id: 'bauch', title: 'Bauch', icon: '/ratatosk.2.0/magen.svg' },
-  { id: 'lunge', title: 'Lunge', icon: '/ratatosk.2.0/lunge.svg' },
-  { id: 'herz', title: 'Herz', icon: '/ratatosk.2.0/anatomisches-herz.svg' },
-  { id: 'magen', title: 'Magen', icon: '/ratatosk.2.0/magen.svg' },
-  { id: 'leber', title: 'Leber', icon: '/ratatosk.2.0/magen.svg' },
-  { id: 'niere', title: 'Niere', icon: '/ratatosk.2.0/magen.svg' },
-  { id: 'blase', title: 'Blase', icon: '/ratatosk.2.0/blase.svg' }
+  { id: 'brust', title: 'Brust', icon: '/brust.svg' },
+  { id: 'ruecken', title: 'Rücken', icon: '/schulterblätter.svg' },
+  { id: 'schulterblatt', title: 'Schulterblatt', icon: '/schulterblätter.svg' },
+  { id: 'wirbelsaeule', title: 'Wirbelsäule', icon: '/wirbelsaule.svg' },
+  { id: 'bauch', title: 'Bauch', icon: '/magen.svg' },
+  { id: 'lunge', title: 'Lunge', icon: '/lunge.svg' },
+  { id: 'herz', title: 'Herz', icon: '/anatomisches-herz.svg' },
+  { id: 'magen', title: 'Magen', icon: '/magen.svg' },
+  { id: 'leber', title: 'Leber', icon: '/magen.svg' },
+  { id: 'niere', title: 'Niere', icon: '/magen.svg' },
+  { id: 'blase', title: 'Blase', icon: '/blase.svg' },
+  { id: 'zurueck', title: 'Zurück', icon: '/back.svg' }
 ]
 
 // Pain levels (1-10)

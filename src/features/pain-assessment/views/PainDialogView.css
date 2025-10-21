@@ -1,75 +1,17 @@
-/* PainDialogView - alle Styles hier */
+/* PainDialogView - Bereinigte CSS */
 
-/* PainDialogView spezifische main-content Anpassung */
+/* === GRUNDLEGENDE STYLES === */
 .pain-dialog .main-content {
-  align-items: flex-start !important;
-  padding-top: 2rem !important;
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 2rem;
+  background-color: var(--bg-primary);
+  transition: background-color 0.3s ease;
 }
 
-/* PainDialogView - 3x2 Grid (wie HomeView) */
-.pain-dialog .grid-container {
-  display: grid !important;
-  grid-template-columns: repeat(3, 1fr) !important;
-  grid-template-rows: repeat(2, 1fr) !important;
-  gap: 2rem !important;
-  max-width: 90rem !important;
-  width: 100% !important;
-  margin: 0 auto !important;
-  padding: 0 2rem !important;
-  justify-content: center !important;
-  align-content: center !important;
-  margin-top: 2rem !important;
-}
-
-.pain-dialog .menu-tile {
-  display: flex !important;
-  flex-direction: column !important;
-  align-items: center !important;
-  justify-content: center !important;
-  padding: 2rem !important;
-  max-width: 360px !important;
-  height: 216px !important;
-  border: 3px solid transparent !important;
-  background-color: var(--bg-secondary) !important;
-  border-radius: 1rem !important;
-  cursor: pointer !important;
-  transition: all 3s cubic-bezier(0.25, 0.46, 0.45, 0.94) !important; /* Much slower */
-  position: relative !important;
-  z-index: 1 !important;
-  user-select: none !important;
-}
-
-.pain-dialog .tile-icon-container {
-  width: 158px !important;
-  height: 158px !important;
-  margin-bottom: 0.6rem !important;
-  display: flex !important;
-  align-items: center !important;
-  justify-content: center !important;
-  border-radius: 50% !important;
-  transition: all 3s cubic-bezier(0.25, 0.46, 0.45, 0.94) !important; /* Much slower */
-}
-
-.pain-dialog .tile-icon {
-  width: 99px !important;
-  height: 99px !important;
-  transition: all 3s cubic-bezier(0.25, 0.46, 0.45, 0.94) !important; /* Much slower */
-}
-
-.pain-dialog .tile-text {
-  font-family: 'Source Code Pro', monospace !important;
-  font-size: 1.44rem !important;
-  font-weight: 500 !important;
-  color: var(--text-primary) !important;
-  text-align: center !important;
-  transition: color 0.3s ease !important;
-  white-space: nowrap !important;
-  overflow: hidden !important;
-  text-overflow: ellipsis !important;
-}
-
-/* Haupttext über den Kacheln */
-.main-title {
+.pain-dialog .main-title {
   font-family: 'Source Code Pro', monospace;
   font-size: 3rem;
   font-weight: 300;
@@ -79,525 +21,172 @@
   transition: color 0.3s ease;
 }
 
-/* Hover Effects für PainDialogView */
+/* === GRID CONTAINER STYLES === */
+.pain-dialog .grid-container {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  grid-template-rows: repeat(3, 1fr);
+  gap: 1rem;
+  max-width: 1600px; /* Viel breiter für Desktop */
+  width: 100%;
+  margin: 0 auto;
+  padding: 0 2rem;
+  justify-content: center;
+  align-content: center;
+  margin-top: 2rem;
+}
+
+.pain-dialog .menu-tile {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 3rem;
+  width: 100%;
+  aspect-ratio: 5 / 1;
+  border: 3px solid transparent;
+  background-color: var(--bg-secondary);
+  border-radius: 1.5rem;
+  cursor: pointer;
+  transition: all 0.8s ease-in-out;
+  position: relative;
+  z-index: 1;
+  user-select: none;
+}
+
+.pain-dialog .tile-icon-container {
+  width: 180px;
+  height: 180px;
+  margin-bottom: 1.5rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  transition: all 0.8s ease-in-out;
+}
+
+.pain-dialog .icon-active {
+  background-color: transparent;
+  border: none;
+}
+
+.pain-dialog .icon-inactive {
+  background-color: transparent;
+  border: none;
+}
+
+.pain-dialog .tile-icon {
+  width: 160px; /* Größer für Desktop */
+  height: 160px; /* Größer für Desktop */
+  transition: all 0.8s ease-in-out;
+  object-fit: contain;
+}
+
+.pain-dialog .tile-text {
+  font-family: 'Source Code Pro', monospace;
+  font-size: 1.8rem;
+  font-weight: 500;
+  color: var(--text-primary);
+  text-align: center;
+  transition: color 0.3s ease;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* Hover Effects */
 .pain-dialog .menu-tile:hover .tile-icon-container {
   background-color: rgba(0, 176, 152, 0.1);
   border: 2px solid rgba(0, 176, 152, 0.2);
 }
 
-/* Dark Mode für Icons */
-.dark .tile-icon {
-  color: #00B098;
-  filter: none;
+.pain-dialog .menu-tile:hover .tile-icon {
+  transform: scale(1.1);
 }
 
-.dark .tile-icon.icon-inverted {
-  color: white;
-  filter: none;
+/* Active States */
+.pain-dialog .tile-active {
+  background-color: #00B098 !important;
+  border: 3px solid #00B098 !important;
+  box-shadow: 0 15px 35px rgba(0, 176, 152, 0.3);
+  transform: scale(1);
 }
 
-/* Dark Mode für aktive Icons */
-.dark .tile-active .tile-icon {
-  color: white !important;
+.pain-dialog .tile-inactive {
+  background-color: var(--bg-secondary);
+  border: 3px solid var(--border-primary);
+}
+
+
+
+.pain-dialog .icon-active {
+  background-color: transparent;
+  border: none;
+}
+
+/* Main view icons get white filter when active */
+.pain-dialog .grid-container .icon-active .tile-icon {
   filter: brightness(0) invert(1);
 }
 
-/* Dark Mode Icon-Container Hover-Effekt */
-.dark .pain-dialog .menu-tile:hover .tile-icon-container {
-  background-color: rgba(0, 176, 152, 0.1);
-  border: 2px solid rgba(0, 176, 152, 0.2);
+/* Icons without filters - colors controlled by SVG fill */
+.pain-dialog .tile-inactive .tile-icon {
+  /* No filter applied - colors controlled by SVG fill */
 }
 
-/* Dark Mode für Text */
-.dark .tile-text {
+.pain-dialog .tile-active .tile-icon {
+  /* No filter applied - colors controlled by SVG fill */
+}
+
+
+
+
+
+.pain-dialog .text-active {
+  color: white;
+  font-weight: 600;
+}
+
+/* Main view icons get white filter when inverted */
+.pain-dialog .grid-container .icon-inverted {
+  filter: brightness(0) invert(1);
+}
+
+/* Torso icon 20% größer */
+.pain-dialog .tile-icon[src*="torso1.svg"] {
+  width: 192px; /* 20% größer als 160px */
+  height: 192px; /* 20% größer als 160px */
+}
+
+/* Carousel icons should NOT get white filter */
+.pain-dialog .carousel-container .icon-active .tile-icon {
+  filter: none;
+}
+
+.pain-dialog .carousel-container .icon-inverted {
+  filter: none;
+}
+
+/* Pain Scale Title - Responsive - matches main-title styling */
+.pain-dialog .pain-scale-title {
+  font-family: 'Source Code Pro', monospace;
+  font-size: 3rem;
+  font-weight: 300;
   color: var(--text-primary);
+  margin: 0 0 4rem 0;
+  text-align: center;
+  transition: color 0.3s ease;
 }
 
-.dark .text-active {
-  color: white !important;
-}
-
-.dark .text-inactive {
-  color: var(--text-primary);
-}
-
-/* Responsive Design - spezifische Anpassungen für PainDialogView */
-
-/* Tablet (1024px und kleiner) */
-@media (max-width: 1024px) {
-  .pain-dialog .grid-container {
-    grid-template-columns: repeat(2, 1fr) !important;
-    gap: 1.25rem !important;
-    max-width: 100% !important;
-  }
-  
-  .pain-dialog .menu-tile {
-    padding: 1.5rem !important;
-    height: 140px !important;
-    max-width: 280px !important;
-  }
-  
-  .pain-dialog .tile-icon-container {
-    width: 60px !important;
-    height: 60px !important;
-  }
-  
-  .pain-dialog .tile-icon {
-    width: 40px !important;
-    height: 40px !important;
-  }
-  
-  .pain-dialog .tile-text {
-    font-size: 1rem !important;
-  }
-}
-
-/* Mobile (600px und kleiner) */
-@media (max-width: 600px) {
-  .pain-dialog .grid-container {
-    grid-template-columns: 1fr !important;
-    gap: 0.75rem !important;
-    width: 100% !important;
-    padding: 0 !important;
-    margin: 0 !important;
-  }
-  
-  .pain-dialog .menu-tile {
-    width: 100% !important;
-    height: auto !important;
-    max-width: none !important;
-    padding: 1rem !important;
-    border-width: 2px !important;
-    border-radius: 0.75rem !important;
-    min-height: 60px !important;
-  }
-  
-  .pain-dialog .tile-icon-container {
-    width: 50px !important;
-    height: 50px !important;
-    margin-bottom: 0.5rem !important;
-  }
-  
-  .pain-dialog .tile-icon {
-    width: 30px !important;
-    height: 30px !important;
-  }
-  
-  .pain-dialog .tile-text {
-    font-size: 0.9rem !important;
-  }
-}
-
-/* Sehr kleine Bildschirme (480px und kleiner) */
-@media (max-width: 480px) {
-  .pain-dialog .main-content {
-    padding: 0.5rem 0 !important;
-    height: 100vh !important;
-    overflow: hidden !important;
-    display: flex !important;
-    flex-direction: column !important;
-    justify-content: center !important;
-    align-items: center !important;
-  }
-  
-  .pain-dialog .grid-container {
-    gap: 0.25rem !important;
-    padding: 0 0.25rem !important;
-    margin-bottom: 0.75rem !important;
-    height: calc(100vh - 150px) * 1.4 !important;
-  }
-  
-  .pain-dialog .menu-tile {
-    flex: 0 0 75% !important;
-    width: 75% !important;
-    aspect-ratio: 1.1 !important;
-    padding: 0.75rem !important;
-    margin: 0 0.125rem !important;
-  }
-  
-  .pain-dialog .tile-text {
-    font-size: 1.5rem !important;
-  }
-  
-  .pain-dialog .tile-icon-container {
-    margin-bottom: 0.75rem !important;
-    width: 2rem !important;
-    height: 2rem !important;
-  }
-  
-  .pain-dialog .tile-icon {
-    width: 3.5rem !important;
-    height: 3.5rem !important;
-  }
-}
-
-/* Große Bildschirme (1200px und größer) */
-@media (min-width: 1200px) {
-  .pain-dialog .grid-container {
-    max-width: 90% !important;
-    gap: 3rem !important;
-  }
-  
-  .pain-dialog .menu-tile {
-    padding: 2.5rem 3rem !important;
-    height: 260px !important;
-    max-width: 450px !important;
-    min-width: 380px !important;
-  }
-  
-  .pain-dialog .tile-icon-container {
-    width: 110px !important;
-    height: 110px !important;
-    margin-bottom: 1.2rem !important;
-  }
-  
-  .pain-dialog .tile-icon {
-    width: 75px !important;
-    height: 75px !important;
-  }
-  
-  .pain-dialog .tile-text {
-    font-size: 1.6rem !important;
-    font-weight: 700 !important;
-  }
-}
-
-/* Sehr große Bildschirme (1600px und größer) */
-@media (min-width: 1600px) {
-  .pain-dialog .grid-container {
-    max-width: 85% !important;
-    gap: 4rem !important;
-  }
-  
-  .pain-dialog .menu-tile {
-    padding: 3rem 3.5rem !important;
-    height: 300px !important;
-    max-width: 550px !important;
-    min-width: 480px !important;
-  }
-  
-  .pain-dialog .tile-icon-container {
-    width: 125px !important;
-    height: 125px !important;
-    margin-bottom: 1.5rem !important;
-  }
-  
-  .pain-dialog .tile-icon {
-    width: 85px !important;
-    height: 85px !important;
-  }
-  
-  .pain-dialog .tile-text {
-    font-size: 1.8rem !important;
-    font-weight: 700 !important;
-  }
-}
-
-/* === Subregion Karussell 3D Effekt === */
-.pain-dialog .carousel-container {
-  position: relative !important;
-  width: 90vw !important;
-  max-width: 1200px !important;
-  margin: 0 auto !important;
-  padding: 1rem 0 !important;
-  display: flex !important;
-  align-items: center !important;
-  justify-content: center !important;
-  perspective: 2000px !important;
-  overflow: visible !important;
-}
-
-.pain-dialog .carousel-content {
-  display: flex !important;
-  align-items: center !important;
-  justify-content: center !important;
-  width: 100% !important;
-  transition: transform 0.8s ease-in-out !important; /* Sanftes Gleiten */
-  transform-style: preserve-3d !important;
-}
-
-.pain-dialog .carousel-item {
-  position: absolute !important;
-  width: 300px !important;
-  height: 400px !important;
-  top: 0 !important;
-  left: 50% !important;
-  transform: translateX(calc(-50% + var(--offset, 0) * 350px)) scale(0.7) rotateY(var(--rotation, 20deg)) !important;
-  opacity: 0.5 !important;
-  transition: transform 0.8s ease-in-out, opacity 0.8s ease-in-out !important;
-  z-index: 1 !important;
-  cursor: pointer !important;
-}
-
-.pain-dialog .carousel-item-active {
-  transform: translateX(-50%) scale(1) rotateY(0deg) !important;
-  opacity: 1 !important;
-  z-index: 3 !important;
-}
-
-/* Spezielle Positionierung für links (alt) und rechts (neu) */
-.pain-dialog .carousel-item[style*="--offset: -1"] {
-  transform: translateX(calc(-50% - 350px)) scale(0.7) rotateY(-20deg) !important;
-  opacity: 0.6 !important;
-}
-
-.pain-dialog .carousel-item[style*="--offset: 1"] {
-  transform: translateX(calc(-50% + 350px)) scale(0.7) rotateY(20deg) !important;
-  opacity: 0.6 !important;
-}
-
-.pain-dialog .carousel-item-inactive {
-  opacity: 0.5 !important;
-  z-index: 2 !important;
-}
-
-/* Einfache und robuste Z-Index-Verwaltung */
-.pain-dialog .carousel-item {
-  z-index: 1 !important;
-}
-
-.pain-dialog .carousel-item-active {
-  z-index: 10 !important;
-}
-
-/* Einfache und robuste Lösung - verstecke alle Items außer den 3 benachbarten */
-.pain-dialog .carousel-item {
-  opacity: 0 !important;
-  pointer-events: none !important;
-  z-index: 0 !important;
-}
-
-/* Nur die 3 benachbarten Items sichtbar machen */
-.pain-dialog .carousel-item[style*="--offset: -1"],
-.pain-dialog .carousel-item[style*="--offset: 0"],
-.pain-dialog .carousel-item[style*="--offset: 1"] {
-  opacity: 1 !important;
-  pointer-events: auto !important;
-  z-index: 1 !important;
-}
-
-/* Zusätzliche Sicherheit für reibungslosen Loop */
-.pain-dialog .carousel-item {
-  will-change: transform, opacity !important;
-  backface-visibility: hidden !important;
-  -webkit-backface-visibility: hidden !important;
-}
-
-/* Spezielle Regel für letztes Item um Überlappen zu verhindern */
-.pain-dialog .carousel-item:last-child {
-  z-index: 0 !important;
-}
-
-.pain-dialog .carousel-item:last-child[style*="--offset: 0"] {
-  z-index: 10 !important;
-}
-
-.pain-dialog .carousel-item:last-child[style*="--offset: 1"] {
-  z-index: 1 !important;
-}
-
-.pain-dialog .carousel-item:last-child[style*="--offset: -1"] {
-  z-index: 1 !important;
-}
-
-
-/* Icon-Scaling */
-.pain-dialog .carousel-item .tile-icon-container {
-  width: 180px !important;
-  height: 180px !important;
-  transition: transform 0.6s ease !important;
-}
-
-.pain-dialog .carousel-item-active .tile-icon-container {
-  transform: scale(1.3) !important;
-}
-
-.pain-dialog .carousel-item-content {
-  width: 100% !important;
-  max-width: 500px !important;
-  height: 450px !important;
-  display: flex !important;
-  flex-direction: column !important;
-  align-items: center !important;
-  justify-content: center !important;
-  background-color: var(--bg-secondary) !important;
-  border-radius: 1.5rem !important;
-  padding: 2.5rem !important;
-  box-shadow: 0 0 25px rgba(0, 176, 152, 0.2) !important;
-  transition: all 4s cubic-bezier(0.25, 0.46, 0.45, 0.94) !important; /* Much much slower */
-  border: 3px solid transparent !important;
-  transform: scale(0.9) !important;
-}
-
-/* Icons im Karussell - korrekte Selektoren */
-.pain-dialog .carousel-item-content .tile-icon-container {
-  width: 250px !important;
-  height: 250px !important;
-  margin-bottom: 1.5rem !important;
-  display: flex !important;
-  align-items: center !important;
-  justify-content: center !important;
-  border-radius: 50% !important;
-  transition: all 3s cubic-bezier(0.25, 0.46, 0.45, 0.94) !important; /* Much slower */
-}
-
-.pain-dialog .carousel-item-content .tile-icon {
-  width: 150px !important;
-  height: 150px !important;
-  transition: all 3s cubic-bezier(0.25, 0.46, 0.45, 0.94) !important; /* Much slower */
-}
-
-/* Zusätzliche Selektoren für bessere Abdeckung */
-.pain-dialog .carousel-item .tile-icon-container {
-  width: 250px !important;
-  height: 250px !important;
-  margin-bottom: 1.5rem !important;
-}
-
-.pain-dialog .carousel-item .tile-icon {
-  width: 150px !important;
-  height: 150px !important;
-}
-
-/* Sehr spezifische Selektoren für Karussell-Icons */
-.pain-dialog .carousel-item-content .tile-icon-container,
-.pain-dialog .carousel-item .tile-icon-container,
-.pain-dialog .carousel-item-content .tile-icon-container {
-  width: 250px !important;
-  height: 250px !important;
-  margin-bottom: 1.5rem !important;
-}
-
-.pain-dialog .carousel-item-content .tile-icon,
-.pain-dialog .carousel-item .tile-icon,
-.pain-dialog .carousel-item-content .tile-icon {
-  width: 150px !important;
-  height: 150px !important;
-}
-
-.pain-dialog .carousel-item-active .carousel-item-content {
-  transform: scale(1) !important;
-  box-shadow: 0 0 35px rgba(0, 176, 152, 0.4) !important;
-  border: 3px solid rgba(0, 176, 152, 0.6) !important;
-}
-
-
-/* Indicators */
-.pain-dialog .carousel-indicators {
-  display: flex !important;
-  justify-content: center !important;
-  align-items: center !important;
-  gap: 1rem !important;
-  margin-top: 3rem !important;
-  margin-bottom: 2rem !important;
-  position: absolute !important;
-  bottom: 2rem !important;
-  left: 50% !important;
-  transform: translateX(-50%) !important;
-  width: 100% !important;
-}
-
-.pain-dialog .carousel-indicator {
-  width: 16px !important;
-  height: 16px !important;
-  border-radius: 50% !important;
-  background-color: rgba(0, 176, 152, 0.3) !important;
-  border: none !important;
-  cursor: pointer !important;
-  transition: all 0.3s ease !important;
-  margin: 0 0.5rem !important;
-}
-
-.pain-dialog .carousel-indicator-active {
-  background-color: rgba(0, 176, 152, 0.8) !important;
-  transform: scale(1.2) !important;
-  box-shadow: 0 0 10px rgba(0, 176, 152, 0.5) !important;
-}
-
-.pain-dialog .carousel-indicator:hover {
-  background-color: rgba(0, 176, 152, 0.6) !important;
-  transform: scale(1.1) !important;
-  transition: all 0.3s ease !important;
-}
-
-/* Kacheln – leicht vergrößert, ausgewogenes Verhältnis */
-.pain-dialog .menu-tile.sub-region-tile {
-  width: 100% !important;
-  aspect-ratio: 4 / 5 !important;
-  min-height: 260px !important;
-
-  background-color: var(--bg-secondary) !important;
-  border-radius: 1.25rem !important;
-  padding: 1.75rem !important;
-  display: flex !important;
-  flex-direction: column !important;
-  align-items: center !important;
-  justify-content: center !important;
-  transition: all 3s cubic-bezier(0.25, 0.46, 0.45, 0.94) !important; /* Much slower */
-  box-shadow: 0 0 18px rgba(0, 176, 152, 0.12) !important;
-  cursor: pointer !important;
-  border: 3px solid transparent !important;
-  position: relative !important;
-  overflow: visible !important;
-  z-index: 1 !important;
-}
-
-.pain-dialog .menu-tile.sub-region-tile .tile-icon-container {
-  width: 200px !important;
-  height: 200px !important;
-  margin-bottom: 1.6rem !important;
-  display: flex !important;
-  align-items: center !important;
-  justify-content: center !important;
-  border-radius: 50% !important;
-  transition: all 3s cubic-bezier(0.25, 0.46, 0.45, 0.94) !important; /* Much slower */
-}
-
-.pain-dialog .menu-tile.sub-region-tile .tile-icon {
-  width: 120px !important;
-  height: 120px !important;
-  transition: all 3s cubic-bezier(0.25, 0.46, 0.45, 0.94) !important; /* Much slower */
-}
-
-.pain-dialog .menu-tile.sub-region-tile:hover {
-  transform: scale(1.05) !important;
-  box-shadow: 0 0 28px rgba(0, 176, 152, 0.3) !important;
-}
-
-/* Aktive Kachel - verstärkter Glow */
-.pain-dialog .menu-tile.sub-region-tile.tile-active {
-  transform: scale(1.02) !important;
-  box-shadow: 0 0 30px rgba(0, 176, 152, 0.4) !important;
-  border: 3px solid rgba(0, 176, 152, 0.6) !important;
-}
-
-/* Text & Icon */
-.pain-dialog .menu-tile.sub-region-tile .tile-text {
-  font-family: 'Source Code Pro', monospace !important;
-  font-size: 1.1rem !important;
-  font-weight: 500 !important;
-  color: var(--text-primary) !important;
-  white-space: normal !important;
-  text-align: center !important;
-  word-break: break-word !important;
-  max-width: 90% !important;
-  transition: color 0.3s ease !important;
-  opacity: 1 !important;
-  visibility: visible !important;
-}
-
-/* Confirmation View Styles */
-.confirmation-container {
+/* Confirmation Container - matches main-title styling */
+.pain-dialog .confirmation-container {
   text-align: center;
   padding: 2rem;
-  max-width: 100%;
-  width: 100%;
-  margin: 0 auto;
 }
 
-.confirmation-container h2 {
+.pain-dialog .confirmation-container h2 {
   font-family: 'Source Code Pro', monospace;
-  font-size: 4.5rem;
+  font-size: 6rem; /* 100% größer als 3rem */
   font-weight: 300;
   color: var(--text-primary);
   margin: 0 0 2rem 0;
@@ -605,116 +194,473 @@
   transition: color 0.3s ease;
 }
 
-.confirmation-container p {
-  font-family: 'Source Code Pro', monospace;
-  font-size: 3rem;
-  font-weight: 400;
-  color: var(--text-primary);
-  margin: 0;
-  line-height: 1.3;
-  max-width: 90%;
+/* Zurück-Kachel spezielle Styles */
+.pain-dialog .menu-tile.back-tile {
+  background-color: var(--bg-secondary);
+  border: 3px solid transparent;
+  z-index: 999; /* Höchster z-index für Zurück-Button */
+}
+
+.pain-dialog .menu-tile.back-tile:hover {
+  background-color: rgba(0, 176, 152, 0.1);
+  border: 3px solid rgba(0, 176, 152, 0.3);
+}
+
+.pain-dialog .menu-tile.back-tile .tile-icon-container {
+  background-color: transparent;
+  border: none;
+}
+
+.pain-dialog .menu-tile.back-tile:hover .tile-icon-container {
+  background-color: rgba(0, 176, 152, 0.1);
+  border: 2px solid rgba(0, 176, 152, 0.3);
+}
+
+/* === KARUSSELL STYLES === */
+.pain-dialog .carousel-container {
+  position: relative;
+  width: 90vw;
+  max-width: 1200px;
   margin: 0 auto;
-  word-wrap: break-word;
+  padding: 1rem 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  perspective: 2000px;
+  overflow: visible;
 }
 
-/* Responsive Design für Confirmation */
-@media (max-width: 768px) {
-  .confirmation-container h2 {
-    font-size: 3.5rem;
-  }
-  
-  .confirmation-container p {
-    font-size: 2.5rem;
-  }
+.pain-dialog .carousel-content {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  transition: transform 0.8s ease-in-out;
+  transform-style: preserve-3d;
 }
 
+.pain-dialog .carousel-item {
+  position: absolute;
+  width: 300px;
+  height: 400px;
+  top: 0;
+  left: 50%;
+  transform: translateX(calc(-50% + var(--offset, 0) * 350px)) scale(0.7) rotateY(var(--rotation, 20deg));
+  opacity: 0;
+  pointer-events: none;
+  z-index: 0;
+  transition: transform 0.8s ease-in-out, opacity 0.8s ease-in-out;
+  cursor: pointer;
+}
+
+/* Nur die 3 benachbarten Items sichtbar machen */
+.pain-dialog .carousel-item[style*="--offset: -1"],
+.pain-dialog .carousel-item[style*="--offset: 0"],
+.pain-dialog .carousel-item[style*="--offset: 1"] {
+  opacity: 1;
+  pointer-events: auto;
+  z-index: 1;
+}
+
+.pain-dialog .carousel-item-active {
+  transform: translateX(-50%) scale(1) rotateY(0deg);
+  opacity: 1;
+  z-index: 10;
+}
+
+.pain-dialog .carousel-item-content {
+  max-width: 500px;
+  height: 450px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  background-color: var(--bg-secondary);
+  border-radius: 1.5rem;
+  padding: 2.5rem;
+  box-shadow: 0 0 25px rgba(0, 176, 152, 0.2);
+  transition: all 0.8s ease-in-out;
+  border: 3px solid transparent;
+  transform: scale(0.9);
+}
+
+.pain-dialog .carousel-item-active .carousel-item-content {
+  transform: scale(1);
+  box-shadow: 0 0 35px rgba(0, 176, 152, 0.4);
+  border: 3px solid rgba(0, 176, 152, 0.6);
+}
+
+.pain-dialog .carousel-item-content .tile-icon-container {
+  width: 250px;
+  height: 250px;
+  margin-bottom: 1.5rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  transition: all 0.8s ease-in-out;
+}
+
+.pain-dialog .carousel-item-content .tile-icon {
+  width: 173px; /* 15% größer */
+  height: 173px; /* 15% größer */
+  transition: all 0.8s ease-in-out;
+}
+
+.pain-dialog .carousel-item-content .tile-text {
+  font-family: 'Source Code Pro', monospace;
+  font-size: 1.44rem;
+  font-weight: 500;
+  color: var(--text-primary);
+  text-align: center;
+  transition: color 0.3s ease;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* Aktive Karussell-Texte sollen schwarz, 30% größer und dicker sein */
+.pain-dialog .carousel-item-active .carousel-item-content .tile-text {
+  color: black !important;
+  font-size: 1.872rem; /* 30% größer als 1.44rem */
+  font-weight: 700; /* Dicker/dicker */
+}
+
+/* Indicators */
+.pain-dialog .carousel-indicators {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 1rem;
+  margin-top: 3rem;
+  margin-bottom: 2rem;
+  position: absolute;
+  bottom: 2rem;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 100%;
+}
+
+.pain-dialog .carousel-indicator {
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background-color: rgba(0, 176, 152, 0.3);
+  border: none;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  margin: 0 0.5rem;
+}
+
+.pain-dialog .carousel-indicator-active {
+  background-color: rgba(0, 176, 152, 0.8);
+  transform: scale(1.2);
+  box-shadow: 0 0 10px rgba(0, 176, 152, 0.5);
+}
+
+.pain-dialog .carousel-indicator:hover {
+  background-color: rgba(0, 176, 152, 0.6);
+  transform: scale(1.1);
+}
+
+/* === MOBILE RESPONSIVE DESIGN === */
 @media (max-width: 480px) {
-  .confirmation-container h2 {
-    font-size: 3rem;
+  .pain-dialog .main-content {
+    padding-top: 0;
+    margin-top: 0;
+    align-items: flex-start;
+    min-height: 100vh;
+    overflow-y: auto;
+    justify-content: flex-start;
   }
   
-  .confirmation-container p {
-    font-size: 2rem;
+  .pain-dialog .main-title {
+    font-size: 2.25rem; /* 25% größer als 1.8rem */
+    margin: 0.5rem 0 1.5rem 0;
+    padding-top: 0.2rem;
+    line-height: 1.2;
+    font-weight: 600; /* Weniger dick */
   }
-}
-
-/* Responsive Karussell */
-@media (max-width: 1024px) {
+  
+  .pain-dialog .grid-container {
+    grid-template-columns: repeat(2, 1fr);
+    grid-template-rows: repeat(2, 1fr) auto; /* Letzte Reihe auto für Zurück-Button */
+    gap: 0.3rem;
+    padding: 0 0.3rem 2rem 0.3rem;
+    margin-top: 1rem;
+    max-width: 100vw;
+    overflow: visible;
+  }
+  
+  
+  .pain-dialog .menu-tile {
+    padding: 0.5rem;
+    aspect-ratio: 1 / 1;
+    min-width: 0;
+  }
+  
+  .pain-dialog .tile-icon-container {
+    width: 120px;
+    height: 120px;
+    margin-bottom: 0.2rem;
+  }
+  
+  .pain-dialog .tile-icon {
+    width: 104px; /* 15% größer */
+    height: 104px; /* 15% größer */
+  }
+  
+  .pain-dialog .tile-text {
+    font-size: 1.6rem;
+  }
+  
+  .pain-dialog .pain-scale-title {
+    font-size: 2.25rem; /* 25% größer als 1.8rem */
+    margin: 0.5rem 0 1.5rem 0;
+    padding-top: 0.2rem;
+    line-height: 1.2;
+    font-weight: 600; /* Weniger dick */
+  }
+  
+  .pain-dialog .confirmation-container h2 {
+    font-size: 2.25rem; /* 25% größer als 1.8rem */
+    margin: 0.5rem 0 1.5rem 0;
+    padding-top: 0.2rem;
+    line-height: 1.2;
+    font-weight: 600; /* Weniger dick */
+  }
+  
+  /* Torso icon 3% größer auf mobile */
+  .pain-dialog .tile-icon[src*="torso1.svg"] {
+    width: 107px; /* 3% größer als 104px */
+    height: 107px; /* 3% größer als 104px */
+  }
+  
   .pain-dialog .carousel-container {
-    width: 95% !important;
-    max-width: 800px !important;
+    width: 95vw;
+    max-width: 350px;
+    padding: 1rem 0;
+    perspective: 1500px;
+    margin-top: 2rem;
+  }
+  
+  .pain-dialog .carousel-item {
+    width: 280px;
+    height: 350px;
+    transform: translateX(calc(-50% + var(--offset, 0) * 300px)) scale(0.6) rotateY(var(--rotation, 20deg));
+  }
+  
+  .pain-dialog .carousel-item-active {
+    transform: translateX(-50%) scale(0.9) rotateY(0deg);
   }
   
   .pain-dialog .carousel-item-content {
-    max-width: 450px !important;
-    height: 400px !important;
+    max-width: 280px;
+    height: 320px;
+    padding: 1.5rem;
+    border-radius: 1rem;
   }
   
-  .pain-dialog .carousel-item-content .tile-icon-container,
-  .pain-dialog .carousel-item .tile-icon-container {
-    width: 200px !important;
-    height: 200px !important;
+  .pain-dialog .carousel-item-content .tile-icon-container {
+    width: 180px;
+    height: 180px;
+    margin-bottom: 1rem;
   }
   
-  .pain-dialog .carousel-item-content .tile-icon,
-  .pain-dialog .carousel-item .tile-icon {
-    width: 120px !important;
-    height: 120px !important;
+  .pain-dialog .carousel-item-content .tile-icon {
+    width: 138px; /* 15% größer */
+    height: 138px; /* 15% größer */
   }
   
-  .pain-dialog .carousel-nav {
-    width: 50px !important;
-    height: 50px !important;
+  .pain-dialog .carousel-item-content .tile-text {
+    font-size: 1.2rem;
+    font-weight: 600;
+  line-height: 1.3;
   }
   
-  .pain-dialog .carousel-nav-left {
-    left: -25px !important;
+  .pain-dialog .carousel-indicators {
+    margin-top: 0.5rem;
+    margin-bottom: 1rem;
+    gap: 0.5rem;
   }
   
-  .pain-dialog .carousel-nav-right {
-    right: -25px !important;
+  .pain-dialog .carousel-indicator {
+    width: 16px;
+    height: 16px;
+    margin: 0 0.2rem;
+    min-width: 16px;
+    min-height: 16px;
+  }
+  
+  .pain-dialog .carousel-indicator-active {
+    transform: scale(1.3);
+    box-shadow: 0 0 15px rgba(0, 176, 152, 0.6);
   }
 }
 
-@media (max-width: 600px) {
+@media (max-width: 320px) {
+  .pain-dialog .main-title {
+    font-size: 1.875rem; /* 25% größer als 1.5rem */
+    margin: 0.3rem 0 1rem 0;
+    padding-top: 0.1rem;
+    line-height: 1.1;
+    font-weight: 600; /* Weniger dick */
+  }
+  
+  .pain-dialog .grid-container {
+    gap: 0.2rem;
+    padding: 0 0.2rem 1.5rem 0.2rem;
+    max-width: 100vw;
+    overflow: visible;
+  }
+  
+  .pain-dialog .menu-tile {
+    padding: 0.3rem;
+    aspect-ratio: 1 / 1;
+    min-width: 0;
+  }
+  
+  .pain-dialog .tile-icon-container {
+    width: 90px;
+    height: 90px;
+    margin-bottom: 0.1rem;
+  }
+  
+  .pain-dialog .tile-icon {
+    width: 75px; /* 15% größer */
+    height: 75px; /* 15% größer */
+  }
+  
+  .pain-dialog .tile-text {
+    font-size: 1.2rem;
+  }
+  
+  .pain-dialog .pain-scale-title {
+    font-size: 1.875rem; /* 25% größer als 1.5rem */
+    margin: 0.3rem 0 1rem 0;
+    padding-top: 0.1rem;
+    line-height: 1.1;
+    font-weight: 600; /* Weniger dick */
+  }
+  
+  .pain-dialog .confirmation-container h2 {
+    font-size: 1.875rem; /* 25% größer als 1.5rem */
+    margin: 0.3rem 0 1rem 0;
+    padding-top: 0.1rem;
+    line-height: 1.1;
+    font-weight: 600; /* Weniger dick */
+  }
+  
+  /* Torso icon 3% größer auf kleine mobile */
+  .pain-dialog .tile-icon[src*="torso1.svg"] {
+    width: 77px; /* 3% größer als 75px */
+    height: 77px; /* 3% größer als 75px */
+  }
+
+.pain-dialog .carousel-container {
+    width: 98vw;
+    max-width: 300px;
+    margin-top: 1.5rem;
+    padding: 1rem 0;
+  }
+  
+  .pain-dialog .carousel-indicators {
+    margin-top: 0.3rem;
+    margin-bottom: 0.5rem;
+    gap: 0.2rem;
+  }
+  
+  .pain-dialog .carousel-indicator {
+    width: 12px;
+    height: 12px;
+    margin: 0 0.1rem;
+    min-width: 12px;
+    min-height: 12px;
+  }
+
+.pain-dialog .carousel-item {
+    width: 250px;
+    height: 320px;
+    transform: translateX(calc(-50% + var(--offset, 0) * 280px)) scale(0.5) rotateY(var(--rotation, 20deg));
+}
+
+.pain-dialog .carousel-item-content {
+    max-width: 250px;
+    height: 290px;
+    padding: 1.2rem;
+  }
+  
+.pain-dialog .carousel-item-content .tile-icon-container {
+    width: 100px;
+    height: 100px;
+}
+
+.pain-dialog .carousel-item-content .tile-icon {
+    width: 70px;
+    height: 70px;
+  }
+  
+  .pain-dialog .carousel-item-content .tile-text {
+    font-size: 1.1rem;
+  }
+}
+
+@media (max-width: 768px) and (orientation: landscape) {
+  .pain-dialog .main-content {
+    padding-top: 0;
+    margin-top: 0;
+    align-items: flex-start;
+  }
+  
+  .pain-dialog .main-title {
+    font-size: 1.6rem;
+    margin: 0.3rem 0 1rem 0;
+    padding-top: 0.1rem;
+    line-height: 1.1;
+  }
+  
   .pain-dialog .carousel-container {
-    width: 90% !important;
-    max-width: 400px !important;
+    width: 90vw;
+    max-width: 600px;
+    height: 60vh;
+  }
+  
+  .pain-dialog .carousel-item {
+    width: 300px;
+    height: 250px;
   }
   
   .pain-dialog .carousel-item-content {
-    max-width: 350px !important;
-    height: 350px !important;
-    padding: 2rem !important;
+    max-width: 300px;
+    height: 220px;
+    padding: 1.5rem;
   }
   
-  .pain-dialog .carousel-item-content .tile-icon-container,
-  .pain-dialog .carousel-item .tile-icon-container {
-    width: 150px !important;
-    height: 150px !important;
+  .pain-dialog .carousel-item-content .tile-icon-container {
+    width: 150px;
+    height: 150px;
   }
   
-  .pain-dialog .carousel-item-content .tile-icon,
-  .pain-dialog .carousel-item .tile-icon {
-    width: 100px !important;
-    height: 100px !important;
+  .pain-dialog .carousel-item-content .tile-icon {
+    width: 121px; /* 15% größer */
+    height: 121px; /* 15% größer */
   }
   
-  .pain-dialog .carousel-nav {
-    width: 40px !important;
-    height: 40px !important;
+  .pain-dialog .carousel-item-content .tile-text {
+    font-size: 1.1rem;
   }
   
-  .pain-dialog .carousel-nav-left {
-    left: -20px !important;
+  .pain-dialog .pain-scale-title {
+    font-size: 1.6rem;
+    margin: 0.3rem 0 1rem 0;
+    padding-top: 0.1rem;
+    line-height: 1.1;
   }
   
-  .pain-dialog .carousel-nav-right {
-    right: -20px !important;
-  }
-  
-  .pain-dialog .carousel-nav-icon {
-    width: 20px !important;
-    height: 20px !important;
+  .pain-dialog .confirmation-container h2 {
+    font-size: 1.6rem;
+    margin: 0.3rem 0 1rem 0;
+    padding-top: 0.1rem;
+    line-height: 1.1;
   }
 }

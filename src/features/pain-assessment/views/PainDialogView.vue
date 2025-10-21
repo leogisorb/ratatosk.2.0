@@ -19,9 +19,12 @@
               v-for="(region, index) in mainRegions"
               :key="region.id"
               class="menu-tile"
-              :class="currentTileIndex === index ? 'tile-active' : 'tile-inactive'"
-              @click="selectMainRegion(region.id)"
-              @contextmenu.prevent="handleMainRegionRightClick($event, region.id)"
+              :class="[
+                currentTileIndex === index ? 'tile-active' : 'tile-inactive',
+                region.id === 'zurueck' ? 'back-tile' : ''
+              ]"
+              @click="region.id === 'zurueck' ? goBack() : selectMainRegion(region.id)"
+              @contextmenu.prevent="region.id === 'zurueck' ? goBack() : handleMainRegionRightClick($event, region.id)"
             >
               <div 
                 class="tile-icon-container"
@@ -38,7 +41,6 @@
               <div 
                 class="tile-text"
                 :class="currentTileIndex === index ? 'text-active' : 'text-inactive'"
-                :style="currentTileIndex === index ? 'color: white !important;' : ''"
               >
                 {{ region.title }}
               </div>
@@ -84,7 +86,6 @@
                   <div 
                     class="tile-text"
                     :class="currentTileIndex === index ? 'text-active' : 'text-inactive'"
-                    :style="currentTileIndex === index ? 'color: white !important;' : ''"
                   >
                     {{ subRegion.title }}
                   </div>
@@ -108,7 +109,9 @@
         </div>
 
         <!-- Pain Scale View -->
-        <div v-if="currentState === 'painScaleView'">
+        <div v-if="currentState === 'painScaleView'"
+             @touchstart="handlePainScaleTouch"
+             @click="handlePainScaleClick">
           <div class="pain-scale-display">
             <div class="pain-scale-title">
                   Wie stark sind Ihre {{ getSubRegionTitle(selectedSubRegion) }}schmerzen?
@@ -121,7 +124,9 @@
             </div>
           </div>
 
-          <div class="pain-scale-bar">
+          <div class="pain-scale-bar"
+               @touchstart="handlePainScaleTouch"
+               @click="handlePainScaleClick">
             <div class="pain-scale-progress"
               :style="{ width: `${((painLevels[currentTileIndex]?.level || (currentTileIndex + 1)) - 1) * 10 + 5}%` }"
             ></div>
@@ -133,6 +138,8 @@
                 class="pain-scale-number"
                 :class="{ 'active': currentTileIndex === index }"
                 :style="{ left: `${(index * 10) + 5}%` }"
+                @touchstart="selectPainLevel(level.level)"
+                @click="selectPainLevel(level.level)"
               >
                 {{ level.level }}
               </span>
@@ -244,6 +251,16 @@ const selectMainRegion = async (regionId: string) => {
 
 const selectSubRegion = async (subRegionId: string) => {
   console.log('Selecting sub region:', subRegionId)
+  
+  if (subRegionId === 'zurueck') {
+    // Zurück zu den Hauptregionen
+    currentState.value = 'mainView'
+    currentTileIndex.value = 0
+    selectedMainRegion.value = null
+    selectedSubRegion.value = null
+    return
+  }
+  
   selectedSubRegion.value = subRegionId
   currentState.value = 'painScaleView'
   currentTileIndex.value = 0
@@ -341,6 +358,12 @@ const handlePainLevelSelection = (item: any) => {
 }
 
 
+const goBack = () => {
+  console.log('Going back to main app')
+  // Navigate to /app route
+  window.location.href = '/app'
+}
+
 const goToSubRegion = (index: number) => {
   console.log('goToSubRegion called with index:', index, 'current:', currentTileIndex.value)
   if (index >= 0 && index < currentSubRegions.value.length) {
@@ -355,6 +378,23 @@ const goToSubRegion = (index: number) => {
     }
     console.log('Looped currentTileIndex to:', currentTileIndex.value)
   }
+}
+
+// Touch-Handler für Pain Scale in PainDialogView
+const handlePainScaleTouch = (event: TouchEvent) => {
+  event.preventDefault()
+  event.stopPropagation()
+  console.log('Touch detected on pain scale in PainDialogView')
+  const level = painLevels[currentTileIndex.value]?.level || (currentTileIndex.value + 1)
+  selectPainLevel(level)
+}
+
+const handlePainScaleClick = (event: MouseEvent) => {
+  event.preventDefault()
+  event.stopPropagation()
+  console.log('Click detected on pain scale in PainDialogView')
+  const level = painLevels[currentTileIndex.value]?.level || (currentTileIndex.value + 1)
+  selectPainLevel(level)
 }
 
 // Lifecycle management

@@ -132,7 +132,13 @@ const stopAutoMode = () => {
 
 // Pain Level Auswahl
 function selectPainLevel(level: number) {
-  console.log('🔥 PainScaleView: selectPainLevel called with level:', level)
+  console.log('🔥 PainScaleView: selectPainLevel called with level:', level, 'isSelectionComplete:', isSelectionComplete.value)
+  
+  if (isSelectionComplete.value) {
+    console.log('Selection already complete, ignoring')
+    return
+  }
+  
   pauseAutoMode()
   isSelectionComplete.value = true
   
@@ -197,6 +203,30 @@ const handleRightClick = (event: MouseEvent) => {
   }
 }
 
+// Touch-Handler für mobile Geräte
+const handleBarClick = (event: MouseEvent) => {
+  event.preventDefault()
+  event.stopPropagation()
+  console.log('Click detected on pain scale')
+  if (!isSelectionComplete.value) {
+    selectPainLevel(currentPainLevel.value)
+  }
+}
+
+const handleBarTouch = (event: TouchEvent) => {
+  event.preventDefault()
+  event.stopPropagation()
+  console.log('Touch detected on pain scale bar, current level:', currentPainLevel.value)
+  if (!isSelectionComplete.value) {
+    selectPainLevel(currentPainLevel.value)
+  }
+}
+
+const handleBarTouchEnd = (event: TouchEvent) => {
+  event.preventDefault()
+  console.log('Touch end detected on pain scale bar')
+}
+
 // Zurück
 const goBack = () => {
   stopAutoMode()
@@ -256,7 +286,9 @@ onUnmounted(() => {
 
     <!-- Main Content -->
     <main class="pain-main-content">
-      <div class="pain-content-wrapper">
+      <div class="pain-content-wrapper" 
+           @touchstart="handleBarTouch"
+           @click="handleBarClick">
         <!-- Ausgewählter Körperteil und Schmerzlevel Anzeige -->
         <div class="pain-scale-display">
           <div class="pain-selected-container">
@@ -278,7 +310,10 @@ onUnmounted(() => {
         </div>
 
         <!-- Schmerzskala Balken -->
-        <div class="pain-scale-bar">
+        <div class="pain-scale-bar" 
+             @click="handleBarClick"
+             @touchstart="handleBarTouch"
+             @touchend="handleBarTouchEnd">
           <div class="pain-scale-progress"
             :style="{ width: markerPosition + '%' }"
           ></div>
@@ -291,6 +326,9 @@ onUnmounted(() => {
               class="pain-scale-number"
               :class="{ 'active': currentPainLevel === item.level }"
               :style="{ left: `${(index * 10) + 5}%` }"
+              @click="selectPainLevel(item.level)"
+              @touchstart="selectPainLevel(item.level)"
+              @touchend="selectPainLevel(item.level)"
             >
               {{ item.level }}
             </span>
