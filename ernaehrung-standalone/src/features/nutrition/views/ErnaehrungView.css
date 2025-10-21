@@ -1,0 +1,490 @@
+/* ============ ERNÄHRUNG VIEW - OPTIMIERTE CSS ============ */
+
+/* Basis-Container */
+.ernaehrung-app {
+  min-height: 100vh;
+  background-color: var(--bg-primary);
+  color: var(--text-primary);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+/* Hauptinhalt */
+.main-content {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-start;
+  padding: 2rem;
+  gap: 2rem;
+}
+
+.content-wrapper {
+  max-width: 1200px;
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2rem;
+}
+
+/* Haupttext */
+.main-text-container {
+  text-align: center;
+}
+
+.main-text {
+  font-family: 'Source Code Pro', monospace;
+  font-size: 3rem;
+  font-weight: 600;
+  color: var(--text-primary);
+  margin: 0;
+  line-height: 1.2;
+}
+
+/* Feedback-Text */
+.feedback-text-container {
+  text-align: center;
+  min-height: 3rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.feedback-text {
+  font-family: 'Source Code Pro', monospace;
+  font-size: 2rem;
+  font-weight: 400;
+  color: #f97316;
+  margin: 0;
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+
+.feedback-text.show {
+  opacity: 1;
+}
+
+/* ============ SLIDING KARUSSELL ============ */
+.carousel-container {
+  position: relative;
+  width: 100%;
+  max-width: 1200px; /* Breiter für mehr sichtbare Kacheln */
+  height: 400px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: visible; /* Zeige alle Kacheln */
+}
+
+.carousel-track {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.carousel-item {
+  position: absolute;
+  width: 280px;
+  height: 360px;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  transition: all 0.8s cubic-bezier(0.4, 0, 0.2, 1); /* Flüssige Sliding-Animation */
+  will-change: transform, opacity;
+  cursor: pointer;
+  opacity: 0.3;
+  z-index: 1;
+}
+
+/* Sliding Karussell - Position wird über getItemStyle() gesteuert */
+.carousel-item.active {
+  /* Aktive Kachel wird über z-index und opacity in getItemStyle() gesteuert */
+}
+
+.carousel-item.left {
+  /* Linke Kachel wird über getItemStyle() positioniert */
+}
+
+.carousel-item.right {
+  /* Rechte Kachel wird über getItemStyle() positioniert */
+}
+
+.carousel-item.visible {
+  /* Sichtbare Kacheln in der Nähe */
+}
+
+.carousel-item.hidden {
+  opacity: 0;
+  pointer-events: none;
+}
+
+/* Karten-Content */
+.carousel-item-content {
+  width: 100%;
+  height: 100%;
+  background: var(--bg-secondary);
+  border: 2px solid var(--border-primary);
+  border-radius: 20px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 2rem;
+  transition: all 0.3s ease;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+}
+
+.carousel-item.active .carousel-item-content {
+  border-color: var(--accent-primary);
+  box-shadow: 0 15px 35px rgba(0, 176, 152, 0.3);
+  transform: scale(1.05);
+}
+
+/* Icon-Container */
+.tile-icon-container {
+  width: 120px;
+  height: 120px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 1.5rem;
+  border-radius: 50%;
+  background: var(--bg-primary);
+  transition: all 0.3s ease;
+}
+
+.carousel-item.active .tile-icon-container {
+  background: var(--accent-primary);
+}
+
+.tile-emoji {
+  font-size: 4rem;
+  transition: all 0.3s ease;
+}
+
+/* Text-Styles */
+.tile-text {
+  font-family: 'Source Code Pro', monospace;
+  font-size: 1.8rem;
+  font-weight: 600;
+  color: var(--text-primary);
+  text-align: center;
+  margin-bottom: 0.5rem;
+  transition: all 0.3s ease;
+}
+
+.carousel-item.active .tile-text {
+  color: white;
+}
+
+.tile-description {
+  font-family: 'Source Code Pro', monospace;
+  font-size: 1rem;
+  font-weight: 400;
+  color: var(--text-secondary);
+  text-align: center;
+  opacity: 0.8;
+  transition: all 0.3s ease;
+}
+
+.carousel-item.active .tile-description {
+  color: rgba(255, 255, 255, 0.9);
+}
+
+/* Focus-Styles für Accessibility */
+.carousel-item:focus {
+  outline: 3px solid var(--accent-primary);
+  outline-offset: 4px;
+}
+
+.carousel-item:focus-visible {
+  outline: 3px solid var(--accent-primary);
+  outline-offset: 4px;
+}
+
+/* ============ INDIKATOREN ============ */
+.indicators-container {
+  position: fixed;
+  bottom: 2rem;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 1000;
+  background: rgba(0, 0, 0, 0.1);
+  padding: 1rem 2rem;
+  border-radius: 2rem;
+  backdrop-filter: blur(10px);
+}
+
+.carousel-indicators {
+  display: flex;
+  justify-content: center;
+  gap: 0.75rem;
+}
+
+.carousel-indicator {
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  border: 2px solid var(--border-secondary);
+  background: var(--bg-secondary);
+  cursor: pointer;
+  transition: all 0.3s ease;
+  opacity: 0.6;
+}
+
+.carousel-indicator:hover {
+  border-color: var(--accent-primary);
+  transform: scale(1.1);
+}
+
+.carousel-indicator.active {
+  background: var(--accent-primary);
+  border-color: var(--accent-primary);
+  transform: scale(1.3);
+  box-shadow: 0 0 15px rgba(0, 176, 152, 0.5);
+  opacity: 1;
+}
+
+.carousel-indicator:focus {
+  outline: 2px solid var(--accent-primary);
+  outline-offset: 2px;
+}
+
+/* ============ TTS-INDIKATOR ============ */
+.tts-indicator {
+  position: absolute;
+  top: 1rem;
+  right: 1rem;
+  font-size: 1.5rem;
+  opacity: 0;
+  transition: opacity 0.3s ease;
+  z-index: 1000;
+}
+
+.tts-indicator.active {
+  opacity: 1;
+  animation: tts-pulse 1s infinite;
+}
+
+@keyframes tts-pulse {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.1); }
+}
+
+/* ============ RESPONSIVE DESIGN ============ */
+@media (max-width: 768px) {
+  .main-content {
+    padding: 1rem;
+    gap: 1.5rem;
+  }
+  
+  .main-text {
+    font-size: 2.25rem;
+  }
+  
+  .feedback-text {
+    font-size: 1.5rem;
+  }
+  
+  .carousel-container {
+    max-width: 800px; /* Breiter für Mobile */
+    height: 320px;
+  }
+  
+  .carousel-item {
+    width: 220px;
+    height: 280px;
+  }
+  
+  /* 15% größere aktive Kachel auf Mobile/Tablet */
+  .carousel-item.active {
+    transform: translate(-50%, -50%) translateZ(100px) scale(1.15);
+    width: 253px; /* 220px * 1.15 */
+    height: 322px; /* 280px * 1.15 */
+  }
+  
+  .carousel-item.left {
+    transform: translate(-50%, -50%) translateX(-240px) rotateY(15deg);
+  }
+  
+  .carousel-item.right {
+    transform: translate(-50%, -50%) translateX(240px) rotateY(-15deg);
+  }
+  
+  .tile-icon-container {
+    width: 100px;
+    height: 100px;
+    margin-bottom: 1rem;
+  }
+  
+  /* 15% größere Icons und Text für aktive Kachel */
+  .carousel-item.active .tile-icon-container {
+    width: 115px; /* 100px * 1.15 */
+    height: 115px;
+  }
+  
+  .carousel-item.active .tile-emoji {
+    font-size: 3.45rem; /* 3rem * 1.15 */
+  }
+  
+  .carousel-item.active .tile-text {
+    font-size: 1.725rem; /* 1.5rem * 1.15 */
+  }
+  
+  .carousel-item.active .tile-description {
+    font-size: 1.035rem; /* 0.9rem * 1.15 */
+  }
+  
+  .tile-emoji {
+    font-size: 3rem;
+  }
+  
+  .tile-text {
+    font-size: 1.5rem;
+  }
+  
+  .tile-description {
+    font-size: 0.9rem;
+  }
+  
+  .indicators-container {
+    bottom: 1rem;
+    padding: 0.75rem 1.5rem;
+  }
+  
+  .carousel-indicator {
+    width: 14px;
+    height: 14px;
+  }
+}
+
+@media (max-width: 480px) {
+  .main-content {
+    padding: 0.75rem;
+    gap: 1rem;
+  }
+  
+  .main-text {
+    font-size: 1.875rem;
+  }
+  
+  .feedback-text {
+    font-size: 1.25rem;
+  }
+  
+  .carousel-container {
+    max-width: 600px; /* Breiter für kleinere Mobile */
+    height: 280px;
+  }
+  
+  .carousel-item {
+    width: 180px;
+    height: 240px;
+  }
+  
+  /* 15% größere aktive Kachel auf kleineren Mobile-Geräten */
+  .carousel-item.active {
+    transform: translate(-50%, -50%) translateZ(100px) scale(1.15);
+    width: 207px; /* 180px * 1.15 */
+    height: 276px; /* 240px * 1.15 */
+  }
+  
+  .carousel-item.left {
+    transform: translate(-50%, -50%) translateX(-200px) rotateY(10deg);
+  }
+  
+  .carousel-item.right {
+    transform: translate(-50%, -50%) translateX(200px) rotateY(-10deg);
+  }
+  
+  .tile-icon-container {
+    width: 80px;
+    height: 80px;
+    margin-bottom: 0.75rem;
+  }
+  
+  /* 15% größere Icons und Text für aktive Kachel */
+  .carousel-item.active .tile-icon-container {
+    width: 92px; /* 80px * 1.15 */
+    height: 92px;
+  }
+  
+  .carousel-item.active .tile-emoji {
+    font-size: 2.875rem; /* 2.5rem * 1.15 */
+  }
+  
+  .carousel-item.active .tile-text {
+    font-size: 1.4375rem; /* 1.25rem * 1.15 */
+  }
+  
+  .carousel-item.active .tile-description {
+    font-size: 0.92rem; /* 0.8rem * 1.15 */
+  }
+  
+  .tile-emoji {
+    font-size: 2.5rem;
+  }
+  
+  .tile-text {
+    font-size: 1.25rem;
+  }
+  
+  .tile-description {
+    font-size: 0.8rem;
+  }
+  
+  .indicators-container {
+    bottom: 0.75rem;
+    padding: 0.5rem 1rem;
+  }
+  
+  .carousel-indicator {
+    width: 12px;
+    height: 12px;
+  }
+}
+
+@media (min-width: 1200px) {
+  .carousel-container {
+    max-width: 1000px;
+    height: 450px;
+    perspective: 2500px;
+  }
+  
+  .carousel-item {
+    width: 320px;
+    height: 400px;
+  }
+  
+  .carousel-item.left {
+    transform: translate(-50%, -50%) translateX(-360px) rotateY(25deg);
+  }
+  
+  .carousel-item.right {
+    transform: translate(-50%, -50%) translateX(360px) rotateY(-25deg);
+  }
+  
+  .tile-icon-container {
+    width: 140px;
+    height: 140px;
+    margin-bottom: 2rem;
+  }
+  
+  .tile-emoji {
+    font-size: 5rem;
+  }
+  
+  .tile-text {
+    font-size: 2rem;
+  }
+  
+  .tile-description {
+    font-size: 1.1rem;
+  }
+}

@@ -117,6 +117,52 @@ Ratatosk ist eine Kommunikationshilfe für Menschen mit Behinderungen, die durch
 
 ---
 
+### 2025-01-20 - 3D Carousel System für alle Views implementiert
+
+**Problem:**
+- GefuehleView benötigte 3D Carousel Design wie HygieneView
+- KleidungView und BewegungView sollten auch 3D Carousel verwenden
+- HomeView mobile Layout war nach Änderungen fehlerhaft
+- CSS-Spezifität Probleme bei Tile-Styling
+- Inkonsistente Tile-Designs zwischen verschiedenen Views
+
+**Lösung:**
+- **GefuehleView 3D Carousel**: Vollständige Implementierung mit 3D-Effekten
+- **KleidungView & BewegungView**: Komplette Neuimplementierung mit 3D Carousel
+- **HomeView Mobile Fix**: Position-Anpassung von 20% auf 5% Offset
+- **CSS-Spezifität**: Höhere Spezifität für Tile-Styling mit `!important`
+- **Einheitliche Tile-Designs**: Alle Views verwenden konsistente Tile-Styles
+- **Global CSS**: Einheitliche Hauptüberschriften in `main.css`
+
+**Technische Details:**
+- **3D Carousel Implementation**: 
+  ```css
+  .carousel-container {
+    perspective: 2000px;
+    transform-style: preserve-3d;
+  }
+  .carousel-item {
+    transform: translateX(calc(-50% + var(--offset, 0) * 350px)) 
+               scale(0.7) 
+               rotateY(var(--rotation, 20deg));
+  }
+  ```
+- **Tile-Styling**: Einheitliche `.menu-tile` Klassen für alle Views
+- **Responsive Design**: Desktop Grid + Mobile Carousel für alle Views
+- **TTS-Integration**: Vollständige TTS-Unterstützung in allen Views
+
+**Ergebnis:**
+- ✅ GefuehleView: 3D Carousel mit korrekten Tile-Styles
+- ✅ KleidungView: Vollständige 3D Carousel Implementierung
+- ✅ BewegungView: Vollständige 3D Carousel Implementierung
+- ✅ HomeView: Mobile Layout korrigiert (5% Offset)
+- ✅ Einheitliche Tile-Designs: Alle Views verwenden konsistente Styles
+- ✅ Global CSS: Einheitliche Hauptüberschriften
+- ✅ CSS-Spezifität: Alle Tile-Styles funktionieren korrekt
+- ✅ Responsive Design: Desktop Grid + Mobile Carousel überall
+
+---
+
 ### 2025-01-16 - Pain Dialog Karussell-System mit 3D-Effekten implementiert
 
 **Problem:**
