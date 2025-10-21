@@ -7,12 +7,38 @@ const {
   selectedGefuehl,
   feedbackText,
   isAutoMode,
+  closedFrames,
+  eyesClosed,
+  blinkThreshold,
+  lastBlinkTime,
+  blinkCooldown,
   gefuehleItems,
+  isMobile,
+  position,
+  carouselStyle,
+  currentItem,
+  itemCount,
+  autoScrollState,
+  touchState,
+  isSwipe,
+  swipeDirection,
+  isTTSActive,
   speakText,
   enableTTSOnInteraction,
   selectGefuehl,
-  handleFaceBlink,
+  handleBlink,
   handleRightClick,
+  handleGefuehlRightClick,
+  goToGefuehl,
+  navigateToIndex,
+  navigateNext,
+  navigatePrevious,
+  handleCarouselTouchStart,
+  handleCarouselTouchMove,
+  handleCarouselTouchEnd,
+  startAutoScrollWithCallback,
+  stopAutoScrollCompletely,
+  checkIsMobile,
   settingsStore,
   faceRecognition
 } = useGefuehleViewLogic()
@@ -23,7 +49,7 @@ const {
     <!-- App Header -->
     <AppHeader />
 
-    <!-- Main Content - Zentriert -->
+    <!-- Main Content - Clean Layout -->
     <main class="main-content">
       <div class="content-wrapper">
         <!-- Haupttext -->
@@ -38,53 +64,52 @@ const {
           </div>
         </div>
 
-        <!-- Gefühle-Items Grid - 3 Zeilen à 4 Items -->
-        <div class="gefuehle-grid">
-          <!-- Zeile 1: Glücklich, Froh, Erleichtert, Traurig -->
-          <div class="gefuehle-row">
-            <button
-              v-for="(item, index) in gefuehleItems.slice(0, 4)"
+        <!-- 3D Karussell Container -->
+        <div class="carousel-container">
+          <div class="carousel-content" :style="carouselStyle">
+            <div
+              v-for="(item, index) in gefuehleItems"
               :key="item.id"
+              class="carousel-item"
+              :class="{
+                'carousel-item-active': currentTileIndex === index,
+                'carousel-item-inactive': currentTileIndex !== index
+              }"
+              :style="{ '--offset': index - currentTileIndex }"
               @click="selectGefuehl(item.id)"
-              class="gefuehle-item"
-              :class="currentTileIndex === index ? 'active' : 'inactive'"
+              @contextmenu="handleGefuehlRightClick($event, item.id)"
             >
-              <div v-if="item.emoji" class="gefuehle-emoji">{{ item.emoji }}</div>
-              <span class="gefuehle-text">{{ item.text }}</span>
-            </button>
+              <div class="carousel-item-content">
+                <div class="tile-icon-container">
+                  <div class="tile-emoji">{{ item.emoji }}</div>
+                </div>
+                <div class="tile-text">{{ item.text }}</div>
+              </div>
+            </div>
           </div>
+        </div>
 
-          <!-- Zeile 2: Wütend, Einsam, Ängstlich, Gelangweilt -->
-          <div class="gefuehle-row">
-            <button
-              v-for="(item, index) in gefuehleItems.slice(4, 8)"
-              :key="item.id"
-              @click="selectGefuehl(item.id)"
-              class="gefuehle-item"
-              :class="currentTileIndex === index + 4 ? 'active' : 'inactive'"
-            >
-              <div v-if="item.emoji" class="gefuehle-emoji">{{ item.emoji }}</div>
-              <span class="gefuehle-text">{{ item.text }}</span>
-            </button>
-          </div>
-
-          <!-- Zeile 3: Aufgeregt, Müde, Gestresst, Zurück -->
-          <div class="gefuehle-row">
-            <button
-              v-for="(item, index) in gefuehleItems.slice(8, 12)"
-              :key="item.id"
-              @click="selectGefuehl(item.id)"
-              class="gefuehle-item"
-              :class="currentTileIndex === index + 8 ? 'active' : 'inactive'"
-            >
-              <div v-if="item.emoji" class="gefuehle-emoji">{{ item.emoji }}</div>
-              <span class="gefuehle-text">{{ item.text }}</span>
-            </button>
-          </div>
+        <!-- TTS-Indikator -->
+        <div class="tts-indicator" :class="{ 'tts-active': isTTSActive }">
+          🔊
         </div>
 
       </div>
     </main>
+
+    <!-- Karussell Indicators - Komplett außerhalb des content-wrapper -->
+    <div class="carousel-indicators">
+      <button
+        v-for="(item, index) in gefuehleItems"
+        :key="`indicator-${item.id}`"
+        class="carousel-indicator"
+        :class="{
+          'carousel-indicator-active': currentTileIndex === index,
+          'carousel-indicator-inactive': currentTileIndex !== index
+        }"
+        @click="goToGefuehl(index)"
+      />
+    </div>
   </div>
 </template>
 

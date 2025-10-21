@@ -32,7 +32,7 @@ const {
 
     <!-- Main Content -->
     <main class="main-content">
-      <!-- Grid Container - 3x2 Grid wie Ich-View -->
+      <!-- Grid Container - 3x2 Grid wie HomeView -->
       <div class="grid-container">
         <!-- Dynamic Menu Tiles -->
         <div 

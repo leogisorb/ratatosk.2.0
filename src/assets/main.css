@@ -45,6 +45,30 @@
   --info: #3b82f6;
 }
 
+/* Globale Hauptüberschriften - Einheitlich für alle Views */
+.main-text {
+  font-family: 'Source Code Pro', monospace !important;
+  font-size: 3rem !important;
+  font-weight: 600 !important; /* Einheitlich dick */
+  color: var(--text-primary) !important;
+  margin: 0 !important;
+  text-align: center !important;
+  width: 100% !important;
+}
+
+/* Responsive Anpassungen für Hauptüberschriften */
+@media (max-width: 768px) {
+  .main-text {
+    font-size: 2.5rem !important;
+  }
+}
+
+@media (max-width: 480px) {
+  .main-text {
+    font-size: 2rem !important;
+  }
+}
+
 /* Global TTS Activation */
 .tts-activation-overlay {
   position: fixed;
@@ -418,108 +442,172 @@ body {
   transition: background-color 0.3s ease;
 }
 
+/* HomeView spezifische main-content Anpassung */
+.home-view .main-content {
+  align-items: flex-start;
+  padding-top: 6rem;
+}
+
+
 .content-wrapper {
   display: flex;
   flex-direction: column;
   align-items: center;
-  justify-content: center;
+  justify-content: flex-start;
   width: 100%;
   max-width: 1200px;
   gap: 2rem;
 }
 
-/* Grid Layout - für HomeView */
+/* ===== UNIVERSAL GRID SYSTEM ===== */
+
+/* Basis Grid - universell für alle Komponenten */
 .grid-container {
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
   gap: 2.4rem;
   justify-items: center;
   align-items: center;
+  width: 100%;
+  margin: 0 auto;
 }
 
-/* Menu Tiles - für HomeView */
+/* Spezifische Grid-Container für Views */
+.home-view .grid-container,
+.ich-view .desktop-grid {
+  display: grid !important;
+  grid-template-columns: repeat(3, 1fr) !important;
+  gap: 2rem !important;
+  padding: 0 2rem !important;
+  max-width: 1200px !important;
+  margin: 0 auto !important;
+  justify-items: stretch !important;
+  align-items: stretch !important;
+}
+
+/* Basis Menu Tile - universell für alle Komponenten */
 .menu-tile {
   display: flex;
   flex-direction: column;
-  justify-content: center;
   align-items: center;
+  justify-content: center;
   cursor: pointer;
-  padding: 1rem;
-  border: 2px solid var(--border-secondary);
-  border-radius: 2rem;
-  width: 32rem;
-  height: 20rem;
-  box-shadow: 0 4px 6px -1px var(--shadow-primary);
   transition: all 0.3s ease;
+  border-radius: 1rem;
+  box-sizing: border-box;
   position: relative;
   z-index: 1;
   user-select: none;
 }
 
+/* Basis Hover Effects */
 .menu-tile:hover {
-  background-color: var(--bg-secondary);
-  box-shadow: 0 20px 25px -5px var(--shadow-primary);
   transform: scale(1.05);
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
 }
 
 .menu-tile:active {
   transform: scale(0.98);
 }
 
+/* Basis Active/Inactive States */
 .tile-active {
-  background-color: var(--accent-primary);
-  color: white;
+  background-color: #00B098 !important;
+  border: 3px solid #00B098 !important;
+  box-shadow: 0 15px 35px rgba(0, 176, 152, 0.3);
+}
+
+.tile-active .tile-icon {
+  color: white !important;
+  filter: brightness(0) invert(1);
 }
 
 .tile-inactive {
-  background-color: var(--bg-primary);
-  color: var(--text-primary);
+  background-color: var(--bg-secondary);
+  border: 3px solid var(--border-primary);
 }
 
+/* Basis Icon Container */
 .tile-icon-container {
   display: flex;
   align-items: center;
   justify-content: center;
-  margin-bottom: 3rem;
-  width: 4rem;
-  height: 4rem;
   border-radius: 50%;
+  transition: all 0.3s ease;
 }
 
 .icon-active {
-  background-color: white;
+  background-color: transparent;
+  border: none;
 }
 
 .icon-inactive {
-  background-color: var(--bg-tertiary);
+  background-color: transparent;
+  border: none;
 }
 
+/* Basis Icon */
 .tile-icon {
-  width: 8.5rem;
-  height: 8.5rem;
+  transition: all 0.3s ease;
   object-fit: contain;
-  max-width: 8.5rem;
-  max-height: 8.5rem;
 }
 
 .icon-inverted {
   filter: brightness(0) invert(1);
 }
 
+/* Basis Text */
 .tile-text {
   text-align: center;
   font-family: 'Source Code Pro', monospace;
-  font-weight: normal;
-  font-size: 3.5rem;
+  transition: all 0.3s ease;
+  font-weight: 600;
 }
 
 .text-active {
-  color: white;
+  color: white !important;
 }
 
 .text-inactive {
   color: var(--text-primary);
 }
+
+/* ===== KOMPONENTEN-SPEZIFISCHE STYLES ===== */
+
+/* HomeView - 3x2 Grid */
+.home-view .grid-container {
+  grid-template-columns: repeat(3, 1fr);
+  max-width: 90rem;
+  min-height: 400px;
+  justify-content: center;
+  align-content: center;
+  margin-top: 2rem;
+}
+
+.home-view .menu-tile {
+  padding: 2.4rem;
+  max-width: 360px;
+  height: 216px;
+  border: 3px solid transparent;
+  background-color: var(--bg-secondary);
+  aspect-ratio: 1.2;
+}
+
+.home-view .tile-icon-container {
+  width: 96px;
+  height: 96px;
+  margin-bottom: 1.2rem;
+}
+
+.home-view .tile-icon {
+  width: 60px;
+  height: 60px;
+}
+
+.home-view .tile-text {
+  font-size: 1.44rem;
+}
+
+
 
 /* Modal Styles */
 .modal-overlay {

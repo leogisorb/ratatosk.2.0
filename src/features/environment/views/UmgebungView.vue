@@ -37,7 +37,7 @@ const {
     <main class="main-content">
       <!-- Title -->
       <div class="title-container">
-        <h1 class="main-title">Was möchten Sie an ihrer Umgebung verändern?</h1>
+        <h1 class="main-text">Was möchten Sie an ihrer Umgebung verändern?</h1>
       </div>
       
       <!-- Grid Container - 3x2 Grid wie SchmerzView -->

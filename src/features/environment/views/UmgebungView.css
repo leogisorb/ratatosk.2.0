@@ -24,14 +24,7 @@
   max-width: 1600px;
 }
 
-.main-title {
-  font-family: 'Source Code Pro', monospace;
-  font-size: 3rem;
-  font-weight: 500;
-  color: #333;
-  margin: 0;
-  line-height: 1.2;
-}
+/* Haupttext wird jetzt global in main.css definiert */
 
 /* Grid Layout - 3x2 Grid für 4 Tiles */
 .grid-container {

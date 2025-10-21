@@ -49,6 +49,13 @@
   transition: all 0.5s ease-in-out;
   padding: 0 1rem;
   line-height: 1.4;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  word-wrap: break-word;
+  overflow-wrap: break-word;
+  hyphens: auto;
+  text-align: center;
 }
 
 .sentence-item.sentence-active {
@@ -213,13 +220,14 @@
   }
   
   .sentence-display-container {
-    height: 7.2rem; /* 6rem + 20% = 7.2rem */
+    height: 12rem; /* Erhöht auf 12rem für langen Text */
     margin: 0 auto 0.75rem auto; /* 1rem - 25% = 0.75rem */
     padding: 0 0.5rem;
   }
   
   .sentence-item {
-    font-size: 1.8rem;
+    font-size: 1.6rem; /* Reduzierte Schriftgröße für bessere Lesbarkeit */
+    line-height: 1.4; /* Erhöhte Zeilenhöhe für bessere Lesbarkeit */
   }
   
   .bell-icon {
@@ -237,11 +245,12 @@
 
 @media (max-width: 430px) {
   .sentence-display-container {
-    height: 6rem; /* 5rem + 20% = 6rem */
+    height: 10rem; /* Erhöht auf 10rem für langen Text */
   }
   
   .sentence-item {
-    font-size: 1.5rem;
+    font-size: 1.4rem; /* Reduzierte Schriftgröße für bessere Lesbarkeit */
+    line-height: 1.5; /* Erhöhte Zeilenhöhe für bessere Lesbarkeit */
   }
   
   .bell-icon {

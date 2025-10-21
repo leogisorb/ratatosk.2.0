@@ -34,6 +34,11 @@ export function useWarningViewLogic() {
   
   // ===== CONSTANTS =====
   const LOOP_INTERVAL = 4000 // 4 Sekunden für konsistente UX
+  
+  // ===== MOBILE DETECTION =====
+  const isMobile = () => {
+    return window.innerWidth <= 768 || /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent)
+  }
 
   // ===== TTS IMPLEMENTATION =====
   const speakText = (text: string, onStart?: () => void, onEnd?: () => void): Promise<void> => {
@@ -188,7 +193,13 @@ export function useWarningViewLogic() {
   const startGreeting = async () => {
     console.log('State: GREETING - Starting greeting')
     startIntroduction() // Einführung aktiv - Input ignorieren
-    statusText.value = "Blinzeln Sie oder tippen Sie, um ein Warngeräusch auszulösen. Blinzeln oder tippen Sie erneut, um das Warngeräusch zu stoppen."
+    
+    // Text basierend auf Gerätetyp anpassen
+    if (isMobile()) {
+      statusText.value = "Blinzeln oder Tippen um ein Warngeräusch auszulösen."
+    } else {
+      statusText.value = "Blinzeln Sie oder tippen Sie, um ein Warngeräusch auszulösen. Blinzeln oder tippen Sie erneut, um das Warngeräusch zu stoppen."
+    }
     
     try {
       await speakText(

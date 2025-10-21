@@ -1,5 +1,5 @@
 <template>
-  <div class="pain-dialog-app">
+  <div id="app" class="pain-dialog">
     <!-- App Header -->
     <AppHeader />
 
@@ -13,35 +13,35 @@
             Wo haben Sie Schmerzen?
           </div>
 
-          <div class="pain-dialog-grid">
-            <!-- Row 1: Kopf, Beine -->
-            <div class="pain-dialog-row">
-              <button
-                v-for="(region, index) in mainRegions.slice(0, 2)"
-                :key="region.id"
-                @click="selectMainRegion(region.id)"
-                @contextmenu.prevent="handleMainRegionRightClick($event, region.id)"
-                class="pain-dialog-item"
-                :class="currentTileIndex === index ? 'active' : 'inactive'"
+          <div class="grid-container">
+            <!-- Dynamic Menu Tiles -->
+            <div 
+              v-for="(region, index) in mainRegions"
+              :key="region.id"
+              class="menu-tile"
+              :class="currentTileIndex === index ? 'tile-active' : 'tile-inactive'"
+              @click="selectMainRegion(region.id)"
+              @contextmenu.prevent="handleMainRegionRightClick($event, region.id)"
+            >
+              <div 
+                class="tile-icon-container"
+                :class="currentTileIndex === index ? 'icon-active' : 'icon-inactive'"
               >
-                <img v-if="region.icon" :src="region.icon" :alt="region.title" class="pain-dialog-icon" />
-                <span class="pain-dialog-text">{{ region.title }}</span>
-              </button>
-            </div>
-            
-            <!-- Row 2: Arme, Torso -->
-            <div class="pain-dialog-row">
-              <button
-                v-for="(region, index) in mainRegions.slice(2, 4)"
-                :key="region.id"
-                @click="selectMainRegion(region.id)"
-                @contextmenu.prevent="handleMainRegionRightClick($event, region.id)"
-                class="pain-dialog-item"
-                :class="currentTileIndex === index + 2 ? 'active' : 'inactive'"
+                <img 
+                  v-if="region.icon" 
+                  :src="region.icon" 
+                  :alt="region.title" 
+                  class="tile-icon"
+                  :class="currentTileIndex === index ? 'icon-inverted' : ''"
+                />
+              </div>
+              <div 
+                class="tile-text"
+                :class="currentTileIndex === index ? 'text-active' : 'text-inactive'"
+                :style="currentTileIndex === index ? 'color: white !important;' : ''"
               >
-                <img v-if="region.icon" :src="region.icon" :alt="region.title" class="pain-dialog-icon" />
-                <span class="pain-dialog-text">{{ region.title }}</span>
-              </button>
+                {{ region.title }}
+              </div>
             </div>
           </div>
         </div>
@@ -52,18 +52,58 @@
             Wählen Sie einen {{ getMainRegionTitle(selectedMainRegion) }}bereich aus
           </div>
 
-          <div class="pain-dialog-grid sub-region-grid">
-              <button
-              v-for="(subRegion, index) in currentSubRegions"
+          <!-- Karussell Container -->
+          <div class="carousel-container">
+            <!-- Karussell Content -->
+            <div class="carousel-content">
+              <div 
+                v-for="(subRegion, index) in currentSubRegions"
                 :key="subRegion.id"
+                class="carousel-item"
+                :class="currentTileIndex === index ? 'carousel-item-active' : 'carousel-item-inactive'"
+                :style="{
+                  '--offset': index - currentTileIndex,
+                  '--rotation': (index < currentTileIndex ? -20 : index > currentTileIndex ? 20 : 0) + 'deg'
+                }"
                 @click="selectSubRegion(subRegion.id)"
                 @contextmenu.prevent="handleSubRegionRightClick($event, subRegion.id)"
-              class="pain-dialog-item sub-region-item"
-              :class="currentTileIndex === index ? 'active' : 'inactive'"
+              >
+                <div class="carousel-item-content">
+                  <div 
+                    class="tile-icon-container"
+                    :class="currentTileIndex === index ? 'icon-active' : 'icon-inactive'"
+                  >
+                    <img 
+                      v-if="subRegion.icon" 
+                      :src="subRegion.icon" 
+                      :alt="subRegion.title" 
+                      class="tile-icon"
+                      :class="currentTileIndex === index ? 'icon-inverted' : ''"
+                    />
+                  </div>
+                  <div 
+                    class="tile-text"
+                    :class="currentTileIndex === index ? 'text-active' : 'text-inactive'"
+                    :style="currentTileIndex === index ? 'color: white !important;' : ''"
+                  >
+                    {{ subRegion.title }}
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Karussell Indicators -->
+          <div class="carousel-indicators">
+            <button 
+              v-for="(subRegion, index) in currentSubRegions"
+              :key="`indicator-${subRegion.id}`"
+              class="carousel-indicator"
+              :class="currentTileIndex === index ? 'carousel-indicator-active' : 'carousel-indicator-inactive'"
+              @click="goToSubRegion(index)"
+              :title="`Index: ${index}, Current: ${currentTileIndex}, Active: ${currentTileIndex === index}`"
             >
-              <img v-if="subRegion.icon" :src="subRegion.icon" :alt="subRegion.title" class="pain-dialog-icon sub-region-icon" />
-              <span class="pain-dialog-text sub-region-text">{{ subRegion.title }}</span>
-              </button>
+            </button>
           </div>
         </div>
 
@@ -300,6 +340,23 @@ const handlePainLevelSelection = (item: any) => {
   selectPainLevel(level)
 }
 
+
+const goToSubRegion = (index: number) => {
+  console.log('goToSubRegion called with index:', index, 'current:', currentTileIndex.value)
+  if (index >= 0 && index < currentSubRegions.value.length) {
+    currentTileIndex.value = index
+    console.log('currentTileIndex updated to:', currentTileIndex.value)
+  } else {
+    // Reibungsloser Loop - wenn Index außerhalb des Bereichs, loope zurück
+    if (index < 0) {
+      currentTileIndex.value = currentSubRegions.value.length - 1
+    } else if (index >= currentSubRegions.value.length) {
+      currentTileIndex.value = 0
+    }
+    console.log('Looped currentTileIndex to:', currentTileIndex.value)
+  }
+}
+
 // Lifecycle management
 let cleanup: (() => void) | null = null
 
@@ -372,327 +429,5 @@ watch(currentState, (newState) => {
 </script>
 
 <style scoped>
-/* Pain Dialog View - CSS basierend auf SchmerzView */
-
-/* App Container */
-.pain-dialog-app {
-  min-height: 100vh;
-  display: flex;
-  flex-direction: column;
-}
-
-.main-content {
-  background-color: #f8f9fa;
-  flex: 1;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 2rem;
-}
-
-.content-wrapper {
-  width: 100%;
-  max-width: 1200px;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 2rem;
-}
-
-/* Main Title - ohne Hintergrund und Box */
-.main-title {
-  font-family: 'Source Code Pro', monospace;
-  font-size: 3.5rem;
-  font-weight: normal;
-  color: black;
-  text-align: center;
-  margin-bottom: 2rem;
-}
-
-/* Grid Layout - 2x2 Grid für 4 Tiles */
-.pain-dialog-grid {
-  display: grid;
-  grid-template-columns: repeat(2, 1fr);
-  grid-template-rows: repeat(2, 1fr);
-  gap: 2.4rem;
-  justify-items: center;
-  align-items: center;
-}
-
-.pain-dialog-row {
-  display: contents;
-}
-
-/* Menu Tiles - identisch mit SchmerzView */
-.pain-dialog-item {
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-  align-items: center;
-  cursor: pointer;
-  padding: 1rem;
-  border: 2px solid var(--border-secondary);
-  border-radius: 2rem;
-  width: 32rem;
-  height: 20rem;
-  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
-  transition: all 0.3s ease;
-  position: relative;
-  z-index: 1;
-  user-select: none;
-}
-
-.pain-dialog-item:hover {
-  background-color: #f3f4f6;
-  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
-  transform: scale(1.05);
-}
-
-.pain-dialog-item:active {
-  transform: scale(0.98);
-}
-
-.pain-dialog-item.active {
-  background-color: #00B098;
-  color: white;
-}
-
-.pain-dialog-item.inactive {
-  background-color: var(--bg-primary);
-  color: var(--text-primary);
-}
-
-.pain-dialog-icon {
-  width: 8.5rem;
-  height: 8.5rem;
-  object-fit: contain;
-  max-width: 8.5rem;
-  max-height: 8.5rem;
-  margin-bottom: 3rem;
-}
-
-.pain-dialog-item.active .pain-dialog-icon {
-  filter: brightness(0) invert(1);
-}
-
-.pain-dialog-text {
-  text-align: center;
-  font-family: 'Source Code Pro', monospace;
-  font-weight: normal;
-  font-size: 3.5rem;
-}
-
-.pain-dialog-item.active .pain-dialog-text {
-  color: white;
-}
-
-.pain-dialog-item.inactive .pain-dialog-text {
-  color: black;
-}
-
-/* Sub Region Grid - 4 Kacheln pro Zeile */
-.sub-region-grid {
-  display: grid !important;
-  grid-template-columns: repeat(4, 1fr) !important;
-  grid-template-rows: repeat(auto-fit, 1fr) !important;
-  gap: 1.2rem !important;
-  justify-items: center;
-  align-items: center;
-}
-
-/* Sub Region Items - 25% größer als 50% kleiner */
-.sub-region-item {
-  width: 20rem !important;
-  height: 12.5rem !important;
-}
-
-.sub-region-icon {
-  width: 5.3125rem !important;
-  height: 5.3125rem !important;
-  margin-bottom: 1.875rem !important;
-}
-
-.sub-region-text {
-  font-size: 2.1875rem !important;
-}
-
-/* Pain Scale Styles - ohne Box */
-.pain-scale-display {
-  margin-bottom: 4rem;
-  text-align: center;
-}
-
-.pain-scale-body-part {
-  font-family: 'Source Code Pro', monospace;
-  font-size: 3.5rem;
-  font-weight: normal;
-  color: black;
-  margin: 0;
-}
-
-.pain-scale-title {
-  font-family: 'Source Code Pro', monospace;
-  font-size: 3.5rem;
-  font-weight: normal;
-  color: black;
-  margin: 0;
-}
-
-.pain-scale-level {
-  font-family: 'Source Code Pro', monospace;
-  font-size: 8rem;
-  font-weight: normal;
-  color: black;
-  margin: 1rem 0;
-}
-
-.pain-scale-description {
-  font-family: 'Source Code Pro', monospace;
-  font-size: 2.5rem;
-  font-weight: normal;
-  color: black;
-  margin: 0;
-}
-
-.pain-scale-bar {
-  position: relative;
-  width: 130%;
-  max-width: 1040px;
-  height: 80px;
-  background-color: #e5e7eb;
-  border-radius: 40px;
-  overflow: hidden;
-  margin: 2rem auto;
-}
-
-.pain-scale-progress {
-  height: 100%;
-  background: linear-gradient(90deg, #4CAF50 0%, #FFC107 50%, #F44336 100%);
-  border-radius: 40px;
-  transition: width 0.3s ease;
-}
-
-.pain-scale-numbers {
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  display: flex;
-  align-items: center;
-}
-
-.pain-scale-number {
-  position: absolute;
-  font-family: 'Source Code Pro', monospace;
-  font-size: 3rem;
-  font-weight: normal;
-  color: black;
-  transform: translateX(-50%);
-  transition: all 0.3s ease;
-}
-
-.pain-scale-number.active {
-  font-size: 3.75rem;
-  font-weight: bold;
-  color: black;
-}
-
-/* Confirmation Styles */
-.confirmation-container {
-  background-color: var(--bg-primary);
-  border: 2px solid var(--border-secondary);
-  border-radius: 2rem;
-  padding: 3rem;
-  text-align: center;
-  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
-}
-
-.confirmation-container h2 {
-  font-family: 'Source Code Pro', monospace;
-  font-size: 3.5rem;
-  font-weight: normal;
-  color: black;
-  margin: 0 0 1rem 0;
-}
-
-.confirmation-container p {
-  font-family: 'Source Code Pro', monospace;
-  font-size: 2.5rem;
-  font-weight: normal;
-  color: black;
-  margin: 0;
-}
-
-/* Responsive Design */
-@media (max-width: 768px) {
-  .pain-dialog-grid {
-    grid-template-columns: 1fr;
-    gap: 1.5rem;
-  }
-  
-  .sub-region-grid {
-    grid-template-columns: repeat(3, 1fr) !important;
-    gap: 1rem !important;
-  }
-  
-  .pain-dialog-item {
-    width: 100%;
-    max-width: 400px;
-    height: 15rem;
-  }
-  
-  .sub-region-item {
-    width: 10rem !important;
-    height: 6.25rem !important;
-  }
-  
-  .sub-region-icon {
-    width: 2.65625rem !important;
-    height: 2.65625rem !important;
-    margin-bottom: 0.9375rem !important;
-  }
-  
-  .sub-region-text {
-    font-size: 1.09375rem !important;
-  }
-  
-  .pain-dialog-text {
-    font-size: 2.5rem;
-  }
-  
-  .main-title {
-    font-size: 2.5rem;
-  }
-  
-  .pain-scale-body-part,
-  .pain-scale-title {
-    font-size: 2.5rem;
-  }
-  
-  .pain-scale-level {
-    font-size: 6rem;
-  }
-  
-  .pain-scale-description {
-    font-size: 2rem;
-  }
-  
-  .pain-scale-number {
-    font-size: 2.25rem;
-  }
-  
-  .pain-scale-number.active {
-    font-size: 3rem;
-    color: black;
-  }
-  
-  .confirmation-container h2 {
-    font-size: 2.5rem;
-  }
-  
-  .confirmation-container p {
-    font-size: 2rem;
-  }
-}
+@import './PainDialogView.css';
 </style>

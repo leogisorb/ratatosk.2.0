@@ -5,7 +5,7 @@ import WarningView from '../features/warning/views/WarningView.vue'
 import UnterhaltenView from '../features/communication/views/UnterhaltenView.vue'
 import IchView from '../features/settings/views/IchView.vue'
 import GefuehleView from '../features/feelings/views/GefuehleView.vue'
-import SchmerzView from '../features/pain-assessment/views/SchmerzView.vue'
+// SchmerzView removed - replaced by PainDialogView
 import HygieneView from '../features/hygiene/views/HygieneView.vue'
 import UmgebungView from '../features/environment/views/UmgebungView.vue'
 import GegenstaendeView from '../features/environment/views/GegenstaendeView.vue'
@@ -18,10 +18,6 @@ import BettView from '../features/environment/views/BettView.vue'
 import KleidungView from '../features/clothing/views/KleidungView.vue'
 import BewegungView from '../features/movement/views/BewegungView.vue'
 import ErnaehrungView from '../features/nutrition/views/ErnaehrungView.vue'
-import KopfSchmerzView from '../features/pain-assessment/views/KopfSchmerzView.vue'
-import TorsoSchmerzView from '../features/pain-assessment/views/TorsoSchmerzView.vue'
-import BeineSchmerzView from '../features/pain-assessment/views/BeineSchmerzView.vue'
-import ArmeSchmerzView from '../features/pain-assessment/views/ArmeSchmerzView.vue'
 import PainScaleView from '../features/pain-assessment/views/PainScaleView.vue'
 import PainDialogView from '../features/pain-assessment/views/PainDialogView.vue'
 import SlashSettingsView from '../features/settings/views/SlashSettingsView.vue'
@@ -69,7 +65,7 @@ const router = createRouter({
     {
       path: '/schmerz',
       name: 'schmerz',
-      component: SchmerzView,
+      component: PainDialogView,
     },
     {
       path: '/hygiene',
@@ -130,26 +126,6 @@ const router = createRouter({
       path: '/ernaehrung',
       name: 'ernaehrung',
       component: ErnaehrungView,
-    },
-    {
-      path: '/kopf-schmerz',
-      name: 'kopf-schmerz',
-      component: KopfSchmerzView,
-    },
-    {
-      path: '/torso-schmerz',
-      name: 'torso-schmerz',
-      component: TorsoSchmerzView,
-    },
-    {
-      path: '/beine-schmerz',
-      name: 'beine-schmerz',
-      component: BeineSchmerzView,
-    },
-    {
-      path: '/arme-schmerz',
-      name: 'arme-schmerz',
-      component: ArmeSchmerzView,
     },
     {
       path: '/pain-scale',

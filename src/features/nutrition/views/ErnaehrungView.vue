@@ -7,12 +7,19 @@ const {
   selectedErnaehrung,
   feedbackText,
   isAutoMode,
+  isTTSActive,
   ernaehrungItems,
   speakText,
   enableTTSOnInteraction,
   selectErnaehrung,
   handleFaceBlink,
   handleRightClick,
+  handleErnaehrungRightClick,
+  goToErnaehrung,
+  getTileClass,
+  getIconClass,
+  getTextClass,
+  getIndicatorClass,
   settingsStore,
   faceRecognition
 } = useErnaehrungViewLogic()
@@ -38,53 +45,62 @@ const {
           </div>
         </div>
 
-        <!-- Ernährung-Items Grid - 3 Zeilen à 5 Items -->
-        <div class="ernaehrung-grid">
-          <!-- Zeile 1: Essen, Trinken, süß, herzhaft, scharf -->
-          <div class="ernaehrung-row">
-            <button
-              v-for="(item, index) in ernaehrungItems.slice(0, 5)"
+        <!-- Ernährung-Items Karussell -->
+        <div class="carousel-container">
+          <!-- Karussell Content -->
+          <div class="carousel-content">
+            <div 
+              v-for="(item, index) in ernaehrungItems"
               :key="item.id"
+              class="carousel-item"
+              :class="currentTileIndex === index ? 'carousel-item-active' : 'carousel-item-inactive'"
+              :style="{
+                '--offset': index - currentTileIndex,
+                '--rotation': (index < currentTileIndex ? -20 : index > currentTileIndex ? 20 : 0) + 'deg'
+              }"
               @click="selectErnaehrung(item.id)"
-              class="ernaehrung-item"
-              :class="currentTileIndex === index ? 'active' : 'inactive'"
+              @contextmenu.prevent="handleErnaehrungRightClick($event, item.id)"
             >
-              <div v-if="item.emoji" class="ernaehrung-emoji">{{ item.emoji }}</div>
-              <span class="ernaehrung-text">{{ item.text }}</span>
-            </button>
-          </div>
-
-          <!-- Zeile 2: kalt, warm, lauwarm, trocken, nass -->
-          <div class="ernaehrung-row">
-            <button
-              v-for="(item, index) in ernaehrungItems.slice(5, 10)"
-              :key="item.id"
-              @click="selectErnaehrung(item.id)"
-              class="ernaehrung-item"
-              :class="currentTileIndex === index + 5 ? 'active' : 'inactive'"
-            >
-              <div v-if="item.emoji" class="ernaehrung-emoji">{{ item.emoji }}</div>
-              <span class="ernaehrung-text">{{ item.text }}</span>
-            </button>
-          </div>
-
-          <!-- Zeile 3: breiig, Wasser, Saft, Milch, Zurück -->
-          <div class="ernaehrung-row">
-            <button
-              v-for="(item, index) in ernaehrungItems.slice(10, 15)"
-              :key="item.id"
-              @click="selectErnaehrung(item.id)"
-              class="ernaehrung-item"
-              :class="currentTileIndex === index + 10 ? 'active' : 'inactive'"
-            >
-              <div v-if="item.emoji" class="ernaehrung-emoji">{{ item.emoji }}</div>
-              <span class="ernaehrung-text">{{ item.text }}</span>
-            </button>
+              <div class="carousel-item-content">
+                <div 
+                  class="tile-icon-container"
+                  :class="getIconClass(index)"
+                >
+                  <div v-if="item.emoji" class="tile-emoji">{{ item.emoji }}</div>
+                </div>
+                <div 
+                  class="tile-text"
+                  :class="getTextClass(index)"
+                >
+                  {{ item.text }}
+                </div>
+              </div>
+            </div>
           </div>
         </div>
 
       </div>
     </main>
+
+    <!-- Separater Container für Indikatoren - Komplett getrennt -->
+    <div class="indicators-container">
+      <div class="carousel-indicators-separate">
+        <button 
+          v-for="(item, index) in ernaehrungItems"
+          :key="`indicator-${item.id}`"
+          class="carousel-indicator"
+          :class="getIndicatorClass(index)"
+          @click="goToErnaehrung(index)"
+          :title="`Index: ${index}, Current: ${currentTileIndex}, Active: ${currentTileIndex === index}`"
+        >
+        </button>
+      </div>
+    </div>
+
+    <!-- TTS-Indikator -->
+    <div class="tts-indicator" :class="{ 'tts-active': isTTSActive }">
+      🔊
+    </div>
   </div>
 </template>
 

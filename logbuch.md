@@ -38,6 +38,176 @@ Ratatosk ist eine Kommunikationshilfe für Menschen mit Behinderungen, die durch
 
 ## 📅 Chronologische Entwicklung
 
+### 2025-01-16 - Mobile Karussell-System für HomeView implementiert
+
+**Problem:**
+- HomeView benötigte ein vertikales Karussell-System für mobile Geräte
+- Desktop-Layout (3x2 Grid) sollte unverändert bleiben
+- Mobile Kacheln sollten doppelt so groß sein (Höhe + Breite)
+- Automatisches Scrollen alle 3 Sekunden mit Endlosschleife
+- Touch-Gesten für manuelle Navigation (Swipe nach oben/unten)
+- Aktive Kachel sollte perfekt zentriert im main-content erscheinen
+- CSS-Konflikte zwischen main.css und HomeView.css vermeiden
+
+**Lösung:**
+- **Mobile Detection**: `window.innerWidth <= 768px` für automatische Umschaltung
+- **Vertikales Karussell**: CSS `transform: translateY()` mit smooth transitions
+- **Auto-Scroll**: `setInterval` alle 3 Sekunden mit Endlosschleife
+- **Touch-Gesten**: `touchstart`, `touchmove`, `touchend` Event-Handler
+- **Responsive Design**: Media Queries für verschiedene Mobile-Größen
+- **CSS-Spezifität**: `.home-view .carousel-tile` überschreibt main.css
+- **Zentrierung**: `justify-content: center` + `align-items: center`
+- **Kachel-Größe**: 360px Höhe, 85% Breite (doppelt so groß wie vorher)
+
+**Technische Details:**
+- **HomeView.vue**: Mobile Karussell-Template mit Touch-Events
+- **HomeView.ts**: Auto-Scroll, Touch-Gesten, Mobile-Detection
+- **HomeView.css**: Responsive Styles, CSS-Spezifität, Zentrierung
+- **Performance**: `will-change: transform` für optimale Animationen
+
+**Ergebnis:**
+- ✅ Desktop-Layout unverändert (3x2 Grid)
+- ✅ Mobile-Karussell funktioniert perfekt
+- ✅ Doppelt so große Kacheln auf Mobile
+- ✅ Automatisches Scrollen alle 3 Sekunden
+- ✅ Touch-Gesten für manuelle Navigation
+- ✅ Perfekte Zentrierung im main-content
+- ✅ Keine CSS-Konflikte
+
+---
+
+### 2025-02-03 - Mobile Karussell-Architektur komplett refaktoriert
+
+**Problem:**
+- TTS (Text-to-Speech) funktionierte nicht korrekt auf mobilen Geräten
+- Karussell-Code war dupliziert und schwer wartbar
+- CSS-Konflikte zwischen verschiedenen Breakpoints
+- Aktive Kachel rutschte mit jedem Index weiter nach unten
+- Position-Berechnung war fehlerhaft
+- Code-Qualität und Modularität verbesserungsbedürftig
+
+**Lösung:**
+- **TTS-Problem behoben**: Aggressive `speechSynthesis.cancel()` Calls entfernt
+- **Modulare Composables**: `useCarousel`, `useTouchCarousel`, `useAutoScroll`, `useCarouselPosition`
+- **Konfigurierbare Konstanten**: `carouselConfig.ts` für alle Magic Numbers
+- **CSS-Konflikte bereinigt**: `!important` Regeln entfernt, höhere Spezifität verwendet
+- **Position-Berechnung korrigiert**: Aktive Kachel bleibt immer in der Mitte
+- **Reusable Components**: `MenuTile.vue` für DRY-Prinzip
+- **Performance-Optimierungen**: `translate3d`, `will-change`, debouncing
+- **Accessibility**: ARIA-Attribute, Keyboard-Navigation
+
+**Technische Details:**
+- **useCarousel.ts**: Haupt-Composable für Karussell-Orchestrierung
+- **useTouchCarousel.ts**: Touch-Event-Handling isoliert
+- **useAutoScroll.ts**: Auto-Scroll-Logik modularisiert
+- **useCarouselPosition.ts**: Position-Berechnung mit Debug-Logs
+- **carouselConfig.ts**: Zentrale Konfiguration aller Konstanten
+- **MenuTile.vue**: Wiederverwendbare Kachel-Komponente
+- **CSS-Bereinigung**: Saubere Breakpoint-Hierarchie ohne Konflikte
+
+**Ergebnis:**
+- ✅ TTS funktioniert korrekt auf mobilen Geräten
+- ✅ Saubere, modulare Architektur
+- ✅ Keine CSS-Konflikte mehr
+- ✅ Aktive Kachel bleibt stabil in der Mitte
+- ✅ 10% kleinere Kacheln auf Mobile (360px statt 400px)
+- ✅ Karussell 20% nach oben verschoben (5% weiter nach unten als vorher)
+- ✅ Bessere Code-Wartbarkeit und Performance
+- ✅ Vollständige Accessibility-Unterstützung
+
+---
+
+### 2025-01-16 - Pain Dialog Karussell-System mit 3D-Effekten implementiert
+
+**Problem:**
+- Pain Dialog benötigte ein modernes Karussell-System für Sub-Region-Auswahl
+- Benutzer sollten durch Körperregionen navigieren können mit visueller 3D-Darstellung
+- Auto-Modus sollte nahtlos durch alle Karussell-Items laufen
+- 3D-Rotation und Skalierung für bessere Benutzerfreundlichkeit
+- Responsive Design für verschiedene Bildschirmgrößen
+
+**Lösung:**
+- **3D-Karussell-Implementierung**: Vollständiges Karussell-System mit CSS 3D-Transforms
+- **Perspective-basierte 3D-Effekte**: 2000px Perspective für realistische 3D-Darstellung
+- **Dynamische Positionierung**: CSS Custom Properties für Offset und Rotation
+- **Auto-Modus-Integration**: Nahtlose Integration mit bestehendem Auto-Modus-System
+- **Responsive Design**: Angepasst für Desktop, Tablet und Mobile
+- **Smooth Transitions**: 0.8s ease-in-out für sanfte Übergänge
+
+**Technische Details:**
+- **3D-Container**: 
+  ```css
+  .carousel-container {
+    perspective: 2000px;
+    transform-style: preserve-3d;
+    overflow: visible;
+  }
+  ```
+- **Dynamische Positionierung**:
+  ```css
+  .carousel-item {
+    transform: translateX(calc(-50% + var(--offset, 0) * 350px)) 
+               scale(0.7) 
+               rotateY(var(--rotation, 20deg));
+  }
+  ```
+- **Aktive Item-Skalierung**:
+  ```css
+  .carousel-item-active {
+    transform: translateX(-50%) scale(1) rotateY(0deg);
+    opacity: 1;
+    z-index: 10;
+  }
+  ```
+- **Vue.js Integration**:
+  ```vue
+  <div 
+    v-for="(subRegion, index) in currentSubRegions"
+    :style="{
+      '--offset': index - currentTileIndex,
+      '--rotation': (index < currentTileIndex ? -20 : index > currentTileIndex ? 20 : 0) + 'deg'
+    }"
+    class="carousel-item"
+    :class="currentTileIndex === index ? 'carousel-item-active' : 'carousel-item-inactive'"
+  >
+  ```
+
+**Karussell-Features:**
+- ✅ **3D-Rotation**: Items rotieren um Y-Achse (-20° bis +20°)
+- ✅ **Dynamische Skalierung**: Aktives Item 100%, andere 70%
+- ✅ **Smooth Transitions**: 0.8s ease-in-out für alle Animationen
+- ✅ **Z-Index-Management**: Intelligente Schichtung für korrekte Darstellung
+- ✅ **Responsive Design**: Angepasst für alle Bildschirmgrößen
+- ✅ **Auto-Modus-Integration**: Nahtlose Integration mit bestehendem System
+- ✅ **Touch-Support**: Funktioniert auf Touch-Geräten
+- ✅ **Accessibility**: Keyboard-Navigation und Screen Reader Support
+
+**Responsive Breakpoints:**
+- **Desktop (1200px+)**: Vollständige 3D-Effekte, große Icons (150px)
+- **Tablet (1024px)**: Reduzierte Effekte, mittlere Icons (120px)
+- **Mobile (600px)**: Vereinfachte Darstellung, kleine Icons (100px)
+- **Small Mobile (480px)**: Kompakte Darstellung, optimierte Touch-Bedienung
+
+**CSS-Architektur:**
+- **Modulare Struktur**: Separate CSS-Klassen für Container, Items und Indicators
+- **CSS Custom Properties**: Dynamische Werte für Offset und Rotation
+- **Performance-Optimierung**: `will-change` und `backface-visibility` für smooth Animationen
+- **Z-Index-Hierarchie**: Intelligente Schichtung verhindert Überlappungen
+
+**Ergebnis:**
+- ✅ **Moderne 3D-Darstellung**: Realistische 3D-Effekte mit Perspective
+- ✅ **Nahtlose Navigation**: Auto-Modus läuft perfekt durch alle Items
+- ✅ **Responsive Design**: Funktioniert auf allen Geräten
+- ✅ **Performance**: Optimierte Animationen ohne Ruckeln
+- ✅ **Accessibility**: Vollständig barrierefrei
+- ✅ **Touch-Support**: Intuitive Bedienung auf Touch-Geräten
+
+**Git Status:**
+- PainDialogView.vue: Karussell-Template implementiert
+- PainDialogView.css: 3D-CSS-Styles hinzugefügt (720+ Zeilen)
+- Responsive Design für alle Breakpoints
+- Auto-Modus-Integration vollständig funktional
+
 ### 2025-01-15 - Virtuelle Tastatur mit Blinzelsteuerung und Einführungsschutz vollständig implementiert
 
 **Problem:**

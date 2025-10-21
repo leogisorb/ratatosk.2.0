@@ -445,6 +445,37 @@
   color: #f9fafb; /* Helle Farbe für Dark Mode */
 }
 
+/* Dark Mode Styles für Tasten */
+.dark .keyboard-key {
+  background-color: #374151 !important; /* Dunkler Hintergrund */
+  border-color: #4b5563 !important; /* Dunkler Border */
+  color: #f9fafb !important; /* Weiße Schrift */
+}
+
+.dark .keyboard-key:hover {
+  background-color: #4b5563 !important; /* Hellerer Hintergrund beim Hover */
+  border-color: #6b7280 !important; /* Hellerer Border beim Hover */
+  color: #ffffff !important; /* Weiße Schrift */
+}
+
+.dark .keyboard-key:active {
+  background-color: #1f2937 !important; /* Noch dunklerer Hintergrund beim Klicken */
+  border-color: #374151 !important; /* Dunklerer Border beim Klicken */
+  color: #ffffff !important; /* Weiße Schrift */
+}
+
+.dark .keyboard-key.keyboard-key-inactive {
+  background-color: #374151 !important; /* Dunkler Hintergrund */
+  border-color: #4b5563 !important; /* Dunkler Border */
+  color: #f9fafb !important; /* Weiße Schrift */
+}
+
+.dark .keyboard-key.keyboard-key-active {
+  background-color: #00B098 !important; /* Türkise Farbe für aktive Tasten */
+  border-color: #00B098 !important; /* Türkiser Border */
+  color: #ffffff !important; /* Weiße Schrift */
+}
+
 /* Responsive Dark Mode Styles */
 @media (max-width: 768px) {
   .dark .sentence-item {
@@ -538,7 +569,7 @@
 }
 
 .sentence-item.sentence-active {
-  animation: pulse 2s infinite;
+  /* Animation entfernt - Text soll nicht blinken */
 }
 
 @keyframes pulse {

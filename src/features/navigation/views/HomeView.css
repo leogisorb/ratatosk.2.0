@@ -1,432 +1,409 @@
-/* HomeView spezifische Styles */
+/* HomeView - spezifische Styles (Basis-Styles in main.css) */
 
-/* Global Box-Sizing für alle Elemente */
-*, *::before, *::after {
-  box-sizing: border-box;
-}
-
-/* App Container */
-#app {
-  min-height: 100vh;
-  display: flex;
-  flex-direction: column;
-}
-
-/* Ensure header styles are not overridden */
-.global-header {
-  background-color: var(--bg-primary) !important;
-  box-shadow: 0 10px 15px -3px var(--shadow-primary), 0 4px 6px -2px var(--shadow-secondary) !important;
-  border-bottom: 1px solid var(--border-primary) !important;
-}
-
-.main-content {
-  background-color: var(--bg-primary);
-  padding: 2rem;
-  min-height: calc(100vh - 80px); /* Abzug für Header */
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-/* Grid Container für die Kacheln */
-.grid-container {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr); /* Fix auf 3 Spalten für Desktop */
-  grid-auto-rows: 1fr; /* Jede Zeile gleich hoch */
-  gap: 1.5rem;
-  max-width: 90%; /* 10% weniger als Bildschirmbreite */
-  width: 100%;
-  height: 100%;
-  min-height: 400px;
-  justify-items: center;
-  margin: 0 auto;
-}
-
-/* Menu Tile Styles */
-.menu-tile {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  padding: 2.4rem; /* +20% größer */
-  border-radius: 1rem;
-  cursor: pointer;
-  transition: all 0.3s ease;
-  border: 3px solid transparent;
-  background-color: var(--bg-secondary);
-  width: 100%;
-  max-width: 360px; /* +20% größer */
-  height: 216px; /* +20% größer */
-  box-sizing: border-box;
-}
-
-.menu-tile:hover {
-  transform: scale(1.05);
-  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
-}
-
-.menu-tile:hover .tile-icon-container {
-  background-color: rgba(0, 176, 152, 0.1); /* Schöner Hover-Effekt */
+/* Hover Effects für HomeView */
+.home-view .menu-tile:hover .tile-icon-container {
+  background-color: rgba(0, 176, 152, 0.1);
   border: 2px solid rgba(0, 176, 152, 0.2);
 }
 
-.tile-active {
-  background-color: #00B098 !important;
-  border: 3px solid #00B098 !important;
-  /* transform: scale(1.1); - Entfernt: Kein Zoom bei aktiver Kachel */
-  box-shadow: 0 15px 35px rgba(0, 176, 152, 0.3);
+/* Dark Mode für Icons */
+.dark .tile-icon {
+  color: #00B098;
+  filter: none;
 }
 
-.tile-inactive {
-  background-color: var(--bg-secondary);
-  border: 3px solid var(--border-primary);
+.dark .tile-icon.icon-inverted {
+  color: white;
+  filter: none;
 }
 
-/* Icon Container */
-.tile-icon-container {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 96px; /* +20% größer */
-  height: 96px; /* +20% größer */
-  margin-bottom: 1.2rem; /* +20% größer */
-  border-radius: 50%;
-  transition: all 0.3s ease;
-}
-
-.icon-active {
-  background-color: transparent; /* Kein weißer Kreis auch bei aktiven Icons */
-  border: none; /* Kein Border bei aktiven Icons */
-}
-
-.icon-inactive {
-  background-color: transparent; /* Kein weißer Kreis mehr */
-  border: none; /* Kein Border bei inaktiven Icons */
-}
-
-/* Icon Styles */
-.tile-icon {
-  width: 60px; /* +20% größer */
-  height: 60px; /* +20% größer */
-  transition: all 0.3s ease;
-}
-
-.icon-inverted {
+/* Dark Mode für aktive Icons */
+.dark .tile-active .tile-icon {
+  color: white;
   filter: brightness(0) invert(1);
 }
 
-/* Text Styles */
-.tile-text {
-  font-size: 1.44rem; /* +20% größer */
-  font-weight: 600;
-  text-align: center;
-  font-family: 'Source Code Pro', monospace;
-  transition: all 0.3s ease;
+/* Dark Mode Icon-Container Hover-Effekt */
+.dark .home-view .menu-tile:hover .tile-icon-container {
+  background-color: rgba(0, 176, 152, 0.1);
+  border: 2px solid rgba(0, 176, 152, 0.2);
 }
 
-.text-active {
-  color: white !important;
-}
-
-.text-inactive {
+/* Dark Mode für Text */
+.dark .tile-text {
   color: var(--text-primary);
 }
 
-/* Communication Interface - spezifische Styles */
-.communication-interface {
-  display: flex;
-  flex-direction: column;
-  gap: 1.5rem;
-}
-
-.message-input-section {
-  display: flex;
-  flex-direction: column;
-  gap: 1rem;
-}
-
-.message-textarea {
-  resize: none;
-  height: 6rem;
-}
-
-.message-buttons {
-  display: flex;
-  gap: 0.5rem;
-}
-
-.quick-messages-section,
-.message-history-section {
-  display: flex;
-  flex-direction: column;
-  gap: 1rem;
-}
-
-.quick-messages-grid {
-  display: grid;
-  grid-template-columns: repeat(2, 1fr);
-  gap: 0.5rem;
-}
-
-.quick-message-button {
-  padding: 0.75rem;
-  text-align: left;
-  border-radius: 0.5rem;
-  border: 1px solid var(--border-primary);
-  background-color: var(--bg-secondary);
-  cursor: pointer;
-  transition: all 0.2s;
-}
-
-.quick-message-button:hover {
-  background-color: #00B098;
+.dark .text-active {
   color: white;
-  border-color: #00B098;
 }
 
-.quick-message-content {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
+.dark .text-inactive {
+  color: var(--text-primary);
 }
 
-.quick-message-icon {
-  font-size: 1.125rem;
-}
+/* Responsive Design - spezifische Anpassungen für HomeView */
 
-.quick-message-text {
-  font-size: 0.875rem;
-}
-
-.message-history {
-  display: flex;
-  flex-direction: column;
-  gap: 0.5rem;
-  max-height: 16rem;
-  overflow-y: auto;
-}
-
-.message-item {
-  padding: 0.75rem;
-  border-radius: 0.5rem;
-  background-color: var(--bg-secondary);
-  border-left: 3px solid var(--accent-primary);
-}
-
-.message-content {
-  display: flex;
-  justify-content: space-between;
-  align-items: flex-start;
-}
-
-.message-text {
-  font-size: 0.875rem;
-  margin: 0;
-}
-
-.message-time {
-  font-size: 0.75rem;
-  color: var(--text-tertiary);
-}
-
-/* Other Menu Content */
-.other-menu-content {
-  text-align: center;
-  padding: 3rem 0;
-}
-
-.other-menu-title {
-  font-size: 1.5rem;
-  font-weight: bold;
-  color: var(--accent-primary);
-  margin-bottom: 1rem;
-}
-
-.other-menu-description {
-  color: var(--text-secondary);
-  margin-bottom: 1rem;
-}
-
-.other-menu-note {
-  font-size: 0.875rem;
-  color: var(--text-tertiary);
-  margin-top: 1rem;
-}
-
-/* TTS Status Indicator */
-.tts-status-indicator {
-  position: fixed;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
-  background-color: #fef3c7;
-  border: 2px solid #f59e0b;
-  border-radius: 0.75rem;
-  padding: 1rem 1.5rem;
-  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
-  z-index: 1000;
-  animation: pulse 2s infinite;
-}
-
-.tts-status-content {
-  display: flex;
-  align-items: center;
-  gap: 0.75rem;
-}
-
-.tts-status-icon {
-  font-size: 1.5rem;
-}
-
-.tts-status-text {
-  font-size: 1rem;
-  font-weight: 500;
-  color: #92400e;
-}
-
-@keyframes pulse {
-  0%, 100% {
-    opacity: 1;
-  }
-  50% {
-    opacity: 0.7;
-  }
-}
-
-/* ===== RESPONSIVE DESIGN ===== */
-
-/* Tablet (1024px und kleiner) - 2x3 Layout */
+/* Tablet (1024px und kleiner) */
 @media (max-width: 1024px) {
-  .main-content {
-    padding: 1rem;
-  }
-  
-  .grid-container {
-    grid-template-columns: repeat(2, 1fr); /* 2 Spalten für Tablet */
-    gap: 1.25rem;
+  .home-view .grid-container {
+    grid-template-columns: repeat(3, 1fr);
+    gap: 2rem; /* Gleicher Abstand wie Kacheln zu Rändern */
     max-width: 100%;
+    padding: 0 2rem; /* Abstand zu Rändern = Gap */
   }
   
-  .menu-tile {
+  .home-view .menu-tile {
     padding: 1.5rem;
-    height: 140px; /* Etwas niedriger für Tablet */
-    max-width: 280px;
+    height: 180px;
+    max-width: 320px;
+    aspect-ratio: 1.2;
   }
   
-  .tile-icon-container {
+  .home-view .tile-icon-container {
     width: 60px;
     height: 60px;
   }
   
-  .tile-icon {
+  .home-view .tile-icon {
     width: 40px;
     height: 40px;
   }
   
-  .tile-text {
+  .home-view .tile-text {
     font-size: 1rem;
   }
 }
 
-/* Mobile (600px und kleiner) - 1x6 Layout */
-@media (max-width: 600px) {
-  .main-content {
-    padding: 0.5rem;
-    overflow-x: hidden;
+/* Desktop Grid standardmäßig sichtbar */
+.home-view .desktop-grid {
+  display: grid;
+}
+
+/* Grid Container Basis-Styles */
+.home-view .grid-container {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 2rem; /* Gleicher Abstand wie Kacheln zu Rändern */
+  padding: 0 2rem; /* Abstand zu Rändern = Gap */
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+/* Mobile (768px und kleiner) - Desktop Grid verstecken, Mobile Karussell zeigen */
+@media (max-width: 768px) {
+  .home-view .desktop-grid {
+    display: none;
   }
   
-  .grid-container {
-    grid-template-columns: 1fr; /* Eine Spalte für Mobile */
-    gap: 0.75rem;
-    width: 100%;
-    padding: 0;
-    margin: 0;
-  }
-  
-  .menu-tile {
-    width: 100%;
-    height: auto; /* Automatische Höhe */
-    max-width: none; /* Keine Breitenbegrenzung */
-    padding: 1rem;
-    border-width: 2px; /* Dünnere Borders */
-    border-radius: 0.75rem;
-    min-height: 60px; /* Mindesthöhe */
-  }
-  
-  .tile-icon-container {
-    width: 50px;
-    height: 50px;
-    margin-bottom: 0.5rem;
-  }
-  
-  .tile-icon {
-    width: 30px;
-    height: 30px;
-  }
-  
-  .tile-text {
-    font-size: 0.9rem;
+  .home-view .mobile-carousel {
+    display: block;
   }
 }
 
-/* Sehr kleine Bildschirme (320px und kleiner) */
-@media (max-width: 320px) {
-  .main-content {
-    padding: 0.25rem;
-    overflow-x: hidden;
+/* Mobile Karussell Styles */
+.home-view .mobile-carousel {
+  display: none;
+  position: relative;
+  height: 100vh;
+  width: 100%;
+  overflow: hidden;
+  background-color: var(--bg-primary);
+}
+
+/* Mobile Karussell Container */
+.home-view .carousel-container {
+  position: relative;
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  will-change: transform;
+}
+
+.home-view .menu-tile {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  border-radius: 1rem;
+  box-sizing: border-box;
+  position: relative;
+  z-index: 1;
+  user-select: none;
+  margin: 0 auto;
+  width: 85%;
+  max-width: 450px;
+  height: 360px;
+  padding: 1.5rem;
+  border: 3px solid transparent;
+  background-color: var(--bg-secondary);
+  margin-bottom: 2rem;
+}
+
+/* Alle Kacheln anzeigen für echtes Karussell */
+.home-view .menu-tile {
+  display: flex; /* Alle Kacheln anzeigen */
+}
+
+.menu-tile:hover {
+  transform: scale(1.02);
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1);
+}
+
+.menu-tile:active {
+  transform: scale(0.98);
+}
+
+/* Mobile Tile Active/Inactive States */
+.menu-tile.tile-active {
+  background-color: #00B098;
+  border: 3px solid #00B098;
+  box-shadow: 0 15px 35px rgba(0, 176, 152, 0.3);
+  transform: scale(1.05);
+}
+
+.menu-tile.tile-inactive {
+  background-color: var(--bg-secondary);
+  border: 3px solid var(--border-primary);
+  opacity: 1; /* Nicht blass - volle Opazität */
+  transform: scale(1); /* Normale Größe */
+}
+
+.menu-tile .tile-icon-container {
+  width: 80px;
+  height: 80px;
+  margin-bottom: 1rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  transition: all 0.3s ease;
+}
+
+.menu-tile .tile-icon {
+  width: 50px;
+  height: 50px;
+  transition: all 0.3s ease;
+  object-fit: contain;
+}
+
+.menu-tile .tile-text {
+  text-align: center;
+  font-family: 'Source Code Pro', monospace;
+  transition: all 0.3s ease;
+  font-weight: 600;
+  font-size: 1.2rem;
+}
+
+/* Mobile Optimizations - Kacheln 10% kleiner */
+/* Verwendet höhere Spezifität statt !important */
+@media (max-width: 768px) {
+  .home-view .mobile-carousel .menu-tile .tile-icon-container {
+    width: 108px; /* 10% kleiner (120px * 0.9) */
+    height: 108px; /* 10% kleiner (120px * 0.9) */
+    margin-bottom: 1.2rem;
   }
   
-  .grid-container {
-    gap: 0.5rem;
-    padding: 0;
-    margin: 0;
+  .home-view .mobile-carousel .menu-tile .tile-icon {
+    width: 90px; /* 10% kleiner (100px * 0.9) */
+    height: 90px; /* 10% kleiner (100px * 0.9) */
+  }
+  
+  .home-view .mobile-carousel .menu-tile .tile-text {
+    font-size: 1.62rem; /* 10% kleiner (1.8rem * 0.9) */
+  }
+  
+  .home-view .mobile-carousel .menu-tile {
+    width: 81%; /* 10% kleiner (90% * 0.9) */
+    max-width: 360px; /* 10% kleiner (400px * 0.9) */
+    height: 360px; /* 10% kleiner (400px * 0.9) */
+  }
+}
+
+.menu-tile .text-active {
+  color: white;
+}
+
+.menu-tile .text-inactive {
+  color: var(--text-primary);
+}
+
+.menu-tile .icon-active {
+  background-color: transparent;
+  border: none;
+}
+
+.menu-tile .icon-inactive {
+  background-color: transparent;
+  border: none;
+}
+
+.menu-tile .icon-inverted {
+  filter: brightness(0) invert(1);
+}
+
+/* Mobile Dark Mode für Karussell */
+.dark .menu-tile.tile-inactive {
+  opacity: 0.5;
+}
+
+.dark .menu-tile .tile-icon {
+  color: #00B098;
+  filter: none;
+}
+
+.dark .menu-tile .tile-icon.icon-inverted {
+  color: white;
+  filter: none;
+}
+
+.dark .menu-tile.tile-active .tile-icon {
+  color: white;
+  filter: brightness(0) invert(1);
+}
+
+.dark .menu-tile .tile-text {
+  color: var(--text-primary);
+}
+
+.dark .menu-tile .text-active {
+  color: white;
+}
+
+.dark .menu-tile .text-inactive {
+  color: var(--text-primary);
+}
+
+/* Mobile (600px und kleiner) - Legacy Grid verstecken */
+@media (max-width: 600px) {
+  .home-view .desktop-grid {
+    display: none;
+  }
+  
+  .home-view .mobile-carousel {
+    display: block;
   }
   
   .menu-tile {
-    padding: 0.75rem;
-    min-height: 50px;
-    border-width: 1px; /* Sehr dünne Borders */
+    width: 90%;
+    height: 320px;
+    padding: 1.2rem;
   }
   
-  .tile-icon-container {
-    width: 40px;
-    height: 40px;
+  .menu-tile .tile-icon-container {
+    width: 70px;
+    height: 70px;
+    margin-bottom: 0.8rem;
   }
   
-  .tile-icon {
-    width: 25px;
-    height: 25px;
+  .menu-tile .tile-icon {
+    width: 45px;
+    height: 45px;
   }
   
-  .tile-text {
-    font-size: 0.8rem;
+  .menu-tile .tile-text {
+    font-size: 1.1rem;
   }
+}
+
+/* Mobile Main Content Anpassungen */
+@media (max-width: 768px) {
+  .home-view .main-content {
+    padding: 0; /* Überschreibt padding-top: 6rem aus main.css */
+    padding-top: 0; /* Explizit padding-top entfernen */
+    height: 100vh; /* Volle Bildschirmhöhe */
+    margin-top: 0; /* Kein Margin auf Mobile */
+    width: 100%;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-start; /* Startet oben, nicht zentriert */
+    align-items: center; /* Horizontal zentriert */
+  }
+}
+
+/* Sehr kleine Bildschirme (480px und kleiner) */
+@media (max-width: 480px) {
+  .home-view .main-content {
+    padding: 0; /* Überschreibt padding-top: 6rem aus main.css */
+    padding-top: 0; /* Explizit padding-top entfernen */
+    height: 100vh; /* Volle Bildschirmhöhe */
+    margin-top: 0; /* Kein Margin auf Mobile */
+    width: 100%;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-start; /* Startet oben, nicht zentriert */
+    align-items: center;
+  }
+  
 }
 
 /* Große Bildschirme (1200px und größer) */
 @media (min-width: 1200px) {
-  .grid-container {
-    max-width: 90%; /* 10% weniger als Bildschirmbreite */
-    gap: 3rem; /* +20% größer */
+  .home-view .grid-container {
+    max-width: 90%;
+    gap: 3rem; /* Gleicher Abstand wie Kacheln zu Rändern */
+    padding: 0 3rem; /* Abstand zu Rändern = Gap */
   }
   
-  .menu-tile {
-    padding: 3rem; /* +20% größer */
-    height: 240px; /* +20% größer */
-    max-width: 420px; /* +20% größer */
+  .home-view .menu-tile {
+    padding: 2.5rem 3rem;
+    height: 260px;
+    max-width: 450px;
+    min-width: 380px;
+    aspect-ratio: 1.2;
   }
   
-  .tile-icon-container {
-    width: 120px; /* +20% größer */
-    height: 120px; /* +20% größer */
+  .home-view .tile-icon-container {
+    width: 110px;
+    height: 110px;
+    margin-bottom: 1.2rem;
   }
   
-  .tile-icon {
-    width: 72px; /* +20% größer */
-    height: 72px; /* +20% größer */
+  .home-view .tile-icon {
+    width: 75px;
+    height: 75px;
   }
   
-  .tile-text {
-    font-size: 1.68rem; /* +20% größer */
+  .home-view .tile-text {
+    font-size: 1.6rem;
+    font-weight: 700;
+  }
+}
+
+/* Sehr große Bildschirme (1600px und größer) */
+@media (min-width: 1600px) {
+  .home-view .grid-container {
+    max-width: 85%;
+    gap: 4rem; /* Gleicher Abstand wie Kacheln zu Rändern */
+    padding: 0 4rem; /* Abstand zu Rändern = Gap */
+  }
+  
+  .home-view .menu-tile {
+    padding: 3rem 3.5rem;
+    height: 300px;
+    max-width: 550px;
+    min-width: 480px;
+    aspect-ratio: 1.2;
+  }
+  
+  .home-view .tile-icon-container {
+    width: 125px;
+    height: 125px;
+    margin-bottom: 1.5rem;
+  }
+  
+  .home-view .tile-icon {
+    width: 85px;
+    height: 85px;
+  }
+  
+  .home-view .tile-text {
+    font-size: 1.8rem;
+    font-weight: 700;
   }
 }

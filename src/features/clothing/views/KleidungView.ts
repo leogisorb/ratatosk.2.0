@@ -18,7 +18,7 @@ export function useKleidungViewLogic() {
   // State
   const currentTileIndex = ref(0)
   const selectedKleidung = ref('')
-  const feedbackText = ref('') // Orange Rückmeldung für ausgewählte Items
+  const feedbackText = ref('')
   const isAutoMode = ref(true)
   const userInteracted = ref(false)
   const isTTSActive = ref(false)
@@ -34,7 +34,7 @@ export function useKleidungViewLogic() {
     
     const currentItem = kleidungItems[currentTileIndex.value]
     if (currentItem) {
-      console.log('KleidungView: Blinzel für Item:', currentItem.text)
+      console.log('KleidungView: Blinzel für Item:', currentItem.id)
       selectKleidung(currentItem.id)
     }
   }
@@ -50,22 +50,22 @@ export function useKleidungViewLogic() {
 
   // Kleidung-Items basierend auf dem gezeigten Interface
   const kleidungItems = [
-    // Kopfbedeckungen
-    { id: 'muetze', text: 'Mütze', type: 'kopf', emoji: '🧢' },
-    { id: 'hut', text: 'Hut', type: 'kopf', emoji: '🎩' },
-    { id: 'schal', text: 'Schal', type: 'hals', emoji: '🧣' },
-    { id: 'handschuhe', text: 'Handschuhe', type: 'haende', emoji: '🧤' },
-    
     // Oberbekleidung
-    { id: 'tshirt', text: 'T-Shirt', type: 'oberteil', emoji: '👕' },
-    { id: 'pullover', text: 'Pullover', type: 'oberteil', emoji: '🧥' },
-    { id: 'jacke', text: 'Jacke', type: 'oberteil', emoji: '🧥' },
-    { id: 'hose', text: 'Hose', type: 'unterteil', emoji: '👖' },
+    { id: 'muetze', text: 'Mütze', type: 'oberbekleidung', emoji: '🧢' },
+    { id: 'ohrstoepsel', text: 'Ohrstöpsel', type: 'oberbekleidung', emoji: '🎧' },
+    { id: 'schaal', text: 'Schal', type: 'oberbekleidung', emoji: '🧣' },
+    { id: 'hemd', text: 'Hemd', type: 'oberbekleidung', emoji: '👔' },
     
-    // Unterbekleidung
-    { id: 'socken', text: 'Socken', type: 'fuesse', emoji: '🧦' },
-    { id: 'schuhe', text: 'Schuhe', type: 'fuesse', emoji: '👟' },
-    { id: 'unterwaesche', text: 'Unterwäsche', type: 'unterteil', emoji: '🩲' },
+    // Kleidung
+    { id: 'tshirt', text: 'T-Shirt', type: 'kleidung', emoji: '👕' },
+    { id: 'pullover', text: 'Pullover', type: 'kleidung', emoji: '🧥' },
+    { id: 'jacke', text: 'Jacke', type: 'kleidung', emoji: '🧥' },
+    { id: 'hose', text: 'Hose', type: 'kleidung', emoji: '👖' },
+    
+    // Schuhe und Accessoires
+    { id: 'socken', text: 'Socken', type: 'accessoires', emoji: '🧦' },
+    { id: 'schuhe', text: 'Schuhe', type: 'accessoires', emoji: '👟' },
+    { id: 'unterwaesche', text: 'Unterwäsche', type: 'accessoires', emoji: '🩲' },
     
     // Navigation
     { id: 'zurueck', text: 'zurück', type: 'navigation', emoji: '⬅️' }
@@ -114,12 +114,10 @@ export function useKleidungViewLogic() {
         
         // Verwende die neue TTS-Konfiguration
         const ttsText = generateTTSText('kleidung', selectedItem.text)
-        console.log('KleidungView: Generated TTS text:', ttsText, 'for item:', selectedItem.text)
         
         // Zeige orange Rückmeldung an
         feedbackText.value = ttsText
         console.log('KleidungView: Setting feedback text:', ttsText)
-        console.log('KleidungView: feedbackText.value is now:', feedbackText.value)
         
         // Spreche die Rückmeldung
         await speakText(ttsText)
@@ -130,36 +128,6 @@ export function useKleidungViewLogic() {
         
         // Nach der TTS-Ausgabe zurück zum Ich-View-Hauptgrid
         router.push('/ich')
-    }
-  }
-
-  // Blink Detection
-  const handleBlink = () => {
-    // Verhindere Blink-Interaktion während TTS
-    if (isTTSActive.value) {
-      return
-    }
-
-    const now = Date.now()
-    
-    if (faceRecognition.isBlinking.value) {
-      closedFrames.value++
-      
-      if (closedFrames.value >= blinkThreshold.value && !eyesClosed.value) {
-        const currentItem = kleidungItems[currentTileIndex.value]
-        console.log('KleidungView: Blink activation for tile:', currentTileIndex.value, 'kleidungId:', currentItem.id, 'text:', currentItem.text)
-        
-        // Nur Auswahl - TTS wird in selectKleidung gemacht
-        selectKleidung(currentItem.id)
-        eyesClosed.value = true
-        lastBlinkTime.value = now
-        closedFrames.value = 0
-      }
-    } else {
-      if (closedFrames.value > 0) {
-        closedFrames.value = 0
-        eyesClosed.value = false
-      }
     }
   }
 
@@ -187,6 +155,92 @@ export function useKleidungViewLogic() {
     return false
   }
 
+  // Karussell-spezifische Handler
+  const handleKleidungRightClick = (event: MouseEvent, kleidungId: string) => {
+    if (isTTSActive.value) {
+      event.preventDefault()
+      return false
+    }
+    selectKleidung(kleidungId)
+    return false
+  }
+
+  const goToKleidung = (index: number) => {
+    console.log('goToKleidung called with index:', index, 'current:', currentTileIndex.value)
+    if (index >= 0 && index < kleidungItems.length) {
+      currentTileIndex.value = index
+      console.log('currentTileIndex updated to:', currentTileIndex.value)
+    } else {
+      // Reibungsloser Loop - wenn Index außerhalb des Bereichs, loope zurück
+      if (index < 0) {
+        currentTileIndex.value = kleidungItems.length - 1
+      } else if (index >= kleidungItems.length) {
+        currentTileIndex.value = 0
+      }
+      console.log('Looped currentTileIndex to:', currentTileIndex.value)
+    }
+  }
+
+  // Computed Classes - Pain Dialog Style (einfach und sauber)
+  const getTileClass = (index: number) => {
+    return currentTileIndex.value === index ? 'carousel-item-active' : 'carousel-item-inactive'
+  }
+
+  const getIconClass = (index: number) => {
+    return currentTileIndex.value === index ? 'icon-active' : 'icon-inactive'
+  }
+
+  const getTextClass = (index: number) => {
+    return currentTileIndex.value === index ? 'text-active' : 'text-inactive'
+  }
+
+  const getIndicatorClass = (index: number) => {
+    return currentTileIndex.value === index ? 'carousel-indicator-active' : 'carousel-indicator-inactive'
+  }
+
+  // 3-Kacheln-Looping: Optimierte Offset-Berechnung mit v-if Filter
+  const getCarouselOffset = (index: number) => {
+    // Schutz vor undefined/index - lockern für bessere Kompatibilität
+    if (typeof index !== 'number' || isNaN(index)) {
+      console.warn(`getCarouselOffset: Invalid index: ${index}, treating as 0`)
+      index = 0 // Fallback zu 0 statt null
+    }
+    
+    const current = currentTileIndex.value || 0
+    const total = kleidungItems.length || 0
+    
+    // Fallback falls total = 0
+    if (total === 0) {
+      console.warn(`getCarouselOffset: No items available`)
+      return null
+    }
+    
+    // Relativer Offset zum current Index
+    let offset = index - current
+    
+    // Looping für negatives/positives Offset - korrigiert für 3-Kacheln-System
+    if (offset > 1) offset = offset - total
+    if (offset < -1) offset = offset + total
+    
+    // Debug-Log für Pain Dialog Style - erweitert
+    console.log(`Pain Dialog Style: index=${index}, current=${current}, offset=${offset}, sichtbar=${offset >= -1 && offset <= 1}`)
+    
+    // Nur -1,0,1 sichtbar - alle anderen werden durch v-if gefiltert
+    if (offset < -1 || offset > 1) return null // nicht sichtbar
+    return offset
+  }
+
+  // 3-Kacheln-Looping: Berechne Rotation für smooth 3-Kacheln-System
+  const getCarouselRotation = (index: number) => {
+    const offset = getCarouselOffset(index)
+    
+    if (offset === 0) return 0      // Mittlere Kachel - keine Rotation
+    if (offset === -1) return -20   // Linke Kachel - -20° Rotation
+    if (offset === 1) return 20     // Rechte Kachel - +20° Rotation
+    
+    return 0 // Unsichtbare Kacheln - keine Rotation
+  }
+
   // Lifecycle
   onMounted(() => {
     // Setze KleidungView als aktiven View
@@ -207,6 +261,10 @@ export function useKleidungViewLogic() {
     // Add right-click handler
     console.log('KleidungView: Registering right-click handler')
     document.addEventListener('contextmenu', handleRightClick, { capture: true, passive: false })
+    
+    // Event Listener für Face Blinzel-Erkennung
+    window.addEventListener('faceBlinkDetected', handleFaceBlink)
+    console.log('KleidungView: Face Recognition mit alter Blinzel-Erkennung gestartet')
     
     // Start auto-mode automatically über FlowController
     // Zuerst den Haupttext sprechen, dann nach Pause die automatische Durchlauf-Logik starten
@@ -248,6 +306,10 @@ export function useKleidungViewLogic() {
     document.removeEventListener('touchstart', enableTTSOnInteraction)
     document.removeEventListener('contextmenu', handleRightClick, { capture: true })
     
+    // Clean up Face Recognition
+    faceRecognition.stop()
+    window.removeEventListener('faceBlinkDetected', handleFaceBlink)
+    
     console.log('KleidungView: unmounted - Auto-mode stopped, TTS stopped')
   })
 
@@ -257,19 +319,27 @@ export function useKleidungViewLogic() {
     selectedKleidung,
     feedbackText,
     isAutoMode,
-    closedFrames,
-    eyesClosed,
-    blinkThreshold,
-    lastBlinkTime,
-    blinkCooldown,
+    isTTSActive,
     kleidungItems,
     
     // Methods
     speakText,
     enableTTSOnInteraction,
     selectKleidung,
-    handleBlink,
+    handleFaceBlink,
     handleRightClick,
+    handleKleidungRightClick,
+    goToKleidung,
+    
+    // Computed Classes
+    getTileClass,
+    getIconClass,
+    getTextClass,
+    getIndicatorClass,
+    
+    // 3-Kacheln-Looping Functions
+    getCarouselOffset,
+    getCarouselRotation,
     
     // Stores
     settingsStore,

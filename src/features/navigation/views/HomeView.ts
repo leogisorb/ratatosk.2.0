@@ -3,7 +3,9 @@ import { useRouter } from 'vue-router'
 import { useSettingsStore } from '../../settings/stores/settings'
 import { useCommunicationStore } from '../../communication/stores/communication'
 import { useFaceRecognition } from '../../face-recognition/composables/useFaceRecognition'
-import { simpleFlowController } from '../../../core/application/SimpleFlowController'
+import { simpleFlowController, SimpleFlowController } from '../../../core/application/SimpleFlowController'
+import { useCarousel } from '../composables/useCarousel'
+import { type CarouselItem } from '../config/carouselConfig'
 
 export function useHomeViewLogic() {
   // Router
@@ -20,7 +22,7 @@ export function useHomeViewLogic() {
   const handleFaceBlink = (event: any) => {
     console.log('HomeView: Face blink received:', event.detail)
     
-    const currentItem = menuItems[currentTileIndex.value]
+    const currentItem = menuItems[position.currentIndex]
     if (currentItem) {
       console.log('HomeView: Blinzel für Item:', currentItem.title)
       
@@ -31,7 +33,6 @@ export function useHomeViewLogic() {
   }
 
   // State
-  const currentTileIndex = ref(0)
   const isAutoMode = ref(true)
   const userInteracted = ref(false)
   
@@ -59,50 +60,77 @@ export function useHomeViewLogic() {
   }
 
   // Menu Items - Nur 6 Hauptkategorien
-  const menuItems = [
+  const menuItems: CarouselItem[] = [
     {
       id: 'warning',
       title: 'WARNGERÄUSCH',
-      icon: '/ratatosk.2.0/Glocke.svg',
+      icon: '/bell.svg',
       route: '/warning',
-      category: 'main' as const
+      category: 'main'
     },
     {
       id: 'communication',
       title: 'UNTERHALTEN',
-      icon: '/ratatosk.2.0/Nachricht.svg',
+      icon: '/comment-dots.svg',
       route: '/unterhalten',
-      category: 'communication' as const
+      category: 'communication'
     },
     {
       id: 'ich',
       title: 'ICH',
-      icon: '/ratatosk.2.0/user.svg',
+      icon: '/user.svg',
       route: '/ich',
-      category: 'main' as const
+      category: 'main'
     },
     {
       id: 'pain',
       title: 'SCHMERZEN',
-      icon: '/ratatosk.2.0/Schmerz.svg',
+      icon: '/headache.svg',
       route: '/pain-dialog',
-      category: 'pain' as const
+      category: 'pain'
     },
     {
       id: 'environment',
       title: 'UMGEBUNG',
-      icon: '/ratatosk.2.0/Umgebung.svg',
+      icon: '/house-chimney.svg',
       route: '/umgebung',
-      category: 'main' as const
+      category: 'main'
     },
     {
       id: 'settings',
       title: 'EINSTELLUNGEN',
-      icon: '/ratatosk.2.0/Einstellungen.svg',
+      icon: '/settings-sliders.svg',
       route: '/einstellungen',
-      category: 'settings' as const
+      category: 'settings'
     }
   ]
+
+  // Karussell Composable
+  const {
+    isMobile,
+    position,
+    carouselStyle,
+    currentItem,
+    itemCount,
+    autoScrollState,
+    touchState,
+    isSwipe,
+    swipeDirection,
+    initializeCarousel,
+    cleanup: cleanupCarousel,
+    navigateToIndex,
+    navigateNext,
+    navigatePrevious,
+    handleCarouselTouchStart,
+    handleCarouselTouchMove,
+    handleCarouselTouchEnd,
+    startAutoScrollWithCallback,
+    stopAutoScrollCompletely,
+    checkIsMobile
+  } = useCarousel(menuItems)
+
+  // Computed für aktuellen Tile-Index
+  const currentTileIndex = computed(() => position.currentIndex)
 
   // Auto-Mode Funktionen - einfach und direkt
   const startAutoMode = () => {
@@ -113,7 +141,7 @@ export function useHomeViewLogic() {
     const success = simpleFlowController.startAutoMode(
       menuItems,
       (currentIndex, currentItem) => {
-        currentTileIndex.value = currentIndex
+        navigateToIndex(currentIndex)
         console.log(`[${instanceId}] Auto-mode cycle:`, currentItem.title, 'at index:', currentIndex)
         speakText(currentItem.title)
       },
@@ -137,11 +165,31 @@ export function useHomeViewLogic() {
       console.log(`[${instanceId}] User interaction detected - TTS now enabled`)
       userInteracted.value = true
       simpleFlowController.setUserInteracted(true)
+      
+      // Für mobile Geräte: Teste TTS sofort nach Interaktion
+      if (isMobile.value) {
+        console.log(`[${instanceId}] Mobile device - testing TTS after user interaction`)
+        setTimeout(() => {
+          if (typeof speechSynthesis !== 'undefined' && speechSynthesis) {
+            // Teste TTS mit einem kurzen Text
+            const testUtterance = new SpeechSynthesisUtterance('Test')
+            testUtterance.volume = 0.1 // Sehr leise
+            testUtterance.onend = () => {
+              console.log(`[${instanceId}] Mobile TTS test successful`)
+            }
+            testUtterance.onerror = (e) => {
+              console.warn(`[${instanceId}] Mobile TTS test failed:`, e)
+            }
+            speechSynthesis.speak(testUtterance)
+          }
+        }, 100)
+      }
     }
   }
 
   // Menu selection - verhindert Navigation ohne Interaktion
-  const selectMenu = (menuId: string) => {
+  const selectMenu = (menuIdOrItem: string | CarouselItem) => {
+    const menuId = typeof menuIdOrItem === 'string' ? menuIdOrItem : menuIdOrItem.id
     console.log(`[${instanceId}] selectMenu called with menuId:`, menuId)
     
     // Enable TTS on user interaction
@@ -150,10 +198,13 @@ export function useHomeViewLogic() {
     // Stoppe Auto-Mode bei bewusster Navigation
     stopAutoMode()
     
+    // Stoppe TTS vor Navigation (sanft)
+    simpleFlowController.stopTTSOnly()
+    
     // Setze den aktuellen Tile-Index basierend auf der menuId
     const index = menuItems.findIndex(item => item.id === menuId)
     if (index !== -1) {
-      currentTileIndex.value = index
+      navigateToIndex(index)
     }
 
     // Navigate to the selected route
@@ -171,8 +222,8 @@ export function useHomeViewLogic() {
     event.preventDefault()
     event.stopPropagation()
     event.stopImmediatePropagation()
-    console.log('HomeView: Right click detected! Current tile index:', currentTileIndex.value, 'Items length:', menuItems.length)
-    const currentItem = menuItems[currentTileIndex.value]
+    console.log('HomeView: Right click detected! Current tile index:', position.currentIndex, 'Items length:', menuItems.length)
+    const currentItem = menuItems[position.currentIndex]
     if (currentItem) {
       console.log('HomeView: Right click activation for item:', currentItem.title)
       
@@ -206,6 +257,40 @@ export function useHomeViewLogic() {
     }
   }
 
+  // Touch Event Handlers (delegiert an Karussell Composable)
+  const handleTouchStart = (event: TouchEvent) => {
+    handleCarouselTouchStart(event)
+  }
+
+  const handleTouchMove = (event: TouchEvent) => {
+    handleCarouselTouchMove(event)
+  }
+
+  const handleTouchEnd = (event: TouchEvent) => {
+    handleCarouselTouchEnd(event)
+  }
+
+  // Keyboard Navigation
+  const handleKeyboardNavigation = (event: KeyboardEvent) => {
+    if (!isMobile.value) return
+    
+    switch (event.key) {
+      case 'ArrowUp':
+        event.preventDefault()
+        navigatePrevious()
+        break
+      case 'ArrowDown':
+        event.preventDefault()
+        navigateNext()
+        break
+      case 'Enter':
+      case ' ':
+        event.preventDefault()
+        selectMenu(currentItem.value)
+        break
+    }
+  }
+
   // Time formatting
   function formatTime(date: Date): string {
     return new Intl.DateTimeFormat('de-DE', {
@@ -218,6 +303,10 @@ export function useHomeViewLogic() {
   onMounted(() => {
     // Setze HomeView als aktiven View
     simpleFlowController.setActiveView('/home')
+    
+    // Mobile Detection und Karussell-Initialisierung
+    checkIsMobile()
+    window.addEventListener('resize', checkIsMobile)
     
     // Prüfe ob Face Recognition bereits aktiv ist (von StartView)
     if (!faceRecognition.isActive.value) {
@@ -242,7 +331,13 @@ export function useHomeViewLogic() {
     // Start auto-mode automatically
     setTimeout(() => {
       console.log(`[${instanceId}] Starting auto-mode automatically (TTS disabled until user interaction)`)
-      startAutoMode()
+      if (isMobile.value) {
+        // Mobile: Starte Karussell
+        initializeCarousel()
+      } else {
+        // Desktop: Starte normales Auto-Mode
+        startAutoMode()
+      }
     }, 1000)
     
     // Event Listener für Face Blinzel-Erkennung
@@ -253,8 +348,16 @@ export function useHomeViewLogic() {
   })
 
   onUnmounted(() => {
+    console.log(`[${instanceId}] HomeView unmounting - starting cleanup`)
+    
     // Stoppe Auto-Mode und TTS
     stopAutoMode()
+    stopAutoScrollCompletely()
+    
+    // Karussell-Cleanup
+    cleanupCarousel()
+    
+    // Sanfte TTS-Stoppung beim Verlassen der HomeView
     simpleFlowController.stopTTS()
     
     // Clean up Face Recognition Event Listener (aber nicht die Face Recognition selbst)
@@ -267,8 +370,9 @@ export function useHomeViewLogic() {
     document.removeEventListener('touchstart', enableTTSOnInteraction)
     document.removeEventListener('contextmenu', handleRightClick, { capture: true })
     window.removeEventListener('volumeToggle', handleVolumeToggle)
+    window.removeEventListener('resize', checkIsMobile)
     
-    console.log(`[${instanceId}] HomeViewSimple unmounted - cleanup completed`)
+    console.log(`[${instanceId}] HomeView unmounted - cleanup completed`)
   })
 
   return {
@@ -278,6 +382,17 @@ export function useHomeViewLogic() {
     isAutoMode,
     userInteracted,
     
+    // Mobile Carousel State (von Composable)
+    isMobile,
+    carouselOffset: computed(() => position.offset),
+    carouselStyle,
+    currentItem,
+    itemCount,
+    autoScrollState,
+    touchState,
+    isSwipe,
+    swipeDirection,
+    
     // TTS functions
     speakText,
     menuItems,
@@ -286,6 +401,19 @@ export function useHomeViewLogic() {
     // Auto-mode functions
     startAutoMode,
     stopAutoMode,
+    
+    // Mobile Carousel functions
+    handleTouchStart,
+    handleTouchMove,
+    handleTouchEnd,
+    
+    // Karussell-Navigation
+    navigateToIndex,
+    navigateNext,
+    navigatePrevious,
+    
+    // Keyboard Navigation
+    handleKeyboardNavigation,
     
     // Methods
     selectMenu,

@@ -18,17 +18,26 @@ export function useBewegungViewLogic() {
   // State
   const currentTileIndex = ref(0)
   const selectedBewegung = ref('')
-  const feedbackText = ref('') // Orange Rückmeldung für ausgewählte Items
+  const feedbackText = ref('')
   const isAutoMode = ref(true)
-  const closedFrames = ref(0)
-  const eyesClosed = ref(false)
   const userInteracted = ref(false)
   const isTTSActive = ref(false)
 
-  // Verbesserte Blink-Detection Parameter - zentral gesteuert
-  const blinkThreshold = computed(() => Math.ceil(settingsStore.settings.blinkSensitivity * 10))
-  const lastBlinkTime = ref(0)
-  const blinkCooldown = computed(() => settingsStore.settings.blinkSensitivity * 1000)
+  // Alte Blinzel-Erkennung (aus alter Version)
+  const handleFaceBlink = (event: any) => {
+    console.log('BewegungView: Face blink received:', event.detail)
+    
+    if (isTTSActive.value) {
+      console.log('BewegungView: TTS aktiv - Blinzel ignoriert')
+      return
+    }
+    
+    const currentItem = bewegungItems[currentTileIndex.value]
+    if (currentItem) {
+      console.log('BewegungView: Blinzel für Item:', currentItem.id)
+      selectBewegung(currentItem.id)
+    }
+  }
 
   // User interaction detection - aktiviert TTS
   const enableTTSOnInteraction = () => {
@@ -41,22 +50,22 @@ export function useBewegungViewLogic() {
 
   // Bewegung-Items basierend auf dem gezeigten Interface
   const bewegungItems = [
-    // Aktive Bewegungen
-    { id: 'laufen', text: 'Laufen', type: 'aktiv', emoji: '🏃' },
-    { id: 'gehen', text: 'Gehen', type: 'aktiv', emoji: '🚶' },
-    { id: 'yoga', text: 'Yoga', type: 'aktiv', emoji: '🧘' },
-    { id: 'tanzen', text: 'Tanzen', type: 'aktiv', emoji: '💃' },
+    // Körperbewegungen
+    { id: 'aufstehen', text: 'aufstehen', type: 'bewegung', emoji: '🚶' },
+    { id: 'sitzen', text: 'sitzen', type: 'bewegung', emoji: '🪑' },
+    { id: 'liegen', text: 'liegen', type: 'bewegung', emoji: '🛏️' },
+    { id: 'gehen', text: 'gehen', type: 'bewegung', emoji: '🚶‍♂️' },
     
-    // Sport
-    { id: 'sport', text: 'Sport', type: 'sport', emoji: '⚽' },
-    { id: 'spazieren', text: 'Spazieren', type: 'sport', emoji: '🚶‍♂️' },
-    { id: 'schwimmen', text: 'Schwimmen', type: 'sport', emoji: '🏊' },
-    { id: 'radfahren', text: 'Radfahren', type: 'sport', emoji: '🚴' },
+    // Aktivitäten
+    { id: 'laufen', text: 'laufen', type: 'aktivitaet', emoji: '🏃' },
+    { id: 'springen', text: 'springen', type: 'aktivitaet', emoji: '🦘' },
+    { id: 'tanzen', text: 'tanzen', type: 'aktivitaet', emoji: '💃' },
+    { id: 'schwimmen', text: 'schwimmen', type: 'aktivitaet', emoji: '🏊' },
     
-    // Therapie
-    { id: 'physiotherapie', text: 'Physiotherapie', type: 'therapie', emoji: '🏥' },
-    { id: 'massage', text: 'Massage', type: 'therapie', emoji: '💆' },
-    { id: 'ruhe', text: 'Ruhe', type: 'therapie', emoji: '😴' },
+    // Entspannung
+    { id: 'dehnen', text: 'dehnen', type: 'entspannung', emoji: '🧘' },
+    { id: 'meditieren', text: 'meditieren', type: 'entspannung', emoji: '🧘‍♀️' },
+    { id: 'atmen', text: 'atmen', type: 'entspannung', emoji: '🫁' },
     
     // Navigation
     { id: 'zurueck', text: 'zurück', type: 'navigation', emoji: '⬅️' }
@@ -122,36 +131,6 @@ export function useBewegungViewLogic() {
     }
   }
 
-  // Blink Detection
-  const handleBlink = () => {
-    // Verhindere Blink-Interaktion während TTS
-    if (isTTSActive.value) {
-      return
-    }
-
-    const now = Date.now()
-    
-    if (faceRecognition.isBlinking.value) {
-      closedFrames.value++
-      
-      if (closedFrames.value >= blinkThreshold.value && !eyesClosed.value) {
-        const currentItem = bewegungItems[currentTileIndex.value]
-        console.log('BewegungView: Blink activation for tile:', currentTileIndex.value, 'bewegungId:', currentItem.id, 'text:', currentItem.text)
-        
-        // Nur Auswahl - TTS wird in selectBewegung gemacht
-        selectBewegung(currentItem.id)
-        eyesClosed.value = true
-        lastBlinkTime.value = now
-        closedFrames.value = 0
-      }
-    } else {
-      if (closedFrames.value > 0) {
-        closedFrames.value = 0
-        eyesClosed.value = false
-      }
-    }
-  }
-
   // Right Click Handler
   const handleRightClick = (event: MouseEvent) => {
     // Verhindere Right-Click-Interaktion während TTS
@@ -176,6 +155,92 @@ export function useBewegungViewLogic() {
     return false
   }
 
+  // Karussell-spezifische Handler
+  const handleBewegungRightClick = (event: MouseEvent, bewegungId: string) => {
+    if (isTTSActive.value) {
+      event.preventDefault()
+      return false
+    }
+    selectBewegung(bewegungId)
+    return false
+  }
+
+  const goToBewegung = (index: number) => {
+    console.log('goToBewegung called with index:', index, 'current:', currentTileIndex.value)
+    if (index >= 0 && index < bewegungItems.length) {
+      currentTileIndex.value = index
+      console.log('currentTileIndex updated to:', currentTileIndex.value)
+    } else {
+      // Reibungsloser Loop - wenn Index außerhalb des Bereichs, loope zurück
+      if (index < 0) {
+        currentTileIndex.value = bewegungItems.length - 1
+      } else if (index >= bewegungItems.length) {
+        currentTileIndex.value = 0
+      }
+      console.log('Looped currentTileIndex to:', currentTileIndex.value)
+    }
+  }
+
+  // Computed Classes - Pain Dialog Style (einfach und sauber)
+  const getTileClass = (index: number) => {
+    return currentTileIndex.value === index ? 'carousel-item-active' : 'carousel-item-inactive'
+  }
+
+  const getIconClass = (index: number) => {
+    return currentTileIndex.value === index ? 'icon-active' : 'icon-inactive'
+  }
+
+  const getTextClass = (index: number) => {
+    return currentTileIndex.value === index ? 'text-active' : 'text-inactive'
+  }
+
+  const getIndicatorClass = (index: number) => {
+    return currentTileIndex.value === index ? 'carousel-indicator-active' : 'carousel-indicator-inactive'
+  }
+
+  // 3-Kacheln-Looping: Optimierte Offset-Berechnung mit v-if Filter
+  const getCarouselOffset = (index: number) => {
+    // Schutz vor undefined/index - lockern für bessere Kompatibilität
+    if (typeof index !== 'number' || isNaN(index)) {
+      console.warn(`getCarouselOffset: Invalid index: ${index}, treating as 0`)
+      index = 0 // Fallback zu 0 statt null
+    }
+    
+    const current = currentTileIndex.value || 0
+    const total = bewegungItems.length || 0
+    
+    // Fallback falls total = 0
+    if (total === 0) {
+      console.warn(`getCarouselOffset: No items available`)
+      return null
+    }
+    
+    // Relativer Offset zum current Index
+    let offset = index - current
+    
+    // Looping für negatives/positives Offset - korrigiert für 3-Kacheln-System
+    if (offset > 1) offset = offset - total
+    if (offset < -1) offset = offset + total
+    
+    // Debug-Log für Pain Dialog Style - erweitert
+    console.log(`Pain Dialog Style: index=${index}, current=${current}, offset=${offset}, sichtbar=${offset >= -1 && offset <= 1}`)
+    
+    // Nur -1,0,1 sichtbar - alle anderen werden durch v-if gefiltert
+    if (offset < -1 || offset > 1) return null // nicht sichtbar
+    return offset
+  }
+
+  // 3-Kacheln-Looping: Berechne Rotation für smooth 3-Kacheln-System
+  const getCarouselRotation = (index: number) => {
+    const offset = getCarouselOffset(index)
+    
+    if (offset === 0) return 0      // Mittlere Kachel - keine Rotation
+    if (offset === -1) return -20   // Linke Kachel - -20° Rotation
+    if (offset === 1) return 20     // Rechte Kachel - +20° Rotation
+    
+    return 0 // Unsichtbare Kacheln - keine Rotation
+  }
+
   // Lifecycle
   onMounted(() => {
     // Setze BewegungView als aktiven View
@@ -196,6 +261,10 @@ export function useBewegungViewLogic() {
     // Add right-click handler
     console.log('BewegungView: Registering right-click handler')
     document.addEventListener('contextmenu', handleRightClick, { capture: true, passive: false })
+    
+    // Event Listener für Face Blinzel-Erkennung
+    window.addEventListener('faceBlinkDetected', handleFaceBlink)
+    console.log('BewegungView: Face Recognition mit alter Blinzel-Erkennung gestartet')
     
     // Start auto-mode automatically über FlowController
     // Zuerst den Haupttext sprechen, dann nach Pause die automatische Durchlauf-Logik starten
@@ -237,6 +306,10 @@ export function useBewegungViewLogic() {
     document.removeEventListener('touchstart', enableTTSOnInteraction)
     document.removeEventListener('contextmenu', handleRightClick, { capture: true })
     
+    // Clean up Face Recognition
+    faceRecognition.stop()
+    window.removeEventListener('faceBlinkDetected', handleFaceBlink)
+    
     console.log('BewegungView: unmounted - Auto-mode stopped, TTS stopped')
   })
 
@@ -246,19 +319,27 @@ export function useBewegungViewLogic() {
     selectedBewegung,
     feedbackText,
     isAutoMode,
-    closedFrames,
-    eyesClosed,
-    blinkThreshold,
-    lastBlinkTime,
-    blinkCooldown,
+    isTTSActive,
     bewegungItems,
     
     // Methods
     speakText,
     enableTTSOnInteraction,
     selectBewegung,
-    handleBlink,
+    handleFaceBlink,
     handleRightClick,
+    handleBewegungRightClick,
+    goToBewegung,
+    
+    // Computed Classes
+    getTileClass,
+    getIconClass,
+    getTextClass,
+    getIndicatorClass,
+    
+    // 3-Kacheln-Looping Functions
+    getCarouselOffset,
+    getCarouselRotation,
     
     // Stores
     settingsStore,

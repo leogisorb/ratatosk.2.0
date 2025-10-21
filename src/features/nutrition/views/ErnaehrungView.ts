@@ -34,8 +34,8 @@ export function useErnaehrungViewLogic() {
     
     const currentItem = ernaehrungItems[currentTileIndex.value]
     if (currentItem) {
-      console.log('ErnaehrungView: Blinzel für Item:', currentItem.name)
-      selectErnaehrung(currentItem.name)
+      console.log('ErnaehrungView: Blinzel für Item:', currentItem.id)
+      selectErnaehrung(currentItem.id)
     }
   }
 
@@ -164,6 +164,92 @@ export function useErnaehrungViewLogic() {
     return false
   }
 
+  // Karussell-spezifische Handler
+  const handleErnaehrungRightClick = (event: MouseEvent, ernaehrungId: string) => {
+    if (isTTSActive.value) {
+      event.preventDefault()
+      return false
+    }
+    selectErnaehrung(ernaehrungId)
+    return false
+  }
+
+  const goToErnaehrung = (index: number) => {
+    console.log('goToErnaehrung called with index:', index, 'current:', currentTileIndex.value)
+    if (index >= 0 && index < ernaehrungItems.length) {
+      currentTileIndex.value = index
+      console.log('currentTileIndex updated to:', currentTileIndex.value)
+    } else {
+      // Reibungsloser Loop - wenn Index außerhalb des Bereichs, loope zurück
+      if (index < 0) {
+        currentTileIndex.value = ernaehrungItems.length - 1
+      } else if (index >= ernaehrungItems.length) {
+        currentTileIndex.value = 0
+      }
+      console.log('Looped currentTileIndex to:', currentTileIndex.value)
+    }
+  }
+
+  // Computed Classes - Pain Dialog Style (einfach und sauber)
+  const getTileClass = (index: number) => {
+    return currentTileIndex.value === index ? 'carousel-item-active' : 'carousel-item-inactive'
+  }
+
+  const getIconClass = (index: number) => {
+    return currentTileIndex.value === index ? 'icon-active' : 'icon-inactive'
+  }
+
+  const getTextClass = (index: number) => {
+    return currentTileIndex.value === index ? 'text-active' : 'text-inactive'
+  }
+
+  const getIndicatorClass = (index: number) => {
+    return currentTileIndex.value === index ? 'carousel-indicator-active' : 'carousel-indicator-inactive'
+  }
+
+  // 3-Kacheln-Looping: Optimierte Offset-Berechnung mit v-if Filter
+  const getCarouselOffset = (index: number) => {
+    // Schutz vor undefined/index - lockern für bessere Kompatibilität
+    if (typeof index !== 'number' || isNaN(index)) {
+      console.warn(`getCarouselOffset: Invalid index: ${index}, treating as 0`)
+      index = 0 // Fallback zu 0 statt null
+    }
+    
+    const current = currentTileIndex.value || 0
+    const total = ernaehrungItems.length || 0
+    
+    // Fallback falls total = 0
+    if (total === 0) {
+      console.warn(`getCarouselOffset: No items available`)
+      return null
+    }
+    
+    // Relativer Offset zum current Index
+    let offset = index - current
+    
+    // Looping für negatives/positives Offset - korrigiert für 3-Kacheln-System
+    if (offset > 1) offset = offset - total
+    if (offset < -1) offset = offset + total
+    
+    // Debug-Log für Pain Dialog Style - erweitert
+    console.log(`Pain Dialog Style: index=${index}, current=${current}, offset=${offset}, sichtbar=${offset >= -1 && offset <= 1}`)
+    
+    // Nur -1,0,1 sichtbar - alle anderen werden durch v-if gefiltert
+    if (offset < -1 || offset > 1) return null // nicht sichtbar
+    return offset
+  }
+
+  // 3-Kacheln-Looping: Berechne Rotation für smooth 3-Kacheln-System
+  const getCarouselRotation = (index: number) => {
+    const offset = getCarouselOffset(index)
+    
+    if (offset === 0) return 0      // Mittlere Kachel - keine Rotation
+    if (offset === -1) return -20   // Linke Kachel - -20° Rotation
+    if (offset === 1) return 20     // Rechte Kachel - +20° Rotation
+    
+    return 0 // Unsichtbare Kacheln - keine Rotation
+  }
+
   // Lifecycle
   onMounted(() => {
     // Setze ErnaehrungView als aktiven View
@@ -184,9 +270,6 @@ export function useErnaehrungViewLogic() {
     // Add right-click handler
     console.log('ErnaehrungView: Registering right-click handler')
     document.addEventListener('contextmenu', handleRightClick, { capture: true, passive: false })
-    
-    // Start Face Recognition mit alter Blinzel-Erkennung
-    faceRecognition.start()
     
     // Event Listener für Face Blinzel-Erkennung
     window.addEventListener('faceBlinkDetected', handleFaceBlink)
@@ -245,6 +328,7 @@ export function useErnaehrungViewLogic() {
     selectedErnaehrung,
     feedbackText,
     isAutoMode,
+    isTTSActive,
     ernaehrungItems,
     
     // Methods
@@ -253,6 +337,18 @@ export function useErnaehrungViewLogic() {
     selectErnaehrung,
     handleFaceBlink,
     handleRightClick,
+    handleErnaehrungRightClick,
+    goToErnaehrung,
+    
+    // Computed Classes
+    getTileClass,
+    getIconClass,
+    getTextClass,
+    getIndicatorClass,
+    
+    // 3-Kacheln-Looping Functions
+    getCarouselOffset,
+    getCarouselRotation,
     
     // Stores
     settingsStore,

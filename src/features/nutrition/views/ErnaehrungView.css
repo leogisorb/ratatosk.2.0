@@ -8,13 +8,15 @@
   flex-direction: column;
 }
 
-/* Main Content - Weniger Abstand unter Header */
+/* Main Content - Clean Layout */
 .main-content {
   flex: 1;
   display: flex;
+  flex-direction: column;
   align-items: center;
-  justify-content: center;
-  padding: 1rem 4rem; /* Weniger Abstand oben/unten: 4rem → 1rem */
+  justify-content: flex-start;
+  padding: 2rem 4rem;
+  gap: 2rem; /* Gleichmäßige Abstände zwischen allen Elementen */
 }
 
 .content-wrapper {
@@ -23,36 +25,35 @@
   width: 100%;
 }
 
-/* Haupttext */
+/* Haupttext - Clean */
 .main-text-container {
-  margin-bottom: 0.25rem; /* Einheitlich: 0.25rem für alle Ich-Views */
   text-align: center;
+  margin: 0; /* Keine zusätzlichen Margins, gap regelt Abstände */
 }
 
 .main-text {
   font-family: 'Source Code Pro', monospace;
-  font-size: 4rem;
-  font-weight: 300;
+  font-size: 3rem; /* 50% größer: 2rem * 1.5 = 3rem */
+  font-weight: 600; /* Dicker: 300 → 600 */
   color: var(--text-primary);
   margin: 0;
 }
 
-/* Orange Rückmeldung unter der Überschrift */
+/* TTS Debug Info - Clean */
 .feedback-text-container {
-  margin-top: 0.1rem; /* Einheitlich: 0.1rem für alle Ich-Views */
-  margin-bottom: 0.25rem; /* Einheitlich: 0.25rem für alle Ich-Views */
   text-align: center;
+  margin: 0; /* Keine zusätzlichen Margins, gap regelt Abstände */
 }
 
 .feedback-text {
   font-family: 'Source Code Pro', monospace;
-  font-size: 2.5rem;
-  font-weight: 300;
+  font-size: 2rem; /* Kleiner als Haupttext (3rem) */
+  font-weight: 400; /* Leichter als Haupttext (600) */
   color: #f97316; /* Orange Farbe - bleibt orange auch im Dark Mode */
   margin: 0;
   opacity: 0;
   transition: opacity 0.3s ease;
-  min-height: 3rem; /* Mindesthöhe für bessere Sichtbarkeit */
+  min-height: 2.5rem; /* Angepasste Mindesthöhe */
 }
 
 .feedback-text.show {
@@ -65,64 +66,296 @@
   height: 4rem;
 }
 
-/* Ernährung Items Grid - Nochmal 5% weiter hoch */
-.ernaehrung-grid {
-  display: flex;
-  flex-direction: column;
-  gap: 0.86rem; /* 5% weniger: 0.9rem * 0.95 = 0.86rem */
-  margin: 0 0 0.43rem 0; /* 5% weniger: 0.45rem * 0.95 = 0.43rem */
+/* === Ernährung Karussell 3D Effekt === */
+.ernaehrung-app .carousel-container {
+  position: relative !important;
+  width: 90vw !important;
+  max-width: 1200px !important;
+  margin: 0 auto !important;
+  padding: 1rem 0 !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  perspective: 2000px !important;
+  overflow: visible !important;
 }
 
-.ernaehrung-row {
-  display: flex;
-  justify-content: center;
-  gap: 0.75rem; /* Noch näher: 1.5rem → 0.75rem */
+.ernaehrung-app .carousel-content {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  width: 100% !important;
+  transition: transform 0.8s ease-in-out !important; /* Sanftes Gleiten */
+  transform-style: preserve-3d !important;
 }
 
-/* Ernährung Item Buttons - Alle gleich groß */
-.ernaehrung-item {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  gap: 0.75rem;
-  padding: 1.5rem;
-  border: 2px solid var(--border-secondary);
-  border-radius: 15px;
-  background: var(--bg-primary);
-  cursor: pointer;
-  transition: all 0.3s ease;
-  font-size: 2.06rem; /* 25% größer: 1.65rem * 1.25 = 2.06rem */
-  font-weight: 500;
-  width: 180px; /* 25% größer: 144px * 1.25 = 180px */
-  height: 150px; /* 25% größer: 120px * 1.25 = 150px */
-  outline: none;
-  box-shadow: none;
-  margin: 0;
+.ernaehrung-app .carousel-item {
+  position: absolute !important;
+  width: 300px !important;
+  height: 400px !important;
+  top: 0 !important;
+  left: 50% !important;
+  transform: translateX(calc(-50% + var(--offset, 0) * 350px)) scale(0.7) rotateY(var(--rotation, 20deg)) !important;
+  opacity: 0.5 !important;
+  transition: transform 0.8s ease-in-out, opacity 0.8s ease-in-out !important;
+  z-index: 1 !important;
+  cursor: pointer !important;
 }
 
-.ernaehrung-item:hover {
-  transform: scale(1.1);
-  color: var(--text-tertiary);
+.ernaehrung-app .carousel-item-active {
+  transform: translateX(-50%) scale(1) rotateY(0deg) !important;
+  opacity: 1 !important;
+  z-index: 3 !important;
 }
 
-.ernaehrung-item.active {
-  background: var(--bg-secondary);
-  color: #f97316; /* Orange bleibt orange auch im Dark Mode */
-  transform: scale(1.1);
+/* Spezielle Positionierung für links (alt) und rechts (neu) */
+.ernaehrung-app .carousel-item[style*="--offset: -1"] {
+  transform: translateX(calc(-50% - 350px)) scale(0.7) rotateY(-20deg) !important;
+  opacity: 0.6 !important;
 }
 
-.ernaehrung-item.inactive {
-  color: var(--text-primary);
+.ernaehrung-app .carousel-item[style*="--offset: 1"] {
+  transform: translateX(calc(-50% + 350px)) scale(0.7) rotateY(20deg) !important;
+  opacity: 0.6 !important;
 }
 
-.ernaehrung-emoji {
-  font-size: 3.75rem; /* 25% größer: 3rem * 1.25 = 3.75rem */
+.ernaehrung-app .carousel-item-inactive {
+  opacity: 0.5 !important;
+  z-index: 2 !important;
 }
 
-.ernaehrung-text {
-  font-family: 'Source Code Pro', monospace;
+/* Einfache und robuste Z-Index-Verwaltung */
+.ernaehrung-app .carousel-item {
+  z-index: 1 !important;
 }
+
+.ernaehrung-app .carousel-item-active {
+  z-index: 10 !important;
+}
+
+/* 3-Kacheln-System: Pain Dialog Style - Exakt wie Pain Dialog */
+.ernaehrung-app .carousel-item {
+  position: absolute !important;
+  width: 300px !important;
+  height: 400px !important;
+  top: 0 !important;
+  left: 50% !important;
+  transform: translateX(calc(-50% + var(--offset, 0) * 350px)) scale(0.7) rotateY(var(--rotation, 20deg)) !important;
+  opacity: 0.5 !important;
+  transition: transform 0.8s ease-in-out, opacity 0.8s ease-in-out !important;
+  z-index: 1 !important;
+  cursor: pointer !important;
+}
+
+.ernaehrung-app .carousel-item-active {
+  transform: translateX(-50%) scale(1) rotateY(0deg) !important;
+  opacity: 1 !important;
+  z-index: 3 !important;
+}
+
+/* Spezielle Positionierung für 3-Kacheln-System - wie Pain Dialog */
+.ernaehrung-app .carousel-item[style*="--offset: -1"] {
+  transform: translateX(calc(-50% + -350px)) scale(0.7) rotateY(-20deg) !important;
+  opacity: 0.5 !important;
+  z-index: 1 !important;
+}
+
+.ernaehrung-app .carousel-item[style*="--offset: 1"] {
+  transform: translateX(calc(-50% + 350px)) scale(0.7) rotateY(20deg) !important;
+  opacity: 0.5 !important;
+  z-index: 1 !important;
+}
+
+.ernaehrung-app .carousel-item[style*="--offset: 0"] {
+  transform: translateX(-50%) scale(1) rotateY(0deg) !important;
+  opacity: 1 !important;
+  z-index: 3 !important;
+}
+
+/* Alle anderen Kacheln unsichtbar - nur 3 sichtbar */
+.ernaehrung-app .carousel-item[style*="--offset: -2"],
+.ernaehrung-app .carousel-item[style*="--offset: -3"],
+.ernaehrung-app .carousel-item[style*="--offset: -4"],
+.ernaehrung-app .carousel-item[style*="--offset: -5"],
+.ernaehrung-app .carousel-item[style*="--offset: -6"],
+.ernaehrung-app .carousel-item[style*="--offset: -7"],
+.ernaehrung-app .carousel-item[style*="--offset: -8"],
+.ernaehrung-app .carousel-item[style*="--offset: -9"],
+.ernaehrung-app .carousel-item[style*="--offset: -10"],
+.ernaehrung-app .carousel-item[style*="--offset: -11"],
+.ernaehrung-app .carousel-item[style*="--offset: -12"],
+.ernaehrung-app .carousel-item[style*="--offset: -13"],
+.ernaehrung-app .carousel-item[style*="--offset: -14"],
+.ernaehrung-app .carousel-item[style*="--offset: 2"],
+.ernaehrung-app .carousel-item[style*="--offset: 3"],
+.ernaehrung-app .carousel-item[style*="--offset: 4"],
+.ernaehrung-app .carousel-item[style*="--offset: 5"],
+.ernaehrung-app .carousel-item[style*="--offset: 6"],
+.ernaehrung-app .carousel-item[style*="--offset: 7"],
+.ernaehrung-app .carousel-item[style*="--offset: 8"],
+.ernaehrung-app .carousel-item[style*="--offset: 9"],
+.ernaehrung-app .carousel-item[style*="--offset: 10"],
+.ernaehrung-app .carousel-item[style*="--offset: 11"],
+.ernaehrung-app .carousel-item[style*="--offset: 12"],
+.ernaehrung-app .carousel-item[style*="--offset: 13"],
+.ernaehrung-app .carousel-item[style*="--offset: 14"] {
+  opacity: 0 !important;
+  pointer-events: none !important;
+  z-index: 0 !important;
+}
+
+/* Carousel Container - wie Pain Dialog */
+.ernaehrung-app .carousel-container {
+  position: relative !important;
+  width: 90vw !important;
+  max-width: 1200px !important;
+  margin: 0 auto !important;
+  padding: 1rem 0 !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  perspective: 2000px !important;
+  overflow: visible !important;
+}
+
+.ernaehrung-app .carousel-content {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  width: 100% !important;
+  transition: transform 0.8s ease-in-out !important;
+  transform-style: preserve-3d !important;
+}
+
+/* Zusätzliche Sicherheit für reibungslosen Loop */
+.ernaehrung-app .carousel-item {
+  will-change: transform, opacity !important;
+  backface-visibility: hidden !important;
+  -webkit-backface-visibility: hidden !important;
+}
+
+/* Alte Z-Index Regeln entfernt - werden durch neue 3-Kacheln-Looping Regeln ersetzt */
+
+/* Karussell Item Content */
+.ernaehrung-app .carousel-item-content {
+  display: flex !important;
+  flex-direction: column !important;
+  align-items: center !important;
+  justify-content: center !important;
+  width: 100% !important;
+  height: 100% !important;
+  padding: 2rem !important;
+  border: 2px solid var(--border-secondary) !important;
+  border-radius: 15px !important;
+  background: var(--bg-primary) !important;
+  transition: all 0.3s ease !important;
+}
+
+.ernaehrung-app .carousel-item-active .carousel-item-content {
+  background: var(--bg-secondary) !important;
+  border-color: #f97316 !important;
+}
+
+.ernaehrung-app .tile-icon-container {
+  width: 120px !important;
+  height: 120px !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  margin-bottom: 1.5rem !important;
+  border-radius: 50% !important;
+  background: var(--bg-primary) !important;
+  transition: all 0.3s ease !important;
+}
+
+.ernaehrung-app .carousel-item-active .tile-icon-container {
+  background: #f97316 !important;
+}
+
+.ernaehrung-app .tile-emoji {
+  font-size: 4rem !important;
+  transition: all 0.3s ease !important;
+}
+
+/* Emojis bleiben IMMER in Originalfarbe - keine Invertierung im Dark Mode */
+.ernaehrung-app .tile-emoji {
+  filter: none !important; /* Keine Filter - Originalfarben beibehalten */
+}
+
+.ernaehrung-app .carousel-item-active .tile-emoji {
+  filter: none !important; /* Auch bei aktiver Kachel keine Invertierung */
+}
+
+.ernaehrung-app .tile-text {
+  font-family: 'Source Code Pro', monospace !important;
+  font-size: 1.8rem !important;
+  font-weight: 500 !important;
+  color: var(--text-primary) !important;
+  text-align: center !important;
+  transition: all 0.3s ease !important;
+}
+
+.ernaehrung-app .carousel-item-active .tile-text {
+  color: white !important;
+}
+
+.ernaehrung-app .tile-text.text-active {
+  color: white !important;
+}
+
+.ernaehrung-app .tile-text.text-inactive {
+  color: var(--text-primary) !important;
+}
+
+/* Separater Container für Indikatoren - Komplett getrennt */
+.ernaehrung-app .indicators-container {
+  position: fixed !important;
+  bottom: 2rem !important;
+  left: 50% !important;
+  transform: translateX(-50%) !important;
+  z-index: 1000 !important; /* Höchste Priorität über allem */
+  background: rgba(0, 0, 0, 0.1) !important;
+  padding: 1rem 2rem !important;
+  border-radius: 2rem !important;
+  backdrop-filter: blur(10px) !important;
+}
+
+.ernaehrung-app .carousel-indicators-separate {
+  display: flex !important;
+  justify-content: center !important;
+  gap: 0.75rem !important;
+  margin: 0 !important;
+  position: relative !important;
+  z-index: 1001 !important;
+  width: 100% !important;
+}
+
+.ernaehrung-app .carousel-indicator {
+  width: 16px !important;
+  height: 16px !important;
+  border-radius: 50% !important;
+  border: 2px solid var(--border-secondary) !important;
+  background: var(--bg-secondary) !important;
+  cursor: pointer !important;
+  transition: all 0.3s ease !important;
+  position: relative !important;
+  z-index: 30 !important;
+  opacity: 0.6 !important;
+}
+
+.ernaehrung-app .carousel-indicator:hover {
+  border-color: var(--accent-primary) !important;
+  transform: scale(1.1) !important;
+}
+
+.ernaehrung-app .carousel-indicator-active {
+  background: #f97316 !important;
+  border-color: #f97316 !important;
+  transform: scale(1.3) !important;
+  box-shadow: 0 0 15px rgba(249, 115, 22, 0.5) !important;
+  opacity: 1 !important;
+}
+
 
 
 /* Custom scrollbar */
@@ -145,35 +378,40 @@
 
 /* Dark mode scrollbar - now handled by CSS variables */
 
-/* Responsive Design - 25% kleiner angepasst */
+/* Responsive Design - Karussell */
 @media (max-width: 768px) {
   .main-content {
     padding: 0.5rem 2rem; /* Weniger Abstand oben/unten: 2rem → 0.5rem */
   }
   
-  .ernaehrung-row {
-    gap: 0.5rem; /* Noch näher: 1rem → 0.5rem */
+  .main-text {
+    font-size: 2.25rem !important; /* 50% größer: 1.5rem * 1.5 = 2.25rem */
+    font-weight: 600 !important; /* Dicker */
   }
   
-  .ernaehrung-item {
-    padding: 1rem;
-    font-size: 1.35rem;
-    width: 120px; /* 20% breiter: 100px * 1.2 = 120px */
-    height: 100px; /* Höhe bleibt gleich */
+  .ernaehrung-app .carousel-container {
+    width: 95vw !important;
+    max-width: 600px !important;
   }
   
-  .ernaehrung-emoji {
-    font-size: 2.25rem; /* 25% kleiner: 3rem * 0.75 = 2.25rem */
+  .ernaehrung-app .carousel-item {
+    width: 250px !important;
+    height: 350px !important;
   }
   
-  .selected-item-title {
-    font-size: 2.25rem; /* 25% kleiner: 3rem * 0.75 = 2.25rem */
+  .ernaehrung-app .tile-icon-container {
+    width: 100px !important;
+    height: 100px !important;
+    margin-bottom: 1rem !important;
   }
   
-  .selected-item-text {
-    font-size: 1.5rem; /* 25% kleiner: 2rem * 0.75 = 1.5rem */
+  .ernaehrung-app .tile-emoji {
+    font-size: 3rem !important;
   }
   
+  .ernaehrung-app .tile-text {
+    font-size: 1.5rem !important;
+  }
 }
 
 @media (max-width: 480px) {
@@ -181,30 +419,52 @@
     padding: 0.25rem 1rem; /* Weniger Abstand oben/unten: 1rem → 0.25rem */
   }
   
-  .ernaehrung-grid {
-    gap: 0.75rem; /* Noch näher: 1.5rem → 0.75rem */
+  .main-text {
+    font-size: 1.875rem !important; /* 50% größer: 1.25rem * 1.5 = 1.875rem */
+    font-weight: 600 !important; /* Dicker */
   }
   
-  .ernaehrung-row {
-    gap: 0.25rem; /* Noch näher: 0.5rem → 0.25rem */
+  .ernaehrung-app .carousel-container {
+    width: 98vw !important;
+    max-width: 400px !important;
   }
   
-  .ernaehrung-item {
-    padding: 0.75rem;
-    font-size: 1.125rem;
-    width: 96px; /* 20% breiter: 80px * 1.2 = 96px */
-    height: 80px; /* Höhe bleibt gleich */
+  .ernaehrung-app .carousel-item {
+    width: 200px !important;
+    height: 300px !important;
   }
   
-  .ernaehrung-emoji {
-    font-size: 1.875rem; /* 25% kleiner: 2.5rem * 0.75 = 1.875rem */
+  .ernaehrung-app .tile-icon-container {
+    width: 80px !important;
+    height: 80px !important;
+    margin-bottom: 0.75rem !important;
   }
   
-  .selected-item-title {
-    font-size: 1.875rem; /* 25% kleiner: 2.5rem * 0.75 = 1.875rem */
+  .ernaehrung-app .tile-emoji {
+    font-size: 2.5rem !important;
   }
   
-  .selected-item-text {
-    font-size: 1.125rem; /* 25% kleiner: 1.5rem * 0.75 = 1.125rem */
+  .ernaehrung-app .tile-text {
+    font-size: 1.25rem !important;
   }
+}
+
+/* TTS-Indikator */
+.tts-indicator {
+  position: absolute;
+  top: 1rem;
+  right: 1rem;
+  font-size: 1.5rem;
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+
+.tts-indicator.tts-active {
+  opacity: 1;
+  animation: tts-pulse 1s infinite;
+}
+
+@keyframes tts-pulse {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.1); }
 }

@@ -3,6 +3,8 @@ import { useRouter } from 'vue-router'
 import { useSettingsStore } from '../../settings/stores/settings'
 import { useFaceRecognition } from '../../face-recognition/composables/useFaceRecognition'
 import { simpleFlowController } from '../../../core/application/SimpleFlowController'
+import { useCarousel } from '../../navigation/composables/useCarousel'
+import { type CarouselItem } from '../../navigation/config/carouselConfig'
 
 export function useIchViewLogic() {
   // Router
@@ -16,7 +18,6 @@ export function useIchViewLogic() {
 
   // State
   const currentMenu = ref('')
-  const currentTileIndex = ref(0)
   const isAutoMode = ref(true)
   const autoModeInterval = ref<number | null>(null)
   const closedFrames = ref(0)
@@ -69,45 +70,103 @@ export function useIchViewLogic() {
     }
   }
 
-  // Menu Items für Ich-Seite - 6 Bereiche
-  const menuItems = [
+  // Menu Items für Ich-Seite - 6 Bereiche (Karussell-kompatibel)
+  const menuItems: CarouselItem[] = [
     {
       id: 'ernaehrung',
       title: 'ERNÄHRUNG',
-      description: 'Ernährung verwalten',
-      icon: 'hamburger-soda.svg'
+      icon: '/hamburger-soda.svg',
+      route: '/ernaehrung',
+      category: 'main'
     },
     {
       id: 'gefuehle',
       title: 'GEFÜHLE',
-      description: 'Gefühle dokumentieren',
-      icon: 'face-smile-upside-down.svg'
+      icon: '/face-smile-upside-down.svg',
+      route: '/gefuehle',
+      category: 'main'
     },
     {
       id: 'kleidung',
       title: 'KLEIDUNG',
-      description: 'Kleidung verwalten',
-      icon: 'clothes-hanger.svg'
+      icon: '/clothes-hanger.svg',
+      route: '/kleidung',
+      category: 'main'
     },
     {
       id: 'hygiene',
       title: 'HYGIENE',
-      description: 'Hygiene verwalten',
-      icon: 'bath.svg'
+      icon: '/bath.svg',
+      route: '/hygiene',
+      category: 'main'
     },
     {
       id: 'bewegung',
       title: 'BEWEGUNG',
-      description: 'Bewegung dokumentieren',
-      icon: 'barefoot.svg'
+      icon: '/barefoot.svg',
+      route: '/bewegung',
+      category: 'main'
     },
     {
       id: 'zurueck',
       title: 'ZURÜCK',
-      description: 'Zurück zur Hauptseite',
-      icon: 'zurueck.svg'
+      icon: '/zurueck.svg',
+      route: '/home',
+      category: 'main'
     }
   ]
+
+  // Karussell-System für Mobile - identisch mit HomeView
+  const {
+    isMobile,
+    position,
+    carouselStyle,
+    currentItem,
+    itemCount,
+    autoScrollState,
+    touchState,
+    isSwipe,
+    swipeDirection,
+    initializeCarousel,
+    cleanup: cleanupCarousel,
+    navigateToIndex,
+    navigateNext,
+    navigatePrevious,
+    handleCarouselTouchStart,
+    handleCarouselTouchMove,
+    handleCarouselTouchEnd,
+    startAutoScrollWithCallback,
+    stopAutoScrollCompletely,
+    checkIsMobile
+  } = useCarousel(menuItems)
+
+  // IchView-spezifische Position-Korrektur - Clean Implementation
+  const ichViewCarouselStyle = computed(() => {
+    if (!isMobile.value) return carouselStyle.value
+
+    const mainContent = document.querySelector('.ich-view .main-content')
+    if (!mainContent) return carouselStyle.value
+
+    const mainContentHeight = mainContent.clientHeight
+    const tileHeight = 380 // 5% kleiner (400px * 0.95)
+
+    // Feste Zielposition: aktive Kachel bleibt immer 2% über der Mitte
+    const desiredCenterY = mainContentHeight * 0.02
+
+    // Offset: verschiebt das Karussell so, dass die aktive Kachel an desiredCenterY steht
+    const newOffset = desiredCenterY - currentTileIndex.value * tileHeight
+
+    console.log(`🎯 IchView Clean: index=${currentTileIndex.value}, offset=${newOffset}`)
+    console.log(`🎯 IchView Desired Y: ${desiredCenterY}px, Tile height: ${tileHeight}px`)
+
+    return {
+      transform: `translate3d(0, ${newOffset}px, 0)`,
+      transition: 'transform 0.4s ease-out'
+    }
+  })
+
+  // Computed für aktuellen Tile-Index
+  const currentTileIndex = computed(() => position.currentIndex)
 
   // Computed
   const appClasses = computed(() => [
@@ -177,13 +236,17 @@ export function useIchViewLogic() {
   }
 
   // Methods
-  function selectMenu(menuId: string) {
+  function selectMenu(menuIdOrItem: string | CarouselItem) {
+    const menuId = typeof menuIdOrItem === 'string' ? menuIdOrItem : menuIdOrItem.id
     console.log('selectMenu called with menuId:', menuId)
     
     // Setze den aktuellen Tile-Index basierend auf der menuId
     const index = menuItems.findIndex(item => item.id === menuId)
+    console.log('IchView: selectMenu - menuId:', menuId, 'index:', index, 'currentTileIndex before:', currentTileIndex.value)
     if (index !== -1) {
-      currentTileIndex.value = index
+      if (isMobile.value) {
+        navigateToIndex(index)
+      }
     }
     
     currentMenu.value = menuId
@@ -255,8 +318,8 @@ export function useIchViewLogic() {
         // Spreche den Menüpunkt vor, bevor er ausgewählt wird
         speakText(currentItem.title)
         
-        // Scroll zur aktiven Kachel (nur auf Mobile)
-        if (window.innerWidth <= 768) {
+        // Scroll zur aktiven Kachel (nur auf Desktop)
+        if (!isMobile.value) {
           scrollToActiveTile(currentTileIndex.value)
         }
         
@@ -288,8 +351,8 @@ export function useIchViewLogic() {
       // Spreche den Menüpunkt vor, bevor er ausgewählt wird
       speakText(currentItem.title)
       
-      // Scroll zur aktiven Kachel (nur auf Mobile)
-      if (window.innerWidth <= 768) {
+      // Scroll zur aktiven Kachel (nur auf Desktop)
+      if (!isMobile.value) {
         scrollToActiveTile(currentTileIndex.value)
       }
       
@@ -301,7 +364,7 @@ export function useIchViewLogic() {
   }
 
   // Lifecycle
-  onMounted(() => {
+  onMounted(async () => {
     // Setze IchView als aktiven View
     simpleFlowController.setActiveView('/ich')
     
@@ -309,6 +372,9 @@ export function useIchViewLogic() {
     if (!faceRecognition.isActive.value) {
       faceRecognition.start()
     }
+    
+    // Automatisch "Was möchten Sie machen?" vorlesen
+    await speakText('Was möchten Sie machen?')
     
     // Watch for blinks using the isBlinking function
     const blinkCheckInterval = setInterval(() => {
@@ -323,26 +389,37 @@ export function useIchViewLogic() {
     document.addEventListener('keydown', enableTTSOnInteraction)
     document.addEventListener('touchstart', enableTTSOnInteraction)
     
-    // Start auto-mode automatically über FlowController
-    setTimeout(() => {
-      simpleFlowController.startAutoMode(
-        menuItems,
-        (currentIndex, currentItem) => {
-          currentTileIndex.value = currentIndex
-          console.log('IchView: Auto-mode cycle:', currentItem.title, 'at index:', currentIndex)
-          speakText(currentItem.title)
-          
-          // Scroll zur aktiven Kachel (nur auf Mobile)
-          if (window.innerWidth <= 768) {
-            setTimeout(() => {
-              scrollToActiveTile(currentIndex)
-            }, 100) // Kurze Verzögerung für bessere Performance
-          }
-        },
-        3000,
-        3000
-      )
-    }, 1000)
+    // Prüfe Mobile-Status und initialisiere entsprechend
+    checkIsMobile()
+    window.addEventListener('resize', checkIsMobile)
+    
+    // Initialisiere Karussell für Mobile
+    if (isMobile.value) {
+      console.log('IchView: Mobile detected - initializing carousel')
+      initializeCarousel()
+    } else {
+      console.log('IchView: Desktop detected - starting auto-mode')
+      // Start auto-mode automatically über FlowController für Desktop
+      setTimeout(() => {
+        simpleFlowController.startAutoMode(
+          menuItems,
+          (currentIndex, currentItem) => {
+            currentTileIndex.value = currentIndex
+            console.log('IchView: Auto-mode cycle:', currentItem.title, 'at index:', currentIndex)
+            speakText(currentItem.title)
+            
+            // Scroll zur aktiven Kachel (nur auf Desktop)
+            if (!isMobile.value) {
+              setTimeout(() => {
+                scrollToActiveTile(currentIndex)
+              }, 100) // Kurze Verzögerung für bessere Performance
+            }
+          },
+          3000,
+          3000
+        )
+      }, 1000)
+    }
     
     console.log('IchView: mounted - using central controllers')
     
@@ -354,19 +431,22 @@ export function useIchViewLogic() {
     simpleFlowController.stopAutoMode()
     simpleFlowController.stopTTS()
     
+    // Cleanup Karussell
+    cleanupCarousel()
+    
     // Clean up event listeners
     document.removeEventListener('contextmenu', handleRightClick, { capture: true })
     document.removeEventListener('click', enableTTSOnInteraction)
     document.removeEventListener('keydown', enableTTSOnInteraction)
     document.removeEventListener('touchstart', enableTTSOnInteraction)
+    window.removeEventListener('resize', checkIsMobile)
     
-    console.log('IchView: unmounted - Auto-mode stopped, TTS stopped')
+    console.log('IchView: unmounted - Auto-mode stopped, TTS stopped, Karussell cleaned up')
   })
 
   return {
     // State
     currentMenu,
-    currentTileIndex,
     isAutoMode,
     autoModeInterval,
     closedFrames,
@@ -380,14 +460,36 @@ export function useIchViewLogic() {
     menuItems,
     appClasses,
 
+    // Karussell-System für Mobile
+    isMobile,
+    position,
+    carouselStyle: ichViewCarouselStyle,
+    currentItem,
+    itemCount,
+    autoScrollState,
+    touchState,
+    isSwipe,
+    swipeDirection,
+    currentTileIndex,
+
     // Methods
     speakText,
     enableTTSOnInteraction,
-    // Auto-Mode-Funktionen entfernt - verwende zentrale ViewFlowController-Methoden
     selectMenu,
     formatTime,
     handleBlink,
     handleRightClick,
+    
+    // Karussell-Methods
+    navigateToIndex,
+    navigateNext,
+    navigatePrevious,
+    handleCarouselTouchStart,
+    handleCarouselTouchMove,
+    handleCarouselTouchEnd,
+    startAutoScrollWithCallback,
+    stopAutoScrollCompletely,
+    checkIsMobile,
 
     // Stores
     settingsStore,

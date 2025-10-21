@@ -4,6 +4,8 @@ import { useFaceRecognition } from '../../face-recognition/composables/useFaceRe
 import { useSettingsStore } from '../../settings/stores/settings'
 import { simpleFlowController } from '../../../core/application/SimpleFlowController'
 import { generateTTSText, getMainText, getPauseAfterTTS, getAutoStartDelay, getCycleDelay } from '../../../config/ttsConfig'
+import { useCarousel } from '../../navigation/composables/useCarousel'
+import type { CarouselItem } from '../../navigation/config/carouselConfig'
 
 export function useGefuehleViewLogic() {
   // Router
@@ -16,12 +18,18 @@ export function useGefuehleViewLogic() {
   const faceRecognition = useFaceRecognition()
 
   // State
-  const currentTileIndex = ref(0)
   const selectedGefuehl = ref('')
   const feedbackText = ref('') // Orange Rückmeldung für ausgewählte Items
   const isAutoMode = ref(true)
+  const closedFrames = ref(0)
+  const eyesClosed = ref(false)
   const userInteracted = ref(false)
   const isTTSActive = ref(false)
+
+  // Verbesserte Blink-Detection Parameter - zentral gesteuert
+  const blinkThreshold = computed(() => Math.ceil(settingsStore.settings.blinkSensitivity * 10))
+  const lastBlinkTime = ref(0)
+  const blinkCooldown = computed(() => settingsStore.settings.blinkSensitivity * 1000)
 
   // Alte Blinzel-Erkennung (aus alter Version)
   const handleFaceBlink = (event: any) => {
@@ -47,6 +55,49 @@ export function useGefuehleViewLogic() {
       simpleFlowController.setUserInteracted(true)
     }
   }
+
+  // Gefühle-Items für Karussell (CarouselItem Format)
+  const menuItems: CarouselItem[] = [
+    { id: 'gluecklich', title: 'GLÜCKLICH', icon: '😊', route: '/gefuehle/gluecklich', category: 'gefuehle' },
+    { id: 'zufrieden', title: 'ZUFRIEDEN', icon: '😌', route: '/gefuehle/zufrieden', category: 'gefuehle' },
+    { id: 'stolz', title: 'STOLZ', icon: '😤', route: '/gefuehle/stolz', category: 'gefuehle' },
+    { id: 'liebevoll', title: 'LIEBEVOLL', icon: '🥰', route: '/gefuehle/liebevoll', category: 'gefuehle' },
+    { id: 'wuetend', title: 'WÜTEND', icon: '😠', route: '/gefuehle/wuetend', category: 'gefuehle' },
+    { id: 'einsam', title: 'EINSAM', icon: '😔', route: '/gefuehle/einsam', category: 'gefuehle' },
+    { id: 'aengstlich', title: 'ÄNGSTLICH', icon: '😰', route: '/gefuehle/aengstlich', category: 'gefuehle' },
+    { id: 'gelangweilt', title: 'GELANGWEILT', icon: '😑', route: '/gefuehle/gelangweilt', category: 'gefuehle' },
+    { id: 'aufgeregt', title: 'AUFGEREGT', icon: '🤩', route: '/gefuehle/aufgeregt', category: 'gefuehle' },
+    { id: 'muede', title: 'MÜDE', icon: '😴', route: '/gefuehle/muede', category: 'gefuehle' },
+    { id: 'gestresst', title: 'GESTRESST', icon: '😵', route: '/gefuehle/gestresst', category: 'gefuehle' },
+    { id: 'zurueck', title: 'ZURÜCK', icon: '⬅️', route: '/ich', category: 'main' }
+  ]
+
+  // Karussell-System für Mobile
+  const {
+    isMobile,
+    position,
+    carouselStyle,
+    currentItem,
+    itemCount,
+    autoScrollState,
+    touchState,
+    isSwipe,
+    swipeDirection,
+    initializeCarousel,
+    cleanup: cleanupCarousel,
+    navigateToIndex,
+    navigateNext,
+    navigatePrevious,
+    handleCarouselTouchStart,
+    handleCarouselTouchMove,
+    handleCarouselTouchEnd,
+    startAutoScrollWithCallback,
+    stopAutoScrollCompletely,
+    checkIsMobile
+  } = useCarousel(menuItems)
+
+  // Ref für aktuellen Tile-Index - kann geschrieben werden
+  const currentTileIndex = ref(0)
 
   // Gefühle-Items basierend auf dem gezeigten Interface
   const gefuehleItems = [
@@ -161,6 +212,32 @@ export function useGefuehleViewLogic() {
     }
   }
 
+  // Gefühle-spezifische Handler
+  const handleGefuehlRightClick = (event: MouseEvent, gefuehlId: string) => {
+    if (isTTSActive.value) {
+      event.preventDefault()
+      return false
+    }
+    selectGefuehl(gefuehlId)
+    return false
+  }
+
+  const goToGefuehl = (index: number) => {
+    console.log('goToGefuehl called with index:', index, 'current:', currentTileIndex.value)
+    if (index >= 0 && index < gefuehleItems.length) {
+      currentTileIndex.value = index
+      console.log('currentTileIndex updated to:', currentTileIndex.value)
+    } else {
+      // Reibungsloser Loop - wenn Index außerhalb des Bereichs, loope zurück
+      if (index < 0) {
+        currentTileIndex.value = gefuehleItems.length - 1
+      } else if (index >= gefuehleItems.length) {
+        currentTileIndex.value = 0
+      }
+      console.log('Looped currentTileIndex to:', currentTileIndex.value)
+    }
+  }
+
   // Right Click Handler
   const handleRightClick = (event: MouseEvent) => {
     // Verhindere Right-Click-Interaktion während TTS
@@ -187,6 +264,10 @@ export function useGefuehleViewLogic() {
 
   // Lifecycle
   onMounted(() => {
+    // Mobile Detection
+    checkIsMobile()
+    window.addEventListener('resize', checkIsMobile)
+    
     // Setze GefuehleView als aktiven View
     simpleFlowController.setActiveView('/gefuehle')
     
@@ -196,10 +277,6 @@ export function useGefuehleViewLogic() {
     if (!faceRecognition.isActive.value) {
       faceRecognition.start()
     }
-    
-    // Event Listener für Face Blinzel-Erkennung
-    window.addEventListener('faceBlinkDetected', handleFaceBlink)
-    console.log('GefuehleView: Face Recognition mit alter Blinzel-Erkennung gestartet')
     
     // Add global event listeners to detect user interaction
     document.addEventListener('click', enableTTSOnInteraction)
@@ -227,7 +304,10 @@ export function useGefuehleViewLogic() {
       simpleFlowController.startAutoMode(
         gefuehleItems,
         (currentIndex, currentItem) => {
-          currentTileIndex.value = currentIndex
+          // Setze currentTileIndex nur wenn es sich geändert hat
+          if (currentTileIndex.value !== currentIndex) {
+            currentTileIndex.value = currentIndex
+          }
           console.log('GefuehleView: Auto-mode cycle:', currentItem.text, 'at index:', currentIndex)
           speakText(currentItem.text)
         },
@@ -236,10 +316,20 @@ export function useGefuehleViewLogic() {
       )
     }, autoStartDelay)
     
+    // Mobile Karussell initialisieren
+    if (isMobile.value) {
+      initializeCarousel()
+      startAutoScrollWithCallback()
+    }
+    
     console.log('GefuehleView: mounted - using central controllers')
   })
 
   onUnmounted(() => {
+    // Mobile Karussell cleanup
+    cleanupCarousel()
+    window.removeEventListener('resize', checkIsMobile)
+    
     // Stoppe Auto-Mode und TTS über FlowController
     simpleFlowController.stopAutoMode()
     simpleFlowController.stopTTS()
@@ -250,10 +340,6 @@ export function useGefuehleViewLogic() {
     document.removeEventListener('touchstart', enableTTSOnInteraction)
     document.removeEventListener('contextmenu', handleRightClick, { capture: true })
     
-    // Clean up Face Recognition
-    faceRecognition.stop()
-    window.removeEventListener('faceBlinkDetected', handleFaceBlink)
-    
     console.log('GefuehleView: unmounted - Auto-mode stopped, TTS stopped')
   })
 
@@ -263,14 +349,44 @@ export function useGefuehleViewLogic() {
     selectedGefuehl,
     feedbackText,
     isAutoMode,
+    closedFrames,
+    eyesClosed,
+    blinkThreshold,
+    lastBlinkTime,
+    blinkCooldown,
     gefuehleItems,
+    isTTSActive,
+    
+    // Mobile Karussell State
+    isMobile,
+    position,
+    carouselStyle,
+    currentItem,
+    itemCount,
+    autoScrollState,
+    touchState,
+    isSwipe,
+    swipeDirection,
     
     // Methods
     speakText,
     enableTTSOnInteraction,
     selectGefuehl,
-    handleFaceBlink,
+    handleBlink,
     handleRightClick,
+    handleGefuehlRightClick,
+    goToGefuehl,
+    
+    // Mobile Karussell Methods
+    navigateToIndex,
+    navigateNext,
+    navigatePrevious,
+    handleCarouselTouchStart,
+    handleCarouselTouchMove,
+    handleCarouselTouchEnd,
+    startAutoScrollWithCallback,
+    stopAutoScrollCompletely,
+    checkIsMobile,
     
     // Stores
     settingsStore,

@@ -7,17 +7,19 @@ const {
   selectedBewegung,
   feedbackText,
   isAutoMode,
-  closedFrames,
-  eyesClosed,
-  blinkThreshold,
-  lastBlinkTime,
-  blinkCooldown,
+  isTTSActive,
   bewegungItems,
   speakText,
   enableTTSOnInteraction,
   selectBewegung,
   handleFaceBlink,
   handleRightClick,
+  handleBewegungRightClick,
+  goToBewegung,
+  getTileClass,
+  getIconClass,
+  getTextClass,
+  getIndicatorClass,
   settingsStore,
   faceRecognition
 } = useBewegungViewLogic()
@@ -43,53 +45,62 @@ const {
           </div>
         </div>
 
-        <!-- Bewegung-Items Grid - 3 Zeilen à 4 Items -->
-        <div class="bewegung-grid">
-          <!-- Zeile 1: Gehen, Laufen, Fahrrad, Schwimmen -->
-          <div class="bewegung-row">
-            <button
-              v-for="(item, index) in bewegungItems.slice(0, 4)"
+        <!-- Bewegung-Items 3D Karussell -->
+        <div class="carousel-container">
+          <!-- Karussell Content -->
+          <div class="carousel-content">
+            <div 
+              v-for="(item, index) in bewegungItems"
               :key="item.id"
+              class="carousel-item"
+              :class="currentTileIndex === index ? 'carousel-item-active' : 'carousel-item-inactive'"
+              :style="{
+                '--offset': index - currentTileIndex,
+                '--rotation': (index < currentTileIndex ? -20 : index > currentTileIndex ? 20 : 0) + 'deg'
+              }"
               @click="selectBewegung(item.id)"
-              class="bewegung-item"
-              :class="currentTileIndex === index ? 'active' : 'inactive'"
+              @contextmenu.prevent="handleBewegungRightClick($event, item.id)"
             >
-              <div v-if="item.emoji" class="bewegung-emoji">{{ item.emoji }}</div>
-              <span class="bewegung-text">{{ item.text }}</span>
-            </button>
-          </div>
-
-          <!-- Zeile 2: Yoga, Tanzen, Sport, Spazieren -->
-          <div class="bewegung-row">
-            <button
-              v-for="(item, index) in bewegungItems.slice(4, 8)"
-              :key="item.id"
-              @click="selectBewegung(item.id)"
-              class="bewegung-item"
-              :class="currentTileIndex === index + 4 ? 'active' : 'inactive'"
-            >
-              <div v-if="item.emoji" class="bewegung-emoji">{{ item.emoji }}</div>
-              <span class="bewegung-text">{{ item.text }}</span>
-            </button>
-          </div>
-
-          <!-- Zeile 3: Physiotherapie, Massage, Ruhe, Zurück -->
-          <div class="bewegung-row">
-            <button
-              v-for="(item, index) in bewegungItems.slice(8, 12)"
-              :key="item.id"
-              @click="selectBewegung(item.id)"
-              class="bewegung-item"
-              :class="currentTileIndex === index + 8 ? 'active' : 'inactive'"
-            >
-              <div v-if="item.emoji" class="bewegung-emoji">{{ item.emoji }}</div>
-              <span class="bewegung-text">{{ item.text }}</span>
-            </button>
+              <div class="carousel-item-content">
+                <div 
+                  class="tile-icon-container"
+                  :class="getIconClass(index)"
+                >
+                  <div v-if="item.emoji" class="tile-emoji">{{ item.emoji }}</div>
+                </div>
+                <div 
+                  class="tile-text"
+                  :class="getTextClass(index)"
+                >
+                  {{ item.text }}
+                </div>
+              </div>
+            </div>
           </div>
         </div>
 
       </div>
     </main>
+
+    <!-- Separater Container für Indikatoren - Komplett getrennt -->
+    <div class="indicators-container">
+      <div class="carousel-indicators-separate">
+        <button 
+          v-for="(item, index) in bewegungItems"
+          :key="`indicator-${item.id}`"
+          class="carousel-indicator"
+          :class="getIndicatorClass(index)"
+          @click="goToBewegung(index)"
+          :title="`Index: ${index}, Current: ${currentTileIndex}, Active: ${currentTileIndex === index}`"
+        >
+        </button>
+      </div>
+    </div>
+
+    <!-- TTS-Indikator -->
+    <div class="tts-indicator" :class="{ 'tts-active': isTTSActive }">
+      🔊
+    </div>
   </div>
 </template>
 

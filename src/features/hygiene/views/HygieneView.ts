@@ -4,6 +4,8 @@ import { useFaceRecognition } from '../../face-recognition/composables/useFaceRe
 import { useSettingsStore } from '../../settings/stores/settings'
 import { simpleFlowController } from '../../../core/application/SimpleFlowController'
 import { generateTTSText, getMainText, getPauseAfterTTS, getAutoStartDelay, getCycleDelay } from '../../../config/ttsConfig'
+import { useCarousel } from '../../navigation/composables/useCarousel'
+import type { CarouselItem } from '../../navigation/config/carouselConfig'
 
 export function useHygieneViewLogic() {
   // Router
@@ -16,7 +18,6 @@ export function useHygieneViewLogic() {
   const faceRecognition = useFaceRecognition()
 
   // State
-  const currentTileIndex = ref(0)
   const selectedHygiene = ref('')
   const feedbackText = ref('') // Orange Rückmeldung für ausgewählte Items
   const isAutoMode = ref(true)
@@ -39,7 +40,44 @@ export function useHygieneViewLogic() {
     }
   }
 
-  // Hygiene-Items basierend auf dem gezeigten Interface
+  // Hygiene-Items für Karussell (CarouselItem Format)
+  const menuItems: CarouselItem[] = [
+    { id: 'duschen', title: 'DUSCHEN', icon: '/bath.svg', route: '/hygiene/duschen', category: 'hygiene' },
+    { id: 'baden', title: 'BADEN', icon: '/bath.svg', route: '/hygiene/baden', category: 'hygiene' },
+    { id: 'zaehneputzen', title: 'ZÄHNEPUTZEN', icon: '/tooth.svg', route: '/hygiene/zaehneputzen', category: 'hygiene' },
+    { id: 'haare_waschen', title: 'HAARE WASCHEN', icon: '/shampoo.svg', route: '/hygiene/haare_waschen', category: 'hygiene' },
+    { id: 'rasieren', title: 'RASIEREN', icon: '/razor.svg', route: '/hygiene/rasieren', category: 'hygiene' },
+    { id: 'zurueck', title: 'ZURÜCK', icon: '/back.svg', route: '/ich', category: 'main' }
+  ]
+
+  // Karussell-System für Mobile
+  const {
+    isMobile,
+    position,
+    carouselStyle,
+    currentItem,
+    itemCount,
+    autoScrollState,
+    touchState,
+    isSwipe,
+    swipeDirection,
+    initializeCarousel,
+    cleanup: cleanupCarousel,
+    navigateToIndex,
+    navigateNext,
+    navigatePrevious,
+    handleCarouselTouchStart,
+    handleCarouselTouchMove,
+    handleCarouselTouchEnd,
+    startAutoScrollWithCallback,
+    stopAutoScrollCompletely,
+    checkIsMobile
+  } = useCarousel(menuItems)
+
+  // Ref für aktuellen Tile-Index - kann geschrieben werden
+  const currentTileIndex = ref(0)
+
+  // Hygiene-Items basierend auf dem gezeigten Interface (für Desktop)
   const hygieneItems = [
     // Körperpflege
     { id: 'duschen', text: 'duschen', type: 'koerper', emoji: '🚿' },
@@ -176,8 +214,38 @@ export function useHygieneViewLogic() {
     return false
   }
 
+  // Karussell-spezifische Handler
+  const handleHygieneRightClick = (event: MouseEvent, hygieneId: string) => {
+    if (isTTSActive.value) {
+      event.preventDefault()
+      return false
+    }
+    selectHygiene(hygieneId)
+    return false
+  }
+
+  const goToHygiene = (index: number) => {
+    console.log('goToHygiene called with index:', index, 'current:', currentTileIndex.value)
+    if (index >= 0 && index < hygieneItems.length) {
+      currentTileIndex.value = index
+      console.log('currentTileIndex updated to:', currentTileIndex.value)
+    } else {
+      // Reibungsloser Loop - wenn Index außerhalb des Bereichs, loope zurück
+      if (index < 0) {
+        currentTileIndex.value = hygieneItems.length - 1
+      } else if (index >= hygieneItems.length) {
+        currentTileIndex.value = 0
+      }
+      console.log('Looped currentTileIndex to:', currentTileIndex.value)
+    }
+  }
+
   // Lifecycle
   onMounted(() => {
+    // Mobile Detection
+    checkIsMobile()
+    window.addEventListener('resize', checkIsMobile)
+    
     // Setze HygieneView als aktiven View
     simpleFlowController.setActiveView('/hygiene')
     
@@ -214,7 +282,10 @@ export function useHygieneViewLogic() {
       simpleFlowController.startAutoMode(
         hygieneItems,
         (currentIndex, currentItem) => {
-          currentTileIndex.value = currentIndex
+          // Setze currentTileIndex nur wenn es sich geändert hat
+          if (currentTileIndex.value !== currentIndex) {
+            currentTileIndex.value = currentIndex
+          }
           console.log('HygieneView: Auto-mode cycle:', currentItem.text, 'at index:', currentIndex)
           speakText(currentItem.text)
         },
@@ -223,10 +294,20 @@ export function useHygieneViewLogic() {
       )
     }, autoStartDelay)
     
+    // Mobile Karussell initialisieren
+    if (isMobile.value) {
+      initializeCarousel()
+      startAutoScrollWithCallback()
+    }
+    
     console.log('HygieneView: mounted - using central controllers')
   })
 
   onUnmounted(() => {
+    // Mobile Karussell cleanup
+    cleanupCarousel()
+    window.removeEventListener('resize', checkIsMobile)
+    
     // Stoppe Auto-Mode und TTS über FlowController
     simpleFlowController.stopAutoMode()
     simpleFlowController.stopTTS()
@@ -253,12 +334,36 @@ export function useHygieneViewLogic() {
     blinkCooldown,
     hygieneItems,
     
+    // Mobile Karussell State
+    isMobile,
+    position,
+    carouselStyle,
+    currentItem,
+    itemCount,
+    autoScrollState,
+    touchState,
+    isSwipe,
+    swipeDirection,
+    
     // Methods
     speakText,
     enableTTSOnInteraction,
     selectHygiene,
     handleBlink,
     handleRightClick,
+    handleHygieneRightClick,
+    goToHygiene,
+    
+    // Mobile Karussell Methods
+    navigateToIndex,
+    navigateNext,
+    navigatePrevious,
+    handleCarouselTouchStart,
+    handleCarouselTouchMove,
+    handleCarouselTouchEnd,
+    startAutoScrollWithCallback,
+    stopAutoScrollCompletely,
+    checkIsMobile,
     
     // Stores
     settingsStore,
