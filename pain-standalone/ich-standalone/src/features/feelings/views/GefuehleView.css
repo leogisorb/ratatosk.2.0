@@ -1,0 +1,682 @@
+/* GefuehleView - Komplett neu geschriebenes CSS nach Hygiene-Vorbild */
+
+/* App Container */
+.gefuehle-app {
+  min-height: 100vh;
+  background-color: var(--bg-primary);
+  display: flex;
+  flex-direction: column;
+}
+
+/* Desktop Grid standardmäßig sichtbar */
+.gefuehle-app .desktop-grid {
+  display: block;
+}
+
+/* Mobile (768px und kleiner) - Desktop Grid verstecken, Mobile Karussell zeigen */
+@media (max-width: 768px) {
+  .gefuehle-app .desktop-grid {
+    display: none !important;
+  }
+  
+  .gefuehle-app .mobile-carousel {
+    display: block !important;
+  }
+}
+
+/* Mobile Karussell Styles */
+.gefuehle-app .mobile-carousel {
+  display: none;
+  position: relative;
+  height: 100vh;
+  width: 100%;
+  overflow: hidden;
+  background-color: var(--bg-primary);
+}
+
+/* Main Content - Clean Layout */
+.main-content {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-start;
+  padding: 2rem 4rem;
+  gap: 2rem; /* Gleichmäßige Abstände zwischen allen Elementen */
+}
+
+.content-wrapper {
+  max-width: 8xl;
+  margin: 0 auto;
+  width: 100%;
+}
+
+/* Haupttext - Clean */
+.main-text-container {
+  text-align: center;
+  margin: 0; /* Keine zusätzlichen Margins, gap regelt Abstände */
+}
+
+/* Haupttext wird jetzt global in main.css definiert */
+
+/* TTS Debug Info - Clean */
+.feedback-text-container {
+  text-align: center;
+  margin: 0; /* Keine zusätzlichen Margins, gap regelt Abstände */
+}
+
+.feedback-text {
+  font-family: 'Source Code Pro', monospace;
+  font-size: 2rem; /* Kleiner als Haupttext (3rem) */
+  font-weight: 400; /* Leichter als Haupttext (600) */
+  color: #f97316; /* Orange Farbe - bleibt orange auch im Dark Mode */
+  margin: 0;
+  opacity: 0;
+  transition: opacity 0.3s ease;
+  min-height: 2.5rem; /* Angepasste Mindesthöhe */
+}
+
+.feedback-text.show {
+  opacity: 1;
+}
+
+/* Spacer */
+.spacer {
+  height: 4rem;
+}
+
+/* === Gefühle Karussell 3D Effekt === */
+.gefuehle-app .carousel-container {
+  position: relative !important;
+  width: 90vw !important;
+  max-width: 1200px !important;
+  margin: 0 auto !important;
+  padding: 1rem 0 !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  perspective: 2000px !important;
+  overflow: visible !important;
+}
+
+.gefuehle-app .carousel-content {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  width: 100% !important;
+  transition: transform 0.8s ease-in-out !important; /* Sanftes Gleiten */
+  transform-style: preserve-3d !important;
+}
+
+.gefuehle-app .carousel-item {
+  position: absolute !important;
+  width: 300px !important;
+  height: 400px !important;
+  top: 0 !important;
+  left: 50% !important;
+  transform: translateX(calc(-50% + var(--offset, 0) * 350px)) scale(0.7) rotateY(var(--rotation, 20deg)) !important;
+  opacity: 0.5 !important;
+  transition: transform 0.8s ease-in-out, opacity 0.8s ease-in-out !important;
+  z-index: 1 !important;
+  cursor: pointer !important;
+}
+
+.gefuehle-app .carousel-item-active {
+  transform: translateX(-50%) scale(1) rotateY(0deg) !important;
+  opacity: 1 !important;
+  z-index: 3 !important;
+}
+
+/* Spezielle Positionierung für links (alt) und rechts (neu) */
+.gefuehle-app .carousel-item[style*="--offset: -1"] {
+  transform: translateX(calc(-50% - 350px)) scale(0.7) rotateY(-20deg) !important;
+  opacity: 0.6 !important;
+}
+
+.gefuehle-app .carousel-item[style*="--offset: 1"] {
+  transform: translateX(calc(-50% + 350px)) scale(0.7) rotateY(20deg) !important;
+  opacity: 0.6 !important;
+}
+
+.gefuehle-app .carousel-item-inactive {
+  opacity: 0.5 !important;
+  z-index: 2 !important;
+}
+
+/* Einfache und robuste Z-Index-Verwaltung */
+.gefuehle-app .carousel-item {
+  z-index: 1 !important;
+}
+
+.gefuehle-app .carousel-item-active {
+  z-index: 5 !important;
+}
+
+/* 3-Kacheln-System: Pain Dialog Style - Exakt wie Ernährung */
+.gefuehle-app .carousel-item {
+  position: absolute !important;
+  width: 300px !important;
+  height: 400px !important;
+  top: 0 !important;
+  left: 50% !important;
+  transform: translateX(calc(-50% + var(--offset, 0) * 350px)) scale(0.7) rotateY(var(--rotation, 20deg)) !important;
+  opacity: 0.5 !important;
+  transition: transform 0.8s ease-in-out, opacity 0.8s ease-in-out !important;
+  z-index: 1 !important;
+  cursor: pointer !important;
+}
+
+.gefuehle-app .carousel-item-active {
+  transform: translateX(-50%) scale(1) rotateY(0deg) !important;
+  opacity: 1 !important;
+  z-index: 3 !important;
+}
+
+/* Spezielle Positionierung für 3-Kacheln-System - wie Pain Dialog */
+.gefuehle-app .carousel-item[style*="--offset: -1"] {
+  transform: translateX(calc(-50% + -350px)) scale(0.7) rotateY(-20deg) !important;
+  opacity: 0.5 !important;
+  z-index: 1 !important;
+}
+
+.gefuehle-app .carousel-item[style*="--offset: 1"] {
+  transform: translateX(calc(-50% + 350px)) scale(0.7) rotateY(20deg) !important;
+  opacity: 0.5 !important;
+  z-index: 1 !important;
+}
+
+.gefuehle-app .carousel-item[style*="--offset: 0"] {
+  transform: translateX(-50%) scale(1) rotateY(0deg) !important;
+  opacity: 1 !important;
+  z-index: 3 !important;
+}
+
+/* Alle anderen Kacheln unsichtbar - nur 3 sichtbar */
+.gefuehle-app .carousel-item[style*="--offset: -2"],
+.gefuehle-app .carousel-item[style*="--offset: -3"],
+.gefuehle-app .carousel-item[style*="--offset: -4"],
+.gefuehle-app .carousel-item[style*="--offset: -5"],
+.gefuehle-app .carousel-item[style*="--offset: -6"],
+.gefuehle-app .carousel-item[style*="--offset: -7"],
+.gefuehle-app .carousel-item[style*="--offset: -8"],
+.gefuehle-app .carousel-item[style*="--offset: -9"],
+.gefuehle-app .carousel-item[style*="--offset: -10"],
+.gefuehle-app .carousel-item[style*="--offset: -11"],
+.gefuehle-app .carousel-item[style*="--offset: -12"],
+.gefuehle-app .carousel-item[style*="--offset: -13"],
+.gefuehle-app .carousel-item[style*="--offset: -14"],
+.gefuehle-app .carousel-item[style*="--offset: 2"],
+.gefuehle-app .carousel-item[style*="--offset: 3"],
+.gefuehle-app .carousel-item[style*="--offset: 4"],
+.gefuehle-app .carousel-item[style*="--offset: 5"],
+.gefuehle-app .carousel-item[style*="--offset: 6"],
+.gefuehle-app .carousel-item[style*="--offset: 7"],
+.gefuehle-app .carousel-item[style*="--offset: 8"],
+.gefuehle-app .carousel-item[style*="--offset: 9"],
+.gefuehle-app .carousel-item[style*="--offset: 10"],
+.gefuehle-app .carousel-item[style*="--offset: 11"],
+.gefuehle-app .carousel-item[style*="--offset: 12"],
+.gefuehle-app .carousel-item[style*="--offset: 13"],
+.gefuehle-app .carousel-item[style*="--offset: 14"] {
+  opacity: 0 !important;
+  pointer-events: none !important;
+  z-index: 0 !important;
+}
+
+/* Zusätzliche Sicherheit für reibungslosen Loop */
+.gefuehle-app .carousel-item {
+  will-change: transform, opacity !important;
+  backface-visibility: hidden !important;
+  -webkit-backface-visibility: hidden !important;
+}
+
+/* Separate Indicators Container - wie Ernährung */
+.indicators-container {
+  position: fixed !important;
+  bottom: 2rem !important;
+  left: 50% !important;
+  transform: translateX(-50%) !important;
+  z-index: 1000 !important;
+  background: rgba(0, 0, 0, 0.1) !important;
+  backdrop-filter: blur(10px) !important;
+  border-radius: 2rem !important;
+  padding: 1rem 2rem !important;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1) !important;
+}
+
+.indicators-container .carousel-indicators {
+  display: flex !important;
+  gap: 0.5rem !important;
+  align-items: center !important;
+  justify-content: center !important;
+}
+
+.indicators-container .carousel-indicator {
+  width: 12px !important;
+  height: 12px !important;
+  border-radius: 50% !important;
+  border: none !important;
+  cursor: pointer !important;
+  transition: all 0.3s ease !important;
+  background: rgba(255, 255, 255, 0.3) !important;
+}
+
+.indicators-container .carousel-indicator-active {
+  background: #f97316 !important;
+  transform: scale(1.2) !important;
+}
+
+.indicators-container .carousel-indicator-inactive {
+  background: rgba(255, 255, 255, 0.3) !important;
+}
+
+.indicators-container .carousel-indicator:hover {
+  background: rgba(255, 255, 255, 0.6) !important;
+  transform: scale(1.1) !important;
+}
+
+/* Spezielle Regel für letztes Item um Überlappen zu verhindern */
+.gefuehle-app .carousel-item:last-child {
+  z-index: 0 !important;
+}
+
+.gefuehle-app .carousel-item:last-child[style*="--offset: 0"] {
+  z-index: 5 !important;
+}
+
+.gefuehle-app .carousel-item:last-child[style*="--offset: 1"] {
+  z-index: 2 !important;
+}
+
+/* Karussell Item Content - Höchste Spezifität gegen inline CSS */
+.gefuehle-app .carousel-item .carousel-item-content {
+  display: flex !important;
+  flex-direction: column !important;
+  align-items: center !important;
+  justify-content: center !important;
+  width: 100% !important;
+  height: 100% !important;
+  padding: 2rem !important;
+  border: 3px solid var(--border-primary) !important; /* Gleiche Rahmen wie IchView */
+  border-radius: 15px !important;
+  background-color: var(--bg-secondary) !important; /* Wie IchView */
+  transition: all 0.3s ease !important;
+}
+
+/* Überschreibt inline CSS mit höchster Spezifität */
+.gefuehle-app .carousel-item .carousel-item-content[style] {
+  background-color: var(--bg-secondary) !important;
+}
+
+/* Gleiche Spezifität wie .ich-view .menu-tile.tile-inactive */
+.gefuehle-app .carousel-item-content.tile-inactive {
+  background-color: var(--bg-secondary) !important;
+  border: 3px solid var(--border-primary) !important; /* Gleiche Rahmen wie IchView */
+}
+
+/* Aktive Kachel - wie HomeView */
+.gefuehle-app .carousel-item-active .carousel-item-content {
+  background-color: #00B098 !important; /* Grüne Farbe für aktive Kachel */
+  border: 3px solid #00B098 !important; /* Grüne Rahmen für aktive Kachel */
+}
+
+.gefuehle-app .tile-icon-container {
+  width: 120px !important;
+  height: 120px !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  margin-bottom: 1.5rem !important;
+  border-radius: 50% !important;
+  background: var(--bg-primary) !important;
+  transition: all 0.3s ease !important;
+}
+
+.gefuehle-app .carousel-item-active .tile-icon-container {
+  background: #f97316 !important;
+}
+
+/* Emojis bleiben IMMER in Originalfarbe - keine Invertierung im Dark Mode */
+.gefuehle-app .tile-emoji {
+  font-size: 4rem !important;
+  transition: all 0.3s ease !important;
+  filter: none !important; /* Keine Filter - Originalfarben beibehalten */
+}
+
+.gefuehle-app .carousel-item-active .tile-emoji {
+  filter: none !important; /* Auch bei aktiver Kachel keine Invertierung */
+}
+
+.gefuehle-app .tile-text {
+  font-family: 'Source Code Pro', monospace !important;
+  font-size: 1.8rem !important;
+  font-weight: 500 !important;
+  color: var(--text-primary) !important;
+  text-align: center !important;
+  transition: all 0.3s ease !important;
+}
+
+.gefuehle-app .carousel-item-active .tile-text {
+  color: white !important;
+}
+
+/* Karussell Indicators - Getrennt von Kachel */
+.gefuehle-app .carousel-indicators {
+  display: flex !important;
+  justify-content: center !important;
+  gap: 0.5rem !important;
+  margin-top: 3rem !important; /* Abstand zur Kachel */
+  margin-bottom: 1rem !important; /* Abstand nach unten */
+  position: relative !important;
+  z-index: 20 !important; /* Über der Kachel */
+  clear: both !important; /* Sicherstellen, dass sie unter der Kachel sind */
+  width: 100% !important;
+  order: 2 !important; /* Nach der Kachel */
+}
+
+.gefuehle-app .carousel-indicator {
+  width: 12px !important;
+  height: 12px !important;
+  border-radius: 50% !important;
+  border: none !important;
+  background: var(--border-secondary) !important;
+  cursor: pointer !important;
+  transition: all 0.3s ease !important;
+  position: relative !important;
+  z-index: 10 !important; /* Über der Kachel */
+}
+
+.gefuehle-app .carousel-indicator-active {
+  background: #f97316 !important;
+  transform: scale(1.2) !important;
+}
+
+/* Gefühle Items Grid - Nochmal 5% weiter hoch */
+.gefuehle-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 0.86rem; /* 5% weniger: 0.9rem * 0.95 = 0.86rem */
+  margin: 0 0 0.43rem 0; /* 5% weniger: 0.45rem * 0.95 = 0.43rem */
+}
+
+.gefuehle-row {
+  display: flex;
+  justify-content: center;
+  gap: 0.75rem; /* Noch näher: 1.5rem → 0.75rem */
+}
+
+/* Gefühle Item Buttons - Alle gleich groß */
+.gefuehle-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.75rem;
+  padding: 1.5rem;
+  border: 3px solid var(--border-primary);
+  border-radius: 15px;
+  background: var(--bg-primary);
+  cursor: pointer;
+  transition: all 0.3s ease;
+  font-size: 2.06rem; /* 25% größer: 1.65rem * 1.25 = 2.06rem */
+  font-weight: 500;
+  width: 234px; /* 25% größer: 187px * 1.25 = 234px */
+  height: 150px; /* 25% größer: 120px * 1.25 = 150px */
+  outline: none;
+  box-shadow: none;
+  margin: 0;
+}
+
+.gefuehle-item:hover {
+  transform: scale(1.1);
+  color: var(--text-tertiary);
+}
+
+.gefuehle-item.active {
+  background: var(--bg-secondary);
+  color: #f97316; /* Orange bleibt orange auch im Dark Mode */
+  transform: scale(1.1);
+}
+
+.gefuehle-item.inactive {
+  color: var(--text-primary);
+}
+
+.gefuehle-emoji {
+  font-size: 3.75rem; /* 25% größer: 3rem * 1.25 = 3.75rem */
+}
+
+.gefuehle-text {
+  font-family: 'Source Code Pro', monospace;
+}
+
+
+/* Custom scrollbar */
+.overflow-y-auto::-webkit-scrollbar {
+  width: 6px;
+}
+
+.overflow-y-auto::-webkit-scrollbar-track {
+  background: var(--bg-secondary);
+}
+
+.overflow-y-auto::-webkit-scrollbar-thumb {
+  background: var(--border-secondary);
+  border-radius: 3px;
+}
+
+.overflow-y-auto::-webkit-scrollbar-thumb:hover {
+  background: var(--text-tertiary);
+}
+
+/* Dark mode scrollbar - now handled by CSS variables */
+
+/* Responsive Design - Karussell */
+@media (max-width: 768px) {
+  .main-content {
+    padding: 0.5rem 2rem; /* Weniger Abstand oben/unten: 2rem → 0.5rem */
+  }
+  
+  /* Haupttext responsive wird jetzt global in main.css definiert */
+  
+  .gefuehle-app .carousel-container {
+    width: 95vw !important;
+    max-width: 600px !important;
+  }
+  
+  .gefuehle-app .carousel-item {
+    width: 250px !important;
+    height: 350px !important;
+  }
+  
+  .gefuehle-app .tile-icon-container {
+    width: 100px !important;
+    height: 100px !important;
+    margin-bottom: 1rem !important;
+  }
+  
+  .gefuehle-app .tile-emoji {
+    font-size: 3rem !important;
+  }
+  
+  .gefuehle-app .tile-text {
+    font-size: 1.5rem !important;
+  }
+}
+
+@media (max-width: 480px) {
+  .main-content {
+    padding: 0.25rem 1rem; /* Weniger Abstand oben/unten: 1rem → 0.25rem */
+  }
+  
+  .main-text {
+    font-size: 1.875rem !important; /* 50% größer: 1.25rem * 1.5 = 1.875rem */
+    font-weight: 600 !important; /* Dicker */
+  }
+  
+  .gefuehle-app .carousel-container {
+    width: 98vw !important;
+    max-width: 400px !important;
+  }
+  
+  .gefuehle-app .carousel-item {
+    width: 200px !important;
+    height: 300px !important;
+  }
+  
+  .gefuehle-app .tile-icon-container {
+    width: 80px !important;
+    height: 80px !important;
+    margin-bottom: 0.75rem !important;
+  }
+  
+  .gefuehle-app .tile-emoji {
+    font-size: 2.5rem !important;
+  }
+  
+  .gefuehle-app .tile-text {
+    font-size: 1.25rem !important;
+  }
+}
+
+/* Mobile Karussell Styles - GefuehleView */
+.gefuehle-app .carousel-container {
+  position: relative;
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  transition: transform 0.3s ease;
+}
+
+.gefuehle-app .carousel-tile {
+  width: 85%;
+  max-width: 450px;
+  height: 360px;
+  margin-bottom: 2rem;
+  border-radius: 1rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  background-color: var(--bg-secondary);
+  border: 3px solid var(--border-primary);
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+}
+
+.gefuehle-app .carousel-tile.tile-active {
+  transform: scale(1.05);
+  opacity: 1;
+  background-color: var(--accent-primary);
+  border-color: var(--accent-primary);
+  box-shadow: 0 8px 25px -5px rgba(0, 176, 152, 0.3);
+}
+
+.gefuehle-app .carousel-tile.tile-inactive {
+  transform: scale(0.9);
+  opacity: 0.6;
+}
+
+.gefuehle-app .tile-icon-container {
+  width: 80px;
+  height: 80px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 1rem;
+}
+
+.gefuehle-app .tile-emoji {
+  font-size: 3rem;
+  transition: all 0.3s ease;
+}
+
+.gefuehle-app .tile-text {
+  font-family: 'Source Code Pro', monospace;
+  font-size: 1.2rem;
+  font-weight: 600;
+  text-align: center;
+  color: var(--text-primary);
+  transition: all 0.3s ease;
+}
+
+.gefuehle-app .tile-text.text-active {
+  color: white !important;
+}
+
+.gefuehle-app .tile-text.text-inactive {
+  color: var(--text-secondary);
+}
+
+/* Mobile Main Content Anpassungen */
+@media (max-width: 768px) {
+  .gefuehle-app .main-content {
+    padding: 0 !important;
+    padding-top: 0 !important;
+    height: 100vh;
+    margin-top: 0 !important;
+    width: 100%;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+  }
+}
+
+/* Sehr kleine Bildschirme (480px und kleiner) */
+@media (max-width: 480px) {
+  .gefuehle-app .main-content {
+    padding: 0 !important;
+    padding-top: 0 !important;
+    height: 100vh;
+    margin-top: 0 !important;
+    width: 100%;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+  }
+  
+  .gefuehle-app .carousel-tile {
+    width: 90%;
+    height: 280px;
+    padding: 1rem;
+  }
+  
+  .gefuehle-app .tile-icon-container {
+    width: 60px;
+    height: 60px;
+  }
+  
+  .gefuehle-app .tile-emoji {
+    font-size: 2.5rem;
+  }
+  
+  .gefuehle-app .tile-text {
+    font-size: 1rem;
+  }
+}
+
+/* TTS-Indikator */
+.tts-indicator {
+  position: absolute;
+  top: 1rem;
+  right: 1rem;
+  font-size: 1.5rem;
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+
+.tts-indicator.tts-active {
+  opacity: 1;
+  animation: tts-pulse 1s infinite;
+}
+
+@keyframes tts-pulse {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.1); }
+}

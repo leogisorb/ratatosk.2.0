@@ -1,0 +1,56 @@
+/* Main CSS für Umgebung Standalone */
+@import url('https://fonts.googleapis.com/css2?family=Source+Code+Pro:wght@300;400;500;600;700&display=swap');
+
+:root {
+  --bg-primary: #ffffff;
+  --bg-secondary: #f3f4f6;
+  --text-primary: #1f2937;
+  --text-secondary: #374151;
+  --border-primary: #d1d5db;
+  --border-secondary: #9ca3af;
+  --accent-primary: #f97316;
+  --accent-secondary: #00B098;
+}
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  font-family: 'Source Code Pro', monospace;
+  background-color: var(--bg-primary);
+  color: var(--text-primary);
+  line-height: 1.6;
+}
+
+#app {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+/* Global Styles */
+.main-text {
+  font-size: 4rem;
+  font-weight: 300;
+  color: var(--text-primary);
+  font-family: 'Source Code Pro', monospace;
+  text-align: center;
+  margin: 0;
+  line-height: 1.2;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .main-text {
+    font-size: 2.5rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .main-text {
+    font-size: 2rem;
+  }
+}

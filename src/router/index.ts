@@ -30,7 +30,7 @@ import KamerapositionView from '../features/camera-position/views/Kameraposition
 import KameraView from '../features/camera/views/KameraView.vue'
 
 const router = createRouter({
-  history: createWebHistory(import.meta.env.BASE_URL),
+  history: createWebHistory('/ratatosk.2.0/'),
   routes: [
     {
       path: '/',
