@@ -1,76 +1,125 @@
-// Settings Store for ich-standalone
 import { defineStore } from 'pinia'
 import { ref, computed } from 'vue'
+import type { UserSettings } from '../../../shared/types/index'
 
 export const useSettingsStore = defineStore('settings', () => {
   // State
-  const isDarkMode = ref(false)
-  const isVolumeEnabled = ref(true)
-  const autoModeSpeed = ref(3000)
-  const language = ref('de-DE')
-  
-  // Settings object
-  const settings = computed(() => ({
-    isDarkMode: isDarkMode.value,
-    isVolumeEnabled: isVolumeEnabled.value,
-    autoModeSpeed: autoModeSpeed.value,
-    language: language.value
-  }))
+  const settings = ref<UserSettings>({
+    theme: 'light',
+    keyboardLayout: 'alphabetical',
+    blinkDuration: 2,
+    blinkSpeed: 2,
+    autoModeSpeed: 3000, // 3 Sekunden in Millisekunden
+    blinkSensitivity: 0.7, // 0.7 Sekunden
+    soundEnabled: true,
+    voiceEnabled: true, // TTS aktiviert
+    // Neue Einstellungen
+    leuchtdauer: 3, // 3 Sekunden
+    blinzeldauer: 0.7, // 0.7 Sekunden - wie lange man blinzeln muss
+    farbmodus: 'neutral', // neutral color mode
+    kamera: 'back', // back camera
+    accessibility: {
+      highContrast: false,
+      largeText: false,
+      reducedMotion: false
+    }
+  })
+
+  // Getters
+  const isDarkMode = computed(() => {
+    if (settings.value.theme === 'auto') {
+      return window.matchMedia('(prefers-color-scheme: dark)').matches
+    }
+    return settings.value.theme === 'dark'
+  })
+
+  const isHighContrast = computed(() => settings.value.accessibility.highContrast)
+  const isLargeText = computed(() => settings.value.accessibility.largeText)
+  const isReducedMotion = computed(() => settings.value.accessibility.reducedMotion)
 
   // Actions
-  const toggleDarkMode = () => {
-    isDarkMode.value = !isDarkMode.value
+  function updateSettings(newSettings: Partial<UserSettings>) {
+    settings.value = { ...settings.value, ...newSettings }
+    saveSettings()
   }
 
-  const toggleVolume = () => {
-    isVolumeEnabled.value = !isVolumeEnabled.value
+  function toggleTheme() {
+    const themes: Array<'light' | 'dark' | 'auto'> = ['light', 'dark', 'auto']
+    const currentIndex = themes.indexOf(settings.value.theme)
+    const nextIndex = (currentIndex + 1) % themes.length
+    settings.value.theme = themes[nextIndex]
+    saveSettings()
   }
 
-  const setAutoModeSpeed = (speed: number) => {
-    autoModeSpeed.value = speed
+  function toggleDarkMode() {
+    settings.value.theme = settings.value.theme === 'dark' ? 'light' : 'dark'
+    saveSettings()
   }
 
-  const setLanguage = (lang: string) => {
-    language.value = lang
+  function toggleAccessibility(feature: keyof UserSettings['accessibility']) {
+    settings.value.accessibility[feature] = !settings.value.accessibility[feature]
+    saveSettings()
   }
 
-  const loadSettings = () => {
-    try {
-      const stored = localStorage.getItem('ich-settings')
-      if (stored) {
-        const parsed = JSON.parse(stored)
-        isDarkMode.value = parsed.isDarkMode || false
-        isVolumeEnabled.value = parsed.isVolumeEnabled !== false
-        autoModeSpeed.value = parsed.autoModeSpeed || 3000
-        language.value = parsed.language || 'de-DE'
+  function resetSettings() {
+    settings.value = {
+      theme: 'light',
+      keyboardLayout: 'alphabetical',
+      blinkDuration: 2,
+      blinkSpeed: 2,
+      autoModeSpeed: 3000,
+      blinkSensitivity: 0.7,
+      soundEnabled: true,
+      voiceEnabled: true, // TTS aktiviert
+      // Neue Einstellungen
+      leuchtdauer: 3, // 3 Sekunden
+      blinzeldauer: 0.7, // 0.7 Sekunden - wie lange man blinzeln muss
+      farbmodus: 'neutral', // neutral color mode
+      kamera: 'back', // back camera
+      accessibility: {
+        highContrast: false,
+        largeText: false,
+        reducedMotion: false
       }
-    } catch (error) {
-      console.error('Error loading settings:', error)
+    }
+    saveSettings()
+  }
+
+  function saveSettings() {
+    localStorage.setItem('ratatosk-settings', JSON.stringify(settings.value))
+  }
+
+  function loadSettings() {
+    const saved = localStorage.getItem('ratatosk-settings')
+    if (saved) {
+      try {
+        settings.value = JSON.parse(saved)
+      } catch (error) {
+        console.error('Failed to load settings:', error)
+      }
     }
   }
 
-  const saveSettings = () => {
-    try {
-      localStorage.setItem('ich-settings', JSON.stringify(settings.value))
-    } catch (error) {
-      console.error('Error saving settings:', error)
-    }
-  }
+  // Initialize
+  loadSettings()
 
   return {
     // State
-    isDarkMode,
-    isVolumeEnabled,
-    autoModeSpeed,
-    language,
     settings,
     
+    // Getters
+    isDarkMode,
+    isHighContrast,
+    isLargeText,
+    isReducedMotion,
+    
     // Actions
+    updateSettings,
+    toggleTheme,
     toggleDarkMode,
-    toggleVolume,
-    setAutoModeSpeed,
-    setLanguage,
-    loadSettings,
-    saveSettings
+    toggleAccessibility,
+    resetSettings,
+    saveSettings,
+    loadSettings
   }
 })

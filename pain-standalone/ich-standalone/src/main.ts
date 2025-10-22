@@ -5,8 +5,7 @@ import App from './App.vue'
 import './assets/main.css'
 
 // Import Views
-import HomeView from './features/navigation/views/HomeView.vue'
-import IchDialogView from './features/ich-dialog/views/IchDialogView.vue'
+import IchView from './features/settings/views/IchView.vue'
 import ErnaehrungView from './features/nutrition/views/ErnaehrungView.vue'
 import BewegungView from './features/movement/views/BewegungView.vue'
 import HygieneView from './features/hygiene/views/HygieneView.vue'
@@ -15,8 +14,8 @@ import KleidungView from './features/clothing/views/KleidungView.vue'
 
 // Router Setup
 const routes = [
-  { path: '/', component: HomeView },
-  { path: '/ich-dialog', component: IchDialogView },
+  { path: '/', redirect: '/ich' },
+  { path: '/ich', component: IchView },
   { path: '/ernaehrung', component: ErnaehrungView },
   { path: '/bewegung', component: BewegungView },
   { path: '/hygiene', component: HygieneView },

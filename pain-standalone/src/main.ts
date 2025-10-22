@@ -4,6 +4,8 @@ import { createRouter, createWebHistory } from 'vue-router'
 import App from './App.vue'
 import PainDialogView from './features/pain-assessment/views/PainDialogView.vue'
 import PainScaleView from './features/pain-assessment/views/PainScaleView.vue'
+import IchDialogView from './features/ich-dialog/views/IchDialogView.vue'
+import UmgebungDialogView from './features/umgebung-dialog/views/UmgebungDialogView.vue'
 
 // Import global CSS
 import './assets/main.css'
@@ -17,6 +19,10 @@ const router = createRouter({
       redirect: '/pain-dialog'
     },
     {
+      path: '/test-ich',
+      redirect: '/ich-dialog'
+    },
+    {
       path: '/pain-dialog',
       component: PainDialogView
     },
@@ -27,6 +33,14 @@ const router = createRouter({
         selectedBodyPart: route.query.bodyPart || 'Unbekannter Bereich',
         returnRoute: route.query.returnRoute || '/pain-dialog'
       })
+    },
+    {
+      path: '/ich-dialog',
+      component: IchDialogView
+    },
+    {
+      path: '/umgebung-dialog',
+      component: UmgebungDialogView
     }
   ]
 })

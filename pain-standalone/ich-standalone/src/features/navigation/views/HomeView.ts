@@ -83,13 +83,6 @@ export function useHomeViewLogic() {
       category: 'main'
     },
     {
-      id: 'ich-dialog',
-      title: 'ICH-DIALOG',
-      icon: '/user.svg',
-      route: '/ich-dialog',
-      category: 'ich-dialog'
-    },
-    {
       id: 'pain',
       title: 'SCHMERZEN',
       icon: '/headache.svg',
