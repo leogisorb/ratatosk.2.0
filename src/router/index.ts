@@ -153,14 +153,7 @@ const router = createRouter({
       name: 'einstellungen-impressum',
       component: ImpressumView,
     },
-    {
-      path: '/about',
-      name: 'about',
-      // route level code-splitting
-      // this generates a separate chunk (About.[hash].js) for this route
-      // which is lazy-loaded when the route is visited.
-      component: () => import('../features/about/views/AboutView.vue'),
-    },
+    // About route removed - was standard Vue.js template
   ],
 })
 

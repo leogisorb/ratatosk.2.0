@@ -18,6 +18,7 @@
 7. [Accessibility & Barrierefreiheit](#accessibility-barrierefreiheit)
 8. [Fehlerbehebung & Optimierung](#fehlerbehebung-optimierung)
 9. [Deployment & Status](#deployment-status)
+10. [🏗️ MAJOR ARCHITECTURE REFACTOR - Oktober 2024](#major-architecture-refactor-oktober-2024)
 
 ---
 
