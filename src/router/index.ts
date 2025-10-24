@@ -3,10 +3,10 @@ import StartView from '../features/navigation/views/StartView.vue'
 import HomeView from '../features/navigation/views/HomeView.vue'
 import WarningView from '../features/warning/views/WarningView.vue'
 import UnterhaltenView from '../features/communication/views/UnterhaltenView.vue'
-import IchView from '../features/settings/views/IchView.vue'
-import GefuehleView from '../features/feelings/views/GefuehleView.vue'
-// SchmerzView removed - replaced by PainDialogView
-import HygieneView from '../features/hygiene/views/HygieneView.vue'
+// Alte Ich-Views entfernt - ersetzt durch IchDialogView
+// import IchView from '../features/settings/views/IchView.vue'
+// import GefuehleView from '../features/feelings/views/GefuehleView.vue'
+// import HygieneView from '../features/hygiene/views/HygieneView.vue'
 import UmgebungView from '../features/environment/views/UmgebungView.vue'
 import GegenstaendeView from '../features/environment/views/GegenstaendeView.vue'
 import VerbenView from '../features/environment/views/VerbenView.vue'
@@ -15,19 +15,21 @@ import BettVerbenView from '../features/environment/views/BettVerbenView.vue'
 import ZimmerVerbenView from '../features/environment/views/ZimmerVerbenView.vue'
 import ZimmerView from '../features/environment/views/ZimmerView.vue'
 import BettView from '../features/environment/views/BettView.vue'
-import KleidungView from '../features/clothing/views/KleidungView.vue'
-import BewegungView from '../features/movement/views/BewegungView.vue'
-import ErnaehrungView from '../features/nutrition/views/ErnaehrungView.vue'
+// Alte Ich-Views entfernt - ersetzt durch IchDialogView
+// import KleidungView from '../features/clothing/views/KleidungView.vue'
+// import BewegungView from '../features/movement/views/BewegungView.vue'
+// import ErnaehrungView from '../features/nutrition/views/ErnaehrungView.vue'
 import PainScaleView from '../features/pain-assessment/views/PainScaleView.vue'
 import PainDialogView from '../features/pain-assessment/views/PainDialogView.vue'
+import IchDialogView from '../features/ich/views/IchDialogView.vue'
 import SlashSettingsView from '../features/settings/views/SlashSettingsView.vue'
-import LeuchtDauerView from '../features/light-duration/views/LeuchtDauerView.vue'
-import BlinzeldauerView from '../features/blink-duration/views/BlinzeldauerView.vue'
-import BlitzdauerView from '../features/blink-duration/views/BlitzdauerView.vue'
+import LeuchtDauerView from '../features/settings/views/LeuchtDauerView.vue'
+import BlinzeldauerView from '../features/settings/views/BlinzeldauerView.vue'
+import BlitzdauerView from '../features/settings/views/BlitzdauerView.vue'
 import FarbmodusView from '../features/settings/views/FarbmodusView.vue'
 import ImpressumView from '../features/settings/views/ImpressumView.vue'
-import KamerapositionView from '../features/camera-position/views/KamerapositionView.vue'
-import KameraView from '../features/camera/views/KameraView.vue'
+import KamerapositionView from '../features/settings/views/KamerapositionView.vue'
+import KameraView from '../features/settings/views/KameraView.vue'
 
 const router = createRouter({
   history: createWebHistory('/ratatosk.2.0/'),
@@ -52,26 +54,13 @@ const router = createRouter({
       name: 'unterhalten',
       component: UnterhaltenView,
     },
-    {
-      path: '/ich',
-      name: 'ich',
-      component: IchView,
-    },
-    {
-      path: '/gefuehle',
-      name: 'gefuehle',
-      component: GefuehleView,
-    },
+    // Alte Ich-Routes entfernt - ersetzt durch /ich-dialog
     {
       path: '/schmerz',
       name: 'schmerz',
       component: PainDialogView,
     },
-    {
-      path: '/hygiene',
-      name: 'hygiene',
-      component: HygieneView,
-    },
+    // Alte Hygiene-Route entfernt - ersetzt durch /ich-dialog
     {
       path: '/umgebung',
       name: 'umgebung',
@@ -112,21 +101,8 @@ const router = createRouter({
       name: 'bett',
       component: BettView,
     },
-    {
-      path: '/kleidung',
-      name: 'kleidung',
-      component: KleidungView,
-    },
-    {
-      path: '/bewegung',
-      name: 'bewegung',
-      component: BewegungView,
-    },
-    {
-      path: '/ernaehrung',
-      name: 'ernaehrung',
-      component: ErnaehrungView,
-    },
+    // Alte Ich-Routes entfernt - ersetzt durch /ich-dialog
+    // /kleidung, /bewegung, /ernaehrung
     {
       path: '/pain-scale',
       name: 'pain-scale',
@@ -136,6 +112,11 @@ const router = createRouter({
       path: '/pain-dialog',
       name: 'pain-dialog',
       component: PainDialogView,
+    },
+    {
+      path: '/ich-dialog',
+      name: 'ich-dialog',
+      component: IchDialogView,
     },
     {
       path: '/einstellungen',

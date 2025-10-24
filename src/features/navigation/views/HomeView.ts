@@ -22,6 +22,12 @@ export function useHomeViewLogic() {
   const handleFaceBlink = (event: any) => {
     console.log('HomeView: Face blink received:', event.detail)
     
+    // Ignoriere Blink-Events wenn sie von Header-Buttons kommen
+    if (event.detail && event.detail.source === 'fallback-interaction') {
+      console.log('HomeView: Ignoring blink event from header button')
+      return
+    }
+    
     const currentItem = menuItems[position.currentIndex]
     if (currentItem) {
       console.log('HomeView: Blinzel für Item:', currentItem.title)
@@ -79,7 +85,7 @@ export function useHomeViewLogic() {
       id: 'ich',
       title: 'ICH',
       icon: '/user.svg',
-      route: '/ich',
+      route: '/ich-dialog',
       category: 'main'
     },
     {
@@ -93,7 +99,7 @@ export function useHomeViewLogic() {
       id: 'environment',
       title: 'UMGEBUNG',
       icon: '/house-chimney.svg',
-      route: '/umgebung',
+      route: '/umgebung-dialog',
       category: 'main'
     },
     {
@@ -152,6 +158,22 @@ export function useHomeViewLogic() {
     if (!success) {
       console.log(`[${instanceId}] Auto-mode start failed`)
     }
+  }
+
+  // HomeView TTS Start nach 1 Sekunde
+  const startHomeViewTTS = () => {
+    console.log(`[${instanceId}] Starting HomeView TTS after 1 second delay`)
+    
+    setTimeout(() => {
+      console.log(`[${instanceId}] HomeView: Starting TTS and rhythms`)
+      
+      // Starte Auto-Mode mit TTS
+      startAutoMode()
+      
+      // Aktiviere TTS
+      simpleFlowController.setUserInteracted(true)
+      
+    }, 1000) // 1 Sekunde Verzögerung
   }
 
   const stopAutoMode = () => {
@@ -328,17 +350,8 @@ export function useHomeViewLogic() {
     // Add volume toggle listener
     window.addEventListener('volumeToggle', handleVolumeToggle)
     
-    // Start auto-mode automatically
-    setTimeout(() => {
-      console.log(`[${instanceId}] Starting auto-mode automatically (TTS disabled until user interaction)`)
-      if (isMobile.value) {
-        // Mobile: Starte Karussell
-        initializeCarousel()
-      } else {
-        // Desktop: Starte normales Auto-Mode
-        startAutoMode()
-      }
-    }, 1000)
+    // Start HomeView TTS nach 1 Sekunde
+    startHomeViewTTS()
     
     // Event Listener für Face Blinzel-Erkennung
     window.addEventListener('faceBlinkDetected', handleFaceBlink)
@@ -401,6 +414,7 @@ export function useHomeViewLogic() {
     // Auto-mode functions
     startAutoMode,
     stopAutoMode,
+    startHomeViewTTS,
     
     // Mobile Carousel functions
     handleTouchStart,

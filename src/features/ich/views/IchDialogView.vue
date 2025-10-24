@@ -7,10 +7,10 @@
     <main class="main-content">
       <div class="content-wrapper">
         
-        <!-- Main View: Body Region Selection -->
+        <!-- Main View: Ich Region Selection -->
         <div v-if="currentState === 'mainView'">
           <div class="main-title">
-            Wo haben Sie Schmerzen?
+            Was möchten Sie machen?
           </div>
 
           <div class="grid-container">
@@ -51,7 +51,7 @@
         <!-- Sub Region View -->
         <div v-if="currentState === 'subRegionView'">
           <div class="main-title">
-            Wählen Sie einen {{ getMainRegionTitle(selectedMainRegion) }}bereich aus
+            {{ getSubRegionTitle(selectedMainRegion) }}
           </div>
 
           <!-- Karussell Container -->
@@ -75,8 +75,9 @@
                     class="tile-icon-container"
                     :class="currentTileIndex === index ? 'icon-active' : 'icon-inactive'"
                   >
+                    <div v-if="subRegion.emoji" class="tile-emoji">{{ subRegion.emoji }}</div>
                     <img 
-                      v-if="subRegion.icon" 
+                      v-else-if="subRegion.icon" 
                       :src="subRegion.icon" 
                       :alt="subRegion.title" 
                       class="tile-icon"
@@ -108,50 +109,11 @@
           </div>
         </div>
 
-        <!-- Pain Scale View -->
-        <div v-if="currentState === 'painScaleView'"
-             @touchstart="handlePainScaleTouch"
-             @click="handlePainScaleClick">
-          <div class="pain-scale-display">
-            <div class="pain-scale-title">
-                  Wie stark sind Ihre {{ getSubRegionTitle(selectedSubRegion) }}schmerzen?
-              </div>
-              <div class="pain-scale-level">
-              {{ painLevels[currentTileIndex]?.level || (currentTileIndex + 1) }}
-              </div>
-              <div class="pain-scale-description">
-              {{ painLevels[currentTileIndex]?.description || getPainDescription(currentTileIndex + 1) }}
-            </div>
-          </div>
-
-          <div class="pain-scale-bar"
-               @touchstart="handlePainScaleTouch"
-               @click="handlePainScaleClick">
-            <div class="pain-scale-progress"
-              :style="{ width: `${((painLevels[currentTileIndex]?.level || (currentTileIndex + 1)) - 1) * 10 + 5}%` }"
-            ></div>
-            
-            <div class="pain-scale-numbers">
-              <span 
-                v-for="(level, index) in painLevels" 
-                :key="level.id"
-                class="pain-scale-number"
-                :class="{ 'active': currentTileIndex === index }"
-                :style="{ left: `${(index * 10) + 5}%` }"
-                @touchstart="selectPainLevel(level.level)"
-                @click="selectPainLevel(level.level)"
-              >
-                {{ level.level }}
-              </span>
-            </div>
-          </div>
-        </div>
-
         <!-- Confirmation View -->
         <div v-if="currentState === 'confirmation'">
           <div class="confirmation-container">
-            <h2>Schmerz erfasst</h2>
-            <p>{{ getSubRegionTitle(selectedSubRegion) }} - Schmerzlevel {{ selectedPainLevel }} - {{ selectedPainLevel ? getPainDescription(selectedPainLevel) : '' }}</p>
+            <h2>{{ getConfirmationTitle() }}</h2>
+            <p>{{ getConfirmationText() }}</p>
           </div>
         </div>
       </div>
@@ -164,24 +126,22 @@ import { ref, computed, onMounted, onUnmounted, watch } from 'vue'
 import { usePainAssessment } from '../composables/usePainAssessment'
 import { 
   mainRegions, 
-  kopfSubRegions, 
-  beineSubRegions, 
-  armeSubRegions, 
-  torsoSubRegions, 
-  painLevels,
-  getSubRegionsByMainRegion,
-  getPainDescription
-} from '../data/painAssessmentData'
+  ernaehrungSubRegions, 
+  gefuehleSubRegions, 
+  kleidungSubRegions, 
+  hygieneSubRegions, 
+  bewegungSubRegions,
+  getSubRegionsByMainRegion
+} from '../data/ichDialogData'
 import AppHeader from '../../../shared/components/AppHeader.vue'
 
-// Pain dialog states
-type PainDialogState = 'mainView' | 'subRegionView' | 'painScaleView' | 'confirmation'
+// Ich dialog states
+type IchDialogState = 'mainView' | 'subRegionView' | 'confirmation'
 
 // Reactive state
-const currentState = ref<PainDialogState>('mainView')
+const currentState = ref<IchDialogState>('mainView')
 const selectedMainRegion = ref<string | null>(null)
 const selectedSubRegion = ref<string | null>(null)
-const selectedPainLevel = ref<number | null>(null)
 const hasUserInteracted = ref(false)
 
 // Use pain assessment composable
@@ -194,6 +154,9 @@ const {
   speakText,
   setupLifecycle
 } = usePainAssessment()
+
+// Ensure currentTileIndex starts at 0
+currentTileIndex.value = 0
 
 // Computed properties
 const currentSubRegions = computed(() => {
@@ -209,26 +172,75 @@ const getMainRegionTitle = (regionId: string | null) => {
   
   // Korrekte Grammatik für Bereich-Titel
   switch (region.title) {
-    case 'ARME':
-      return 'Arm'
-    case 'BEINE':
-      return 'Bein'
+    case 'ERNÄHRUNG':
+      return 'Ernährungs'
+    case 'GEFÜHLE':
+      return 'Gefühls'
+    case 'KLEIDUNG':
+      return 'Kleidungs'
+    case 'HYGIENE':
+      return 'Hygiene'
+    case 'BEWEGUNG':
+      return 'Bewegungs'
     default:
       return region.title
   }
 }
 
-const getSubRegionTitle = (subRegionId: string | null) => {
+const getSubRegionTitle = (mainRegionId: string | null) => {
+  if (!mainRegionId) return ''
+  
+  // Return the main title for each category
+  switch (mainRegionId) {
+    case 'ernaehrung':
+      return 'Was wollen Sie zu sich nehmen?'
+    case 'gefuehle':
+      return 'Wie fühlen Sie sich?'
+    case 'kleidung':
+      return 'Was möchten Sie anziehen?'
+    case 'hygiene':
+      return 'Was möchten Sie machen?'
+    case 'bewegung':
+      return 'Was möchten Sie machen?'
+    default:
+      return 'Wählen Sie eine Option aus'
+  }
+}
+
+const getSubRegionItemTitle = (subRegionId: string | null) => {
   if (!subRegionId) return ''
   const subRegion = currentSubRegions.value.find(region => region.id === subRegionId)
-  return subRegion ? subRegion.title : subRegionId
+  return subRegion ? (subRegion.ttsText || subRegion.title) : subRegionId
+}
+
+const getConfirmationTitle = () => {
+  return 'Auswahl erfasst'
+}
+
+const getConfirmationText = () => {
+  const mainRegion = selectedMainRegion.value
+  const itemTitle = getSubRegionItemTitle(selectedSubRegion.value)
+  
+  switch (mainRegion) {
+    case 'ernaehrung':
+      return `Ich möchte gerne ${itemTitle} zu mir nehmen`
+    case 'gefuehle':
+      return `Ich fühle mich ${itemTitle}`
+    case 'kleidung':
+      return `Ich möchte gerne ${itemTitle} anziehen`
+    case 'hygiene':
+      return `Ich möchte gerne ${itemTitle}`
+    case 'bewegung':
+      return `Ich möchte gerne ${itemTitle}`
+    default:
+      return `Sie haben ${itemTitle} gewählt`
+  }
 }
 
 // Navigation functions
 const selectMainRegion = async (regionId: string) => {
   console.log('Selecting main region:', regionId)
   
-  // TTS removed
   if (!hasUserInteracted.value) {
     hasUserInteracted.value = true
     console.log('User first interaction - TTS removed')
@@ -240,7 +252,7 @@ const selectMainRegion = async (regionId: string) => {
   
   const region = mainRegions.find(r => r.id === regionId)
   if (region) {
-    console.log(`Wählen Sie einen ${region.title}bereich aus. - TTS removed`)
+    console.log(`Wählen Sie eine ${region.title}option aus. - TTS removed`)
   }
   
   // Auto-mode disabled to prevent infinite loops
@@ -262,23 +274,56 @@ const selectSubRegion = async (subRegionId: string) => {
   }
   
   selectedSubRegion.value = subRegionId
-  currentState.value = 'painScaleView'
-  currentTileIndex.value = 0
+  currentState.value = 'confirmation'
   
   const subRegionTitle = getSubRegionTitle(selectedSubRegion.value)
-  console.log(`Wie stark sind Ihre ${subRegionTitle}schmerzen? - TTS removed`)
+  console.log(`Auswahl erfasst: ${subRegionTitle} - TTS removed`)
   
-  // Auto-mode disabled to prevent infinite loops
+  // TTS für Bestätigung - spezifisch für jede Kategorie
+  setTimeout(() => {
+    const mainRegion = selectedMainRegion.value
+    const itemTitle = getSubRegionItemTitle(subRegionId)
+    
+    let confirmationText = ''
+    switch (mainRegion) {
+      case 'ernaehrung':
+        confirmationText = `Ich möchte gerne ${itemTitle} zu mir nehmen`
+        break
+      case 'gefuehle':
+        confirmationText = `Ich fühle mich ${itemTitle}`
+        break
+      case 'kleidung':
+        confirmationText = `Ich möchte gerne ${itemTitle} anziehen`
+        break
+      case 'hygiene':
+        confirmationText = `Ich möchte gerne ${itemTitle}`
+        break
+      case 'bewegung':
+        confirmationText = `Ich möchte gerne ${itemTitle}`
+        break
+      default:
+        confirmationText = `Sie haben ${itemTitle} gewählt`
+    }
+    
+    speakText(confirmationText)
+  }, 500)
+  
+  // Keine zusätzliche "Auswahl bestätigt" Nachricht mehr
   // setTimeout(() => {
-  //   startAutoMode(painLevels, 2000, 2000)
+  //   speakText('Auswahl bestätigt')
   // }, 2000)
+  
+  // After confirmation, return to main view after 6.5 seconds (3.5 seconds more time for TTS)
+  setTimeout(() => {
+    resetToMainView()
+  }, 6500)
 }
 
 const handleMainRegionRightClick = (event: MouseEvent, regionId: string) => {
   event.preventDefault()
   event.stopPropagation()
   event.stopImmediatePropagation()
-  console.log('PainDialogView: Right click detected on main region:', regionId)
+  console.log('IchDialogView: Right click detected on main region:', regionId)
   selectMainRegion(regionId)
   return false
 }
@@ -287,42 +332,9 @@ const handleSubRegionRightClick = (event: MouseEvent, subRegionId: string) => {
   event.preventDefault()
   event.stopPropagation()
   event.stopImmediatePropagation()
-  console.log('PainDialogView: Right click detected on sub-region:', subRegionId)
+  console.log('IchDialogView: Right click detected on sub-region:', subRegionId)
   selectSubRegion(subRegionId)
   return false
-}
-
-const selectPainLevel = async (level: number) => {
-  console.log('Selecting pain level:', level)
-  selectedPainLevel.value = level
-  currentState.value = 'confirmation'
-  
-  const mainRegion = mainRegions.find(r => r.id === selectedMainRegion.value)
-  const subRegion = currentSubRegions.value.find(item => item.id === selectedSubRegion.value)
-  const painLevel = painLevels.find(p => p.level === level)
-  
-  console.log('Pain level selection - mainRegion:', mainRegion, 'subRegion:', subRegion, 'painLevel:', painLevel)
-  
-  if (mainRegion && subRegion && painLevel) {
-    const confirmationText = `${subRegion.title} Schmerzlevel ${level} - ${painLevel.description}`
-    console.log('Confirmation:', confirmationText)
-    
-    // TTS für Bestätigung
-    setTimeout(() => {
-      speakText('Schmerz erfasst')
-    }, 500)
-    
-    setTimeout(() => {
-      speakText(confirmationText)
-    }, 2000)
-  } else {
-    console.error('Missing data for confirmation:', { mainRegion, subRegion, painLevel })
-  }
-  
-  // After confirmation, return to main view after 6.5 seconds (3.5 seconds more time for TTS)
-  setTimeout(() => {
-    resetToMainView()
-  }, 6500)
 }
 
 const resetToMainView = async () => {
@@ -330,9 +342,13 @@ const resetToMainView = async () => {
   currentTileIndex.value = 0
   selectedMainRegion.value = null
   selectedSubRegion.value = null
-  selectedPainLevel.value = null
   
-  console.log('Wo haben Sie Schmerzen? - TTS removed')
+  console.log('Was möchten Sie machen? - TTS removed')
+  
+  // TTS für Zurück zum Hauptmenü
+  setTimeout(() => {
+    speakText('Zurück zum Hauptmenü')
+  }, 500)
   
   // Start auto-mode for main regions
   setTimeout(() => {
@@ -343,25 +359,22 @@ const resetToMainView = async () => {
 // Selection handlers for different views
 const handleMainRegionSelection = (item: any) => {
   console.log('Main region selection handler called with:', item)
-  selectMainRegion(item.id)
+  if (item && item.id) {
+    selectMainRegion(item.id)
+  }
 }
 
 const handleSubRegionSelection = (item: any) => {
   console.log('Sub region selection handler called with:', item)
-  selectSubRegion(item.id)
+  if (item && item.id) {
+    selectSubRegion(item.id)
+  }
 }
-
-const handlePainLevelSelection = (item: any) => {
-  console.log('Pain level selection handler called with:', item, 'current index:', currentTileIndex.value)
-  const level = item.level || (currentTileIndex.value + 1)
-  selectPainLevel(level)
-}
-
 
 const goBack = () => {
-  console.log('PainDialogView: Going back to main app')
-  // Navigate to /app route
-  window.location.href = '/ratatosk.2.0/app'
+  console.log('Going back to main app')
+  // Navigate to pain-dialog route
+  router.push('/pain-dialog')
 }
 
 const goToSubRegion = (index: number) => {
@@ -380,38 +393,58 @@ const goToSubRegion = (index: number) => {
   }
 }
 
-// Touch-Handler für Pain Scale in PainDialogView
-const handlePainScaleTouch = (event: TouchEvent) => {
-  event.preventDefault()
-  event.stopPropagation()
-  console.log('Touch detected on pain scale in PainDialogView')
-  const level = painLevels[currentTileIndex.value]?.level || (currentTileIndex.value + 1)
-  selectPainLevel(level)
-}
-
-const handlePainScaleClick = (event: MouseEvent) => {
-  event.preventDefault()
-  event.stopPropagation()
-  console.log('Click detected on pain scale in PainDialogView')
-  const level = painLevels[currentTileIndex.value]?.level || (currentTileIndex.value + 1)
-  selectPainLevel(level)
-}
-
 // Lifecycle management
 let cleanup: (() => void) | null = null
 
+// Keyboard navigation
+const handleKeydown = (event: KeyboardEvent) => {
+  if (currentState.value === 'mainView') {
+    switch (event.key) {
+      case 'ArrowLeft':
+        currentTileIndex.value = Math.max(0, currentTileIndex.value - 1)
+        break
+      case 'ArrowRight':
+        currentTileIndex.value = Math.min(mainRegions.length - 1, currentTileIndex.value + 1)
+        break
+      case 'Enter':
+      case ' ':
+        const currentRegion = mainRegions[currentTileIndex.value]
+        if (currentRegion) {
+          selectMainRegion(currentRegion.id)
+        }
+        break
+    }
+  } else if (currentState.value === 'subRegionView') {
+    switch (event.key) {
+      case 'ArrowLeft':
+        currentTileIndex.value = Math.max(0, currentTileIndex.value - 1)
+        break
+      case 'ArrowRight':
+        currentTileIndex.value = Math.min(currentSubRegions.value.length - 1, currentTileIndex.value + 1)
+        break
+      case 'Enter':
+      case ' ':
+        const currentSubRegion = currentSubRegions.value[currentTileIndex.value]
+        if (currentSubRegion) {
+          selectSubRegion(currentSubRegion.id)
+        }
+        break
+    }
+  }
+}
+
 onMounted(() => {
-  console.log('PainDialogView mounted, current state:', currentState.value)
+  console.log('IchDialogView mounted, current state:', currentState.value)
+  
+  // Ensure we start in main view
+  currentState.value = 'mainView'
+  currentTileIndex.value = 0
+  
+  // Add keyboard navigation
+  document.addEventListener('keydown', handleKeydown)
   
   // Setup initial lifecycle and auto-mode
   cleanup = setupLifecycle(mainRegions, handleMainRegionSelection)
-  
-  // TTS will be triggered by user interaction instead of setTimeout
-  // setTimeout(async () => {
-  //   console.log('Wo haben Sie Schmerzen? - TTS removed')
-  //   // Auto-mode disabled to prevent infinite loops
-  //   // startAutoMode(mainRegions, 1000, 3000)
-  // }, 1000)
 })
 
 onUnmounted(() => {
@@ -419,6 +452,9 @@ onUnmounted(() => {
     cleanup()
   }
   stopAutoMode()
+  
+  // Remove keyboard navigation
+  document.removeEventListener('keydown', handleKeydown)
 })
 
 // Watch for state changes to update lifecycle
@@ -445,29 +481,20 @@ watch(currentState, (newState) => {
       // Erst den korrekten Titel mit Bereich vorlesen
       setTimeout(() => {
         const mainRegionTitle = getMainRegionTitle(selectedMainRegion.value)
-        speakText(`Wählen Sie einen ${mainRegionTitle}bereich aus`)
+        speakText(`Wählen Sie eine ${mainRegionTitle}option aus`)
       }, 1000)
       // Dann Auto-Mode für Sub-Regions starten
       setTimeout(() => {
         cleanup = setupLifecycle(currentSubRegions.value, handleSubRegionSelection)
       }, 4000)
       break
-    case 'painScaleView':
-      console.log('Setting up pain scale view with', painLevels.length, 'levels')
-      // Erst den korrekten Titel mit Körperteil vorlesen
-      setTimeout(() => {
-        const subRegionTitle = getSubRegionTitle(selectedSubRegion.value)
-        speakText(`Wie stark sind Ihre ${subRegionTitle}schmerzen?`)
-      }, 1000)
-      // Dann Auto-Mode für Pain Scale starten
-      setTimeout(() => {
-        cleanup = setupLifecycle(painLevels, handlePainLevelSelection)
-      }, 4000)
+    case 'confirmation':
+      console.log('Confirmation view - no auto-mode needed')
       break
   }
 })
 </script>
 
 <style scoped>
-@import './PainDialogView.css';
+@import './IchDialogView.css';
 </style>
