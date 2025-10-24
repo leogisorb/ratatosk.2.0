@@ -7,14 +7,15 @@ import UnterhaltenView from '../features/communication/views/UnterhaltenView.vue
 // import IchView from '../features/settings/views/IchView.vue'
 // import GefuehleView from '../features/feelings/views/GefuehleView.vue'
 // import HygieneView from '../features/hygiene/views/HygieneView.vue'
-import UmgebungView from '../features/environment/views/UmgebungView.vue'
-import GegenstaendeView from '../features/environment/views/GegenstaendeView.vue'
-import VerbenView from '../features/environment/views/VerbenView.vue'
-import GegenstaendeVerbenView from '../features/environment/views/GegenstaendeVerbenView.vue'
-import BettVerbenView from '../features/environment/views/BettVerbenView.vue'
-import ZimmerVerbenView from '../features/environment/views/ZimmerVerbenView.vue'
-import ZimmerView from '../features/environment/views/ZimmerView.vue'
-import BettView from '../features/environment/views/BettView.vue'
+// Environment views removed - replaced by UmgebungDialogView
+// import UmgebungView from '../features/environment/views/UmgebungView.vue'
+// import GegenstaendeView from '../features/environment/views/GegenstaendeView.vue'
+// import VerbenView from '../features/environment/views/VerbenView.vue'
+// import GegenstaendeVerbenView from '../features/environment/views/GegenstaendeVerbenView.vue'
+// import BettVerbenView from '../features/environment/views/BettVerbenView.vue'
+// import ZimmerVerbenView from '../features/environment/views/ZimmerVerbenView.vue'
+// import ZimmerView from '../features/environment/views/ZimmerView.vue'
+// import BettView from '../features/environment/views/BettView.vue'
 // Alte Ich-Views entfernt - ersetzt durch IchDialogView
 // import KleidungView from '../features/clothing/views/KleidungView.vue'
 // import BewegungView from '../features/movement/views/BewegungView.vue'
@@ -22,6 +23,7 @@ import BettView from '../features/environment/views/BettView.vue'
 import PainScaleView from '../features/pain-assessment/views/PainScaleView.vue'
 import PainDialogView from '../features/pain-assessment/views/PainDialogView.vue'
 import IchDialogView from '../features/ich/views/IchDialogView.vue'
+import UmgebungDialogView from '../features/umgebung-dialog/views/UmgebungDialogView.vue'
 import SlashSettingsView from '../features/settings/views/SlashSettingsView.vue'
 import LeuchtDauerView from '../features/settings/views/LeuchtDauerView.vue'
 import BlinzeldauerView from '../features/settings/views/BlinzeldauerView.vue'
@@ -61,46 +63,8 @@ const router = createRouter({
       component: PainDialogView,
     },
     // Alte Hygiene-Route entfernt - ersetzt durch /ich-dialog
-    {
-      path: '/umgebung',
-      name: 'umgebung',
-      component: UmgebungView,
-    },
-    {
-      path: '/gegenstaende',
-      name: 'gegenstaende',
-      component: GegenstaendeView,
-    },
-    {
-      path: '/verben/:gegenstand',
-      name: 'verben',
-      component: VerbenView,
-    },
-    {
-      path: '/gegenstaende-verben/:gegenstand',
-      name: 'gegenstaende-verben',
-      component: GegenstaendeVerbenView,
-    },
-    {
-      path: '/bett-verben/:bettItem',
-      name: 'bett-verben',
-      component: BettVerbenView,
-    },
-    {
-      path: '/zimmer-verben/:zimmerItem',
-      name: 'zimmer-verben',
-      component: ZimmerVerbenView,
-    },
-    {
-      path: '/zimmer',
-      name: 'zimmer',
-      component: ZimmerView,
-    },
-    {
-      path: '/bett',
-      name: 'bett',
-      component: BettView,
-    },
+    // Environment routes removed - replaced by /umgebung-dialog
+    // All environment routes removed - replaced by /umgebung-dialog
     // Alte Ich-Routes entfernt - ersetzt durch /ich-dialog
     // /kleidung, /bewegung, /ernaehrung
     {
@@ -117,6 +81,11 @@ const router = createRouter({
       path: '/ich-dialog',
       name: 'ich-dialog',
       component: IchDialogView,
+    },
+    {
+      path: '/umgebung-dialog',
+      name: 'umgebung-dialog',
+      component: UmgebungDialogView,
     },
     {
       path: '/einstellungen',
