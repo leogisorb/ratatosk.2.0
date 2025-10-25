@@ -3,23 +3,6 @@ import StartView from '../features/navigation/views/StartView.vue'
 import HomeView from '../features/navigation/views/HomeView.vue'
 import WarningView from '../features/warning/views/WarningView.vue'
 import UnterhaltenView from '../features/communication/views/UnterhaltenView.vue'
-// Alte Ich-Views entfernt - ersetzt durch IchDialogView
-// import IchView from '../features/settings/views/IchView.vue'
-// import GefuehleView from '../features/feelings/views/GefuehleView.vue'
-// import HygieneView from '../features/hygiene/views/HygieneView.vue'
-// Environment views removed - replaced by UmgebungDialogView
-// import UmgebungView from '../features/environment/views/UmgebungView.vue'
-// import GegenstaendeView from '../features/environment/views/GegenstaendeView.vue'
-// import VerbenView from '../features/environment/views/VerbenView.vue'
-// import GegenstaendeVerbenView from '../features/environment/views/GegenstaendeVerbenView.vue'
-// import BettVerbenView from '../features/environment/views/BettVerbenView.vue'
-// import ZimmerVerbenView from '../features/environment/views/ZimmerVerbenView.vue'
-// import ZimmerView from '../features/environment/views/ZimmerView.vue'
-// import BettView from '../features/environment/views/BettView.vue'
-// Alte Ich-Views entfernt - ersetzt durch IchDialogView
-// import KleidungView from '../features/clothing/views/KleidungView.vue'
-// import BewegungView from '../features/movement/views/BewegungView.vue'
-// import ErnaehrungView from '../features/nutrition/views/ErnaehrungView.vue'
 import PainScaleView from '../features/pain-assessment/views/PainScaleView.vue'
 import PainDialogView from '../features/pain-assessment/views/PainDialogView.vue'
 import IchDialogView from '../features/ich/views/IchDialogView.vue'
@@ -122,8 +105,6 @@ const router = createRouter({
       name: 'einstellungen-impressum',
       component: ImpressumView,
     },
-    // About route removed - was standard Vue.js template
-  ],
-})
+  ]})
 
 export default router

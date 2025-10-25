@@ -24,13 +24,12 @@
 /* === GRID CONTAINER STYLES === */
 .pain-dialog .grid-container {
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  grid-template-rows: repeat(3, 1fr);
-  gap: 1rem;
-  max-width: 1600px; /* Viel breiter für Desktop */
+  grid-template-columns: repeat(auto-fit, minmax(clamp(180px, 25vw, 400px), 1fr));
+  gap: clamp(0.5rem, 2vw, 1.5rem);
+  max-width: 1440px; /* 10% kleiner: 1600px * 0.9 = 1440px */
   width: 100%;
   margin: 0 auto;
-  padding: 0 2rem;
+  padding: 0 clamp(1rem, 3vw, 2rem);
   justify-content: center;
   align-content: center;
   margin-top: 2rem;
@@ -41,9 +40,9 @@
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  padding: 3rem;
-  width: 100%;
-  aspect-ratio: 5 / 1;
+  padding: clamp(1rem, 2vw, 3rem);
+  width: clamp(180px, 25vw, 400px);
+  height: clamp(154px, 17vw, 299px); /* Nochmal 5% kleiner: 162px*0.95, 18vw*0.95, 315px*0.95 */
   border: 3px solid transparent;
   background-color: var(--bg-secondary);
   border-radius: 1.5rem;
@@ -55,9 +54,9 @@
 }
 
 .pain-dialog .tile-icon-container {
-  width: 180px;
-  height: 180px;
-  margin-bottom: 1.5rem;
+  width: clamp(80px, 10vw, 160px);
+  height: clamp(80px, 10vw, 160px);
+  margin-bottom: clamp(0.5rem, 1vw, 1.5rem);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -76,15 +75,15 @@
 }
 
 .pain-dialog .tile-icon {
-  width: 160px; /* Größer für Desktop */
-  height: 160px; /* Größer für Desktop */
+  width: clamp(80px, 10vw, 160px);
+  height: clamp(80px, 10vw, 160px);
   transition: all 0.8s ease-in-out;
   object-fit: contain;
 }
 
 .pain-dialog .tile-text {
   font-family: 'Source Code Pro', monospace;
-  font-size: 1.8rem;
+  font-size: clamp(1rem, 1.5vw, 1.8rem);
   font-weight: 500;
   color: var(--text-primary);
   text-align: center;
@@ -152,10 +151,10 @@
   filter: brightness(0) invert(1);
 }
 
-/* Torso icon 20% größer */
+/* Torso icon - responsive mit clamp() */
 .pain-dialog .tile-icon[src*="torso1.svg"] {
-  width: 192px; /* 20% größer als 160px */
-  height: 192px; /* 20% größer als 160px */
+  width: clamp(96px, 12vw, 192px); /* 20% größer als clamp(80px, 10vw, 160px) */
+  height: clamp(96px, 12vw, 192px); /* 20% größer als clamp(80px, 10vw, 160px) */
 }
 
 /* Carousel icons should NOT get white filter */
@@ -364,6 +363,8 @@
 }
 
 /* === MOBILE RESPONSIVE DESIGN === */
+/* Chrome-spezifische Fixes entfernt - jetzt durch clamp() ersetzt */
+
 @media (max-width: 480px) {
   .pain-dialog .main-content {
     padding-top: 0;
@@ -430,10 +431,10 @@
     font-weight: 600; /* Weniger dick */
   }
   
-  /* Torso icon 3% größer auf mobile */
+  /* Torso icon responsive auf mobile */
   .pain-dialog .tile-icon[src*="torso1.svg"] {
-    width: 107px; /* 3% größer als 104px */
-    height: 107px; /* 3% größer als 104px */
+    width: clamp(82px, 10.3vw, 107px); /* 3% größer als mobile clamp */
+    height: clamp(82px, 10.3vw, 107px); /* 3% größer als mobile clamp */
   }
   
   .pain-dialog .carousel-container {
@@ -551,10 +552,10 @@
     font-weight: 600; /* Weniger dick */
   }
   
-  /* Torso icon 3% größer auf kleine mobile */
+  /* Torso icon responsive auf kleine mobile */
   .pain-dialog .tile-icon[src*="torso1.svg"] {
-    width: 77px; /* 3% größer als 75px */
-    height: 77px; /* 3% größer als 75px */
+    width: clamp(77px, 10.3vw, 77px); /* 3% größer als kleine mobile clamp */
+    height: clamp(77px, 10.3vw, 77px); /* 3% größer als kleine mobile clamp */
   }
 
 .pain-dialog .carousel-container {
