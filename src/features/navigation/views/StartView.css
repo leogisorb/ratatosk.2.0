@@ -329,6 +329,46 @@
   }
 }
 
+/* Safari Kamera-Hinweis */
+.safari-camera-hint {
+  background: #fef3c7;
+  border: 2px solid #f59e0b;
+  border-radius: 0.75rem;
+  padding: 1.5rem;
+  margin: 1rem 0;
+  max-width: 32rem;
+  width: 100%;
+}
+
+.safari-hint-content h3 {
+  color: #92400e;
+  font-size: 1.25rem;
+  font-weight: 600;
+  margin: 0 0 1rem 0;
+}
+
+.safari-hint-content p {
+  color: #92400e;
+  font-size: 1rem;
+  margin: 0 0 1rem 0;
+}
+
+.safari-hint-content ol {
+  color: #92400e;
+  font-size: 0.9rem;
+  margin: 0;
+  padding-left: 1.5rem;
+}
+
+.safari-hint-content li {
+  margin-bottom: 0.5rem;
+}
+
+.safari-hint-content strong {
+  color: #78350f;
+  font-weight: 600;
+}
+
 @media (max-width: 480px) {
   .start-header-content {
     flex-direction: column;
@@ -342,5 +382,19 @@
   .btn-primary {
     font-size: 1rem;
     padding: 0.875rem 1.5rem;
+  }
+  
+  .safari-camera-hint {
+    padding: 1rem;
+    margin: 0.5rem 0;
+  }
+  
+  .safari-hint-content h3 {
+    font-size: 1.1rem;
+  }
+  
+  .safari-hint-content p,
+  .safari-hint-content ol {
+    font-size: 0.85rem;
   }
 }

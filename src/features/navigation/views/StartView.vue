@@ -40,6 +40,20 @@
           </div>
         </div>
 
+        <!-- Safari Kamera-Hinweis -->
+        <div v-if="cameraStatus === 'error' && faceRecognition.error?.includes('Safari')" class="safari-camera-hint">
+          <div class="safari-hint-content">
+            <h3>🔒 Safari Kamera-Berechtigung erforderlich</h3>
+            <p>Um die Kamera zu aktivieren:</p>
+            <ol>
+              <li>Klicken Sie auf <strong>"Kamera aktivieren"</strong></li>
+              <li>Erlauben Sie den Kamera-Zugriff im Safari-Dialog</li>
+              <li>Oder gehen Sie zu <strong>Safari → Einstellungen → Websites → Kamera</strong></li>
+              <li>Setzen Sie die Berechtigung für diese Website auf <strong>"Erlauben"</strong></li>
+            </ol>
+          </div>
+        </div>
+
         <!-- Button Container -->
         <div class="button-container">
           <!-- Start Button -->

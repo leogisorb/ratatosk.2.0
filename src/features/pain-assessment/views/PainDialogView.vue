@@ -337,10 +337,12 @@ const resetToMainView = async () => {
   
   console.log('Wo haben Sie Schmerzen? - TTS removed')
   
-  // Start auto-mode for main regions
-  setTimeout(() => {
-    startAutoMode(mainRegions, 1000, 3000)
-  }, 2000)
+  // Start auto-mode for main regions (nur einmal)
+  if (!isAutoMode.value) {
+    setTimeout(() => {
+      startAutoMode(mainRegions, 1000, 3000)
+    }, 2000)
+  }
 }
 
 // Selection handlers for different views

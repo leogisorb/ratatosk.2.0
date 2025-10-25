@@ -195,6 +195,12 @@ export class SimpleFlowController {
    * TTS in Queue einreihen und verarbeiten
    */
   private async queueAndSpeak(text: string): Promise<void> {
+    // Prüfe auf Duplikate in der Queue
+    if (this.ttsQueue.includes(text)) {
+      console.log('SimpleFlowController: Duplicate TTS text skipped:', text)
+      return
+    }
+    
     // Füge Text zur Queue hinzu
     this.ttsQueue.push(text)
     console.log('SimpleFlowController: Added to TTS queue:', text, 'Queue length:', this.ttsQueue.length)

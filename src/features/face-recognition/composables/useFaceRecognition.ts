@@ -87,6 +87,28 @@ export function useFaceRecognition() {
       let stream: MediaStream | undefined
       
       try {
+        // Safari: Prüfe Kamera-Berechtigungen VOR dem Zugriff
+        if (isSafari) {
+          console.log('Safari erkannt - prüfe Kamera-Berechtigungen...')
+          
+          // Safari: Warte auf Benutzer-Interaktion für Kamera-Zugriff
+          if (navigator.permissions) {
+            try {
+              const permission = await navigator.permissions.query({ name: 'camera' as PermissionName })
+              console.log('Safari Kamera-Berechtigung:', permission.state)
+              
+              if (permission.state === 'denied') {
+                console.warn('Safari: Kamera-Berechtigung verweigert - verwende Fallback-Modus')
+                isActive.value = true
+                error.value = 'Safari: Kamera-Berechtigung verweigert - Face Recognition im Fallback-Modus'
+                return
+              }
+            } catch (permError) {
+              console.log('Safari: Permissions API nicht verfügbar, versuche direkten Zugriff')
+            }
+          }
+        }
+        
         // Prüfe zuerst ob Kameras verfügbar sind
         const devices = await navigator.mediaDevices.enumerateDevices()
         const videoDevices = devices.filter(device => device.kind === 'videoinput')
@@ -99,8 +121,13 @@ export function useFaceRecognition() {
           return
         }
         
-        // Erste Versuche mit verschiedenen Konfigurationen für Safari
-        const constraints = [
+        // Safari-optimierte Constraints (weniger restriktiv)
+        const constraints = isSafari ? [
+          { video: { facingMode: 'user' } },
+          { video: true },
+          { video: { width: 320, height: 240 } },
+          { video: { width: 640, height: 480 } }
+        ] : [
           { video: { facingMode: 'user', width: { ideal: 640 }, height: { ideal: 480 } } },
           { video: { facingMode: 'user' } },
           { video: true },
@@ -109,6 +136,30 @@ export function useFaceRecognition() {
         ]
         
         let streamObtained = false
+        
+        // Safari: Spezielle Behandlung für Benutzer-Interaktion
+        if (isSafari) {
+          console.log('Safari: Warte auf Benutzer-Interaktion für Kamera-Zugriff...')
+          
+          // Safari: Erstelle einen unsichtbaren Button für Benutzer-Interaktion
+          const safariButton = document.createElement('button')
+          safariButton.style.display = 'none'
+          safariButton.textContent = 'Kamera aktivieren'
+          document.body.appendChild(safariButton)
+          
+          // Safari: Warte auf Klick für Kamera-Zugriff
+          const safariClick = new Promise<void>((resolve) => {
+            safariButton.onclick = () => resolve()
+            // Auto-Klick nach kurzer Verzögerung für automatische Aktivierung
+            setTimeout(() => {
+              safariButton.click()
+            }, 100)
+          })
+          
+          await safariClick
+          document.body.removeChild(safariButton)
+        }
+        
         for (const constraint of constraints) {
           try {
             console.log('Versuche Kamera-Zugriff mit:', constraint)
@@ -129,9 +180,17 @@ export function useFaceRecognition() {
         
         if (!streamObtained || !stream) {
           console.warn('Kamera-Zugriff auf allen Konfigurationen fehlgeschlagen - verwende Fallback-Modus')
+          
+          // Safari: Spezielle Fallback-Behandlung
+          if (isSafari) {
+            console.log('Safari: Kamera-Berechtigung erforderlich - zeige Hinweis')
+            error.value = 'Safari: Kamera-Berechtigung erforderlich. Bitte erlauben Sie den Kamera-Zugriff in den Safari-Einstellungen.'
+          } else {
+            error.value = 'Kamera nicht verfügbar - Face Recognition im Fallback-Modus'
+          }
+          
           // Setze einen Fallback-Modus ohne Kamera
           isActive.value = true
-          error.value = 'Kamera nicht verfügbar - Face Recognition im Fallback-Modus'
           
           // Simuliere Face Recognition ohne Kamera für Testzwecke
           console.log('Face Recognition läuft im Fallback-Modus (ohne Kamera)')
