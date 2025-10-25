@@ -362,6 +362,61 @@
   transform: scale(1.1);
 }
 
+/* === 3D KARUSSELL ZENTRIERUNG FIX === */
+
+/* 1️⃣ Der Wrapper zentriert das Karussell zwischen Titel & Indikatoren */
+.pain-dialog .carousel-wrapper {
+  display: flex;
+  justify-content: center;   /* horizontal in der Mitte */
+  align-items: center;       /* vertikal mittig */
+  width: 100%;
+  position: relative;
+  margin: 0 auto;
+  padding: 0;                /* entfernt evtl. Push nach unten */
+  min-height: clamp(300px, 40vh, 500px);
+}
+
+/* 2️⃣ Der Container bleibt im Zentrum und füllt den Raum */
+.pain-dialog .carousel-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  width: 100%;
+  position: relative;
+  transform-style: preserve-3d;
+  perspective: 2000px;
+  overflow: visible;
+  height: clamp(250px, 35vh, 400px);
+}
+
+/* 3️⃣ Die Items bleiben auf gleicher Höhe und zentriert auf X-Achse */
+.pain-dialog .carousel-item {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform-origin: center center;
+  transform: translate(-50%, -50%) translateX(calc(var(--offset, 0) * 350px)) rotateY(var(--rotation, 0deg)) scale(0.8);
+  opacity: 0;
+  pointer-events: none;
+  transition: transform 0.8s ease-in-out, opacity 0.8s ease-in-out;
+  will-change: transform;
+  backface-visibility: hidden;
+}
+
+.pain-dialog .carousel-item-active {
+  transform: translate(-50%, -50%) translateX(0) rotateY(0deg) scale(1);
+  opacity: 1;
+  z-index: 10;
+}
+
+.pain-dialog .carousel-indicators {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 1rem;
+  margin-top: clamp(1rem, 2vh, 2rem);
+}
+
 /* === MOBILE RESPONSIVE DESIGN === */
 /* Chrome-spezifische Fixes entfernt - jetzt durch clamp() ersetzt */
 
@@ -443,16 +498,23 @@
     padding: 1rem 0;
     perspective: 1500px;
     margin-top: 2rem;
+    /* Mobile: Behalte die neue Zentrierung bei */
+    display: flex;
+    justify-content: center;
+    align-items: center;
   }
   
   .pain-dialog .carousel-item {
     width: 280px;
     height: 350px;
-    transform: translateX(calc(-50% + var(--offset, 0) * 300px)) scale(0.6) rotateY(var(--rotation, 20deg));
+    /* Mobile: Behalte die neue Zentrierung bei */
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%) translateX(calc(var(--offset, 0) * 300px)) rotateY(var(--rotation, 20deg)) scale(0.6);
   }
   
   .pain-dialog .carousel-item-active {
-    transform: translateX(-50%) scale(0.9) rotateY(0deg);
+    transform: translate(-50%, -50%) translateX(0) rotateY(0deg) scale(0.9);
   }
   
   .pain-dialog .carousel-item-content {
@@ -563,6 +625,10 @@
     max-width: 300px;
     margin-top: 1.5rem;
     padding: 1rem 0;
+    /* Mobile: Behalte die neue Zentrierung bei */
+    display: flex;
+    justify-content: center;
+    align-items: center;
   }
   
   .pain-dialog .carousel-indicators {
@@ -582,7 +648,10 @@
 .pain-dialog .carousel-item {
     width: 250px;
     height: 320px;
-    transform: translateX(calc(-50% + var(--offset, 0) * 280px)) scale(0.5) rotateY(var(--rotation, 20deg));
+    /* Mobile: Behalte die neue Zentrierung bei */
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%) translateX(calc(var(--offset, 0) * 280px)) rotateY(var(--rotation, 20deg)) scale(0.5);
 }
 
 .pain-dialog .carousel-item-content {
@@ -624,11 +693,19 @@
     width: 90vw;
     max-width: 600px;
     height: 60vh;
+    /* Mobile Landscape: Behalte die neue Zentrierung bei */
+    display: flex;
+    justify-content: center;
+    align-items: center;
   }
   
   .pain-dialog .carousel-item {
     width: 300px;
     height: 250px;
+    /* Mobile Landscape: Behalte die neue Zentrierung bei */
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%) translateX(calc(var(--offset, 0) * 350px)) rotateY(var(--rotation, 0deg)) scale(0.8);
   }
   
   .pain-dialog .carousel-item-content {

@@ -54,8 +54,10 @@
             Wählen Sie einen {{ getMainRegionTitle(selectedMainRegion) }}bereich aus
           </div>
 
-          <!-- Karussell Container -->
-          <div class="carousel-container">
+          <!-- Karussell Wrapper für vertikale Zentrierung -->
+          <div class="carousel-wrapper">
+            <!-- Karussell Container -->
+            <div class="carousel-container">
             <!-- Karussell Content -->
             <div class="carousel-content">
               <div 
@@ -91,6 +93,7 @@
                   </div>
                 </div>
               </div>
+            </div>
             </div>
           </div>
 
