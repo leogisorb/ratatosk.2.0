@@ -21,6 +21,7 @@
               class="menu-tile"
               :class="currentTileIndex === index ? 'tile-active' : 'tile-inactive'"
               @click="region.id === 'zurueck' ? goBack() : selectMainRegion(region.id)"
+              @touchstart="region.id === 'zurueck' ? goBack() : handleMainRegionTouch($event, region.id)"
               @contextmenu.prevent="region.id === 'zurueck' ? goBack() : handleMainRegionRightClick($event, region.id)"
             >
               <div 
@@ -65,6 +66,7 @@
                   '--rotation': (index < currentTileIndex ? -20 : index > currentTileIndex ? 20 : 0) + 'deg'
                 }"
                 @click="subRegion.id === 'zurueck' ? goBack() : selectSubRegion(subRegion.id)"
+                @touchstart="subRegion.id === 'zurueck' ? goBack() : handleSubRegionTouch($event, subRegion.id)"
                 @contextmenu.prevent="handleSubRegionRightClick($event, subRegion.id)"
               >
                 <div class="carousel-item-content">
@@ -132,6 +134,7 @@
                   '--rotation': (index < currentTileIndex ? -20 : index > currentTileIndex ? 20 : 0) + 'deg'
                 }"
                 @click="subSubRegion.id === 'zurueck' ? goBack() : selectSubSubRegion(subSubRegion.id)"
+                @touchstart="subSubRegion.id === 'zurueck' ? goBack() : handleSubSubRegionTouch($event, subSubRegion.id)"
                 @contextmenu.prevent="handleSubSubRegionRightClick($event, subSubRegion.id)"
               >
                 <div class="carousel-item-content">
@@ -194,7 +197,7 @@
 <script setup lang="ts">
 import { ref, computed, onMounted, onUnmounted, watch } from 'vue'
 import { useRouter } from 'vue-router'
-import { usePainAssessment } from '../composables/usePainAssessment'
+import { useUmgebungAssessment } from '../composables/useUmgebungAssessment'
 import { 
   mainRegions, 
   bettSubRegions, 
@@ -221,7 +224,7 @@ const selectedSubRegion = ref<string | null>(null)
 const selectedSubSubRegion = ref<string | null>(null)
 const hasUserInteracted = ref(false)
 
-// Use pain assessment composable
+// Use umgebung assessment composable
 const {
   currentTileIndex,
   isAutoMode,
@@ -229,8 +232,9 @@ const {
   pauseAutoMode,
   stopAutoMode,
   speakText,
-  setupLifecycle
-} = usePainAssessment()
+  setupLifecycle,
+  handleClick
+} = useUmgebungAssessment()
 
 // Ensure currentTileIndex starts at 0
 currentTileIndex.value = 0
@@ -354,7 +358,7 @@ const selectMainRegion = async (regionId: string) => {
   
   if (!hasUserInteracted.value) {
     hasUserInteracted.value = true
-    console.log('User first interaction - TTS removed')
+    console.log('User first interaction - TTS enabled')
   }
   
   selectedMainRegion.value = regionId
@@ -365,6 +369,8 @@ const selectMainRegion = async (regionId: string) => {
   if (region) {
     console.log(`Wählen Sie eine ${region.title}option aus. - TTS removed`)
   }
+  
+  // Auto-mode wird im watch() gesteuert, nicht hier
 }
 
 const selectSubRegion = async (subRegionId: string) => {
@@ -385,7 +391,9 @@ const selectSubRegion = async (subRegionId: string) => {
   currentTileIndex.value = 0
   
   const subRegionTitle = getSubRegionItemTitle(subRegionId)
-  console.log(`Auswahl erfasst: ${subRegionTitle} - TTS removed`)
+  console.log(`Auswahl erfasst: ${subRegionTitle}`)
+  
+  // Auto-mode wird im watch() gesteuert, nicht hier
 }
 
 const selectSubSubRegion = async (subSubRegionId: string) => {
@@ -447,6 +455,52 @@ const handleSubSubRegionRightClick = (event: MouseEvent, subSubRegionId: string)
   console.log('UmgebungDialogView: Right click detected on sub-sub-region:', subSubRegionId)
   selectSubSubRegion(subSubRegionId)
   return false
+}
+
+// Touch-Handler für Main Regions
+const handleMainRegionTouch = (event: TouchEvent, regionId: string) => {
+  event.preventDefault()
+  event.stopPropagation()
+  console.log('Touch detected on main region in UmgebungDialogView:', regionId)
+  selectMainRegion(regionId)
+}
+
+// Touch-Handler für Sub Regions
+const handleSubRegionTouch = (event: TouchEvent, subRegionId: string) => {
+  event.preventDefault()
+  event.stopPropagation()
+  console.log('Touch detected on sub-region in UmgebungDialogView:', subRegionId)
+  selectSubRegion(subRegionId)
+}
+
+// Touch-Handler für Sub-Sub Regions
+const handleSubSubRegionTouch = (event: TouchEvent, subSubRegionId: string) => {
+  event.preventDefault()
+  event.stopPropagation()
+  console.log('Touch detected on sub-sub-region in UmgebungDialogView:', subSubRegionId)
+  selectSubSubRegion(subSubRegionId)
+}
+
+// Selection handlers for different views
+const handleMainRegionSelection = (item: any) => {
+  console.log('Main region selection handler called with:', item)
+  if (item && item.id) {
+    selectMainRegion(item.id)
+  }
+}
+
+const handleSubRegionSelection = (item: any) => {
+  console.log('Sub region selection handler called with:', item)
+  if (item && item.id) {
+    selectSubRegion(item.id)
+  }
+}
+
+const handleSubSubRegionSelection = (item: any) => {
+  console.log('Sub-sub region selection handler called with:', item)
+  if (item && item.id) {
+    selectSubSubRegion(item.id)
+  }
 }
 
 // Auto-Mode für Sub-Region View - wie Pain-Dialog: TTS, dann Pause, dann Karussell
@@ -552,28 +606,6 @@ const resetToSubRegionView = async () => {
   }, 2000)
 }
 
-// Selection handlers for different views
-const handleMainRegionSelection = (item: any) => {
-  console.log('Main region selection handler called with:', item)
-  if (item && item.id) {
-    selectMainRegion(item.id)
-  }
-}
-
-const handleSubRegionSelection = (item: any) => {
-  console.log('Sub region selection handler called with:', item)
-  if (item && item.id) {
-    selectSubRegion(item.id)
-  }
-}
-
-const handleSubSubRegionSelection = (item: any) => {
-  console.log('Sub-sub region selection handler called with:', item)
-  if (item && item.id) {
-    selectSubSubRegion(item.id)
-  }
-}
-
 // Blink Detection
 const handleBlink = () => {
   console.log('Blink detected in UmgebungDialogView')
@@ -600,12 +632,6 @@ const handleBlink = () => {
   }
 }
 
-// Touch/Tap Detection
-const handleTouch = (event: TouchEvent) => {
-  event.preventDefault()
-  console.log('Touch detected in UmgebungDialogView')
-  handleBlink()
-}
 
 
 const goBack = () => {
@@ -703,9 +729,6 @@ onMounted(() => {
   // Add keyboard navigation
   document.addEventListener('keydown', handleKeydown)
   
-  // Add touch events
-  document.addEventListener('touchstart', handleTouch, { passive: false })
-  
   // Add blink detection (if available)
   if (window.speechSynthesis) {
     // Blink detection can be added here if needed
@@ -724,9 +747,6 @@ onUnmounted(() => {
   
   // Remove keyboard navigation
   document.removeEventListener('keydown', handleKeydown)
-  
-  // Remove touch events
-  document.removeEventListener('touchstart', handleTouch)
 })
 
 // Watch for state changes to update lifecycle
@@ -757,7 +777,7 @@ watch(currentState, (newState) => {
       }, 1000)
       // Dann Auto-Mode für Sub-Regions starten
       setTimeout(() => {
-        startSubRegionAutoMode()
+        cleanup = setupLifecycle(currentSubRegions.value, handleSubRegionSelection)
       }, 4000)
       break
     case 'subSubRegionView':
@@ -769,7 +789,7 @@ watch(currentState, (newState) => {
       }, 1000)
       // Dann Auto-Mode für Sub-Sub-Regions starten
       setTimeout(() => {
-        startSubSubRegionAutoMode()
+        cleanup = setupLifecycle(currentSubSubRegions.value, handleSubSubRegionSelection)
       }, 4000)
       break
     case 'confirmation':
