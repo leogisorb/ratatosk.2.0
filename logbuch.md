@@ -39,6 +39,74 @@ Ratatosk ist eine Kommunikationshilfe für Menschen mit Behinderungen, die durch
 
 ## 📅 Chronologische Entwicklung
 
+### 2025-01-16 - Umgebung-Dialog: Vollständige Überarbeitung nach Pain-Dialog Vorbild
+
+**Problem:**
+- Umgebung-Dialog funktionierte nicht wie der Pain-Dialog
+- Fehlende Interaktionsmöglichkeiten (Blink, Tap, Maus-Handler)
+- TTS-Timing war falsch - Titel wurden nicht korrekt vorgelesen
+- Karussell war zu schnell und unterbrach TTS
+- Auto-Mode wurde nicht korrekt gesteuert
+- View-Wechsel funktionierte nicht richtig
+- Doppelte Funktionsdeklarationen verursachten Compiler-Fehler
+
+**Lösung:**
+- **Neue useUmgebungAssessment Composable erstellt** (1:1 Kopie von usePainAssessment)
+- **Touch/Click/Blink-Handler hinzugefügt** für alle drei Ebenen (Main, Sub, Sub-Sub)
+- **TTS-Timing korrigiert**: 1s warten, Titel sprechen, 3s warten, Karussell starten
+- **View-Wechsel über watch(currentState)** wie im Pain-Dialog
+- **Auto-Mode über SimpleFlowController** mit korrekten Delays
+- **Doppelte Deklarationen entfernt** (handleMainRegionSelection, handleTouch)
+- **Alle drei Ebenen funktionieren** jetzt wie im Pain-Dialog
+
+**Technische Details:**
+```typescript
+// Navigation-Funktionen vereinfacht (wie Pain-Dialog)
+const selectMainRegion = async (regionId: string) => {
+  selectedMainRegion.value = regionId
+  currentState.value = 'subRegionView'
+  // TTS wird im watch() gesteuert, nicht hier
+}
+
+// Watch-Funktion exakt kopiert für alle drei Ebenen
+watch(currentState, (newState) => {
+  switch (newState) {
+    case 'subRegionView':
+      setTimeout(() => {
+        const mainRegionTitle = getMainRegionTitle(selectedMainRegion.value)
+        speakText(`Wählen Sie eine ${mainRegionTitle}option aus`)
+      }, 1000)
+      setTimeout(() => {
+        cleanup = setupLifecycle(currentSubRegions.value, handleSubRegionSelection)
+      }, 4000)
+      break
+    case 'subSubRegionView':
+      setTimeout(() => {
+        const subRegionTitle = getSubRegionItemTitle(selectedSubRegion.value)
+        speakText(`Was soll mit ${subRegionTitle} gemacht werden?`)
+      }, 1000)
+      setTimeout(() => {
+        cleanup = setupLifecycle(currentSubSubRegions.value, handleSubSubRegionSelection)
+      }, 4000)
+      break
+  }
+})
+```
+
+**Ergebnis:**
+- ✅ Alle Interaktionsmöglichkeiten funktionieren (Blink, Touch, Click, Maus)
+- ✅ TTS spricht alle Titel korrekt aus ("Was möchten Sie an ihrer Umgebung verändern?")
+- ✅ Karussell wartet auf TTS-Ende und startet dann mit korrekten Delays
+- ✅ View-Wechsel funktioniert exakt wie im Pain-Dialog für alle drei Ebenen
+- ✅ Umgebung-Dialog ist jetzt eine 1:1 Kopie des Pain-Dialog Patterns
+- ✅ Keine Compiler-Fehler mehr durch doppelte Deklarationen
+
+**Dateien geändert:**
+- `src/features/umgebung-dialog/composables/useUmgebungAssessment.ts` (neu)
+- `src/features/umgebung-dialog/views/UmgebungDialogView.vue` (überarbeitet)
+
+---
+
 ### 2025-01-16 - Ich-Dialog: Vollständige Überarbeitung nach Pain-Dialog Vorbild
 
 **Problem:**
