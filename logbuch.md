@@ -39,6 +39,63 @@ Ratatosk ist eine Kommunikationshilfe für Menschen mit Behinderungen, die durch
 
 ## 📅 Chronologische Entwicklung
 
+### 2025-01-16 - Ich-Dialog: Vollständige Überarbeitung nach Pain-Dialog Vorbild
+
+**Problem:**
+- Ich-Dialog funktionierte nicht wie der Pain-Dialog
+- Fehlende Interaktionsmöglichkeiten (Blink, Tap, Maus-Handler)
+- TTS-Timing war falsch - "Was wollen Sie zu sich nehmen?" wurde nicht ausgesprochen
+- Karussell war zu schnell und unterbrach TTS
+- Auto-Mode wurde nicht korrekt gesteuert
+- View-Wechsel funktionierte nicht richtig
+
+**Lösung:**
+- **Neue useIchAssessment Composable erstellt** (1:1 Kopie von usePainAssessment)
+- **Touch/Click/Blink-Handler hinzugefügt** für alle Interaktionen
+- **TTS-Timing korrigiert**: 1s warten, Titel sprechen, 3s warten, Karussell starten
+- **View-Wechsel über watch(currentState)** wie im Pain-Dialog
+- **Auto-Mode über SimpleFlowController** mit korrekten Delays
+- **Karussell-Geschwindigkeit angepasst** (4s initial, 5s cycle für Sub-Regions)
+
+**Technische Details:**
+```typescript
+// Navigation-Funktionen vereinfacht (wie Pain-Dialog)
+const selectMainRegion = async (regionId: string) => {
+  selectedMainRegion.value = regionId
+  currentState.value = 'subRegionView'
+  // TTS wird im watch() gesteuert, nicht hier
+}
+
+// Watch-Funktion exakt kopiert
+watch(currentState, (newState) => {
+  switch (newState) {
+    case 'subRegionView':
+      setTimeout(() => {
+        const subRegionTitle = getSubRegionTitle(selectedMainRegion.value)
+        speakText(subRegionTitle) // "Was wollen Sie zu sich nehmen?"
+      }, 1000)
+      setTimeout(() => {
+        cleanup = setupLifecycle(currentSubRegions.value, handleSubRegionSelection)
+      }, 4000)
+      break
+  }
+})
+```
+
+**Ergebnis:**
+- ✅ Alle Interaktionsmöglichkeiten funktionieren (Blink, Touch, Click, Maus)
+- ✅ TTS spricht "Was wollen Sie zu sich nehmen?" korrekt aus
+- ✅ Karussell wartet auf TTS-Ende und startet dann mit korrekten Delays
+- ✅ View-Wechsel funktioniert exakt wie im Pain-Dialog
+- ✅ Ich-Dialog ist jetzt eine 1:1 Kopie des Pain-Dialog Patterns
+
+**Dateien geändert:**
+- `src/features/ich/composables/useIchAssessment.ts` (neu)
+- `src/features/ich/views/IchDialogView.vue` (überarbeitet)
+- `src/features/ich/composables/usePainAssessment.ts` (aktualisiert)
+
+---
+
 ### 2025-01-16 - Mobile Karussell-System für HomeView implementiert
 
 **Problem:**
