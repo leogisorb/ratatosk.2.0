@@ -74,7 +74,12 @@ export function usePainAssessment() {
         const currentItem = items[currentIndex]
         if (currentItem) {
           console.log('IchDialog: Auto-mode cycle:', currentItem.title, 'at index:', currentIndex)
-          speakText(currentItem.title)
+          // Für Sub-Regions: Spreche den korrekten TTS-Text
+          if (isSubRegionView && currentItem.ttsText) {
+            speakText(currentItem.ttsText)
+          } else {
+            speakText(currentItem.title)
+          }
         }
         
         currentIndex = (currentIndex + 1) % items.length

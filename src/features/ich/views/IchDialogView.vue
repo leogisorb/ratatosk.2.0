@@ -24,6 +24,7 @@
                 region.id === 'zurueck' ? 'back-tile' : ''
               ]"
               @click="region.id === 'zurueck' ? goBack() : selectMainRegion(region.id)"
+              @touchstart="region.id === 'zurueck' ? goBack() : handleMainRegionTouch($event, region.id)"
               @contextmenu.prevent="region.id === 'zurueck' ? goBack() : handleMainRegionRightClick($event, region.id)"
             >
               <div 
@@ -54,8 +55,10 @@
             {{ getSubRegionTitle(selectedMainRegion) }}
           </div>
 
-          <!-- Karussell Container -->
-          <div class="carousel-container">
+          <!-- Karussell Wrapper für vertikale Zentrierung -->
+          <div class="carousel-wrapper">
+            <!-- Karussell Container -->
+            <div class="carousel-container">
             <!-- Karussell Content -->
             <div class="carousel-content">
               <div 
@@ -63,11 +66,9 @@
                 :key="subRegion.id"
                 class="carousel-item"
                 :class="currentTileIndex === index ? 'carousel-item-active' : 'carousel-item-inactive'"
-                :style="{
-                  '--offset': index - currentTileIndex,
-                  '--rotation': (index < currentTileIndex ? -20 : index > currentTileIndex ? 20 : 0) + 'deg'
-                }"
+                :style="getCarouselItemStyle(index)"
                 @click="selectSubRegion(subRegion.id)"
+                @touchstart="handleSubRegionTouch($event, subRegion.id)"
                 @contextmenu.prevent="handleSubRegionRightClick($event, subRegion.id)"
               >
                 <div class="carousel-item-content">
@@ -92,6 +93,7 @@
                   </div>
                 </div>
               </div>
+            </div>
             </div>
           </div>
 
@@ -123,7 +125,8 @@
 
 <script setup lang="ts">
 import { ref, computed, onMounted, onUnmounted, watch } from 'vue'
-import { usePainAssessment } from '../composables/usePainAssessment'
+import { useRouter } from 'vue-router'
+import { useIchAssessment } from '../composables/useIchAssessment'
 import { 
   mainRegions, 
   ernaehrungSubRegions, 
@@ -135,6 +138,9 @@ import {
 } from '../data/ichDialogData'
 import AppHeader from '../../../shared/components/AppHeader.vue'
 
+// Router
+const router = useRouter()
+
 // Ich dialog states
 type IchDialogState = 'mainView' | 'subRegionView' | 'confirmation'
 
@@ -144,7 +150,7 @@ const selectedMainRegion = ref<string | null>(null)
 const selectedSubRegion = ref<string | null>(null)
 const hasUserInteracted = ref(false)
 
-// Use pain assessment composable
+// Use ich assessment composable
 const {
   currentTileIndex,
   isAutoMode,
@@ -152,8 +158,10 @@ const {
   pauseAutoMode,
   stopAutoMode,
   speakText,
-  setupLifecycle
-} = usePainAssessment()
+  setupLifecycle,
+  handleTouch,
+  handleClick
+} = useIchAssessment()
 
 // Ensure currentTileIndex starts at 0
 currentTileIndex.value = 0
@@ -237,13 +245,24 @@ const getConfirmationText = () => {
   }
 }
 
+// Karussell Style-Funktion (wie im Pain Dialog)
+const getCarouselItemStyle = (index: number) => {
+  const offset = index - currentTileIndex.value
+  const rotation = index < currentTileIndex.value ? -20 : index > currentTileIndex.value ? 20 : 0
+  
+  return {
+    '--offset': offset,
+    '--rotation': `${rotation}deg`
+  }
+}
+
 // Navigation functions
 const selectMainRegion = async (regionId: string) => {
   console.log('Selecting main region:', regionId)
   
   if (!hasUserInteracted.value) {
     hasUserInteracted.value = true
-    console.log('User first interaction - TTS removed')
+    console.log('User first interaction - TTS enabled')
   }
   
   selectedMainRegion.value = regionId
@@ -255,10 +274,7 @@ const selectMainRegion = async (regionId: string) => {
     console.log(`Wählen Sie eine ${region.title}option aus. - TTS removed`)
   }
   
-  // Auto-mode disabled to prevent infinite loops
-  // setTimeout(() => {
-  //   startAutoMode(currentSubRegions.value, 2000, 3000)
-  // }, 2000)
+  // Auto-mode wird im watch() gesteuert, nicht hier
 }
 
 const selectSubRegion = async (subRegionId: string) => {
@@ -277,7 +293,7 @@ const selectSubRegion = async (subRegionId: string) => {
   currentState.value = 'confirmation'
   
   const subRegionTitle = getSubRegionTitle(selectedSubRegion.value)
-  console.log(`Auswahl erfasst: ${subRegionTitle} - TTS removed`)
+  console.log(`Auswahl erfasst: ${subRegionTitle}`)
   
   // TTS für Bestätigung - spezifisch für jede Kategorie
   setTimeout(() => {
@@ -308,11 +324,6 @@ const selectSubRegion = async (subRegionId: string) => {
     speakText(confirmationText)
   }, 500)
   
-  // Keine zusätzliche "Auswahl bestätigt" Nachricht mehr
-  // setTimeout(() => {
-  //   speakText('Auswahl bestätigt')
-  // }, 2000)
-  
   // After confirmation, return to main view after 6.5 seconds (3.5 seconds more time for TTS)
   setTimeout(() => {
     resetToMainView()
@@ -337,22 +348,38 @@ const handleSubRegionRightClick = (event: MouseEvent, subRegionId: string) => {
   return false
 }
 
+// Touch-Handler für Main Regions
+const handleMainRegionTouch = (event: TouchEvent, regionId: string) => {
+  event.preventDefault()
+  event.stopPropagation()
+  console.log('Touch detected on main region in IchDialogView:', regionId)
+  selectMainRegion(regionId)
+}
+
+// Touch-Handler für Sub Regions
+const handleSubRegionTouch = (event: TouchEvent, subRegionId: string) => {
+  event.preventDefault()
+  event.stopPropagation()
+  console.log('Touch detected on sub-region in IchDialogView:', subRegionId)
+  selectSubRegion(subRegionId)
+}
+
 const resetToMainView = async () => {
   currentState.value = 'mainView'
   currentTileIndex.value = 0
   selectedMainRegion.value = null
   selectedSubRegion.value = null
   
-  console.log('Was möchten Sie machen? - TTS removed')
+  console.log('Was möchten Sie machen?')
   
   // TTS für Zurück zum Hauptmenü
   setTimeout(() => {
     speakText('Zurück zum Hauptmenü')
   }, 500)
   
-  // Start auto-mode for main regions
+  // Start auto-mode for main regions (längere Delays für TTS)
   setTimeout(() => {
-    startAutoMode(mainRegions, 1000, 3000)
+    startAutoMode(mainRegions, 3000, 4000)
   }, 2000)
 }
 
@@ -443,6 +470,9 @@ onMounted(() => {
   // Add keyboard navigation
   document.addEventListener('keydown', handleKeydown)
   
+  // Enable TTS immediately for Ich-Dialog
+  hasUserInteracted.value = true
+  
   // Setup initial lifecycle and auto-mode
   cleanup = setupLifecycle(mainRegions, handleMainRegionSelection)
 })
@@ -480,8 +510,8 @@ watch(currentState, (newState) => {
       console.log('Setting up sub region view with', currentSubRegions.value.length, 'sub-regions')
       // Erst den korrekten Titel mit Bereich vorlesen
       setTimeout(() => {
-        const mainRegionTitle = getMainRegionTitle(selectedMainRegion.value)
-        speakText(`Wählen Sie eine ${mainRegionTitle}option aus`)
+        const subRegionTitle = getSubRegionTitle(selectedMainRegion.value)
+        speakText(subRegionTitle)
       }, 1000)
       // Dann Auto-Mode für Sub-Regions starten
       setTimeout(() => {
