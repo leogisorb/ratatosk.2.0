@@ -52,6 +52,19 @@
   position: relative;
   z-index: 1;
   user-select: none;
+  font-family: inherit;
+  font-size: inherit;
+  color: inherit;
+}
+
+.pain-dialog .menu-tile:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.pain-dialog .menu-tile:focus {
+  outline: 3px solid rgba(0, 176, 152, 0.6);
+  outline-offset: 2px;
 }
 
 .pain-dialog .tile-icon-container {
@@ -199,17 +212,34 @@
 .pain-dialog .confirmation-container {
   text-align: center;
   padding: 2rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 50vh;
 }
 
 .pain-dialog .confirmation-container h2 {
   font-family: 'Source Code Pro', monospace;
-  font-size: 6rem; /* 100% größer als 3rem */
+  font-size: 3rem; /* Halb so groß wie vorher (6rem / 2 = 3rem) */
   font-weight: 300;
   color: var(--text-primary);
   margin: 0 0 2rem 0;
   text-align: center;
   transition: color 0.3s ease;
 }
+
+.pain-dialog .confirmation-container p {
+  font-family: 'Source Code Pro', monospace;
+  font-size: 3.75rem; /* Nochmal halb so groß (7.5rem / 2 = 3.75rem) */
+  font-weight: 600;
+  color: #FF8C00; /* Orange Farbe */
+  margin: 0;
+  text-align: center;
+  transition: color 0.3s ease;
+  line-height: 1.2;
+}
+
 
 /* Zurück-Kachel spezielle Styles */
 .pain-dialog .menu-tile.back-tile {
@@ -268,6 +298,16 @@
   z-index: 0;
   transition: transform 0.8s ease-in-out, opacity 0.8s ease-in-out;
   cursor: pointer;
+  border: none;
+  background: none;
+  font-family: inherit;
+  font-size: inherit;
+  color: inherit;
+}
+
+.pain-dialog .carousel-item:focus {
+  outline: 3px solid rgba(0, 176, 152, 0.6);
+  outline-offset: 2px;
 }
 
 /* Nur die 3 benachbarten Items sichtbar machen */
@@ -457,12 +497,24 @@
     font-weight: 600; /* Weniger dick */
   }
   
+  .pain-dialog .confirmation-container {
+    min-height: 40vh;
+    padding: 1rem;
+  }
+  
   .pain-dialog .confirmation-container h2 {
-    font-size: 2.25rem; /* 25% größer als 1.8rem */
+    font-size: 1.125rem; /* Halb so groß (2.25rem / 2 = 1.125rem) */
     margin: 0.5rem 0 1.5rem 0;
     padding-top: 0.2rem;
     line-height: 1.2;
     font-weight: 600; /* Weniger dick */
+  }
+  
+  .pain-dialog .confirmation-container p {
+    font-size: 1.40625rem; /* Nochmal halb so groß (2.8125rem / 2 = 1.40625rem) */
+    color: #FF8C00; /* Orange Farbe */
+    font-weight: 600;
+    line-height: 1.2;
   }
   
   /* Torso icon 3% größer auf mobile */
@@ -582,12 +634,24 @@
     font-weight: 600; /* Weniger dick */
   }
   
+  .pain-dialog .confirmation-container {
+    min-height: 35vh;
+    padding: 0.5rem;
+  }
+  
   .pain-dialog .confirmation-container h2 {
-    font-size: 1.875rem; /* 25% größer als 1.5rem */
+    font-size: 0.9375rem; /* Halb so groß (1.875rem / 2 = 0.9375rem) */
     margin: 0.3rem 0 1rem 0;
     padding-top: 0.1rem;
     line-height: 1.1;
     font-weight: 600; /* Weniger dick */
+  }
+  
+  .pain-dialog .confirmation-container p {
+    font-size: 1.171875rem; /* Nochmal halb so groß (2.34375rem / 2 = 1.171875rem) */
+    color: #FF8C00; /* Orange Farbe */
+    font-weight: 600;
+    line-height: 1.1;
   }
   
   /* Torso icon 3% größer auf kleine mobile */
@@ -704,10 +768,22 @@
     line-height: 1.1;
   }
   
+  .pain-dialog .confirmation-container {
+    min-height: 30vh;
+    padding: 0.5rem;
+  }
+  
   .pain-dialog .confirmation-container h2 {
-    font-size: 1.6rem;
+    font-size: 0.8rem; /* Halb so groß (1.6rem / 2 = 0.8rem) */
     margin: 0.3rem 0 1rem 0;
     padding-top: 0.1rem;
+    line-height: 1.1;
+  }
+  
+  .pain-dialog .confirmation-container p {
+    font-size: 2rem; /* Halb so groß (4rem / 2 = 2rem) */
+    color: #FF8C00; /* Orange Farbe */
+    font-weight: 600;
     line-height: 1.1;
   }
 }

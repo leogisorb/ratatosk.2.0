@@ -15,14 +15,17 @@
 
           <div class="grid-container">
             <!-- Dynamic Menu Tiles -->
-            <div 
+            <button 
               v-for="(region, index) in mainRegions"
               :key="region.id"
               class="menu-tile"
               :class="currentTileIndex === index ? 'tile-active' : 'tile-inactive'"
-              @click="region.id === 'zurueck' ? goBack() : selectMainRegion(region.id)"
-              @touchstart="region.id === 'zurueck' ? goBack() : handleMainRegionTouch($event, region.id)"
-              @contextmenu.prevent="region.id === 'zurueck' ? goBack() : handleMainRegionRightClick($event, region.id)"
+              :aria-pressed="currentTileIndex === index"
+              :aria-label="region.title"
+              :disabled="isSpeaking"
+              @click="region.id === ID_BACK ? goBack() : selectMainRegion(region.id)"
+              @touchstart="region.id === ID_BACK ? goBack() : handleMainRegionTouch($event, region.id)"
+              @contextmenu.prevent="region.id === ID_BACK ? goBack() : handleMainRegionRightClick($event, region.id)"
             >
               <div 
                 class="tile-icon-container"
@@ -42,14 +45,14 @@
               >
                 {{ region.title }}
               </div>
-            </div>
+            </button>
           </div>
         </div>
 
         <!-- Sub Region View -->
         <div v-if="currentState === 'subRegionView'">
           <div class="main-title">
-            Wählen Sie einen {{ getMainRegionTitle(selectedMainRegion) }}bereich aus
+            {{ getSubRegionTitle(selectedMainRegion) }}
           </div>
 
           <!-- Karussell Container -->
@@ -65,9 +68,15 @@
                   '--offset': index - currentTileIndex,
                   '--rotation': (index < currentTileIndex ? -20 : index > currentTileIndex ? 20 : 0) + 'deg'
                 }"
-                @click="subRegion.id === 'zurueck' ? goBack() : selectSubRegion(subRegion.id)"
-                @touchstart="subRegion.id === 'zurueck' ? goBack() : handleSubRegionTouch($event, subRegion.id)"
+                role="button"
+                :aria-pressed="currentTileIndex === index"
+                :aria-label="subRegion.title"
+                :tabindex="0"
+                @click="subRegion.id === ID_BACK ? goBack() : selectSubRegion(subRegion.id)"
+                @touchstart="subRegion.id === ID_BACK ? goBack() : handleSubRegionTouch($event, subRegion.id)"
                 @contextmenu.prevent="handleSubRegionRightClick($event, subRegion.id)"
+                @keydown.enter="subRegion.id === ID_BACK ? goBack() : selectSubRegion(subRegion.id)"
+                @keydown.space.prevent="subRegion.id === ID_BACK ? goBack() : selectSubRegion(subRegion.id)"
               >
                 <div class="carousel-item-content">
                   <div 
@@ -133,9 +142,15 @@
                   '--offset': index - currentTileIndex,
                   '--rotation': (index < currentTileIndex ? -20 : index > currentTileIndex ? 20 : 0) + 'deg'
                 }"
-                @click="subSubRegion.id === 'zurueck' ? goBack() : selectSubSubRegion(subSubRegion.id)"
-                @touchstart="subSubRegion.id === 'zurueck' ? goBack() : handleSubSubRegionTouch($event, subSubRegion.id)"
+                role="button"
+                :aria-pressed="currentTileIndex === index"
+                :aria-label="subSubRegion.title"
+                :tabindex="0"
+                @click="subSubRegion.id === ID_BACK ? goBack() : selectSubSubRegion(subSubRegion.id)"
+                @touchstart="subSubRegion.id === ID_BACK ? goBack() : handleSubSubRegionTouch($event, subSubRegion.id)"
                 @contextmenu.prevent="handleSubSubRegionRightClick($event, subSubRegion.id)"
+                @keydown.enter="subSubRegion.id === ID_BACK ? goBack() : selectSubSubRegion(subSubRegion.id)"
+                @keydown.space.prevent="subSubRegion.id === ID_BACK ? goBack() : selectSubSubRegion(subSubRegion.id)"
               >
                 <div class="carousel-item-content">
                   <div 
@@ -203,11 +218,14 @@ import {
   bettSubRegions, 
   zimmerSubRegions, 
   gegenstaendeSubRegions,
-  bettVerbenSubRegions,
-  zimmerVerbenSubRegions,
-  gegenstaendeVerbenSubRegions,
   getSubRegionsByMainRegion,
-  getSubSubRegionsBySubRegion
+  getSubSubRegionsBySubRegion,
+  getArticles,
+  buildConfirmationText,
+  ID_BACK,
+  ID_BETT,
+  ID_ZIMMER,
+  ID_GEGENSTAENDE
 } from '../data/umgebungDialogData'
 import AppHeader from '../../../shared/components/AppHeader.vue'
 
@@ -223,6 +241,56 @@ const selectedMainRegion = ref<string | null>(null)
 const selectedSubRegion = ref<string | null>(null)
 const selectedSubSubRegion = ref<string | null>(null)
 const hasUserInteracted = ref(false)
+const isReturningToMain = ref(false)
+
+// Timer management
+const timers = ref<number[]>([])
+const autoModeAbortController = ref<{ aborted: boolean } | null>(null)
+
+// Timer management functions
+const setSafeTimeout = (fn: Function, ms: number): number => {
+  const id = window.setTimeout(() => {
+    timers.value = timers.value.filter(t => t !== id)
+    fn()
+  }, ms)
+  timers.value.push(id)
+  return id
+}
+
+const clearAllTimers = () => {
+  timers.value.forEach(id => clearTimeout(id))
+  timers.value = []
+}
+
+// Cancelable Auto-Mode implementation
+const runAutoLoop = async (items: any[], speakTextFn: (text: string) => Promise<void>, delay = 3000) => {
+  if (autoModeAbortController.value) {
+    autoModeAbortController.value.aborted = true
+  }
+  autoModeAbortController.value = { aborted: false }
+  const token = autoModeAbortController.value
+
+  while (!token.aborted) {
+    for (let i = 0; i < items.length; i++) {
+      if (token.aborted) break
+      currentTileIndex.value = i
+      await speakTextFn(items[i].title) // speakText returns Promise
+      // wait but abortable
+      await new Promise<void>(res => {
+        const id = setSafeTimeout(() => res(), delay)
+        // Don't add to timers array as it's managed by setSafeTimeout
+      })
+      if (token.aborted) break
+    }
+  }
+}
+
+const stopAutoLoop = () => {
+  if (autoModeAbortController.value) {
+    autoModeAbortController.value.aborted = true
+  }
+  clearAllTimers()
+}
 
 // Use umgebung assessment composable
 const {
@@ -238,6 +306,12 @@ const {
 
 // Ensure currentTileIndex starts at 0
 currentTileIndex.value = 0
+
+// Computed property for TTS state
+const isSpeaking = computed(() => {
+  // Check if TTS is currently active
+  return window.speechSynthesis?.speaking || false
+})
 
 // Computed properties
 const currentSubRegions = computed(() => {
@@ -274,11 +348,11 @@ const getSubRegionTitle = (mainRegionId: string | null) => {
   
   // Return the main title for each category
   switch (mainRegionId) {
-    case 'bett':
+    case ID_BETT:
       return 'Wählen Sie einen Bett-Bereich aus'
-    case 'zimmer':
+    case ID_ZIMMER:
       return 'Wählen Sie einen Zimmer-Bereich aus'
-    case 'gegenstaende':
+    case ID_GEGENSTAENDE:
       return 'Wählen Sie einen Gegenstand aus'
     default:
       return 'Wählen Sie eine Option aus'
@@ -288,48 +362,42 @@ const getSubRegionTitle = (mainRegionId: string | null) => {
 const getSubSubRegionTitle = (subRegionId: string | null) => {
   if (!subRegionId) return ''
   
-  // Return the verb title for each sub-region
-  switch (subRegionId) {
-    case 'decke':
-    case 'kissen':
-    case 'bettbezug':
-    case 'fernbedienung':
-      return `Was soll mit ${getSubRegionItemTitle(subRegionId)} gemacht werden?`
-    case 'tuer':
-    case 'fenster':
-    case 'licht':
-    case 'bett':
-    case 'tisch':
-    case 'stuhl':
-    case 'fernseher':
-    case 'vorhang':
-    case 'schrank':
-      return `Was soll mit ${getSubRegionItemTitle(subRegionId)} gemacht werden?`
-    case 'handy':
-    case 'glas':
-    case 'brille':
-    case 'stift':
-    case 'papier':
-    case 'lineal':
-    case 'teller':
-    case 'besteck':
-    case 'tisch':
-      return `Was soll mit ${getSubRegionItemTitle(subRegionId)} gemacht werden?`
-    default:
-      return 'Wählen Sie eine Option aus'
-  }
+  const subRegion = currentSubRegions.value.find(region => region.id === subRegionId)
+  if (!subRegion) return ''
+  
+  // Use centralized grammar utility for dative case (mit)
+  const articles = getArticles(subRegion.gender)
+  const article = articles.dat
+  
+  return `Was soll mit ${article} ${subRegion.title} gemacht werden?`
 }
 
 const getSubRegionItemTitle = (subRegionId: string | null) => {
   if (!subRegionId) return ''
   const subRegion = currentSubRegions.value.find(region => region.id === subRegionId)
+  // Für Karussell: nur den Titel ohne Artikel
+  return subRegion ? subRegion.title : subRegionId
+}
+
+const getSubRegionItemTitleWithArticle = (subRegionId: string | null) => {
+  if (!subRegionId) return ''
+  const subRegion = currentSubRegions.value.find(region => region.id === subRegionId)
+  // Für Confirmation: mit Artikel
   return subRegion ? (subRegion.ttsText || subRegion.title) : subRegionId
 }
 
 const getSubSubRegionItemTitle = (subSubRegionId: string | null) => {
   if (!subSubRegionId) return ''
   const subSubRegion = currentSubSubRegions.value.find(region => region.id === subSubRegionId)
-  return subSubRegion ? (subSubRegion.ttsText || subSubRegion.title) : subSubRegionId
+  // Für Verben-Karussell: nur den Titel ohne Artikel
+  return subSubRegion ? subSubRegion.title : subSubRegionId
+}
+
+const getSubSubRegionItemTitleWithArticle = (subSubRegionId: string | null) => {
+  if (!subSubRegionId) return ''
+  const subSubRegion = currentSubSubRegions.value.find(region => region.id === subSubRegionId)
+  // Für Confirmation: nur den Titel ohne Artikel (Verben haben keine Artikel)
+  return subSubRegion ? subSubRegion.title : subSubRegionId
 }
 
 const getConfirmationTitle = () => {
@@ -338,15 +406,15 @@ const getConfirmationTitle = () => {
 
 const getConfirmationText = () => {
   const mainRegion = selectedMainRegion.value
-  const subRegionTitle = getSubRegionItemTitle(selectedSubRegion.value)
-  const subSubRegionTitle = getSubSubRegionItemTitle(selectedSubSubRegion.value)
+  const subRegion = currentSubRegions.value.find(region => region.id === selectedSubRegion.value)
+  const subSubRegion = currentSubSubRegions.value.find(region => region.id === selectedSubSubRegion.value)
   
-  if (selectedSubSubRegion.value) {
-    // Verb + Item Kombination
-    return `Bitte ${subRegionTitle} ${subSubRegionTitle}`
-  } else if (selectedSubRegion.value) {
-    // Nur Item
-    return `${subRegionTitle} ausgewählt`
+  if (selectedSubSubRegion.value && subRegion && subSubRegion) {
+    // Use centralized grammar utility for confirmation text
+    return buildConfirmationText(subRegion, subSubRegion)
+  } else if (selectedSubRegion.value && subRegion) {
+    // Only item with article
+    return `${subRegion.ttsText || subRegion.title} ausgewählt`
   } else {
     return 'Auswahl erfasst'
   }
@@ -355,6 +423,10 @@ const getConfirmationText = () => {
 // Navigation functions
 const selectMainRegion = async (regionId: string) => {
   console.log('Selecting main region:', regionId)
+  
+  // TTS stoppen bevor View wechselt
+  stopAutoMode()
+  stopAutoLoop() // Clear all timers
   
   if (!hasUserInteracted.value) {
     hasUserInteracted.value = true
@@ -376,7 +448,11 @@ const selectMainRegion = async (regionId: string) => {
 const selectSubRegion = async (subRegionId: string) => {
   console.log('Selecting sub region:', subRegionId)
   
-  if (subRegionId === 'zurueck') {
+  // TTS stoppen bevor View wechselt
+  stopAutoMode()
+  stopAutoLoop() // Clear all timers
+  
+  if (subRegionId === ID_BACK) {
     // Zurück zu den Hauptregionen
     currentState.value = 'mainView'
     currentTileIndex.value = 0
@@ -399,7 +475,11 @@ const selectSubRegion = async (subRegionId: string) => {
 const selectSubSubRegion = async (subSubRegionId: string) => {
   console.log('Selecting sub-sub region:', subSubRegionId)
   
-  if (subSubRegionId === 'zurueck') {
+  // TTS stoppen bevor View wechselt
+  stopAutoMode()
+  stopAutoLoop() // Clear all timers
+  
+  if (subSubRegionId === ID_BACK) {
     // Zurück zu den Sub-Regionen
     currentState.value = 'subRegionView'
     currentTileIndex.value = 0
@@ -417,13 +497,13 @@ const selectSubSubRegion = async (subSubRegionId: string) => {
   console.log(`Auswahl erfasst: ${subRegionTitle} ${subSubRegionTitle} - TTS removed`)
   
   // TTS für Bestätigung - spezifisch für jede Kategorie
-  setTimeout(() => {
-    const confirmationText = `Bitte ${subRegionTitle} ${subSubRegionTitle}`
+  setSafeTimeout(() => {
+    const confirmationText = getConfirmationText()
     speakText(confirmationText)
   }, 500)
   
   // After confirmation, return to main view after 6.5 seconds
-  setTimeout(() => {
+  setSafeTimeout(() => {
     resetToMainView()
   }, 6500)
 }
@@ -503,71 +583,34 @@ const handleSubSubRegionSelection = (item: any) => {
   }
 }
 
-// Auto-Mode für Sub-Region View - wie Pain-Dialog: TTS, dann Pause, dann Karussell
+// Auto-Mode für Sub-Region View - mit cancelable loop
 const startSubRegionAutoMode = () => {
   if (currentSubRegions.value.length === 0) return
   
   console.log('Starting sub-region auto-mode with', currentSubRegions.value.length, 'items')
   
-  // Erst TTS für Sub-Region Titel
-  setTimeout(async () => {
-    const subRegionTitle = getSubRegionItemTitle(selectedMainRegion.value)
-    await speakText(subRegionTitle)
-  }, 1000)
-  
-  // Dann Pause (3 Sekunden) und Karussell starten
-  setTimeout(() => {
-    console.log('Sub-region TTS completed, starting Karussell after pause')
-    const cycleSubRegions = () => {
-      if (currentState.value !== 'subRegionView') return
-      
-      const currentItem = currentSubRegions.value[currentTileIndex.value]
-      if (currentItem) {
-        speakText(currentItem.ttsText || currentItem.title)
-      }
-      
-      currentTileIndex.value = (currentTileIndex.value + 1) % currentSubRegions.value.length
-      
-      setTimeout(cycleSubRegions, 3000)
-    }
-    
-    cycleSubRegions()
-  }, 4000) // 1s TTS + 3s Pause = 4s
+  // Start cancelable auto-loop
+  runAutoLoop(currentSubRegions.value, speakText, 3000)
 }
 
-// Auto-Mode für Sub-Sub-Region View - wie Pain-Dialog: TTS, dann Pause, dann Karussell
+// Auto-Mode für Sub-Sub-Region View - mit cancelable loop
 const startSubSubRegionAutoMode = () => {
   if (currentSubSubRegions.value.length === 0) return
   
   console.log('Starting sub-sub-region auto-mode with', currentSubSubRegions.value.length, 'items')
   
-  // Erst TTS für Sub-Sub-Region Titel
-  setTimeout(async () => {
-    const subSubRegionTitle = getSubSubRegionItemTitle(selectedSubRegion.value)
-    await speakText(subSubRegionTitle)
-  }, 1000)
-  
-  // Dann Pause (3 Sekunden) und Karussell starten
-  setTimeout(() => {
-    console.log('Sub-sub-region TTS completed, starting Karussell after pause')
-    const cycleSubSubRegions = () => {
-      if (currentState.value !== 'subSubRegionView') return
-      
-      const currentItem = currentSubSubRegions.value[currentTileIndex.value]
-      if (currentItem) {
-        speakText(currentItem.ttsText || currentItem.title)
-      }
-      
-      currentTileIndex.value = (currentTileIndex.value + 1) % currentSubSubRegions.value.length
-      
-      setTimeout(cycleSubSubRegions, 3000)
-    }
-    
-    cycleSubSubRegions()
-  }, 4000) // 1s TTS + 3s Pause = 4s
+  // Start cancelable auto-loop
+  runAutoLoop(currentSubSubRegions.value, speakText, 3000)
 }
 
 const resetToMainView = async () => {
+  // TTS stoppen bevor View wechselt
+  stopAutoMode()
+  stopAutoLoop() // Clear all timers
+  
+  // Flag setzen, dass wir zur Hauptansicht zurückkehren
+  isReturningToMain.value = true
+  
   currentState.value = 'mainView'
   currentTileIndex.value = 0
   selectedMainRegion.value = null
@@ -577,17 +620,18 @@ const resetToMainView = async () => {
   console.log('Was möchten Sie an ihrer Umgebung verändern? - TTS removed')
   
   // TTS für Zurück zum Hauptmenü
-  setTimeout(() => {
+  setSafeTimeout(() => {
     speakText('Zurück zum Hauptmenü')
   }, 500)
   
-  // Start auto-mode for main regions
-  setTimeout(() => {
-    startAutoMode(mainRegions, 1000, 3000)
-  }, 2000)
+  // Das Watch-System wird automatisch das Auto-Mode starten, daher hier nichts mehr
 }
 
 const resetToSubRegionView = async () => {
+  // TTS stoppen bevor View wechselt
+  stopAutoMode()
+  stopAutoLoop() // Clear all timers
+  
   currentState.value = 'subRegionView'
   currentTileIndex.value = 0
   selectedSubRegion.value = null
@@ -596,12 +640,12 @@ const resetToSubRegionView = async () => {
   console.log('Zurück zu den Sub-Regionen - TTS removed')
   
   // TTS für Zurück zu den Sub-Regionen
-  setTimeout(() => {
+  setSafeTimeout(() => {
     speakText('Zurück zu den Sub-Regionen')
   }, 500)
   
   // Start auto-mode for sub regions
-  setTimeout(() => {
+  setSafeTimeout(() => {
     startAutoMode(currentSubRegions.value, 1000, 3000)
   }, 2000)
 }
@@ -744,6 +788,7 @@ onUnmounted(() => {
     cleanup()
   }
   stopAutoMode()
+  stopAutoLoop() // Clear all timers
   
   // Remove keyboard navigation
   document.removeEventListener('keydown', handleKeydown)
@@ -753,6 +798,7 @@ onUnmounted(() => {
 watch(currentState, (newState) => {
   console.log('State changed to:', newState)
   stopAutoMode()
+  stopAutoLoop() // Clear all timers when state changes
   
   // Clean up previous lifecycle
   if (cleanup) {
@@ -766,31 +812,39 @@ watch(currentState, (newState) => {
   switch (newState) {
     case 'mainView':
       console.log('Setting up main view with', mainRegions.length, 'regions')
-      cleanup = setupLifecycle(mainRegions, handleMainRegionSelection)
+      // Nur setupLifecycle wenn nicht von resetToMainView aufgerufen
+      if (!isReturningToMain.value) {
+        cleanup = setupLifecycle(mainRegions, handleMainRegionSelection)
+      } else {
+        // Flag zurücksetzen
+        isReturningToMain.value = false
+      }
       break
     case 'subRegionView':
       console.log('Setting up sub region view with', currentSubRegions.value.length, 'sub-regions')
-      // Erst den korrekten Titel mit Bereich vorlesen
-      setTimeout(() => {
-        const mainRegionTitle = getMainRegionTitle(selectedMainRegion.value)
-        speakText(`Wählen Sie eine ${mainRegionTitle}option aus`)
+      // Erst den korrekten Titel vorlesen
+      setSafeTimeout(() => {
+        const subRegionTitle = getSubRegionTitle(selectedMainRegion.value)
+        speakText(subRegionTitle)
       }, 1000)
-      // Dann Auto-Mode für Sub-Regions starten
-      setTimeout(() => {
+      // Dann Auto-Mode für Sub-Regions starten (nach Titel-TTS)
+      setSafeTimeout(() => {
+        // Setup lifecycle für Blink und Rechtsklick (überschreibt Auto-Mode)
         cleanup = setupLifecycle(currentSubRegions.value, handleSubRegionSelection)
-      }, 4000)
+      }, 4000) // 1s Titel-TTS + 3s Pause = 4s
       break
     case 'subSubRegionView':
       console.log('Setting up sub-sub region view with', currentSubSubRegions.value.length, 'sub-sub-regions')
-      // Erst den korrekten Titel mit Bereich vorlesen
-      setTimeout(() => {
-        const subRegionTitle = getSubRegionItemTitle(selectedSubRegion.value)
-        speakText(`Was soll mit ${subRegionTitle} gemacht werden?`)
+      // Erst den korrekten Titel vorlesen
+      setSafeTimeout(() => {
+        const subSubRegionTitle = getSubSubRegionTitle(selectedSubRegion.value)
+        speakText(subSubRegionTitle)
       }, 1000)
-      // Dann Auto-Mode für Sub-Sub-Regions starten
-      setTimeout(() => {
+      // Dann Auto-Mode für Sub-Sub-Regions starten (nach Titel-TTS)
+      setSafeTimeout(() => {
+        // Setup lifecycle für Blink und Rechtsklick (überschreibt Auto-Mode)
         cleanup = setupLifecycle(currentSubSubRegions.value, handleSubSubRegionSelection)
-      }, 4000)
+      }, 4000) // 1s Titel-TTS + 3s Pause = 4s
       break
     case 'confirmation':
       console.log('Confirmation view - no auto-mode needed')
