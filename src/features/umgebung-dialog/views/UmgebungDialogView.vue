@@ -307,11 +307,38 @@ const {
 // Ensure currentTileIndex starts at 0
 currentTileIndex.value = 0
 
-// Computed property for TTS state
-const isSpeaking = computed(() => {
-  // Check if TTS is currently active
-  return window.speechSynthesis?.speaking || false
-})
+// Direct TTS implementation as fallback
+const speakTextDirect = async (text: string): Promise<void> => {
+  return new Promise((resolve, reject) => {
+    if (!window.speechSynthesis) {
+      console.error('Speech synthesis not supported')
+      reject(new Error('Speech synthesis not supported'))
+      return
+    }
+
+    // Stop any ongoing speech
+    window.speechSynthesis.cancel()
+
+    const utterance = new SpeechSynthesisUtterance(text)
+    utterance.lang = 'de-DE'
+    utterance.rate = 0.8
+    utterance.pitch = 1.0
+    utterance.volume = 1.0
+
+    utterance.onend = () => {
+      console.log('Direct TTS completed:', text)
+      resolve()
+    }
+
+    utterance.onerror = (event) => {
+      console.error('Direct TTS error:', event.error)
+      reject(new Error(event.error))
+    }
+
+    console.log('Speaking directly:', text)
+    window.speechSynthesis.speak(utterance)
+  })
+}
 
 // Computed properties
 const currentSubRegions = computed(() => {
@@ -409,13 +436,25 @@ const getConfirmationText = () => {
   const subRegion = currentSubRegions.value.find(region => region.id === selectedSubRegion.value)
   const subSubRegion = currentSubSubRegions.value.find(region => region.id === selectedSubSubRegion.value)
   
+  console.log('Debug confirmation text generation:')
+  console.log('- selectedMainRegion:', mainRegion)
+  console.log('- selectedSubRegion:', selectedSubRegion.value)
+  console.log('- selectedSubSubRegion:', selectedSubSubRegion.value)
+  console.log('- subRegion found:', subRegion)
+  console.log('- subSubRegion found:', subSubRegion)
+  
   if (selectedSubSubRegion.value && subRegion && subSubRegion) {
     // Use centralized grammar utility for confirmation text
-    return buildConfirmationText(subRegion, subSubRegion)
+    const result = buildConfirmationText(subRegion, subSubRegion)
+    console.log('- Generated confirmation text:', result)
+    return result
   } else if (selectedSubRegion.value && subRegion) {
     // Only item with article
-    return `${subRegion.ttsText || subRegion.title} ausgewählt`
+    const result = `${subRegion.ttsText || subRegion.title} ausgewählt`
+    console.log('- Generated item-only text:', result)
+    return result
   } else {
+    console.log('- Using fallback text')
     return 'Auswahl erfasst'
   }
 }
@@ -497,15 +536,46 @@ const selectSubSubRegion = async (subSubRegionId: string) => {
   console.log(`Auswahl erfasst: ${subRegionTitle} ${subSubRegionTitle} - TTS removed`)
   
   // TTS für Bestätigung - spezifisch für jede Kategorie
-  setSafeTimeout(() => {
-    const confirmationText = getConfirmationText()
-    speakText(confirmationText)
-  }, 500)
+  console.log('Starting confirmation TTS process...')
   
-  // After confirmation, return to main view after 6.5 seconds
-  setSafeTimeout(() => {
-    resetToMainView()
-  }, 6500)
+  // Use immediate execution instead of setTimeout to avoid timer conflicts
+  const executeConfirmationTTS = async () => {
+    const confirmationText = getConfirmationText()
+    console.log('Speaking confirmation text:', confirmationText)
+    
+    try {
+      // Try direct TTS first, fallback to composable TTS
+      await speakTextDirect(confirmationText)
+      console.log('Direct TTS completed successfully')
+      
+      // Wait a bit longer after TTS completion before returning
+      await new Promise(resolve => setTimeout(resolve, 2000)) // 2 seconds pause after TTS
+      console.log('TTS completed, returning to main view')
+      resetToMainView()
+      
+    } catch (error) {
+      console.error('Direct TTS failed, trying composable TTS:', error)
+      try {
+        await speakText(confirmationText)
+        console.log('Composable TTS completed successfully')
+        
+        // Wait a bit longer after TTS completion before returning
+        await new Promise(resolve => setTimeout(resolve, 2000)) // 2 seconds pause after TTS
+        console.log('TTS completed, returning to main view')
+        resetToMainView()
+        
+      } catch (composableError) {
+        console.error('Both TTS methods failed:', composableError)
+        // Even if TTS fails, wait a bit before returning
+        await new Promise(resolve => setTimeout(resolve, 2000))
+        console.log('TTS failed, returning to main view anyway')
+        resetToMainView()
+      }
+    }
+  }
+  
+  // Execute immediately
+  executeConfirmationTTS()
 }
 
 // Click Handlers
