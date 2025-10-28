@@ -141,7 +141,7 @@ export function useIchDialogFlow() {
       currentTileIndex.value = 0
     } else {
       // Zurück zur Hauptanwendung
-      router.push('/')
+      router.push('/app')
     }
   }
 
