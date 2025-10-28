@@ -21,15 +21,6 @@
   transition: color 0.3s ease;
 }
 
-.settings-dialog .current-setting {
-  font-family: 'Source Code Pro', monospace;
-  font-size: 1.5rem;
-  font-weight: 500;
-  color: var(--accent-color);
-  margin: 0 0 2rem 0;
-  text-align: center;
-  transition: color 0.3s ease;
-}
 
 /* === GRID CONTAINER STYLES === */
 .settings-dialog .grid-container {
@@ -64,9 +55,9 @@
 }
 
 .settings-dialog .tile-icon-container {
-  width: clamp(80px, 12vw, 150px);
-  height: clamp(80px, 12vw, 150px);
-  margin-bottom: clamp(0.5rem, 1vw, 1rem);
+  width: clamp(80px, 10vw, 160px);
+  height: clamp(80px, 10vw, 160px);
+  margin-bottom: clamp(0.5rem, 1vw, 1.5rem);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -85,8 +76,8 @@
 }
 
 .settings-dialog .tile-icon {
-  width: clamp(80px, 12vw, 150px);
-  height: clamp(80px, 12vw, 150px);
+  width: clamp(80px, 10vw, 160px);
+  height: clamp(80px, 10vw, 160px);
   transition: all 0.8s ease-in-out;
   object-fit: contain;
 }
@@ -411,10 +402,6 @@
     margin-bottom: 1rem;
   }
   
-  .settings-dialog .current-setting {
-    font-size: 1.2rem;
-    margin-bottom: 1.5rem;
-  }
   
   .settings-dialog .grid-container {
     grid-template-columns: repeat(2, 1fr);
@@ -428,14 +415,14 @@
   }
   
   .settings-dialog .tile-icon-container {
-    width: 50px;
-    height: 50px;
-    margin-bottom: 0.5rem;
+    width: 90px;
+    height: 90px;
+    margin-bottom: 0.1rem;
   }
   
   .settings-dialog .tile-icon {
-    width: 50px;
-    height: 50px;
+    width: 75px;
+    height: 75px;
   }
   
   .settings-dialog .tile-text {
@@ -510,11 +497,6 @@
     font-weight: 600;
   }
   
-  .settings-dialog .current-setting {
-    font-size: 1rem;
-    margin: 0 0 1rem 0;
-    line-height: 1.2;
-  }
   
   .settings-dialog .grid-container {
     grid-template-columns: repeat(2, 1fr);
@@ -532,14 +514,14 @@
   }
   
   .settings-dialog .tile-icon-container {
-    width: clamp(40px, 8vw, 50px);
-    height: clamp(40px, 8vw, 50px);
-    margin-bottom: 0.3rem;
+    width: clamp(75px, 10vw, 90px);
+    height: clamp(75px, 10vw, 90px);
+    margin-bottom: 0.1rem;
   }
   
   .settings-dialog .tile-icon {
-    width: clamp(40px, 8vw, 50px);
-    height: clamp(40px, 8vw, 50px);
+    width: clamp(75px, 10vw, 75px);
+    height: clamp(75px, 10vw, 75px);
   }
   
   .settings-dialog .tile-text {

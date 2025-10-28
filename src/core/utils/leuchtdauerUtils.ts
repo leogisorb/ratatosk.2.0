@@ -23,7 +23,7 @@ export function getLeuchtdauer(viewName: string, customDuration?: number): numbe
   }
   
   // Verwende die globale Leuchtdauer aus den Settings
-  const globalLeuchtdauer = settingsStore.settings.leuchtdauer || 3
+  const globalLeuchtdauer = settingsStore.settings.leuchtdauer || 2
   console.log(`LeuchtdauerUtils: ${viewName} verwendet globale Leuchtdauer: ${globalLeuchtdauer}s`)
   return globalLeuchtdauer * 1000 // Konvertiere zu Millisekunden
 }
@@ -65,7 +65,7 @@ export function getCSSLeuchtdauer(viewName: string, customDuration?: number): nu
   }
   
   // Für CSS verwende die globale Leuchtdauer direkt in Sekunden
-  const globalLeuchtdauer = settingsStore.settings.leuchtdauer || 3
+  const globalLeuchtdauer = settingsStore.settings.leuchtdauer || 2
   console.log(`LeuchtdauerUtils: ${viewName} CSS verwendet globale Leuchtdauer: ${globalLeuchtdauer}s`)
   return globalLeuchtdauer
 }

@@ -132,7 +132,7 @@ export function usePainAssessment() {
   }
 
   // Navigation helpers
-  const navigateBack = (route: string = '/') => {
+  const navigateBack = (route: string = '/app') => {
     stopAutoMode()
     router.push(route)
   }

@@ -4,6 +4,14 @@ import { useSettingsStore } from '../../settings/stores/settings'
 import { useFaceRecognition } from '../../face-recognition/composables/useFaceRecognition'
 import { simpleFlowController } from '../../../core/application/SimpleFlowController'
 
+// Import icons
+import leuchtdauerIcon from '@/assets/leuchtdauer.svg'
+import blinzeldauerIcon from '@/assets/blinzeldauer.svg'
+import farbmodusIcon from '@/assets/farbmodus.svg'
+import kameraIcon from '@/assets/kamera.svg'
+import kamerapositionIcon from '@/assets/kameraposition.svg'
+import impressumIcon from '@/assets/impressum.svg'
+
 export function useSettingsDialogLogic() {
   // Router
   const router = useRouter()
@@ -68,37 +76,37 @@ export function useSettingsDialogLogic() {
     {
       id: 'leuchtdauer',
       title: 'LEUCHTDAUER',
-      icon: '/settings-sliders.svg',
+      icon: leuchtdauerIcon,
       category: 'settings' as const
     },
     {
       id: 'blitzdauer',
       title: 'BLITZDAUER',
-      icon: '/settings-sliders.svg',
+      icon: blinzeldauerIcon,
       category: 'settings' as const
     },
     {
       id: 'farbmodus',
       title: 'FARBMODUS',
-      icon: '/settings-sliders.svg',
+      icon: farbmodusIcon,
       category: 'settings' as const
     },
     {
       id: 'kamera',
       title: 'KAMERA',
-      icon: '/settings-sliders.svg',
+      icon: kameraIcon,
       category: 'settings' as const
     },
     {
       id: 'kamerapositionen',
       title: 'KAMERAPOSITIONEN',
-      icon: '/settings-sliders.svg',
+      icon: kamerapositionIcon,
       category: 'settings' as const
     },
     {
       id: 'impressum',
       title: 'IMPRESSUM',
-      icon: '/Einstellungen.svg',
+      icon: impressumIcon,
       category: 'settings' as const
     }
   ]
@@ -106,11 +114,11 @@ export function useSettingsDialogLogic() {
   // Settings Options für jede Kategorie - basierend auf den alten Views
   const settingsOptions = {
     leuchtdauer: [
-      { id: 'normal', title: 'Normal', description: '3 Sekunden', value: 3, emoji: '⚡' },
-      { id: 'langsam', title: 'Langsam', description: '4 Sekunden', value: 4, emoji: '🐌' },
-      { id: 'sehr-langsam', title: 'Sehr langsam', description: '5 Sekunden', value: 5, emoji: '🐢' },
-      { id: 'lang', title: 'Lang', description: '6 Sekunden', value: 6, emoji: '⏰' },
-      { id: 'sehr-lang', title: 'Sehr lang', description: '7 Sekunden', value: 7, emoji: '⏳' },
+      { id: 'schnell', title: 'Schnell', description: '1,5 Sekunden', value: 1.5, emoji: '⚡' },
+      { id: 'normal', title: 'Normal', description: '2 Sekunden', value: 2, emoji: '⚡' },
+      { id: 'langsam', title: 'Langsam', description: '3 Sekunden', value: 3, emoji: '🐌' },
+      { id: 'sehr-langsam', title: 'Sehr langsam', description: '4 Sekunden', value: 4, emoji: '🐢' },
+      { id: 'lang', title: 'Lang', description: '5 Sekunden', value: 5, emoji: '⏰' },
       { id: 'zurueck', title: 'Zurück', description: '', value: null, emoji: '↩️' }
     ],
     blitzdauer: [
@@ -126,8 +134,8 @@ export function useSettingsDialogLogic() {
       { id: 'zurueck', title: 'Zurück', description: '', value: null, emoji: '↩️' }
     ],
     kamera: [
-      { id: 'ein', title: 'Ein', description: 'Kamera aktivieren', value: true, emoji: '📹' },
-      { id: 'aus', title: 'Aus', description: 'Kamera deaktivieren', value: false, emoji: '📷' },
+      { id: 'ein', title: 'KAMERA EIN', description: 'Kamera aktivieren', value: true, emoji: '📹' },
+      { id: 'aus', title: 'KAMERA AUS', description: 'Kamera deaktivieren', value: false, emoji: '📷' },
       { id: 'zurueck', title: 'Zurück', description: '', value: null, emoji: '↩️' }
     ],
     kamerapositionen: [

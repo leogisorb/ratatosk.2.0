@@ -51,10 +51,7 @@
         <!-- Settings Options View -->
         <div v-if="currentState === 'optionsView'">
           <div class="main-title">
-            {{ getCategoryTitle(selectedCategory) }}
-          </div>
-          <div class="current-setting">
-            Aktuell: {{ getCurrentValue(selectedCategory) }}
+            {{ getCategoryTitle(selectedCategory) }} - Aktuell: {{ getCurrentValue(selectedCategory) }}
           </div>
 
           <!-- Karussell Wrapper für vertikale Zentrierung -->

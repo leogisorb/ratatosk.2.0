@@ -400,8 +400,8 @@ const handleSubRegionSelection = (item: any) => {
 
 const goBack = () => {
   console.log('Going back to main app')
-  // Navigate to pain-dialog route
-  router.push('/pain-dialog')
+  // Navigate to app route
+  router.push('/app')
 }
 
 const goToSubRegion = (index: number) => {
