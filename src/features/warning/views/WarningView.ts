@@ -241,17 +241,22 @@ export function useWarningViewLogic() {
       await delay(2000)
     }
     
-    // Nach 4 Sekunden → automatisch zu Zurück-Button (Loop startet)
-    console.log('Setting timer for 4 seconds to go to back button')
-    setTimer(() => {
-      console.log('Bell timer fired! Current state:', currentState.value)
-      if (currentState.value === WarningState.BELL_IDLE) {
-        console.log('No interaction after 4 seconds - starting loop with back button')
-        transitionTo(WarningState.BACK_ACTIVE)
-      } else {
-        console.log('Bell state changed during timer, not switching to back button')
-      }
-    }, LOOP_INTERVAL)
+    // Auto-Mode: Nach 4 Sekunden → automatisch zu Zurück-Button (Loop startet)
+    // Nur wenn kein Warngesräusch läuft
+    if (!isAlarmActive.value) {
+      console.log('Setting timer for 4 seconds to go to back button')
+      setTimer(() => {
+        console.log('Bell timer fired! Current state:', currentState.value)
+        if (currentState.value === WarningState.BELL_IDLE && !isAlarmActive.value) {
+          console.log('No interaction after 4 seconds - starting loop with back button')
+          transitionTo(WarningState.BACK_ACTIVE)
+        } else {
+          console.log('Bell state changed during timer or alarm active, not switching to back button')
+        }
+      }, LOOP_INTERVAL)
+    } else {
+      console.log('Auto-Mode übersprungen - Warngesräusch läuft bereits')
+    }
   }
 
   // Schritt 3: Glocke spielt Warnton
@@ -260,12 +265,9 @@ export function useWarningViewLogic() {
     statusText.value = "Warngeräusch läuft..."
     startContinuousAlarm()
     
-    // Nach 3 Sekunden → automatisch zu Zurück-Button
-    setTimer(() => {
-      if (currentState.value === WarningState.BELL_PLAYING) {
-        transitionTo(WarningState.BACK_ACTIVE)
-      }
-    }, 3000)
+    // WICHTIG: Kein Auto-Mode während Warngesräusch läuft!
+    // Der Durchlauf wird gestoppt, bis das Warngesräusch deaktiviert wird
+    console.log('Auto-Mode gestoppt während Warngesräusch läuft')
   }
 
   // Schritt 4: Zurück-Button aktiv
@@ -288,22 +290,33 @@ export function useWarningViewLogic() {
       await delay(2000)
     }
     
-    // Nach 4 Sekunden → zurück zu Glocke (Loop fortsetzen)
-    console.log('Setting timer for 4 seconds to go back to bell')
-    setTimer(() => {
-      console.log('Back button timer fired! Current state:', currentState.value)
-      if (currentState.value === WarningState.BACK_ACTIVE) {
-        console.log('Loop continuing - back to bell')
-        transitionTo(WarningState.BELL_IDLE)
-      } else {
-        console.log('State changed during back button timer, not switching to bell')
-      }
-    }, LOOP_INTERVAL)
+    // Auto-Mode: Nach 4 Sekunden → zurück zu Glocke (Loop fortsetzen)
+    // Nur wenn kein Warngesräusch läuft
+    if (!isAlarmActive.value) {
+      console.log('Setting timer for 4 seconds to go back to bell')
+      setTimer(() => {
+        console.log('Back button timer fired! Current state:', currentState.value)
+        if (currentState.value === WarningState.BACK_ACTIVE && !isAlarmActive.value) {
+          console.log('Loop continuing - back to bell')
+          transitionTo(WarningState.BELL_IDLE)
+        } else {
+          console.log('State changed during back button timer or alarm active, not switching to bell')
+        }
+      }, LOOP_INTERVAL)
+    } else {
+      console.log('Auto-Mode übersprungen - Warngesräusch läuft bereits')
+    }
   }
 
   // ===== USER INTERACTION =====
   const handleUserInput = async () => {
     console.log('User input detected in state:', currentState.value)
+    
+    // Nur für aktive States reagieren
+    if (currentState.value === WarningState.GREETING) {
+      console.log('User input ignored during greeting state')
+      return
+    }
     
     // Stoppe alle Timer und TTS
     clearTimers()
@@ -313,6 +326,8 @@ export function useWarningViewLogic() {
       case WarningState.BELL_IDLE:
         // Erster Blinzler/Klick: Startet Warngeräusch
         console.log('Bell activated - starting alarm')
+        // Stoppe alle Timer (Auto-Mode wird gestoppt)
+        clearTimers()
         transitionTo(WarningState.BELL_PLAYING)
         break
         
@@ -320,7 +335,12 @@ export function useWarningViewLogic() {
         // Zweiter Blinzler/Klick: Stoppt Warngeräusch
         console.log('Bell deactivated - stopping alarm')
         stopContinuousAlarm()
-        transitionTo(WarningState.BACK_ACTIVE)
+        // 2 Sekunden Pause nach Stoppen des Warngesräuschs
+        console.log('Waiting 2 seconds before resuming auto-mode')
+        setTimer(() => {
+          console.log('Pause finished - resuming auto-mode')
+          transitionTo(WarningState.BACK_ACTIVE)
+        }, 2000)
         break
         
       case WarningState.BACK_ACTIVE:
@@ -354,6 +374,45 @@ export function useWarningViewLogic() {
     }
   }
 
+  // ===== TOUCH EVENT HANDLERS =====
+  const handleTouchStart = (event: TouchEvent) => {
+    // Nur Touch-Events für aktive States verarbeiten
+    const target = event.target as HTMLElement
+    const bellButton = target.closest('.bell-button')
+    const backButton = target.closest('.back-action-button')
+    
+    if (bellButton && (currentState.value === WarningState.BELL_IDLE || currentState.value === WarningState.BELL_PLAYING)) {
+      console.log('WarningView: Touch start on active bell button')
+      // Touch-Events werden normal verarbeitet
+    } else if (backButton && currentState.value === WarningState.BACK_ACTIVE) {
+      console.log('WarningView: Touch start on active back button')
+      // Touch-Events werden normal verarbeitet
+    } else {
+      console.log('WarningView: Touch start on inactive element - ignoring')
+      event.preventDefault()
+      event.stopPropagation()
+    }
+  }
+
+  const handleTouchEnd = (event: TouchEvent) => {
+    // Nur Touch-Events für aktive States verarbeiten
+    const target = event.target as HTMLElement
+    const bellButton = target.closest('.bell-button')
+    const backButton = target.closest('.back-action-button')
+    
+    if (bellButton && (currentState.value === WarningState.BELL_IDLE || currentState.value === WarningState.BELL_PLAYING)) {
+      console.log('WarningView: Touch end on active bell button')
+      handleUserInput()
+    } else if (backButton && currentState.value === WarningState.BACK_ACTIVE) {
+      console.log('WarningView: Touch end on active back button')
+      handleUserInput()
+    } else {
+      console.log('WarningView: Touch end on inactive element - ignoring')
+      event.preventDefault()
+      event.stopPropagation()
+    }
+  }
+
   // Event Listener Setup (wird von Vue-Komponente aufgerufen)
   const setupWarningSystem = async () => {
     console.log('WarningView: Setting up warning system')
@@ -361,11 +420,19 @@ export function useWarningViewLogic() {
     // Event Listener für Blink- und Klick-Erkennung einrichten
     const cleanupEventListeners = setupEventListeners(handleUserInput)
     
+    // Touch Event Listener hinzufügen
+    document.addEventListener('touchstart', handleTouchStart, { passive: false })
+    document.addEventListener('touchend', handleTouchEnd, { passive: false })
+    
     // Direkt starten
     await start()
     
     // Cleanup-Funktion zurückgeben
-    return cleanupEventListeners
+    return () => {
+      cleanupEventListeners()
+      document.removeEventListener('touchstart', handleTouchStart)
+      document.removeEventListener('touchend', handleTouchEnd)
+    }
   }
 
   return {

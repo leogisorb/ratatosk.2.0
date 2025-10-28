@@ -63,7 +63,8 @@ const {
             <div 
               class="menu-tile"
               :class="currentTileIndex === 0 ? 'tile-active' : 'tile-inactive'"
-              @click="selectMenu('warning')"
+              @click="currentTileIndex === 0 ? selectMenu('warning') : null"
+              @contextmenu="currentTileIndex === 0 ? handleRightClick : null"
             >
               <div 
                 class="tile-icon-container"
@@ -89,7 +90,8 @@ const {
             <div 
               class="menu-tile"
               :class="currentTileIndex === 1 ? 'tile-active' : 'tile-inactive'"
-              @click="selectMenu('communication')"
+              @click="currentTileIndex === 1 ? selectMenu('communication') : null"
+              @contextmenu="currentTileIndex === 1 ? handleRightClick : null"
             >
               <div 
                 class="tile-icon-container"
@@ -115,7 +117,8 @@ const {
             <div 
               class="menu-tile"
               :class="currentTileIndex === 2 ? 'tile-active' : 'tile-inactive'"
-              @click="selectMenu('ich')"
+              @click="currentTileIndex === 2 ? selectMenu('ich') : null"
+              @contextmenu="currentTileIndex === 2 ? handleRightClick : null"
             >
               <div 
                 class="tile-icon-container"
@@ -141,7 +144,8 @@ const {
             <div 
               class="menu-tile"
               :class="currentTileIndex === 3 ? 'tile-active' : 'tile-inactive'"
-              @click="selectMenu('pain')"
+              @click="currentTileIndex === 3 ? selectMenu('pain') : null"
+              @contextmenu="currentTileIndex === 3 ? handleRightClick : null"
             >
               <div 
                 class="tile-icon-container"
@@ -167,7 +171,8 @@ const {
             <div 
               class="menu-tile"
               :class="currentTileIndex === 4 ? 'tile-active' : 'tile-inactive'"
-              @click="selectMenu('environment')"
+              @click="currentTileIndex === 4 ? selectMenu('environment') : null"
+              @contextmenu="currentTileIndex === 4 ? handleRightClick : null"
             >
               <div 
                 class="tile-icon-container"
@@ -193,7 +198,8 @@ const {
             <div 
               class="menu-tile"
               :class="currentTileIndex === 5 ? 'tile-active' : 'tile-inactive'"
-              @click="selectMenu('settings')"
+              @click="currentTileIndex === 5 ? selectMenu('settings') : null"
+              @contextmenu="currentTileIndex === 5 ? handleRightClick : null"
             >
               <div 
                 class="tile-icon-container"
@@ -233,7 +239,8 @@ const {
                 <div 
                   class="menu-tile"
                   :class="currentTileIndex === 0 ? 'tile-active' : 'tile-inactive'"
-                  @click="selectMenu('warning')"
+                  @click="currentTileIndex === 0 ? selectMenu('warning') : null"
+                  @contextmenu="currentTileIndex === 0 ? handleRightClick : null"
                 >
                   <div 
                     class="tile-icon-container"
@@ -259,7 +266,8 @@ const {
                 <div 
                   class="menu-tile"
                   :class="currentTileIndex === 1 ? 'tile-active' : 'tile-inactive'"
-                  @click="selectMenu('communication')"
+                  @click="currentTileIndex === 1 ? selectMenu('communication') : null"
+                  @contextmenu="currentTileIndex === 1 ? handleRightClick : null"
                 >
                   <div 
                     class="tile-icon-container"
@@ -285,7 +293,8 @@ const {
                 <div 
                   class="menu-tile"
                   :class="currentTileIndex === 2 ? 'tile-active' : 'tile-inactive'"
-                  @click="selectMenu('ich')"
+                  @click="currentTileIndex === 2 ? selectMenu('ich') : null"
+                  @contextmenu="currentTileIndex === 2 ? handleRightClick : null"
                 >
                   <div 
                     class="tile-icon-container"
@@ -311,7 +320,8 @@ const {
                 <div 
                   class="menu-tile"
                   :class="currentTileIndex === 3 ? 'tile-active' : 'tile-inactive'"
-                  @click="selectMenu('pain')"
+                  @click="currentTileIndex === 3 ? selectMenu('pain') : null"
+                  @contextmenu="currentTileIndex === 3 ? handleRightClick : null"
                 >
                   <div 
                     class="tile-icon-container"
@@ -337,7 +347,8 @@ const {
                 <div 
                   class="menu-tile"
                   :class="currentTileIndex === 4 ? 'tile-active' : 'tile-inactive'"
-                  @click="selectMenu('environment')"
+                  @click="currentTileIndex === 4 ? selectMenu('environment') : null"
+                  @contextmenu="currentTileIndex === 4 ? handleRightClick : null"
                 >
                   <div 
                     class="tile-icon-container"
@@ -363,7 +374,8 @@ const {
                 <div 
                   class="menu-tile"
                   :class="currentTileIndex === 5 ? 'tile-active' : 'tile-inactive'"
-                  @click="selectMenu('settings')"
+                  @click="currentTileIndex === 5 ? selectMenu('settings') : null"
+                  @contextmenu="currentTileIndex === 5 ? handleRightClick : null"
                 >
                   <div 
                     class="tile-icon-container"

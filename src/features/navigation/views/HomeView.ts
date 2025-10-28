@@ -18,7 +18,7 @@ export function useHomeViewLogic() {
   // Face Recognition
   const faceRecognition = useFaceRecognition()
   
-  // Alte Blinzel-Erkennung (aus alter Version)
+  // Blinzel-Erkennung - nur für aktive Kachel
   const handleFaceBlink = (event: any) => {
     console.log('HomeView: Face blink received:', event.detail)
     
@@ -28,13 +28,16 @@ export function useHomeViewLogic() {
       return
     }
     
+    // Nur für aktive Kachel reagieren
     const currentItem = menuItems[position.currentIndex]
     if (currentItem) {
-      console.log('HomeView: Blinzel für Item:', currentItem.title)
+      console.log('HomeView: Blinzel für aktive Item:', currentItem.title)
       
       // TTS + Navigation - Auto-Mode stoppt bei Interaktion
       speakText(currentItem.title)
       selectMenu(currentItem.id)
+    } else {
+      console.log('HomeView: Keine aktive Kachel für Blinzel-Interaktion')
     }
   }
 
@@ -106,7 +109,7 @@ export function useHomeViewLogic() {
       id: 'settings',
       title: 'EINSTELLUNGEN',
       icon: '/settings-sliders.svg',
-      route: '/einstellungen',
+      route: '/einstellungen-dialog',
       category: 'settings'
     }
   ]
@@ -239,21 +242,24 @@ export function useHomeViewLogic() {
   }
 
 
-  // Right-click handler
+  // Right-click handler - nur für aktive Kachel
   const handleRightClick = (event: MouseEvent) => {
     event.preventDefault()
     event.stopPropagation()
     event.stopImmediatePropagation()
+    
     console.log('HomeView: Right click detected! Current tile index:', position.currentIndex, 'Items length:', menuItems.length)
+    
+    // Nur für aktive Kachel reagieren
     const currentItem = menuItems[position.currentIndex]
     if (currentItem) {
-      console.log('HomeView: Right click activation for item:', currentItem.title)
+      console.log('HomeView: Right click activation for aktive item:', currentItem.title)
       
       // TTS + Navigation - Auto-Mode stoppt bei Interaktion
       speakText(currentItem.title)
       selectMenu(currentItem.id)
     } else {
-      console.log('HomeView: No current item found for right click')
+      console.log('HomeView: No aktive item found for right click')
     }
     return false
   }
@@ -279,17 +285,48 @@ export function useHomeViewLogic() {
     }
   }
 
-  // Touch Event Handlers (delegiert an Karussell Composable)
+  // Touch Event Handlers - nur für aktive Kachel
   const handleTouchStart = (event: TouchEvent) => {
-    handleCarouselTouchStart(event)
+    // Nur Touch-Events für aktive Kachel verarbeiten
+    const target = event.target as HTMLElement
+    const menuTile = target.closest('.menu-tile')
+    
+    if (menuTile && menuTile.classList.contains('tile-active')) {
+      console.log('HomeView: Touch start on aktive tile')
+      handleCarouselTouchStart(event)
+    } else {
+      console.log('HomeView: Touch start on inactive tile - ignoring')
+      event.preventDefault()
+      event.stopPropagation()
+    }
   }
 
   const handleTouchMove = (event: TouchEvent) => {
-    handleCarouselTouchMove(event)
+    // Nur Touch-Events für aktive Kachel verarbeiten
+    const target = event.target as HTMLElement
+    const menuTile = target.closest('.menu-tile')
+    
+    if (menuTile && menuTile.classList.contains('tile-active')) {
+      handleCarouselTouchMove(event)
+    } else {
+      event.preventDefault()
+      event.stopPropagation()
+    }
   }
 
   const handleTouchEnd = (event: TouchEvent) => {
-    handleCarouselTouchEnd(event)
+    // Nur Touch-Events für aktive Kachel verarbeiten
+    const target = event.target as HTMLElement
+    const menuTile = target.closest('.menu-tile')
+    
+    if (menuTile && menuTile.classList.contains('tile-active')) {
+      console.log('HomeView: Touch end on aktive tile')
+      handleCarouselTouchEnd(event)
+    } else {
+      console.log('HomeView: Touch end on inactive tile - ignoring')
+      event.preventDefault()
+      event.stopPropagation()
+    }
   }
 
   // Keyboard Navigation

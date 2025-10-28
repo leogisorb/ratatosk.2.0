@@ -231,6 +231,12 @@ const getSubRegionTitle = (subRegionId: string | null) => {
 const selectMainRegion = async (regionId: string) => {
   console.log('Selecting main region:', regionId)
   
+  // Spezielle Behandlung für Zurück-Kachel
+  if (regionId === 'zurueck') {
+    goBack()
+    return
+  }
+  
   // TTS removed
   if (!hasUserInteracted.value) {
     hasUserInteracted.value = true
@@ -348,7 +354,9 @@ const resetToMainView = async () => {
 // Selection handlers for different views
 const handleMainRegionSelection = (item: any) => {
   console.log('Main region selection handler called with:', item)
-  selectMainRegion(item.id)
+  if (item && item.id) {
+    selectMainRegion(item.id)
+  }
 }
 
 const handleSubRegionSelection = (item: any) => {
@@ -365,7 +373,7 @@ const handlePainLevelSelection = (item: any) => {
 
 const goBack = () => {
   console.log('PainDialogView: Going back to main app')
-  // Navigate to /app route
+  // Navigate to /app route using Vue Router
   window.location.href = '/ratatosk.2.0/app'
 }
 
@@ -447,10 +455,12 @@ watch(currentState, (newState) => {
       break
     case 'subRegionView':
       console.log('Setting up sub region view with', currentSubRegions.value.length, 'sub-regions')
-      // Erst den korrekten Titel mit Bereich vorlesen
+      // Erst den korrekten Titel mit Bereich vorlesen (nur wenn es nicht die Zurück-Kachel ist)
       setTimeout(() => {
         const mainRegionTitle = getMainRegionTitle(selectedMainRegion.value)
-        speakText(`Wählen Sie einen ${mainRegionTitle}bereich aus`)
+        if (mainRegionTitle !== 'Zurück') {
+          speakText(`Wählen Sie einen ${mainRegionTitle}bereich aus`)
+        }
       }, 1000)
       // Dann Auto-Mode für Sub-Regions starten
       setTimeout(() => {

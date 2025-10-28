@@ -2,7 +2,7 @@
   <div 
     :class="tileClasses"
     :style="tileStyle"
-    @click="handleClick"
+    @contextmenu="handleRightClick"
     @touchstart="handleTouchStart"
     @touchmove="handleTouchMove"
     @touchend="handleTouchEnd"
@@ -75,8 +75,11 @@ const ariaLabel = computed(() => `${props.item.title} auswählen`)
 const tabindex = computed(() => props.isActive ? 0 : -1)
 
 // Event Handlers
-const handleClick = () => {
-  console.log('Tile clicked:', props.item.title)
+const handleRightClick = (event: MouseEvent) => {
+  event.preventDefault()
+  event.stopPropagation()
+  event.stopImmediatePropagation()
+  console.log('Tile right-clicked:', props.item.title)
   props.onSelect(props.item)
 }
 
@@ -97,7 +100,7 @@ const handleTouchEnd = (event: TouchEvent) => {
 const handleKeydown = (event: KeyboardEvent) => {
   if (event.key === 'Enter' || event.key === ' ') {
     event.preventDefault()
-    handleClick()
+    handleRightClick(event as any)
   }
 }
 </script>
@@ -110,7 +113,7 @@ const handleKeydown = (event: KeyboardEvent) => {
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  cursor: pointer;
+  cursor: default;
   transition: all 0.3s ease;
   border-radius: 1rem;
   box-sizing: border-box;

@@ -71,10 +71,7 @@ export function useIchAssessment() {
     const isSubRegionView = items.some(item => item.emoji !== undefined)
     
     if (isMainView) {
-      // Erst "Was möchten Sie machen?" vorlesen
-      setTimeout(() => {
-        speakText('Was möchten Sie machen?')
-      }, 1000)
+      // Kein TTS für "Was möchten Sie machen?" - wird bereits in IchDialogView.vue gesprochen
       // Zusätzliche Pause nach dem Titel
       initialDelay = initialDelay + 1000
     } else if (isSubRegionView) {

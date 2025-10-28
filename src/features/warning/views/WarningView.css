@@ -64,25 +64,6 @@
   color: #1f2937;
 }
 
-/* TTS-Indikator */
-.tts-indicator {
-  position: absolute;
-  top: 1rem;
-  right: 1rem;
-  font-size: 1.5rem;
-  opacity: 0;
-  transition: opacity 0.3s ease;
-}
-
-.tts-indicator.tts-active {
-  opacity: 1;
-  animation: tts-pulse 1s infinite;
-}
-
-@keyframes tts-pulse {
-  0%, 100% { transform: scale(1); }
-  50% { transform: scale(1.1); }
-}
 
 /* ===== GLOCKEN-SYMBOL ===== */
 .bell-container {
@@ -103,6 +84,7 @@
   transition: all 0.3s ease;
   padding: 2rem;
   position: relative;
+  pointer-events: auto; /* Standard: interaktiv */
 }
 
 .bell-button:hover {
@@ -114,7 +96,8 @@
   border: 3px solid #f97316 !important;
   background-color: rgba(249, 115, 22, 0.1) !important;
   transform: scale(1.1);
-  animation: bell-active-pulse 2s infinite;
+  pointer-events: auto; /* Aktive Glocke ist klickbar */
+  cursor: pointer;
 }
 
 /* Glocke spielt Warnton */
@@ -122,7 +105,14 @@
   border: 3px solid #ef4444 !important;
   background-color: rgba(239, 68, 68, 0.2) !important;
   transform: scale(1.1);
-  animation: bell-playing-pulse 0.5s infinite;
+  pointer-events: auto; /* Spielende Glocke ist klickbar */
+  cursor: pointer;
+}
+
+/* Glocke inaktiv (nur während Begrüßung) */
+.bell-button:not(.bell-active):not(.bell-playing) {
+  pointer-events: none; /* Inaktive Glocke ist nicht klickbar */
+  cursor: default;
 }
 
 /* Glocke mit Alarm-Ton */
@@ -162,6 +152,7 @@
   transition: all 0.3s ease;
   color: var(--text-primary);
   min-width: 300px;
+  pointer-events: auto; /* Standard: interaktiv */
 }
 
 .back-action-button:hover {
@@ -175,41 +166,20 @@
   color: var(--accent-primary) !important;
   border: 3px solid var(--accent-primary) !important;
   transform: scale(1.1);
-  animation: back-active-pulse 2s infinite;
+  pointer-events: auto; /* Aktiver Zurück-Button ist klickbar */
+  cursor: pointer;
+}
+
+/* Zurück-Button inaktiv */
+.back-action-button:not(.back-active) {
+  pointer-events: none; /* Inaktiver Zurück-Button ist nicht klickbar */
+  cursor: default;
 }
 
 /* ===== ANIMATIONEN ===== */
-@keyframes bell-active-pulse {
-  0%, 100% {
-    transform: scale(1.1);
-    opacity: 1;
-  }
-  50% {
-    transform: scale(1.15);
-    opacity: 0.8;
-  }
-}
-
-@keyframes bell-playing-pulse {
-  0%, 100% {
-    transform: scale(1.1);
-    opacity: 1;
-  }
-  50% {
-    transform: scale(1.2);
-    opacity: 0.7;
-  }
-}
-
-@keyframes back-active-pulse {
-  0%, 100% {
-    transform: scale(1.1);
-    opacity: 1;
-  }
-  50% {
-    transform: scale(1.15);
-    opacity: 0.8;
-  }
+@keyframes tts-pulse {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.1); }
 }
 
 /* ===== RESPONSIVE DESIGN ===== */

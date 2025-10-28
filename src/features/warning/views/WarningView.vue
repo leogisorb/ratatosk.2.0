@@ -7,7 +7,6 @@ import { useWarningViewLogic } from './WarningView'
 const {
   currentState,
   statusText,
-  isTTSActive,
   isAlarmActive,
   handleUserInput,
   setupWarningSystem,
@@ -52,16 +51,12 @@ onUnmounted(() => {
             {{ statusText }}
           </div>
         </div>
-        <!-- TTS-Indikator -->
-        <div class="tts-indicator" :class="{ 'tts-active': isTTSActive }">
-          🔊
-        </div>
       </div>
 
       <!-- 2. Glocken-Symbol (SVG) -->
       <div class="bell-container">
         <button
-          @click="handleUserInput"
+          @click="(currentState === 'bell_idle' || currentState === 'bell_playing') ? handleUserInput : null"
           class="bell-button"
           :class="[
             currentState === 'bell_idle' ? 'bell-active' : '',
@@ -80,7 +75,7 @@ onUnmounted(() => {
       <!-- 3. Zurück-Button -->
       <div class="back-section">
         <button
-          @click="handleUserInput"
+          @click="currentState === 'back_active' ? handleUserInput : null"
           class="back-action-button"
           :class="currentState === 'back_active' ? 'back-active' : ''"
         >

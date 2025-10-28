@@ -1,9 +1,20 @@
 /* HomeView - spezifische Styles (Basis-Styles in main.css) */
 
-/* Hover Effects für HomeView */
-.home-view .menu-tile:hover .tile-icon-container {
+/* Hover Effects für HomeView - nur für aktive Kacheln */
+.home-view .menu-tile.tile-active:hover .tile-icon-container {
   background-color: rgba(0, 176, 152, 0.1);
   border: 2px solid rgba(0, 176, 152, 0.2);
+}
+
+/* Desktop Kacheln - Pointer Events basierend auf Status */
+.home-view .menu-tile.tile-active {
+  pointer-events: auto;
+  cursor: pointer;
+}
+
+.home-view .menu-tile.tile-inactive {
+  pointer-events: none;
+  cursor: default;
 }
 
 /* Dark Mode für Icons */
@@ -163,6 +174,8 @@
   border: 3px solid #00B098;
   box-shadow: 0 15px 35px rgba(0, 176, 152, 0.3);
   transform: scale(1.05);
+  pointer-events: auto; /* Aktive Kachel ist interaktiv */
+  cursor: pointer;
 }
 
 .menu-tile.tile-inactive {
@@ -170,6 +183,8 @@
   border: 3px solid var(--border-primary);
   opacity: 1; /* Nicht blass - volle Opazität */
   transform: scale(1); /* Normale Größe */
+  pointer-events: none; /* Inaktive Kacheln sind nicht klickbar */
+  cursor: default;
 }
 
 .menu-tile .tile-icon-container {

@@ -8,6 +8,7 @@ import PainDialogView from '../features/pain-assessment/views/PainDialogView.vue
 import IchDialogView from '../features/ich/views/IchDialogView.vue'
 import UmgebungDialogView from '../features/umgebung-dialog/views/UmgebungDialogView.vue'
 import SlashSettingsView from '../features/settings/views/SlashSettingsView.vue'
+import SettingsDialogView from '../features/settings/views/SettingsDialogView.vue'
 import LeuchtDauerView from '../features/settings/views/LeuchtDauerView.vue'
 import BlinzeldauerView from '../features/settings/views/BlinzeldauerView.vue'
 import BlitzdauerView from '../features/settings/views/BlitzdauerView.vue'
@@ -74,6 +75,11 @@ const router = createRouter({
       path: '/einstellungen',
       name: 'einstellungen',
       component: SlashSettingsView,
+    },
+    {
+      path: '/einstellungen-dialog',
+      name: 'einstellungen-dialog',
+      component: SettingsDialogView,
     },
     {
       path: '/einstellungen/leuchtdauer',
