@@ -68,37 +68,37 @@ export function useSettingsDialogLogic() {
     {
       id: 'leuchtdauer',
       title: 'LEUCHTDAUER',
-      icon: '/settings-sliders.svg',
+      icon: '/leuchtdauer.svg',
       category: 'settings' as const
     },
     {
       id: 'blitzdauer',
       title: 'BLITZDAUER',
-      icon: '/settings-sliders.svg',
+      icon: '/blinzeldauer.svg',
       category: 'settings' as const
     },
     {
       id: 'farbmodus',
       title: 'FARBMODUS',
-      icon: '/settings-sliders.svg',
+      icon: '/farbmodus.svg',
       category: 'settings' as const
     },
     {
       id: 'kamera',
       title: 'KAMERA',
-      icon: '/settings-sliders.svg',
+      icon: '/kamera.svg',
       category: 'settings' as const
     },
     {
       id: 'kamerapositionen',
       title: 'KAMERAPOSITIONEN',
-      icon: '/settings-sliders.svg',
+      icon: '/kameraposition.svg',
       category: 'settings' as const
     },
     {
       id: 'impressum',
       title: 'IMPRESSUM',
-      icon: '/Einstellungen.svg',
+      icon: '/impressum.svg',
       category: 'settings' as const
     }
   ]
@@ -106,11 +106,11 @@ export function useSettingsDialogLogic() {
   // Settings Options für jede Kategorie - basierend auf den alten Views
   const settingsOptions = {
     leuchtdauer: [
-      { id: 'normal', title: 'Normal', description: '3 Sekunden', value: 3, emoji: '⚡' },
-      { id: 'langsam', title: 'Langsam', description: '4 Sekunden', value: 4, emoji: '🐌' },
-      { id: 'sehr-langsam', title: 'Sehr langsam', description: '5 Sekunden', value: 5, emoji: '🐢' },
-      { id: 'lang', title: 'Lang', description: '6 Sekunden', value: 6, emoji: '⏰' },
-      { id: 'sehr-lang', title: 'Sehr lang', description: '7 Sekunden', value: 7, emoji: '⏳' },
+      { id: 'schnell', title: 'Schnell', description: '1,5 Sekunden', value: 1.5, emoji: '⚡' },
+      { id: 'normal', title: 'Normal', description: '2 Sekunden', value: 2, emoji: '⚡' },
+      { id: 'langsam', title: 'Langsam', description: '3 Sekunden', value: 3, emoji: '🐌' },
+      { id: 'sehr-langsam', title: 'Sehr langsam', description: '4 Sekunden', value: 4, emoji: '🐢' },
+      { id: 'lang', title: 'Lang', description: '5 Sekunden', value: 5, emoji: '⏰' },
       { id: 'zurueck', title: 'Zurück', description: '', value: null, emoji: '↩️' }
     ],
     blitzdauer: [
