@@ -4,6 +4,14 @@ import { useSettingsStore } from '../../settings/stores/settings'
 import { useFaceRecognition } from '../../face-recognition/composables/useFaceRecognition'
 import { simpleFlowController } from '../../../core/application/SimpleFlowController'
 
+// Import icons
+import leuchtdauerIcon from '@/assets/leuchtdauer.svg'
+import blinzeldauerIcon from '@/assets/blinzeldauer.svg'
+import farbmodusIcon from '@/assets/farbmodus.svg'
+import kameraIcon from '@/assets/kamera.svg'
+import kamerapositionIcon from '@/assets/kameraposition.svg'
+import impressumIcon from '@/assets/impressum.svg'
+
 export function useSettingsDialogLogic() {
   // Router
   const router = useRouter()
@@ -68,37 +76,37 @@ export function useSettingsDialogLogic() {
     {
       id: 'leuchtdauer',
       title: 'LEUCHTDAUER',
-      icon: '/leuchtdauer.svg',
+      icon: leuchtdauerIcon,
       category: 'settings' as const
     },
     {
       id: 'blitzdauer',
       title: 'BLITZDAUER',
-      icon: '/blinzeldauer.svg',
+      icon: blinzeldauerIcon,
       category: 'settings' as const
     },
     {
       id: 'farbmodus',
       title: 'FARBMODUS',
-      icon: '/farbmodus.svg',
+      icon: farbmodusIcon,
       category: 'settings' as const
     },
     {
       id: 'kamera',
       title: 'KAMERA',
-      icon: '/kamera.svg',
+      icon: kameraIcon,
       category: 'settings' as const
     },
     {
       id: 'kamerapositionen',
       title: 'KAMERAPOSITIONEN',
-      icon: '/kameraposition.svg',
+      icon: kamerapositionIcon,
       category: 'settings' as const
     },
     {
       id: 'impressum',
       title: 'IMPRESSUM',
-      icon: '/impressum.svg',
+      icon: impressumIcon,
       category: 'settings' as const
     }
   ]
