@@ -134,8 +134,8 @@ export function useSettingsDialogLogic() {
       { id: 'zurueck', title: 'Zurück', description: '', value: null, emoji: '↩️' }
     ],
     kamera: [
-      { id: 'ein', title: 'Ein', description: 'Kamera aktivieren', value: true, emoji: '📹' },
-      { id: 'aus', title: 'Aus', description: 'Kamera deaktivieren', value: false, emoji: '📷' },
+      { id: 'ein', title: 'KAMERA EIN', description: 'Kamera aktivieren', value: true, emoji: '📹' },
+      { id: 'aus', title: 'KAMERA AUS', description: 'Kamera deaktivieren', value: false, emoji: '📷' },
       { id: 'zurueck', title: 'Zurück', description: '', value: null, emoji: '↩️' }
     ],
     kamerapositionen: [
