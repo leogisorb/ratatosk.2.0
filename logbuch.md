@@ -1645,3 +1645,113 @@ if (!isAutoMode.value) {
 ---
 
 **Safari-Kamera und TTS-Duplikation sind vollständig behoben!** 🎉
+
+---
+
+## 📅 **2025-01-10 - Settings-Dialog-System implementiert**
+
+### **🎯 Ziel:**
+Einstellungen von einzelnen Views zu einem einheitlichen 3-Phasen-Dialog-System umbauen, konsistent mit der neuen Dialog-Architektur.
+
+### **🏗️ Architektur-Entscheidung:**
+- **Dialog-System**: 3 Phasen (Hauptansicht → Optionen → Bestätigung)
+- **Konsistenz**: Exakt wie PainDialogView und IchDialogView
+- **UX**: Einheitliche Navigation und Interaktion
+
+### **📦 Implementierung:**
+
+#### **1. SettingsDialogView.vue erstellt:**
+- **3-Phasen-Struktur**: mainView → optionsView → confirmation
+- **Template**: Grid-Layout für Hauptkategorien, Karussell für Optionen
+- **Navigation**: State-Management mit Vue 3 Composition API
+- **Responsive**: Mobile/Tablet/Desktop optimiert
+
+#### **2. SettingsDialogView.ts - Logik:**
+- **State Management**: currentState, selectedCategory, currentTileIndex
+- **Settings Categories**: 6 Hauptkategorien (LEUCHTDAUER, BLITZDAUER, FARBMODUS, KAMERA, KAMERAPOSITIONEN, IMPRESSUM)
+- **Settings Options**: Alle Optionen pro Kategorie mit Emoji-Icons
+- **Auto-Mode**: Integration mit SimpleFlowController
+- **TTS**: Direkte Browser API (umgeht SimpleFlowController-Blockierung)
+
+#### **3. SettingsDialogView.css - Styling:**
+- **Grid-Layout**: 3x2 für Hauptkategorien
+- **Kachelgrößen**: Exakt wie PainDialogView (180px-400px width, 154px-299px height)
+- **Karussell**: 3D-Effekte mit perspective und transform
+- **Indicators**: Außerhalb des Karussell-Containers positioniert
+- **Mobile-Styles**: 1:1 aus PainDialogView übernommen
+
+#### **4. Router-Integration:**
+- **Neue Route**: `/einstellungen-dialog` → SettingsDialogView
+- **HomeView**: Navigation von `/einstellungen` zu `/einstellungen-dialog`
+- **Navigation**: Konsistent mit anderen Dialog-Views
+
+### **🔧 Korrekturen und Optimierungen:**
+
+#### **CSS-Konflikte behoben:**
+- **Problem**: PainDialogView hatte 4 verschiedene CSS-Definitionen für `.carousel-indicators`
+- **Lösung**: Doppelte Definitionen entfernt, konsistente absolute Positionierung
+- **Ergebnis**: Keine CSS-Konflikte mehr, predictable Behavior
+
+#### **TTS-System korrigiert:**
+- **Problem**: SimpleFlowController blockierte TTS bis zur ersten User-Interaktion
+- **Lösung**: Direkte Browser TTS API (`window.speechSynthesis`)
+- **Timing**: Überschrift zuerst vorlesen, dann Auto-Mode nach 3-4 Sekunden
+- **Ergebnis**: "Welche Einstellung möchten Sie ändern?" wird sofort vorgelesen
+
+#### **Kachelgrößen angepasst:**
+- **Problem**: Settings-Kacheln waren kleiner als PainDialogView
+- **Lösung**: Exakte Größen aus PainDialogView übernommen
+- **Desktop**: `clamp(180px, 25vw, 400px)` width, `clamp(154px, 17vw, 299px)` height
+- **Icons**: `clamp(80px, 12vw, 150px)` für Container und Icons
+
+#### **Indicators-Positionierung:**
+- **Problem**: Indicators standen innerhalb des Karussell-Containers
+- **Lösung**: Außerhalb positioniert mit `position: absolute`
+- **Responsive**: `bottom: 2rem` (Desktop), `bottom: 1rem` (Tablet), `bottom: 0.5rem` (Mobile)
+
+### **🎨 Features implementiert:**
+
+#### **Aktuelle Einstellungen anzeigen:**
+- **Dynamische Werte**: Aus Settings Store gelesen
+- **Anzeige**: "Aktuell: 3 Sekunden" unter jeder Kategorie
+- **Live-Updates**: Ändern sich automatisch bei Einstellungsänderungen
+
+#### **Emoji-Icons für alle Optionen:**
+- **LEUCHTDAUER**: ⚡🐌🐢⏰⏳
+- **BLITZDAUER**: ⚡💫✨🌟
+- **FARBMODUS**: ☀️🌙
+- **KAMERA**: 📹📷
+- **KAMERAPOSITIONEN**: ⬆️↔️⬇️
+- **IMPRESSUM**: ℹ️📋📞
+- **ZURÜCK**: ↩️
+
+#### **Settings-Icon korrigiert:**
+- **Problem**: `settings-sliders.svg` wurde nicht gefunden (404 Error)
+- **Lösung**: `Einstellungen.svg` verwendet (existiert im public-Ordner)
+
+### **📱 Responsive Design:**
+- **Desktop**: 3x2 Grid, große Kacheln, 3D-Karussell
+- **Tablet**: 2x3 Grid, mittlere Kacheln, angepasstes Karussell
+- **Mobile**: 2x3 Grid, kleine Kacheln, kompaktes Karussell
+- **Landscape**: Optimierte Darstellung für Querformat
+
+### **🔄 State-Management:**
+- **Vue 3 Composition API**: Reactive state mit ref/computed
+- **Pinia Store**: Integration mit Settings Store
+- **Auto-Mode**: Synchronisation mit SimpleFlowController
+- **Lifecycle**: Proper cleanup bei Component unmount
+
+### **🎯 Ergebnis:**
+- **Einheitliches Dialog-System**: Alle Einstellungen in einem konsistenten 3-Phasen-Dialog
+- **Konsistente UX**: Gleiche Navigation und Interaktion wie andere Dialoge
+- **Responsive Design**: Optimiert für alle Gerätegrößen
+- **TTS-Integration**: Korrekte Sprachausgabe mit Timing
+- **Visual Consistency**: Exakt gleiche Kachelgrößen und Styling wie PainDialogView
+
+### **📊 Technische Details:**
+- **Files**: 3 neue Dateien (SettingsDialogView.vue/ts/css)
+- **Lines**: 1811 Zeilen hinzugefügt, 133 Zeilen entfernt
+- **Commit**: `fdfa348` - "feat: Settings-Dialog-System implementiert"
+- **Architecture**: Unified Dialog System - alle Einstellungen konsistent
+
+**Settings-Dialog-System ist vollständig implementiert und konsistent mit der Dialog-Architektur!** 🎉
