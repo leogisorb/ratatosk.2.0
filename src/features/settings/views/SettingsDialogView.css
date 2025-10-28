@@ -21,15 +21,6 @@
   transition: color 0.3s ease;
 }
 
-.settings-dialog .current-setting {
-  font-family: 'Source Code Pro', monospace;
-  font-size: 1.5rem;
-  font-weight: 500;
-  color: var(--accent-color);
-  margin: 0 0 2rem 0;
-  text-align: center;
-  transition: color 0.3s ease;
-}
 
 /* === GRID CONTAINER STYLES === */
 .settings-dialog .grid-container {
@@ -411,10 +402,6 @@
     margin-bottom: 1rem;
   }
   
-  .settings-dialog .current-setting {
-    font-size: 1.2rem;
-    margin-bottom: 1.5rem;
-  }
   
   .settings-dialog .grid-container {
     grid-template-columns: repeat(2, 1fr);
@@ -510,11 +497,6 @@
     font-weight: 600;
   }
   
-  .settings-dialog .current-setting {
-    font-size: 1rem;
-    margin: 0 0 1rem 0;
-    line-height: 1.2;
-  }
   
   .settings-dialog .grid-container {
     grid-template-columns: repeat(2, 1fr);
