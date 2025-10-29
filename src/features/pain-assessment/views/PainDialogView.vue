@@ -164,7 +164,7 @@
 
 <script setup lang="ts">
 import { ref, computed, onMounted, onUnmounted, watch } from 'vue'
-import { usePainAssessment } from '../composables/usePainAssessment'
+import { usePainAssessment } from '@/shared/composables/usePainAssessment'
 import { 
   mainRegions, 
   kopfSubRegions, 

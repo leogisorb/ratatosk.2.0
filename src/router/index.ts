@@ -9,13 +9,7 @@ import IchDialogView from '../features/ich/views/IchDialogView.vue'
 import UmgebungDialogView from '../features/umgebung-dialog/views/UmgebungDialogView.vue'
 import SlashSettingsView from '../features/settings/views/SlashSettingsView.vue'
 import SettingsDialogView from '../features/settings/views/SettingsDialogView.vue'
-import LeuchtDauerView from '../features/settings/views/LeuchtDauerView.vue'
-import BlinzeldauerView from '../features/settings/views/BlinzeldauerView.vue'
-import BlitzdauerView from '../features/settings/views/BlitzdauerView.vue'
-import FarbmodusView from '../features/settings/views/FarbmodusView.vue'
-import ImpressumView from '../features/settings/views/ImpressumView.vue'
-import KamerapositionView from '../features/settings/views/KamerapositionView.vue'
-import KameraView from '../features/settings/views/KameraView.vue'
+// Alte Settings-Views entfernt - werden durch SettingsDialogView ersetzt
 
 const router = createRouter({
   history: createWebHistory('/ratatosk.2.0/'),
@@ -81,36 +75,7 @@ const router = createRouter({
       name: 'einstellungen-dialog',
       component: SettingsDialogView,
     },
-    {
-      path: '/einstellungen/leuchtdauer',
-      name: 'einstellungen-leuchtdauer',
-      component: LeuchtDauerView,
-    },
-    {
-      path: '/einstellungen/blitzdauer',
-      name: 'einstellungen-blitzdauer',
-      component: BlitzdauerView,
-    },
-    {
-      path: '/einstellungen/farbmodus',
-      name: 'einstellungen-farbmodus',
-      component: FarbmodusView,
-    },
-    {
-      path: '/einstellungen/kamera',
-      name: 'einstellungen-kamera',
-      component: KameraView,
-    },
-    {
-      path: '/einstellungen/kamerapositionen',
-      name: 'einstellungen-kamerapositionen',
-      component: KamerapositionView,
-    },
-    {
-      path: '/einstellungen/impressum',
-      name: 'einstellungen-impressum',
-      component: ImpressumView,
-    },
+    // Alte Settings-Routes entfernt - werden durch /einstellungen (SettingsDialogView) ersetzt
   ]})
 
 export default router
