@@ -103,7 +103,7 @@ export const bettSubRegions: UmgebungSubRegion[] = [
   {
     id: 'fernbedienung',
     title: 'Fernbedienung',
-    emoji: '📺',
+    emoji: '📱',
     ttsText: 'die Fernbedienung',
     article: 'die',
     gender: 'f'
@@ -185,7 +185,7 @@ export const zimmerSubRegions: UmgebungSubRegion[] = [
   {
     id: 'schrank',
     title: 'Schrank',
-    emoji: '🚪',
+    emoji: '🗄️',
     ttsText: 'den Schrank',
     article: 'der',
     gender: 'm'

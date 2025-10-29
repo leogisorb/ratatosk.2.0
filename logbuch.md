@@ -1755,3 +1755,74 @@ Einstellungen von einzelnen Views zu einem einheitlichen 3-Phasen-Dialog-System 
 - **Architecture**: Unified Dialog System - alle Einstellungen konsistent
 
 **Settings-Dialog-System ist vollständig implementiert und konsistent mit der Dialog-Architektur!** 🎉
+
+---
+
+## **🔧 CSS-Konflikte behoben (2025-01-27)**
+
+### **🚨 Problem identifiziert:**
+- **Duplizierte CSS-Definitionen** für `.carousel-container`
+- **4 verschiedene Definitionen** überschneiden sich
+- **PostCSS-Syntax-Fehler** verhindert Kompilierung
+- **Browser-Rendering-Konflikte** durch widersprüchliche Styles
+
+### **🔧 Korrekturen durchgeführt:**
+
+#### **1. Duplizierte Definitionen entfernt:**
+- **Zeile 333-343**: Duplizierte `.carousel-container` Definition entfernt
+- **Ergebnis**: Nur noch 3 Definitionen (Desktop + 2 Mobile)
+
+#### **2. Desktop-Definition erweitert:**
+- **Hinzugefügt**: `transform-style: preserve-3d`
+- **Hinzugefügt**: `height: clamp(250px, 35vh, 400px)`
+- **Ergebnis**: Vollständige 3D-Karussell-Funktionalität
+
+#### **3. CSS-Struktur bereinigt:**
+- **Desktop**: Vollständige Karussell-Definition
+- **Mobile (480px)**: `width: 98vw; max-width: 300px`
+- **Landscape (768px)**: `width: 90vw; max-width: 600px`
+
+### **🎯 Ergebnis:**
+- **Keine CSS-Konflikte** mehr
+- **Saubere PostCSS-Kompilierung**
+- **Konsistente Karussell-Positionierung** auf allen Geräten
+- **3D-Transform-Effekte** funktionieren korrekt
+
+**CSS-Konflikte vollständig behoben - Settings-Dialog funktioniert einwandfrei!** ✅
+
+---
+
+## **🎯 Container-Größen exakt wie Umgebung-Dialog (2025-01-27)**
+
+### **🔍 Problem identifiziert:**
+- **Container-Größen** stimmen nicht mit Umgebung-Dialog überein
+- **Karussell-Positionierung** unterschiedlich
+- **Grid-Layout** nicht konsistent
+- **User-Feedback**: "ne, iwas stimmt nicht in den containern oder größen"
+
+### **🔧 Korrekturen durchgeführt:**
+
+#### **1. Karussell-Container-Struktur 1:1 übernommen:**
+- **Desktop**: `width: 90vw; max-width: 1200px` (ohne height)
+- **Tablet (768px)**: `width: 95vw; max-width: 350px; perspective: 1500px; margin-top: 2rem`
+- **Mobile (480px)**: `width: 98vw; max-width: 300px; margin-top: 1.5rem` (ohne Media Query!)
+- **Landscape (768px)**: `width: 90vw; max-width: 600px; height: 60vh`
+
+#### **2. Grid-Container-Größe angepasst:**
+- **Vorher**: `max-width: 1440px`
+- **Nachher**: `max-width: 1600px` (wie Umgebung-Dialog)
+
+#### **3. Menu-Tile-Größen exakt übernommen:**
+- **Padding**: `3rem` (statt clamp)
+- **Width**: `100%` (statt clamp)
+- **Height**: `aspect-ratio: 5 / 1` (statt clamp)
+- **Icon-Container**: `180px x 180px` (statt clamp)
+- **Icon**: `160px x 160px` (statt clamp)
+
+### **🎯 Ergebnis:**
+- **Identische Container-Größen** wie Umgebung-Dialog
+- **Konsistente Karussell-Positionierung** auf allen Geräten
+- **Einheitliche Grid-Layout-Struktur** in allen Dialogen
+- **Pixel-perfekte Übereinstimmung** mit bestehender Architektur
+
+**Settings-Dialog ist jetzt exakt wie Umgebung-Dialog implementiert!** 🎯

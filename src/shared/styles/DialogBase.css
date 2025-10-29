@@ -1,4 +1,4 @@
-/* PainDialogView - Bereinigte CSS */
+/* DialogBase.css - Gemeinsame Styles basierend auf PainDialogView.css */
 
 /* === GRUNDLEGENDE STYLES === */
 .pain-dialog .main-content {
@@ -14,7 +14,7 @@
 .pain-dialog .main-title {
   font-family: 'Source Code Pro', monospace;
   font-size: 3rem;
-  font-weight: 300;
+  font-weight: 450;
   color: var(--text-primary);
   margin: 0 0 4rem 0;
   text-align: center;
@@ -26,7 +26,7 @@
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(clamp(180px, 25vw, 400px), 1fr));
   gap: clamp(0.5rem, 2vw, 1.5rem);
-  max-width: 1440px; /* 10% kleiner: 1600px * 0.9 = 1440px */
+  max-width: 1440px;
   width: 100%;
   margin: 0 auto;
   padding: 0 clamp(1rem, 3vw, 2rem);
@@ -42,7 +42,7 @@
   justify-content: center;
   padding: clamp(1rem, 2vw, 3rem);
   width: clamp(180px, 25vw, 400px);
-  height: clamp(154px, 17vw, 299px); /* Nochmal 5% kleiner: 162px*0.95, 18vw*0.95, 315px*0.95 */
+  height: clamp(154px, 17vw, 299px);
   border: 3px solid transparent;
   background-color: var(--bg-secondary);
   border-radius: 1.5rem;
@@ -93,6 +93,33 @@
   text-overflow: ellipsis;
 }
 
+/* Emoji Styles - für alle Dialoge */
+.pain-dialog .tile-emoji {
+  font-size: 7.5rem; /* 2.5x größer als 3rem */
+  line-height: 1;
+  user-select: none;
+}
+
+/* Description Styles - für alle Dialoge */
+.pain-dialog .tile-description {
+  font-family: 'Source Code Pro', monospace;
+  font-size: 0.9rem;
+  color: var(--text-secondary);
+  margin: 0.3rem 0 1rem 0;
+  padding-top: 0.1rem;
+  line-height: 1.1;
+  transition: color 0.8s ease-in-out;
+}
+
+/* Current Value Display - für alle Dialoge */
+.pain-dialog .current-setting {
+  font-size: 1rem;
+  color: var(--text-secondary);
+  margin-top: 0.5rem;
+  font-style: italic;
+}
+
+
 /* Hover Effects */
 .pain-dialog .menu-tile:hover .tile-icon-container {
   background-color: rgba(0, 176, 152, 0.1);
@@ -116,34 +143,9 @@
   border: 3px solid var(--border-primary);
 }
 
-
-
-.pain-dialog .icon-active {
-  background-color: transparent;
-  border: none;
-}
-
 /* Main view icons get white filter when active */
 .pain-dialog .grid-container .icon-active .tile-icon {
   filter: brightness(0) invert(1);
-}
-
-/* Icons without filters - colors controlled by SVG fill */
-.pain-dialog .tile-inactive .tile-icon {
-  /* No filter applied - colors controlled by SVG fill */
-}
-
-.pain-dialog .tile-active .tile-icon {
-  /* No filter applied - colors controlled by SVG fill */
-}
-
-
-
-
-
-.pain-dialog .text-active {
-  color: white;
-  font-weight: 600;
 }
 
 /* Main view icons get white filter when inverted */
@@ -151,10 +153,15 @@
   filter: brightness(0) invert(1);
 }
 
+.pain-dialog .text-active {
+  color: white;
+  font-weight: 600;
+}
+
 /* Torso icon - responsive mit clamp() */
 .pain-dialog .tile-icon[src*="torso1.svg"] {
-  width: clamp(96px, 12vw, 192px); /* 20% größer als clamp(80px, 10vw, 160px) */
-  height: clamp(96px, 12vw, 192px); /* 20% größer als clamp(80px, 10vw, 160px) */
+  width: clamp(96px, 12vw, 192px);
+  height: clamp(96px, 12vw, 192px);
 }
 
 /* Carousel icons should NOT get white filter */
@@ -170,7 +177,7 @@
 .pain-dialog .pain-scale-title {
   font-family: 'Source Code Pro', monospace;
   font-size: 3rem;
-  font-weight: 300;
+  font-weight: 450;
   color: var(--text-primary);
   margin: 0 0 4rem 0;
   text-align: center;
@@ -183,21 +190,36 @@
   padding: 2rem;
 }
 
-.pain-dialog .confirmation-container h2 {
+.pain-dialog .confirmation-text {
   font-family: 'Source Code Pro', monospace;
-  font-size: 6rem; /* 100% größer als 3rem */
-  font-weight: 300;
-  color: var(--text-primary);
+  font-size: 5.25rem;
+  font-weight: 450;
+  color: #FF6B35;
   margin: 0 0 2rem 0;
   text-align: center;
   transition: color 0.3s ease;
+}
+
+.pain-dialog .confirmation-title {
+  font-family: 'Source Code Pro', monospace;
+  font-size: 5.25rem;
+  font-weight: 450;
+  color: black;
+  margin: 0 0 2rem 0;
+  text-align: center;
+  transition: color 0.3s ease;
+}
+
+/* Im Dark Mode: confirmation-title soll weiß sein */
+.dark .pain-dialog .confirmation-title {
+  color: white;
 }
 
 /* Zurück-Kachel spezielle Styles */
 .pain-dialog .menu-tile.back-tile {
   background-color: var(--bg-secondary);
   border: 3px solid transparent;
-  z-index: 999; /* Höchster z-index für Zurück-Button */
+  z-index: 999;
 }
 
 .pain-dialog .menu-tile.back-tile:hover {
@@ -301,8 +323,8 @@
 }
 
 .pain-dialog .carousel-item-content .tile-icon {
-  width: 173px; /* 15% größer */
-  height: 173px; /* 15% größer */
+  width: 173px;
+  height: 173px;
   transition: all 0.8s ease-in-out;
 }
 
@@ -318,11 +340,16 @@
   text-overflow: ellipsis;
 }
 
-/* Aktive Karussell-Texte sollen schwarz, 30% größer und dicker sein */
+/* Aktive Karussell-Texte sollen 30% größer und dicker sein */
 .pain-dialog .carousel-item-active .carousel-item-content .tile-text {
   color: black !important;
-  font-size: 1.872rem; /* 30% größer als 1.44rem */
-  font-weight: 700; /* Dicker/dicker */
+  font-size: 1.872rem;
+  font-weight: 700;
+}
+
+/* Im Dark Mode: aktive Karussell-Texte sollen weiß sein */
+.dark .pain-dialog .carousel-item-active .carousel-item-content .tile-text {
+  color: white !important;
 }
 
 /* Indicators */
@@ -367,12 +394,12 @@
 /* 1️⃣ Der Wrapper zentriert das Karussell zwischen Titel & Indikatoren */
 .pain-dialog .carousel-wrapper {
   display: flex;
-  justify-content: center;   /* horizontal in der Mitte */
-  align-items: center;       /* vertikal mittig */
+  justify-content: center;
+  align-items: center;
   width: 100%;
   position: relative;
   margin: 0 auto;
-  padding: 0;                /* entfernt evtl. Push nach unten */
+  padding: 0;
   min-height: clamp(300px, 40vh, 500px);
 }
 
@@ -409,10 +436,7 @@
   z-index: 10;
 }
 
-/* Entfernt - überschreibt die absolute Positionierung! */
-
 /* === MOBILE RESPONSIVE DESIGN === */
-/* Chrome-spezifische Fixes entfernt - jetzt durch clamp() ersetzt */
 
 @media (max-width: 480px) {
   .pain-dialog .main-content {
@@ -425,23 +449,22 @@
   }
   
   .pain-dialog .main-title {
-    font-size: 2.25rem; /* 25% größer als 1.8rem */
+    font-size: 2.25rem;
     margin: 0.5rem 0 1.5rem 0;
     padding-top: 0.2rem;
     line-height: 1.2;
-    font-weight: 600; /* Weniger dick */
+    font-weight: 900;
   }
   
   .pain-dialog .grid-container {
     grid-template-columns: repeat(2, 1fr);
-    grid-template-rows: repeat(2, 1fr) auto; /* Letzte Reihe auto für Zurück-Button */
+    grid-template-rows: repeat(2, 1fr) auto;
     gap: 0.3rem;
     padding: 0 0.3rem 2rem 0.3rem;
     margin-top: 1rem;
     max-width: 100vw;
     overflow: visible;
   }
-  
   
   .pain-dialog .menu-tile {
     padding: 0.5rem;
@@ -456,34 +479,56 @@
   }
   
   .pain-dialog .tile-icon {
-    width: 104px; /* 15% größer */
-    height: 104px; /* 15% größer */
+    width: 104px;
+    height: 104px;
   }
   
   .pain-dialog .tile-text {
     font-size: 1.6rem;
   }
   
-  .pain-dialog .pain-scale-title {
-    font-size: 2.25rem; /* 25% größer als 1.8rem */
-    margin: 0.5rem 0 1.5rem 0;
-    padding-top: 0.2rem;
-    line-height: 1.2;
-    font-weight: 600; /* Weniger dick */
+  .pain-dialog .tile-description {
+    font-size: clamp(0.6rem, 1.8vw, 0.8rem);
   }
   
-  .pain-dialog .confirmation-container h2 {
-    font-size: 2.25rem; /* 25% größer als 1.8rem */
+  .pain-dialog .tile-emoji {
+    font-size: 4.5rem; /* 2.5x größer für Mobile */
+  }
+  
+  .pain-dialog .pain-scale-title {
+    font-size: 2.25rem;
     margin: 0.5rem 0 1.5rem 0;
     padding-top: 0.2rem;
     line-height: 1.2;
-    font-weight: 600; /* Weniger dick */
+    font-weight: 900;
+  }
+  
+  .pain-dialog .confirmation-text {
+    font-size: 1.96875rem;
+    margin: 0.5rem 0 1.5rem 0;
+    padding-top: 0.2rem;
+    line-height: 1.2;
+    font-weight: 900;
+    color: #FF6B35;
+  }
+  
+  .pain-dialog .confirmation-title {
+    font-size: 1.96875rem;
+    margin: 0.5rem 0 1.5rem 0;
+    padding-top: 0.2rem;
+    line-height: 1.2;
+    font-weight: 900;
+    color: black;
+  }
+  
+  .dark .pain-dialog .confirmation-title {
+    color: white;
   }
   
   /* Torso icon responsive auf mobile */
   .pain-dialog .tile-icon[src*="torso1.svg"] {
-    width: clamp(82px, 10.3vw, 107px); /* 3% größer als mobile clamp */
-    height: clamp(82px, 10.3vw, 107px); /* 3% größer als mobile clamp */
+    width: clamp(82px, 10.3vw, 107px);
+    height: clamp(82px, 10.3vw, 107px);
   }
   
   .pain-dialog .carousel-container {
@@ -492,7 +537,6 @@
     padding: 1rem 0;
     perspective: 1500px;
     margin-top: 2rem;
-    /* Mobile: Behalte die neue Zentrierung bei */
     display: flex;
     justify-content: center;
     align-items: center;
@@ -501,7 +545,6 @@
   .pain-dialog .carousel-item {
     width: 280px;
     height: 350px;
-    /* Mobile: Behalte die neue Zentrierung bei */
     top: 50%;
     left: 50%;
     transform: translate(-50%, -50%) translateX(calc(var(--offset, 0) * 300px)) rotateY(var(--rotation, 20deg)) scale(0.6);
@@ -525,14 +568,14 @@
   }
   
   .pain-dialog .carousel-item-content .tile-icon {
-    width: 138px; /* 15% größer */
-    height: 138px; /* 15% größer */
+    width: 138px;
+    height: 138px;
   }
   
   .pain-dialog .carousel-item-content .tile-text {
     font-size: 1.2rem;
     font-weight: 600;
-  line-height: 1.3;
+    line-height: 1.3;
   }
   
   .pain-dialog .carousel-indicators {
@@ -562,11 +605,11 @@
 
 @media (max-width: 320px) {
   .pain-dialog .main-title {
-    font-size: 1.875rem; /* 25% größer als 1.5rem */
+    font-size: 1.875rem;
     margin: 0.3rem 0 1rem 0;
     padding-top: 0.1rem;
     line-height: 1.1;
-    font-weight: 600; /* Weniger dick */
+    font-weight: 900;
   }
   
   .pain-dialog .grid-container {
@@ -589,8 +632,8 @@
   }
   
   .pain-dialog .tile-icon {
-    width: 75px; /* 15% größer */
-    height: 75px; /* 15% größer */
+    width: 75px;
+    height: 75px;
   }
   
   .pain-dialog .tile-text {
@@ -598,33 +641,46 @@
   }
   
   .pain-dialog .pain-scale-title {
-    font-size: 1.875rem; /* 25% größer als 1.5rem */
+    font-size: 1.875rem;
     margin: 0.3rem 0 1rem 0;
     padding-top: 0.1rem;
     line-height: 1.1;
-    font-weight: 600; /* Weniger dick */
+    font-weight: 900;
   }
   
-  .pain-dialog .confirmation-container h2 {
-    font-size: 1.875rem; /* 25% größer als 1.5rem */
+  .pain-dialog .confirmation-text {
+    font-size: 1.640625rem;
     margin: 0.3rem 0 1rem 0;
     padding-top: 0.1rem;
     line-height: 1.1;
-    font-weight: 600; /* Weniger dick */
+    font-weight: 900;
+    color: #FF6B35;
+  }
+  
+  .pain-dialog .confirmation-title {
+    font-size: 1.640625rem;
+    margin: 0.3rem 0 1rem 0;
+    padding-top: 0.1rem;
+    line-height: 1.1;
+    font-weight: 900;
+    color: black;
+  }
+  
+  .dark .pain-dialog .confirmation-title {
+    color: white;
   }
   
   /* Torso icon responsive auf kleine mobile */
   .pain-dialog .tile-icon[src*="torso1.svg"] {
-    width: clamp(77px, 10.3vw, 77px); /* 3% größer als kleine mobile clamp */
-    height: clamp(77px, 10.3vw, 77px); /* 3% größer als kleine mobile clamp */
+    width: clamp(77px, 10.3vw, 77px);
+    height: clamp(77px, 10.3vw, 77px);
   }
 
-.pain-dialog .carousel-container {
+  .pain-dialog .carousel-container {
     width: 98vw;
     max-width: 300px;
     margin-top: 1.5rem;
     padding: 1rem 0;
-    /* Mobile: Behalte die neue Zentrierung bei */
     display: flex;
     justify-content: center;
     align-items: center;
@@ -649,27 +705,26 @@
     min-height: 12px;
   }
 
-.pain-dialog .carousel-item {
+  .pain-dialog .carousel-item {
     width: 250px;
     height: 320px;
-    /* Mobile: Behalte die neue Zentrierung bei */
     top: 50%;
     left: 50%;
     transform: translate(-50%, -50%) translateX(calc(var(--offset, 0) * 280px)) rotateY(var(--rotation, 20deg)) scale(0.5);
-}
+  }
 
-.pain-dialog .carousel-item-content {
+  .pain-dialog .carousel-item-content {
     max-width: 250px;
     height: 290px;
     padding: 1.2rem;
   }
   
-.pain-dialog .carousel-item-content .tile-icon-container {
+  .pain-dialog .carousel-item-content .tile-icon-container {
     width: 100px;
     height: 100px;
-}
+  }
 
-.pain-dialog .carousel-item-content .tile-icon {
+  .pain-dialog .carousel-item-content .tile-icon {
     width: 70px;
     height: 70px;
   }
@@ -691,13 +746,13 @@
     margin: 0.3rem 0 1rem 0;
     padding-top: 0.1rem;
     line-height: 1.1;
+    font-weight: 450;
   }
   
   .pain-dialog .carousel-container {
     width: 90vw;
     max-width: 600px;
     height: 60vh;
-    /* Mobile Landscape: Behalte die neue Zentrierung bei */
     display: flex;
     justify-content: center;
     align-items: center;
@@ -706,7 +761,6 @@
   .pain-dialog .carousel-item {
     width: 300px;
     height: 250px;
-    /* Mobile Landscape: Behalte die neue Zentrierung bei */
     top: 50%;
     left: 50%;
     transform: translate(-50%, -50%) translateX(calc(var(--offset, 0) * 350px)) rotateY(var(--rotation, 0deg)) scale(0.8);
@@ -724,8 +778,8 @@
   }
   
   .pain-dialog .carousel-item-content .tile-icon {
-    width: 121px; /* 15% größer */
-    height: 121px; /* 15% größer */
+    width: 121px;
+    height: 121px;
   }
   
   .pain-dialog .carousel-item-content .tile-text {
@@ -737,12 +791,28 @@
     margin: 0.3rem 0 1rem 0;
     padding-top: 0.1rem;
     line-height: 1.1;
+    font-weight: 450;
   }
   
-  .pain-dialog .confirmation-container h2 {
-    font-size: 1.6rem;
+  .pain-dialog .confirmation-text {
+    font-size: 1.4rem;
     margin: 0.3rem 0 1rem 0;
     padding-top: 0.1rem;
     line-height: 1.1;
+    font-weight: 450;
+    color: #FF6B35;
+  }
+  
+  .pain-dialog .confirmation-title {
+    font-size: 1.4rem;
+    margin: 0.3rem 0 1rem 0;
+    padding-top: 0.1rem;
+    line-height: 1.1;
+    font-weight: 450;
+    color: black;
+  }
+  
+  .dark .pain-dialog .confirmation-title {
+    color: white;
   }
 }

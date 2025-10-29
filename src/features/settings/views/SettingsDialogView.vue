@@ -1,5 +1,5 @@
 <template>
-  <div id="app" class="settings-dialog">
+  <div id="app" class="pain-dialog settings-dialog">
     <!-- App Header -->
     <AppHeader />
 
@@ -51,7 +51,7 @@
         <!-- Settings Options View -->
         <div v-if="currentState === 'optionsView'">
           <div class="main-title">
-            {{ getCategoryTitle(selectedCategory) }} - Aktuell: {{ getCurrentValue(selectedCategory) }}
+            {{ getCategoryTitle(selectedCategory) }} - Aktuell: {{ getCurrentValue(selectedCategory || '') }}
           </div>
 
           <!-- Karussell Wrapper für vertikale Zentrierung -->
@@ -76,8 +76,8 @@
                     >
                       <div v-if="option.emoji" class="tile-emoji">{{ option.emoji }}</div>
                       <img 
-                        v-else-if="option.icon" 
-                        :src="option.icon" 
+                        v-else-if="(option as any).icon" 
+                        :src="(option as any).icon" 
                         :alt="option.title" 
                         class="tile-icon"
                         :class="currentTileIndex === index ? 'icon-inverted' : ''"
@@ -118,8 +118,8 @@
         <!-- Confirmation View -->
         <div v-if="currentState === 'confirmation'">
           <div class="confirmation-container">
-            <h2>Einstellung gespeichert</h2>
-            <p>{{ getCategoryTitle(selectedCategory) }} - {{ getSelectedOptionTitle() }}</p>
+            <div class="confirmation-title">Einstellung gespeichert</div>
+            <div class="confirmation-text">{{ getCategoryTitle(selectedCategory) }} - {{ getSelectedOptionTitle() }}</div>
           </div>
         </div>
       </div>
@@ -129,7 +129,7 @@
 
 <script setup lang="ts">
 import { ref, computed, onMounted, onUnmounted, watch } from 'vue'
-import { useSettingsDialogLogic } from './SettingsDialogView.ts'
+import { useSettingsDialogLogic } from './SettingsDialogView'
 import AppHeader from '../../../shared/components/AppHeader.vue'
 
 // Settings dialog states
@@ -189,7 +189,7 @@ const selectCategory = async (categoryId: string) => {
   currentState.value = 'optionsView'
   currentTileIndex.value = 0
   
-  const category = settingsCategories.find(c => c.id === categoryId)
+  const category = settingsCategories.find((c: any) => c.id === categoryId)
   if (category) {
     console.log(`Einstellungen für ${category.title}`)
   }
@@ -233,6 +233,18 @@ const selectOption = async (optionId: string) => {
 }
 
 const resetToMainView = async () => {
+  console.log('Resetting to main view...')
+  
+  // Stoppe aktuellen Auto-Mode
+  stopAutoMode()
+  
+  // Clean up previous lifecycle
+  if (cleanup) {
+    cleanup()
+    cleanup = null
+  }
+  
+  // Reset state
   currentState.value = 'mainView'
   currentTileIndex.value = 0
   selectedCategory.value = null
@@ -240,12 +252,8 @@ const resetToMainView = async () => {
   
   console.log('Welche Einstellung möchten Sie ändern?')
   
-  // Start auto-mode for categories
-  if (!isAutoMode.value) {
-    setTimeout(() => {
-      startAutoMode(settingsCategories, 1000, 3000)
-    }, 2000)
-  }
+  // Der Watch-Handler wird automatisch den Auto-Mode starten
+  // Keine manuelle Auto-Mode-Initialisierung hier nötig
 }
 
 // Right-click handlers
@@ -377,5 +385,5 @@ watch(currentState, (newState) => {
 </script>
 
 <style scoped>
-@import './SettingsDialogView.css';
+@import '../../../shared/styles/DialogBase.css';
 </style>

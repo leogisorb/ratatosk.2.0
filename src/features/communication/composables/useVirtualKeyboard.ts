@@ -137,9 +137,21 @@ export function useVirtualKeyboard() {
     currentLetterIndex.value = 0
     letterCycleCount.value = 0
     
-    // Anzeige und TTS
-    statusText.value = "Wählen Sie jetzt einen Buchstaben aus, um diesen zu schreiben."
-    await speakText("Wählen Sie jetzt einen Buchstaben aus, um diesen zu schreiben.")
+    // Anzeige und TTS - angepasst an die ausgewählte Zeile
+    const rowDescriptions = [
+      "Wählen Sie jetzt einen Buchstaben aus, um diesen zu schreiben.",
+      "Wählen Sie jetzt einen Buchstaben aus, um diesen zu schreiben.",
+      "Wählen Sie jetzt einen Buchstaben aus, um diesen zu schreiben.",
+      "Wählen Sie jetzt eine Silbe aus, um diese zu schreiben.",
+      "Wählen Sie jetzt ein Kurzwort aus, um dieses zu schreiben.",
+      "Wählen Sie jetzt eine Steuerungstaste aus, um diese zu verwenden."
+    ]
+    
+    const selectedRow = selectedRowIndex.value || 0
+    const description = rowDescriptions[selectedRow]
+    
+    statusText.value = description
+    await speakText(description)
     await delay(3000)
     
     // Starte Buchstabendurchlauf

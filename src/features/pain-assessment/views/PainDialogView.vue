@@ -153,8 +153,8 @@
         <!-- Confirmation View -->
         <div v-if="currentState === 'confirmation'">
           <div class="confirmation-container">
-            <h2>Schmerz erfasst</h2>
-            <p>{{ getSubRegionTitle(selectedSubRegion) }} - Schmerzlevel {{ selectedPainLevel }} - {{ selectedPainLevel ? getPainDescription(selectedPainLevel) : '' }}</p>
+            <div class="confirmation-title">Schmerz erfasst</div>
+            <div class="confirmation-text">{{ getSubRegionTitle(selectedSubRegion) }} - Schmerzlevel {{ selectedPainLevel }} - {{ selectedPainLevel ? getPainDescription(selectedPainLevel) : '' }}</div>
           </div>
         </div>
       </div>
@@ -484,5 +484,5 @@ watch(currentState, (newState) => {
 </script>
 
 <style scoped>
-@import './PainDialogView.css';
+@import '../../../shared/styles/DialogBase.css';
 </style>

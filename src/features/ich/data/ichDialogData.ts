@@ -64,7 +64,7 @@ export const ernaehrungSubRegions: IchSubRegion[] = [
   
   // Konsistenzen
   { id: 'trocken', title: 'trocken', type: 'konsistenz', emoji: '🍪', ttsText: 'etwas Trockenes' },
-  { id: 'nass', title: 'nass', type: 'konsistenz', emoji: '💧', ttsText: 'etwas Nasses' },
+  { id: 'nass', title: 'nass', type: 'konsistenz', emoji: '💦', ttsText: 'etwas Nasses' },
   { id: 'breiig', title: 'breiig', type: 'konsistenz', emoji: '🥣', ttsText: 'etwas Breiiges' },
   
   // Getränke
@@ -110,7 +110,7 @@ export const kleidungSubRegions: IchSubRegion[] = [
   
   // Kleidung
   { id: 'tshirt', title: 'T-Shirt', type: 'kleidung', emoji: '👕', ttsText: 'das T-Shirt' },
-  { id: 'pullover', title: 'Pullover', type: 'kleidung', emoji: '🧥', ttsText: 'den Pullover' },
+  { id: 'pullover', title: 'Pullover', type: 'kleidung', emoji: '👕', ttsText: 'den Pullover' },
   { id: 'jacke', title: 'Jacke', type: 'kleidung', emoji: '🧥', ttsText: 'die Jacke' },
   { id: 'hose', title: 'Hose', type: 'kleidung', emoji: '👖', ttsText: 'die Hose' },
   

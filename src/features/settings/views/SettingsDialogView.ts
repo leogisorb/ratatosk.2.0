@@ -51,6 +51,12 @@ export function useSettingsDialogLogic() {
   const speakText = async (text: string) => {
     console.log('SettingsDialogView: Requesting TTS for:', text)
     
+    // Prüfe ob TTS gemutet ist
+    if (simpleFlowController.getTTSMuted()) {
+      console.log('SettingsDialogView: TTS is muted, skipping:', text)
+      return
+    }
+    
     // Direkt über Browser TTS API sprechen
     if ('speechSynthesis' in window) {
       const utterance = new SpeechSynthesisUtterance(text)
@@ -215,6 +221,17 @@ export function useSettingsDialogLogic() {
     }
   }
 
+  // Get carousel item style for 3D positioning
+  const getCarouselItemStyle = (index: number) => {
+    const offset = index - currentTileIndex.value
+    const rotation = offset < 0 ? -20 : 20
+    
+    return {
+      '--offset': offset,
+      '--rotation': `${rotation}deg`
+    }
+  }
+
   // Save setting to store
   const saveSetting = async (categoryId: string, optionId: string) => {
     const options = getCategoryOptions(categoryId)
@@ -227,19 +244,19 @@ export function useSettingsDialogLogic() {
     // Update settings store based on category
     switch (categoryId) {
       case 'leuchtdauer':
-        settingsStore.updateSetting('leuchtdauer', option.value)
+        settingsStore.updateSettings({ leuchtdauer: option.value as number })
         break
       case 'blitzdauer':
-        settingsStore.updateSetting('blitzdauer', option.value)
+        settingsStore.updateSettings({ blinzeldauer: option.value as number })
         break
       case 'farbmodus':
-        settingsStore.setDarkMode(option.value)
+        settingsStore.toggleDarkMode()
         break
       case 'kamera':
-        settingsStore.updateSetting('kameraEnabled', option.value)
+        settingsStore.updateSettings({ kamera: option.value ? 'back' : 'off' })
         break
       case 'kamerapositionen':
-        settingsStore.updateSetting('kameraPosition', option.value)
+        settingsStore.updateSettings({ kamera: option.value as string })
         break
       case 'impressum':
         // Impressum ist nur zur Anzeige, keine Einstellung
@@ -272,7 +289,7 @@ export function useSettingsDialogLogic() {
 
   const pauseAutoMode = () => {
     console.log(`[${instanceId}] Pausing auto-mode`)
-    simpleFlowController.pauseAutoMode()
+    simpleFlowController.stopAutoMode()
   }
 
   const stopAutoMode = () => {
@@ -329,7 +346,9 @@ export function useSettingsDialogLogic() {
     console.log(`[${instanceId}] Volume toggle received:`, customEvent.detail.enabled)
     
     if (!customEvent.detail.enabled) {
+      // Stoppe alle TTS (SimpleFlowController und Browser API)
       simpleFlowController.stopTTS()
+      window.speechSynthesis.cancel()
     }
   }
 
@@ -412,6 +431,7 @@ export function useSettingsDialogLogic() {
     getCategoryTitle,
     getOptionTitle,
     getCurrentValue,
+    getCarouselItemStyle,
     saveSetting,
     
     // Methods

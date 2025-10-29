@@ -200,8 +200,8 @@
         <!-- Confirmation View -->
         <div v-if="currentState === 'confirmation'">
           <div class="confirmation-container">
-            <h2>{{ getConfirmationTitle() }}</h2>
-            <p>{{ getConfirmationText() }}</p>
+            <div class="confirmation-title">{{ getConfirmationTitle() }}</div>
+            <div class="confirmation-text">{{ getConfirmationText() }}</div>
           </div>
         </div>
       </div>
@@ -750,8 +750,20 @@ const handleBlink = () => {
 
 const goBack = () => {
   console.log('Going back to main app')
-  // Navigate to pain-dialog route
-  router.push('/pain-dialog')
+  // Stop all auto-modes and timers before navigation
+  stopAutoMode()
+  stopAutoLoop()
+  clearAllTimers()
+  
+  // Reset all states before navigation
+  currentState.value = 'mainView'
+  currentTileIndex.value = 0
+  selectedMainRegion.value = null
+  selectedSubRegion.value = null
+  selectedSubSubRegion.value = null
+  
+  // Navigate to /app route
+  router.push('/app')
 }
 
 const goToSubRegion = (index: number) => {
@@ -924,5 +936,5 @@ watch(currentState, (newState) => {
 </script>
 
 <style scoped>
-@import './UmgebungDialogView.css';
+@import '../../../shared/styles/DialogBase.css';
 </style>

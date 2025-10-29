@@ -114,8 +114,8 @@
         <!-- Confirmation View -->
         <div v-if="currentState === 'confirmation'">
           <div class="confirmation-container">
-            <h2>{{ getConfirmationTitle() }}</h2>
-            <p>{{ getConfirmationText() }}</p>
+            <div class="confirmation-title">{{ getConfirmationTitle() }}</div>
+            <div class="confirmation-text">{{ getConfirmationText() }}</div>
           </div>
         </div>
       </div>
@@ -400,6 +400,15 @@ const handleSubRegionSelection = (item: any) => {
 
 const goBack = () => {
   console.log('Going back to main app')
+  // Stop all auto-modes before navigation
+  stopAutoMode()
+  
+  // Reset all states before navigation
+  currentState.value = 'mainView'
+  currentTileIndex.value = 0
+  selectedMainRegion.value = null
+  selectedSubRegion.value = null
+  
   // Navigate to app route
   router.push('/app')
 }
@@ -526,5 +535,5 @@ watch(currentState, (newState) => {
 </script>
 
 <style scoped>
-@import './IchDialogView.css';
+@import '../../../shared/styles/DialogBase.css';
 </style>
