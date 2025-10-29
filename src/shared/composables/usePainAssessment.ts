@@ -1,8 +1,8 @@
 import { ref, computed, onMounted, onUnmounted } from 'vue'
 import { useRouter } from 'vue-router'
-import { useSettingsStore } from '../../settings/stores/settings'
-import { useFaceRecognition } from '../../face-recognition/composables/useFaceRecognition'
-import { simpleFlowController } from '../../../core/application/SimpleFlowController'
+import { useSettingsStore } from '../../features/settings/stores/settings'
+import { useFaceRecognition } from '../../features/face-recognition/composables/useFaceRecognition'
+import { simpleFlowController } from '../../core/application/SimpleFlowController'
 
 // Centralized pain assessment logic
 // This eliminates duplicate auto-mode, TTS, and blink detection implementations

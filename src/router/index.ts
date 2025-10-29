@@ -7,7 +7,6 @@ import PainScaleView from '../features/pain-assessment/views/PainScaleView.vue'
 import PainDialogView from '../features/pain-assessment/views/PainDialogView.vue'
 import IchDialogView from '../features/ich/views/IchDialogView.vue'
 import UmgebungDialogView from '../features/umgebung-dialog/views/UmgebungDialogView.vue'
-import SlashSettingsView from '../features/settings/views/SlashSettingsView.vue'
 import SettingsDialogView from '../features/settings/views/SettingsDialogView.vue'
 // Alte Settings-Views entfernt - werden durch SettingsDialogView ersetzt
 
@@ -68,7 +67,7 @@ const router = createRouter({
     {
       path: '/einstellungen',
       name: 'einstellungen',
-      component: SlashSettingsView,
+      component: SettingsDialogView,
     },
     {
       path: '/einstellungen-dialog',
