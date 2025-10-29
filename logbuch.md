@@ -1826,3 +1826,114 @@ Einstellungen von einzelnen Views zu einem einheitlichen 3-Phasen-Dialog-System 
 - **Pixel-perfekte Übereinstimmung** mit bestehender Architektur
 
 **Settings-Dialog ist jetzt exakt wie Umgebung-Dialog implementiert!** 🎯
+
+---
+
+### 2025-01-28 - Settings-Dialog Icons & Leuchtdauer Optimierung
+
+**Problem:**
+- Settings-Icons waren nicht verfügbar (404-Fehler)
+- Leuchtdauer war zu lang (3 Sekunden Standard)
+- Kamera-Einstellungen zeigten "Ein"/"Aus" in separaten Zeilen
+- Settings-Titel und aktueller Wert waren in separaten Zeilen
+
+**Lösung:**
+- **Icons hinzugefügt**: Alle Settings-SVG-Icons in `src/assets/` verschoben
+- **Leuchtdauer verkürzt**: Von 3s auf 2s Standard, neue Optionen 1.5s-5s
+- **Kamera-Text korrigiert**: "KAMERA EIN"/"KAMERA AUS" in einer Zeile
+- **Titel-Format**: "LEUCHTDAUER - Aktuell: 2 Sekunden" in einer Zeile
+- **Icon-Größen**: An Pain-Dialog angepasst (clamp(80px, 10vw, 160px))
+
+**Technische Details:**
+```typescript
+// Icons korrekt importiert
+import leuchtdauerIcon from '@/assets/leuchtdauer.svg'
+import blinzeldauerIcon from '@/assets/blinzeldauer.svg'
+// ... weitere Icons
+
+// Leuchtdauer-Optionen erweitert
+leuchtdauer: [
+  { id: 'schnell', title: 'Schnell', description: '1,5 Sekunden', value: 1.5, emoji: '⚡' },
+  { id: 'normal', title: 'Normal', description: '2 Sekunden', value: 2, emoji: '⚡' },
+  // ... weitere Optionen
+]
+
+// Kamera-Text in einer Zeile
+{ id: 'ein', title: 'KAMERA EIN', description: 'Kamera aktivieren', value: true, emoji: '📹' }
+{ id: 'aus', title: 'KAMERA AUS', description: 'Kamera deaktivieren', value: false, emoji: '📷' }
+```
+
+**Ergebnis:**
+- ✅ Alle Settings-Icons werden korrekt angezeigt
+- ✅ Leuchtdauer ist schneller (2s Standard, 1.5s-5s Optionen)
+- ✅ Kamera-Einstellungen in einer Zeile
+- ✅ Settings-Titel und Werte in einer Zeile
+- ✅ Icon-Größen konsistent mit Pain-Dialog
+
+**Dateien geändert:**
+- `src/features/settings/views/SettingsDialogView.ts` (Icons, Leuchtdauer, Kamera-Text)
+- `src/features/settings/views/SettingsDialogView.vue` (Titel-Format)
+- `src/features/settings/views/SettingsDialogView.css` (Icon-Größen)
+- `src/core/utils/leuchtdauerUtils.ts` (Standard-Leuchtdauer)
+- `src/assets/` (alle Settings-Icons hinzugefügt)
+
+---
+
+### 2025-01-28 - Ich-Dialog Zurück-Button Navigation korrigiert
+
+**Problem:**
+- Zurück-Button im Ich-Dialog führte zu `/pain-dialog` statt zur App-View
+- Navigation war inkonsistent mit anderen Dialogen
+
+**Lösung:**
+- **Navigation korrigiert**: Zurück-Button führt jetzt zu `/app` (App-View)
+- **Konsistente Navigation**: Alle Dialoge verwenden jetzt `/app` als Ziel
+- **Auto-Mode**: Zurück-Button ist bereits in allen Views enthalten
+
+**Technische Details:**
+```typescript
+// Vorher: Falsche Navigation
+const goBack = () => {
+  router.push('/pain-dialog') // ❌ Falsch
+}
+
+// Nachher: Korrekte Navigation
+const goBack = () => {
+  router.push('/app') // ✅ Korrekt
+}
+```
+
+**Ergebnis:**
+- ✅ Zurück-Button führt korrekt zu `/app`
+- ✅ Navigation ist konsistent across alle Dialoge
+- ✅ Auto-Mode schließt Zurück-Button ein
+
+**Dateien geändert:**
+- `src/features/ich/views/IchDialogView.vue`
+- `src/features/ich/composables/useIchDialogFlow.ts`
+- `src/features/ich/composables/usePainAssessment.ts`
+
+---
+
+### 2025-01-28 - CSS-Konsolidierung & DialogBase.css
+
+**Problem:**
+- CSS war über mehrere Dateien verteilt
+- Inkonsistente Styles zwischen Dialogen
+- Wartbarkeit war schwierig
+
+**Lösung:**
+- **Zentrale CSS-Datei**: `src/shared/styles/DialogBase.css`
+- **Einheitliche Styles**: Alle Dialoge verwenden dieselbe CSS-Basis
+- **Bessere Wartbarkeit**: Ein Ort für alle Dialog-Styles
+
+**Ergebnis:**
+- ✅ Konsistente Styles across alle Dialoge
+- ✅ Bessere Wartbarkeit und Organisation
+- ✅ Reduzierte CSS-Duplikation
+
+**Dateien geändert:**
+- `src/shared/styles/DialogBase.css` (neu, zentral)
+- `src/features/ich/views/IchDialogView.css` (gelöscht)
+- `src/features/settings/views/SettingsDialogView.css` (gelöscht)
+- `src/features/umgebung-dialog/views/UmgebungDialogView.css` (gelöscht)
