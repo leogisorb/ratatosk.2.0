@@ -34,3 +34,8 @@ dist-ssr
 .env.development.local
 .env.test.local
 .env.production.local
+
+# Backup directories and files
+backup-*/
+*-backup/
+dist/
