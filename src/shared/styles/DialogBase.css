@@ -512,10 +512,7 @@
   box-shadow: 0 0 10px rgba(0, 176, 152, 0.5);
 }
 
-.pain-dialog .carousel-indicator:hover {
-  background-color: rgba(0, 176, 152, 0.6);
-  transform: scale(1.1);
-}
+/* Hover Effects entfernt */
 
 /* === 3D KARUSSELL ZENTRIERUNG FIX === */
 
