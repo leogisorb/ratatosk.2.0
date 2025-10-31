@@ -95,7 +95,7 @@ export function useHomeViewLogic() {
       id: 'pain',
       title: 'SCHMERZEN',
       icon: '/headache.svg',
-      route: '/pain-dialog',
+      route: '/schmerz',
       category: 'pain'
     },
     {

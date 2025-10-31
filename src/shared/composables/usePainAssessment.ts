@@ -80,8 +80,13 @@ export function usePainAssessment() {
       items,
       (currentIndex, currentItem) => {
         currentTileIndex.value = currentIndex
-        console.log('PainAssessment: Auto-mode cycle:', currentItem.title || currentItem.description, 'at index:', currentIndex)
-        speakText(currentItem.title || currentItem.description)
+        // Für Pain Scale: immer description vorlesen (z.B. "kein Schmerz", "sehr leicht", etc.)
+        // Für andere Items: title oder description
+        const textToSpeak = isPainScaleView && currentItem.description 
+          ? currentItem.description 
+          : (currentItem.title || currentItem.description || currentItem.level)
+        console.log('PainAssessment: Auto-mode cycle:', textToSpeak, 'at index:', currentIndex)
+        speakText(textToSpeak)
       },
       initialDelay,
       cycleDelay
@@ -170,7 +175,7 @@ export function usePainAssessment() {
   // Lifecycle management
   const setupLifecycle = (items: any[], onSelection: (item: any) => void) => {
     // Setze PainDialogView als aktiven View
-    simpleFlowController.setActiveView('/pain-dialog')
+    simpleFlowController.setActiveView('/schmerz')
     
     // Start face recognition if not active
     if (!faceRecognition.isActive.value) {
