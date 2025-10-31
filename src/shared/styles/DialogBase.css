@@ -120,15 +120,7 @@
 }
 
 
-/* Hover Effects */
-.pain-dialog .menu-tile:hover .tile-icon-container {
-  background-color: rgba(0, 176, 152, 0.1);
-  border: 2px solid rgba(0, 176, 152, 0.2);
-}
-
-.pain-dialog .menu-tile:hover .tile-icon {
-  transform: scale(1.1);
-}
+/* Hover Effects entfernt - nicht gewünscht */
 
 /* Active States */
 .pain-dialog .tile-active {
@@ -364,20 +356,14 @@
   z-index: 999;
 }
 
-.pain-dialog .menu-tile.back-tile:hover {
-  background-color: rgba(0, 176, 152, 0.1);
-  border: 3px solid rgba(0, 176, 152, 0.3);
-}
+/* Hover Effects entfernt */
 
 .pain-dialog .menu-tile.back-tile .tile-icon-container {
   background-color: transparent;
   border: none;
 }
 
-.pain-dialog .menu-tile.back-tile:hover .tile-icon-container {
-  background-color: rgba(0, 176, 152, 0.1);
-  border: 2px solid rgba(0, 176, 152, 0.3);
-}
+/* Hover Effects entfernt */
 
 /* === KARUSSELL STYLES === */
 .pain-dialog .carousel-container {
