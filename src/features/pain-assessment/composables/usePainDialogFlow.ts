@@ -1,107 +1,21 @@
 import { ref, computed, onMounted, onUnmounted } from 'vue'
 import { useSettingsStore } from '../../settings/stores/settings'
 import { useFaceRecognition } from '../../face-recognition/composables/useFaceRecognition'
+import { 
+  mainRegions,
+  kopfSubRegions, 
+  beineSubRegions, 
+  armeSubRegions, 
+  torsoSubRegions,
+  painLevels
+} from '../data/painAssessmentData'
+import { generatePainConfirmationText } from '../data/painAssessmentGrammar'
 
 // Zustände der Schmerzen-Dialog-Maschine
 export type PainDialogState = 'mainView' | 'subRegionView' | 'painScaleView' | 'confirmation'
 
-// Haupt-Körperregionen (mit korrekten Icons aus SchmerzView)
-export const mainRegions = [
-  { id: 'kopf', title: 'Kopf', icon: 'head.png' },
-  { id: 'beine', title: 'Beine', icon: 'leg.png' },
-  { id: 'arme', title: 'Arme', icon: 'elbow-2.png' },
-  { id: 'torso', title: 'Torso', icon: 'living.png' }
-]
-
-// Unterregionen für Kopf (aus KopfSchmerzView)
-export const kopfSubRegions = [
-  { id: 'stirn', title: 'Stirn', icon: 'stirn.svg' },
-  { id: 'hinterkopf', title: 'Hinterkopf', icon: 'hinterkopf.svg' },
-  { id: 'schlaefe', title: 'Schläfe', icon: 'schläfe.svg' },
-  { id: 'nacken', title: 'Nacken', icon: 'nacken.svg' },
-  { id: 'kiefer', title: 'Kiefer', icon: 'kiefer.svg' },
-  { id: 'nebenhoehlen', title: 'Nebenhöhlen', icon: 'nebenhoehlen.svg' },
-  { id: 'hals', title: 'Hals', icon: 'hals.svg' },
-  { id: 'auge', title: 'Auge', icon: 'auge.svg' },
-  { id: 'nase', title: 'Nase', icon: 'nase.svg' },
-  { id: 'mund', title: 'Mund', icon: 'mund.svg' },
-  { id: 'speiseroehre', title: 'Speiseröhre', icon: 'speiseröhre.svg' }
-]
-
-// Unterregionen für Beine (aus BeineSchmerzView - vollständig)
-export const beineSubRegions = [
-  // Zeile 1: Oberschenkel, Knie, Unterschenkel, Knöchel
-  { id: 'oberschenkel', title: 'Oberschenkel', icon: 'OBERSCHENKEL.svg' },
-  { id: 'knie', title: 'Knie', icon: 'KNIE.svg' },
-  { id: 'unterschenkel', title: 'Unterschenkel', icon: 'UNTERSCHENKEL.svg' },
-  { id: 'knoechel', title: 'Knöchel', icon: 'KNÖCHEL.svg' },
-  
-  // Zeile 2: Fuß, Zehen, Hüfte, Wade
-  { id: 'fuss', title: 'Fuß', icon: 'FUSBALLEN.svg' },
-  { id: 'zehen', title: 'Zehen', icon: 'ZEHEN.svg' },
-  { id: 'huefte', title: 'Hüfte', icon: 'hüfte.svg' },
-  { id: 'wade', title: 'Wade', icon: 'UNTERSCHENKEL.svg' },
-  
-  // Zeile 3: Leiste, Gesäß, Sprunggelenk
-  { id: 'leiste', title: 'Leiste', icon: 'hüfte.svg' },
-  { id: 'gesaess', title: 'Gesäß', icon: 'hüfte.svg' },
-  { id: 'sprunggelenk', title: 'Sprunggelenk', icon: 'KNÖCHEL.svg' }
-]
-
-// Unterregionen für Arme (aus ArmeSchmerzView - vollständig)
-export const armeSubRegions = [
-  // Zeile 1: Oberarm, Unterarm, Ellenbogen, Handgelenk
-  { id: 'oberarm', title: 'Oberarm', icon: 'oberarm.svg' },
-  { id: 'unterarm', title: 'Unterarm', icon: 'unterarm.svg' },
-  { id: 'ellenbogen', title: 'Ellenbogen', icon: 'schulter.svg' },
-  { id: 'handgelenk', title: 'Handgelenk', icon: 'handgelenk.svg' },
-  
-  // Zeile 2: Hand, Finger, Schulter, Daumen
-  { id: 'hand', title: 'Hand', icon: 'handfläche.svg' },
-  { id: 'finger', title: 'Finger', icon: 'finger.svg' },
-  { id: 'schulter', title: 'Schulter', icon: 'schulter.svg' },
-  { id: 'daumen', title: 'Daumen', icon: 'finger.svg' },
-  
-  // Zeile 3: Achsel, Handrücken, Handfläche
-  { id: 'achsel', title: 'Achsel', icon: 'achsel.svg' },
-  { id: 'handruecken', title: 'Handrücken', icon: 'handrücken.svg' },
-  { id: 'handflaeche', title: 'Handfläche', icon: 'handfläche.svg' }
-]
-
-// Unterregionen für Torso (vollständig mit korrekten Icons)
-export const torsoSubRegions = [
-  // Zeile 1: Brust, Rücken, Schulterblatt, Wirbelsäule
-  { id: 'brust', title: 'Brust', icon: 'brust.svg' },
-  { id: 'ruecken', title: 'Rücken', icon: 'schulterblätter.svg' },
-  { id: 'schulterblatt', title: 'Schulterblatt', icon: 'schulterblätter.svg' },
-  { id: 'wirbelsaeule', title: 'Wirbelsäule', icon: 'wirbelsaule.svg' },
-  
-  // Zeile 2: Bauch, Lunge, Herz, Magen
-  { id: 'bauch', title: 'Bauch', icon: 'magen.svg' },
-  { id: 'lunge', title: 'Lunge', icon: 'lunge.svg' },
-  { id: 'herz', title: 'Herz', icon: 'anatomisches-herz.svg' },
-  { id: 'magen', title: 'Magen', icon: 'magen.svg' },
-  
-  // Zeile 3: Leber, Niere, Blase, Zurück
-  { id: 'leber', title: 'Leber', icon: 'magen.svg' },
-  { id: 'niere', title: 'Niere', icon: 'magen.svg' },
-  { id: 'blase', title: 'Blase', icon: 'blase.svg' },
-  { id: 'zurueck', title: 'zurück', icon: 'zurueck.svg' }
-]
-
-// Schmerzstufen mit numerischen und verbalen Labels
-export const painLevels = [
-  { id: 1, title: 'Eins', description: 'kein Schmerz', level: 1 },
-  { id: 2, title: 'Zwei', description: 'sehr leicht', level: 2 },
-  { id: 3, title: 'Drei', description: 'leicht', level: 3 },
-  { id: 4, title: 'Vier', description: 'leicht bis mäßig', level: 4 },
-  { id: 5, title: 'Fünf', description: 'mäßig', level: 5 },
-  { id: 6, title: 'Sechs', description: 'mäßig bis stark', level: 6 },
-  { id: 7, title: 'Sieben', description: 'stark', level: 7 },
-  { id: 8, title: 'Acht', description: 'sehr stark', level: 8 },
-  { id: 9, title: 'Neun', description: 'extrem stark', level: 9 },
-  { id: 10, title: 'Zehn', description: 'unerträglich', level: 10 }
-]
+// Exportiere für externe Nutzung
+export { mainRegions, painLevels }
 
 export function usePainDialogFlow() {
   const settingsStore = useSettingsStore()
@@ -114,7 +28,35 @@ export function usePainDialogFlow() {
   const selectedSubRegion = ref<string | null>(null)
   const selectedPainLevel = ref<number | null>(null)
 
-  // TTS removed
+  // ✅ FIX 1: isTTSEnabled und isSpeaking definieren
+  const isTTSEnabled = computed(() => settingsStore.settings.voiceEnabled ?? true)
+  const isSpeaking = ref(false)
+
+  // Timer-Manager für Auto-Mode (verhindert Memory-Leaks)
+  let autoModeTimer: number | null = null
+  let cycleTimer: number | null = null
+  
+  // ✅ BUG A: AutoMode-Guard gegen mehrfache Starts
+  let autoModeRunning = false
+  
+  // Referenz zu aktuellen Items für Race-Condition-Check
+  let currentItemsSnapshot: any[] = []
+  // ✅ BUG D: Gesprochener Index für handleBlink
+  const spokenIndex = ref(0)
+
+  // ✅ FIX 3: Timer-Manager Funktionen
+  const clearAllTimers = () => {
+    if (autoModeTimer) {
+      clearTimeout(autoModeTimer)
+      autoModeTimer = null
+    }
+    if (cycleTimer) {
+      clearTimeout(cycleTimer)
+      cycleTimer = null
+    }
+    // ✅ BUG A: Setze AutoMode-Flag zurück
+    autoModeRunning = false
+  }
 
   // Aktuelle Items basierend auf Zustand
   const currentItems = computed(() => {
@@ -140,8 +82,23 @@ export function usePainDialogFlow() {
       case 'mainView':
         return 'Wo haben Sie Schmerzen?'
       case 'subRegionView':
-        const region = mainRegions.find(r => r.id === selectedMainRegion.value)
-        return region ? `Wählen Sie einen ${region.title}bereich aus.` : 'Wählen Sie einen Bereich aus.'
+        const region = mainRegions.find((r: any) => r.id === selectedMainRegion.value)
+        if (!region) return 'Wählen Sie einen Bereich aus.'
+        
+        // ✅ Korrekte deutsche Grammatik für Singular/Plural
+        // Singular: "im Kopf", "im Torso"
+        // Plural: "an den Beinen", "an den Armen"
+        const pluralRegions = ['beine', 'arme'] // Plural-Regionen
+        const isPlural = pluralRegions.includes(region.id)
+        
+        if (isPlural) {
+          // Plural-Form: "an den Beinen", "an den Armen"
+          const pluralForm = region.id === 'beine' ? 'Beinen' : 'Armen'
+          return `Wählen Sie einen Bereich an den ${pluralForm} aus.`
+        } else {
+          // Singular-Form: "im Kopf", "im Torso"
+          return `Wählen Sie einen Bereich im ${region.title} aus.`
+        }
       case 'painScaleView':
         return 'Wie stark sind Ihre Schmerzen?'
       case 'confirmation':
@@ -156,14 +113,30 @@ export function usePainDialogFlow() {
     return currentItems.value[currentTileIndex.value] || null
   })
 
-  // Bestätigungstext
+  // ✅ Verbesserte Bestätigungstext mit vollständigem Grammatik-System
   const confirmationText = computed(() => {
     if (!selectedSubRegion.value || !selectedPainLevel.value) return ''
     
-    const subRegion = currentItems.value.find(item => item.id === selectedSubRegion.value)
-    const painLevel = painLevels.find(level => level.level === selectedPainLevel.value)
+    // Suche in allen definierten Sub-Region-Arrays
+    const allSubRegions = [
+      ...kopfSubRegions,
+      ...beineSubRegions,
+      ...armeSubRegions,
+      ...torsoSubRegions
+    ]
     
-    return `Der Patient hat ${subRegion?.title}schmerzen Level ${selectedPainLevel.value}, ${painLevel?.description}.`
+    const subRegion = allSubRegions.find(item => item.id === selectedSubRegion.value)
+    const painLevel = painLevels.find((level: any) => level.level === selectedPainLevel.value)
+    
+    if (!subRegion || !painLevel) return ''
+    
+    // Verwende das vollständige Grammatik-System für korrekte deutsche Grammatik
+    return generatePainConfirmationText(
+      selectedSubRegion.value,
+      subRegion.title,
+      selectedPainLevel.value,
+      painLevel.description
+    )
   })
 
   // Type-safe getters für verschiedene Item-Typen
@@ -173,17 +146,24 @@ export function usePainDialogFlow() {
   const getItemIcon = (item: any) => item?.icon || ''
   const getItemLevel = (item: any) => item?.level || null
 
-  // TTS-Funktion
+  // ✅ BUG B: Verbesserte TTS-Funktion mit Deadlock-Schutz
   const speakText = (text: string): Promise<void> => {
     return new Promise((resolve) => {
-      if (!isTTSEnabled.value || isSpeaking.value) {
+      // ✅ BUG B: Auch bei deaktiviertem TTS kurz warten (für Timing-Konsistenz)
+      if (!isTTSEnabled.value) {
+        // Warte kurz, damit AutoMode-Timing konsistent bleibt
+        setTimeout(() => resolve(), 500)
+        return
+      }
+
+      if (isSpeaking.value) {
         resolve()
         return
       }
 
       const speechSynthesis = window.speechSynthesis
       if (!speechSynthesis) {
-        resolve()
+        setTimeout(() => resolve(), 500)
         return
       }
 
@@ -195,12 +175,21 @@ export function usePainDialogFlow() {
       utterance.rate = 1.0
       utterance.volume = 1.0
 
+      // ✅ BUG B: Timeout-Fallback für hängende TTS
+      const timeoutId = setTimeout(() => {
+        speechSynthesis.cancel()
+        isSpeaking.value = false
+        resolve()
+      }, 10000) // 10 Sekunden Timeout
+
       utterance.onend = () => {
+        clearTimeout(timeoutId)
         isSpeaking.value = false
         resolve()
       }
 
       utterance.onerror = () => {
+        clearTimeout(timeoutId)
         isSpeaking.value = false
         resolve()
       }
@@ -209,92 +198,231 @@ export function usePainDialogFlow() {
     })
   }
 
-  // Auto-Modus starten
+  // ✅ BUG A: Refactored Auto-Modus mit Guard gegen mehrfache Starts
   const startAutoMode = async () => {
+    // ✅ BUG A: Prüfe ob AutoMode bereits läuft
+    if (autoModeRunning) {
+      console.warn('AutoMode already running, ignoring duplicate start')
+      return
+    }
+    
+    // Stoppe alle laufenden Timer
+    clearAllTimers()
+    
     if (currentItems.value.length === 0) return
+
+    // ✅ BUG A: Setze Flag
+    autoModeRunning = true
+    
+    // ✅ BUG C: Speichere Snapshot der aktuellen Items und State
+    currentItemsSnapshot = [...currentItems.value]
+    const snapshotLength = currentItemsSnapshot.length
+    const snapshotState = currentState.value
 
     // Spreche zuerst den Titel
     await speakText(currentTitle.value)
     
-    // Warte 3 Sekunden, dann starte das Durchlaufen
-    setTimeout(async () => {
-      const cycleTiles = async () => {
-        if (currentState.value === 'confirmation') return
-        
-        const currentItem = currentItems.value[currentTileIndex.value]
-        if (currentItem) {
-          await speakText(getItemTitle(currentItem))
+    // ✅ BUG C: Prüfe ob Items sich geändert haben (Vergleich über Länge und State)
+    if (currentItems.value.length !== snapshotLength || 
+        currentState.value !== snapshotState ||
+        currentState.value === 'confirmation') {
+      autoModeRunning = false
+      return
+    }
+    
+    // Warte 3 Sekunden, dann starte das Durchlaufen der Tiles
+    autoModeTimer = window.setTimeout(() => {
+      // ✅ BUG C: Prüfe nochmal vor Start
+      if (currentItems.value.length !== snapshotLength || 
+          currentState.value !== snapshotState ||
+          currentState.value === 'confirmation') {
+        autoModeRunning = false
+        return
+      }
+      // Starte den ersten Zyklus
+      scheduleNextCycle()
+    }, 3000)
+  }
+
+  // ✅ BUG C & D: Verbesserter Cycle-Manager mit Race-Condition-Schutz
+  const scheduleNextCycle = () => {
+    // ✅ BUG C: Prüfe ob State geändert wurde oder Items sich geändert haben
+    const snapshotLength = currentItemsSnapshot.length
+    
+    // Prüfe zuerst auf confirmation State (TypeScript-safe)
+    if (currentState.value === 'confirmation' || 
+        currentItems.value.length === 0 ||
+        currentItems.value.length !== snapshotLength) {
+      autoModeRunning = false
+      return
+    }
+    
+    // ✅ BUG D: Speichere gesprochenen Index
+    spokenIndex.value = currentTileIndex.value
+    
+    // Spreche aktuelles Item
+    const currentItem = currentItems.value[currentTileIndex.value]
+    if (currentItem) {
+      speakText(getItemTitle(currentItem)).then(() => {
+        // ✅ BUG C: Prüfe ob Items sich während TTS geändert haben
+        // Prüfe zuerst auf confirmation (TypeScript-safe)
+        if (currentState.value === 'confirmation' ||
+            currentItems.value.length !== snapshotLength || 
+            currentItems.value.length === 0) {
+          autoModeRunning = false
+          return
         }
         
+        // Wechsle zum nächsten Item
         currentTileIndex.value = (currentTileIndex.value + 1) % currentItems.value.length
+        // ✅ BUG D: Aktualisiere auch spokenIndex
+        spokenIndex.value = currentTileIndex.value
         
-        setTimeout(cycleTiles, 3000)
-      }
-      
-      await cycleTiles()
-    }, 3000)
+        // Plane nächsten Zyklus - aber nur wenn noch im richtigen State
+        // (confirmation wurde bereits oben abgefangen, daher ist hier nur noch main/sub/pain möglich)
+        if (currentItems.value.length === 0 ||
+            currentItems.value.length !== snapshotLength) {
+          autoModeRunning = false
+        } else {
+          // Nur wenn length und snapshot übereinstimmen → weiter mit Cycle
+          cycleTimer = window.setTimeout(scheduleNextCycle, 3000)
+        }
+      })
+    } else {
+      autoModeRunning = false
+    }
   }
 
   // Hauptregion auswählen
   const selectMainRegion = async (regionId: string) => {
+    // ✅ BUG A & C: Stoppe alle Timer bevor State-Änderung
+    clearAllTimers()
+    
     selectedMainRegion.value = regionId
     currentState.value = 'subRegionView'
     currentTileIndex.value = 0
+    spokenIndex.value = 0
+    
+    // ✅ BUG C: Aktualisiere Snapshot
+    currentItemsSnapshot = []
     
     await speakText(currentTitle.value)
-    setTimeout(startAutoMode, 3000)
+    
+    // ✅ BUG C: Aktualisiere Snapshot nach State-Änderung
+    currentItemsSnapshot = [...currentItems.value]
+    
+    // Starte Auto-Mode nach 3 Sekunden
+    autoModeTimer = window.setTimeout(startAutoMode, 3000)
   }
 
   // Unterregion auswählen
   const selectSubRegion = async (subRegionId: string) => {
+    // ✅ BUG A & C: Stoppe alle Timer bevor State-Änderung
+    clearAllTimers()
+    
+    // ✅ BUG E: Robustes zurueck-Handling
     if (subRegionId === 'zurueck') {
       currentState.value = 'mainView'
       selectedMainRegion.value = null
       currentTileIndex.value = 0
+      spokenIndex.value = 0
+      // ✅ BUG C: Aktualisiere Snapshot
+      currentItemsSnapshot = [...mainRegions]
       await speakText(currentTitle.value)
-      setTimeout(startAutoMode, 3000)
+      autoModeTimer = window.setTimeout(startAutoMode, 3000)
       return
     }
     
     selectedSubRegion.value = subRegionId
     currentState.value = 'painScaleView'
     currentTileIndex.value = 0
+    spokenIndex.value = 0
+    
+    // ✅ BUG C: Aktualisiere Snapshot
+    currentItemsSnapshot = []
     
     await speakText(currentTitle.value)
-    setTimeout(startAutoMode, 3000)
+    
+    // ✅ BUG C: Aktualisiere Snapshot nach State-Änderung
+    currentItemsSnapshot = [...currentItems.value]
+    
+    // Starte Auto-Mode nach 3 Sekunden
+    autoModeTimer = window.setTimeout(startAutoMode, 3000)
   }
 
   // Schmerzlevel auswählen
   const selectPainLevel = async (level: number) => {
+    // ✅ BUG A & C: Stoppe alle Timer bevor State-Änderung
+    clearAllTimers()
+    
     selectedPainLevel.value = level
     currentState.value = 'confirmation'
     
-    await speakText(confirmationText.value)
+    // ✅ BUG F: Fallback wenn confirmationText leer ist
+    const textToSpeak = confirmationText.value || 'Ihre Angabe wurde gespeichert.'
+    await speakText(textToSpeak)
     
     // Nach 5 Sekunden zurück zum Start
-    setTimeout(() => {
+    autoModeTimer = window.setTimeout(() => {
+      clearAllTimers() // Cleare nochmal für Sicherheit
+      
       currentState.value = 'mainView'
       selectedMainRegion.value = null
       selectedSubRegion.value = null
       selectedPainLevel.value = null
       currentTileIndex.value = 0
+      spokenIndex.value = 0
+      
+      // ✅ BUG C: Aktualisiere Snapshot
+      currentItemsSnapshot = [...mainRegions]
       
       speakText(currentTitle.value)
-      setTimeout(startAutoMode, 3000)
+      autoModeTimer = window.setTimeout(startAutoMode, 3000)
     }, 5000)
   }
 
-  // Blink-Handler
+  // ✅ BUG D & E: Verbesserte Blink-Handler mit Race-Condition-Schutz und robustem zurueck-Handling
   const handleBlink = () => {
+    const items = currentItems.value
+    if (items.length === 0) return
+    
+    // ✅ BUG D: Verwende spokenIndex statt currentTileIndex (verhindert Race Condition)
+    const indexToUse = spokenIndex.value >= 0 && spokenIndex.value < items.length 
+      ? spokenIndex.value 
+      : currentTileIndex.value
+    
+    const currentItem = items[indexToUse]
+    if (!currentItem) return
+    
+    // ✅ BUG E: Robustes zurueck-Handling für alle States
+    if (currentItem.id === 'zurueck') {
+      // Zurück ist nur erlaubt, wenn nicht in mainView
+      if (currentState.value === 'subRegionView') {
+        selectSubRegion('zurueck')
+      }
+      // In mainView und painScaleView: zurueck wird ignoriert
+      return
+    }
+    
+    // ✅ Randfall: "zurueck" in mainView sollte nicht ausgewählt werden
     if (currentState.value === 'mainView') {
-      const region = mainRegions[currentTileIndex.value]
-      if (region) selectMainRegion(region.id)
+      if (typeof currentItem.id === 'string' && currentItem.id !== 'zurueck') {
+        selectMainRegion(currentItem.id)
+      }
     } else if (currentState.value === 'subRegionView') {
-      const subRegion = currentItems.value[currentTileIndex.value]
-      if (subRegion) selectSubRegion(subRegion.id)
+      // Sub regions haben id als string
+      if (typeof currentItem.id === 'string') {
+        selectSubRegion(currentItem.id)
+      }
     } else if (currentState.value === 'painScaleView') {
-      const painLevel = painLevels[currentTileIndex.value]
-      if (painLevel) selectPainLevel(painLevel.level)
+      // Pain levels haben level property
+      // ✅ Konsistent: verwende immer 'level', nicht 'id'
+      if ('level' in currentItem && typeof currentItem.level === 'number') {
+        selectPainLevel(currentItem.level)
+      } else if ('id' in currentItem && typeof currentItem.id === 'number') {
+        // Fallback: falls id als number verwendet wird
+        selectPainLevel(currentItem.id)
+      }
     }
   }
 
@@ -308,6 +436,7 @@ export function usePainDialogFlow() {
   const handleVolumeToggle = (event: CustomEvent) => {
     if (!event.detail.enabled) {
       window.speechSynthesis.cancel()
+      isSpeaking.value = false
     }
   }
 
@@ -317,13 +446,20 @@ export function usePainDialogFlow() {
       faceRecognition.start()
     }
     
+    // ✅ BUG C: Initialisiere Snapshot
+    currentItemsSnapshot = [...mainRegions]
+    
     startAutoMode()
     
-    document.addEventListener('contextmenu', handleRightClick)
+    // ✅ Performance: Event-Listener mit Optionen
+    document.addEventListener('contextmenu', handleRightClick, { passive: false })
     window.addEventListener('volumeToggle', handleVolumeToggle as EventListener)
   })
 
   onUnmounted(() => {
+    // Stoppe alle Timer beim Unmount
+    clearAllTimers()
+    
     document.removeEventListener('contextmenu', handleRightClick)
     window.removeEventListener('volumeToggle', handleVolumeToggle as EventListener)
     
@@ -361,6 +497,9 @@ export function usePainDialogFlow() {
     handleBlink,
     handleRightClick,
     speakText,
-    startAutoMode
+    startAutoMode,
+    
+    // Timer-Manager (für externe Nutzung)
+    clearAllTimers
   }
 }

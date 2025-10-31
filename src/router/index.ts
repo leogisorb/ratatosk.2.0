@@ -39,6 +39,11 @@ const router = createRouter({
       component: PainDialogView,
     },
     {
+      path: '/pain-dialog',
+      name: 'pain-dialog',
+      component: PainDialogView,
+    },
+    {
       path: '/ich-dialog',
       name: 'ich-dialog',
       component: IchDialogView,
@@ -54,6 +59,7 @@ const router = createRouter({
       component: SettingsDialogView,
     },
     // Alte Settings-Routes entfernt - werden durch /einstellungen (SettingsDialogView) ersetzt
-  ]})
+  ]
+})
 
 export default router

@@ -211,7 +211,7 @@ export function useIchAssessment() {
     document.addEventListener('keydown', enableTTSOnInteraction)
     document.addEventListener('touchstart', enableTTSOnInteraction)
 
-    // Start auto-mode automatically
+    // Start auto-mode automatically (wie im Pain Dialog)
     setTimeout(() => {
       // Für Sub-Regions: längere Delays für bessere TTS-Abwicklung
       const isSubRegionView = items.some(item => item.emoji !== undefined)

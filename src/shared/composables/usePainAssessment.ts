@@ -162,11 +162,8 @@ export function usePainAssessment() {
   }
 
   // Navigation helpers
-  const navigateToPainScale = (bodyPart: string, returnRoute: string) => {
-    stopAutoMode()
-    router.push(`/pain-scale?bodyPart=${encodeURIComponent(bodyPart)}&returnRoute=${encodeURIComponent(returnRoute)}`)
-  }
-
+  // ✅ navigateToPainScale entfernt - Pain Scale View ist jetzt in PainDialogView integriert
+  
   const navigateBack = (route: string = '/schmerz') => {
     stopAutoMode()
     router.push(route)
@@ -243,7 +240,6 @@ export function usePainAssessment() {
     handleBlink,
     handleRightClick,
     handleVolumeToggle,
-    navigateToPainScale,
     navigateBack,
     setupLifecycle,
 

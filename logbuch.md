@@ -1634,6 +1634,133 @@ Das Ratatosk-Projekt richtet sich an Menschen mit Behinderungen, die auf alterna
 
 ---
 
+## 📅 2025-01-XX - Pain Assessment Architektur-Refactoring & Input-Manager
+
+### Major Architecture Overhaul - Pain Assessment System
+
+**Problem:**
+- Pain Dialog hatte viele Bugs und Race Conditions
+- TTS wurde doppelt gesprochen
+- AutoMode startete mehrfach parallel
+- Index-Synchronisation zwischen TTS und visueller Darstellung war nicht korrekt
+- Input-Handler (Blink, Click, Touch) waren überall verteilt
+- Keine zentrale Abstraktion für verschiedene Eingabemedien
+
+**Lösung: Modulare Architektur**
+
+#### 1. Neue Modulare Architektur für Pain Assessment
+
+**Erstellte Module:**
+
+1. **`useTTS.ts`** - Robuste TTS-Implementierung
+   - Kein Deadlock mehr
+   - Promise-basiert
+   - Automatisches Timeout (10 Sekunden)
+   - Einheitliche API
+
+2. **`useAutoMode.ts`** - Synchronisierter Auto-Mode
+   - Nur ein aktiver Timer
+   - Wartet auf TTS-Completion
+   - Index-Synchronisation mit visueller Darstellung
+   - Unterstützt `skipTitle` Parameter für doppeltes TTS
+
+3. **`usePainDictionary.ts`** - Zentrale Daten- und Sprachlogik
+   - Alle Regionen und Pain Levels
+   - Grammatik-System für deutsche Texte
+   - Confirmation-Text-Generierung
+
+4. **`usePainDialogMachine.ts`** - Zentrale State-Machine
+   - Klarer State-Flow: mainView → subRegionView → painScaleView → confirmation
+   - Alle Actions zentralisiert
+   - Integriert TTS, AutoMode, Dictionary
+
+**Daten-Dateien reorganisiert:**
+- `regions.ts` - Alle Haupt- und Sub-Regionen
+- `painLevels.ts` - Pain Scale Daten
+- `painAssessmentGrammar.ts` - Deutsche Grammatik-Regeln
+- `painAssessmentMapping.ts` - UI ↔ Domain ID Mapping
+
+**Korrigierte Bugs:**
+
+1. **Doppeltes TTS-Sprechen:**
+   - `autoMode.start()` akzeptiert jetzt `skipTitle` Parameter
+   - Titel wird nur einmal gesprochen (in select-Funktionen ODER autoMode)
+
+2. **Index-Synchronisation:**
+   - Index wird erst NACH TTS + 3s Wartezeit aktualisiert
+   - Visuelle Darstellung bleibt während TTS beim korrekten Item
+
+3. **Pain Scale Darstellung:**
+   - Statt "Drei", "leicht", "EINS;ZWEI;DREI" → jetzt "3, leicht" in einer Zeile
+   - Orange (#FF8C00), 1.25x größer als Titel
+   - TTS spricht auch "3, leicht" statt "Drei"
+
+4. **TypeScript-Fehler:**
+   - Alle Type-Checks korrigiert
+   - `autoMode.index.value` statt `autoMode.index` im Template
+
+#### 2. Zentraler Input-Manager
+
+**Erstellt:**
+- **`InputManager.ts`** (`src/core/application/`)
+  - Zentraler Manager für alle Eingabemedien
+  - Unterstützt: Blink, Click, Touch (und zukünftig Voice, Gestures)
+  - Einheitliche API: Ein `onSelect` Callback für alle Input-Typen
+  - Cooldown-System verhindert zu häufige Inputs
+  - Automatisches Setup/Cleanup
+
+- **`useInputManager.ts`** (`src/shared/composables/`)
+  - Vue Composable für einfache Verwendung
+  - Auto-Cleanup beim Unmount
+  - Reaktive `isActive` State
+
+**Vorteile:**
+- ✅ Einheitliche API für alle Input-Typen
+- ✅ Einfach erweiterbar (neue Input-Typen nur im InputManager hinzufügen)
+- ✅ Wiederverwendbar in allen Views
+- ✅ Konsistentes Verhalten überall
+- ✅ Wartbarkeit: Input-Logik zentral
+
+**Beispiel-Verwendung:**
+```ts
+const inputManager = useInputManager({
+  onSelect: (event) => {
+    machine.handleBlink()
+  },
+  enabledInputs: ['blink', 'click', 'touch']
+})
+
+inputManager.start() // Alle Handler werden automatisch registriert
+```
+
+#### 3. Pain Scale View Optimierung
+
+**Änderungen:**
+- Kombinierte Anzeige: "3, leicht" statt drei separate Texte
+- Orange Farbe (#FF8C00)
+- 1.25x größer als Titel
+- Responsive für alle Breakpoints
+- TTS spricht auch kombiniert: "3, leicht"
+
+**Technische Details:**
+- Neue CSS-Klasse: `.pain-scale-level-combined`
+- Computed Property: `getCurrentPainLevelCombined`
+- `useAutoMode` erkennt Pain Levels automatisch und formatiert TTS
+
+#### 4. Code-Bereinigung
+
+**Gelöschte Dateien:**
+- `PainScaleView.vue` (Funktionalität in PainDialogView integriert)
+- `PainScaleView.css` (Styles in DialogBase.css integriert)
+- `navigateToPainScale()` Funktion aus usePainAssessment.ts entfernt
+
+**Refactored:**
+- `PainDialogView.vue` - Verwendet jetzt neue modulare Architektur
+- Alle TypeScript-Fehler behoben
+- Cleaner Code-Struktur
+
+---
+
 ## 🏗️ MAJOR ARCHITECTURE REFACTOR - Oktober 2024
 
 ### 📋 Übersicht

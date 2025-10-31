@@ -1,5 +1,7 @@
-// Centralized data for pain assessment system
-// This eliminates duplicate declarations across multiple files
+/**
+ * ✅ Daten-Modul: Regionen
+ * Enthält alle Haupt- und Sub-Regionen
+ */
 
 // Main body regions
 export const mainRegions = [
@@ -8,7 +10,7 @@ export const mainRegions = [
   { id: 'arme', title: 'Arme', icon: '/ratatosk.2.0/arm1.svg' },
   { id: 'torso', title: 'Torso', icon: '/ratatosk.2.0/torso1.svg' },
   { id: 'zurueck', title: 'Zurück', icon: '/ratatosk.2.0/zurueck.svg' }
-]
+] as const
 
 // Sub-regions for Kopf
 export const kopfSubRegions = [
@@ -24,7 +26,7 @@ export const kopfSubRegions = [
   { id: 'mund', title: 'Mund', icon: '/ratatosk.2.0/mund.svg' },
   { id: 'speiseroehre', title: 'Speiseröhre', icon: '/ratatosk.2.0/speiseröhre.svg' },
   { id: 'zurueck', title: 'Zurück', icon: '/ratatosk.2.0/back.svg' }
-]
+] as const
 
 // Sub-regions for Beine
 export const beineSubRegions = [
@@ -40,13 +42,13 @@ export const beineSubRegions = [
   { id: 'gesaess', title: 'Gesäß', icon: '/ratatosk.2.0/hüfte.svg' },
   { id: 'sprunggelenk', title: 'Sprunggelenk', icon: '/ratatosk.2.0/KNÖCHEL.svg' },
   { id: 'zurueck', title: 'Zurück', icon: '/ratatosk.2.0/back.svg' }
-]
+] as const
 
 // Sub-regions for Arme
 export const armeSubRegions = [
   { id: 'oberarm', title: 'Oberarm', icon: '/ratatosk.2.0/oberarm.svg' },
   { id: 'unterarm', title: 'Unterarm', icon: '/ratatosk.2.0/unterarm.svg' },
-  { id: 'ellenbogen', title: 'Ellenbogen', icon: '/ratatosk.2.0/ellebogen.svg' }, // ✅ Korrekt
+  { id: 'ellenbogen', title: 'Ellenbogen', icon: '/ratatosk.2.0/ellebogen.svg' },
   { id: 'handgelenk', title: 'Handgelenk', icon: '/ratatosk.2.0/handgelenk.svg' },
   { id: 'hand', title: 'Hand', icon: '/ratatosk.2.0/handfläche.svg' },
   { id: 'finger', title: 'Finger', icon: '/ratatosk.2.0/finger.svg' },
@@ -56,7 +58,7 @@ export const armeSubRegions = [
   { id: 'handruecken', title: 'Handrücken', icon: '/ratatosk.2.0/handrücken.svg' },
   { id: 'handflaeche', title: 'Handfläche', icon: '/ratatosk.2.0/handfläche.svg' },
   { id: 'zurueck', title: 'Zurück', icon: '/ratatosk.2.0/back.svg' }
-]
+] as const
 
 // Sub-regions for Torso
 export const torsoSubRegions = [
@@ -72,21 +74,15 @@ export const torsoSubRegions = [
   { id: 'niere', title: 'Niere', icon: '/ratatosk.2.0/magen.svg' },
   { id: 'blase', title: 'Blase', icon: '/ratatosk.2.0/blase.svg' },
   { id: 'zurueck', title: 'Zurück', icon: '/ratatosk.2.0/back.svg' }
-]
+] as const
 
-// Pain levels (1-10)
-export const painLevels = [
-  { id: 1, level: 1, title: 'Eins', description: 'kein Schmerz' },
-  { id: 2, level: 2, title: 'Zwei', description: 'sehr leicht' },
-  { id: 3, level: 3, title: 'Drei', description: 'leicht' },
-  { id: 4, level: 4, title: 'Vier', description: 'leicht bis mäßig' },
-  { id: 5, level: 5, title: 'Fünf', description: 'mäßig' },
-  { id: 6, level: 6, title: 'Sechs', description: 'mäßig bis stark' },
-  { id: 7, level: 7, title: 'Sieben', description: 'stark' },
-  { id: 8, level: 8, title: 'Acht', description: 'sehr stark' },
-  { id: 9, level: 9, title: 'Neun', description: 'extrem stark' },
-  { id: 10, level: 10, title: 'Zehn', description: 'unerträglich' }
-]
+// ✅ Mapping: Main Region ID → Sub Regions Array
+export const subRegionMap: Record<string, typeof kopfSubRegions> = {
+  'kopf': kopfSubRegions,
+  'beine': beineSubRegions,
+  'arme': armeSubRegions,
+  'torso': torsoSubRegions,
+}
 
 // Helper function to get all sub-regions
 export const getAllSubRegions = () => [
@@ -98,22 +94,6 @@ export const getAllSubRegions = () => [
 
 // Helper function to get sub-regions by main region
 export const getSubRegionsByMainRegion = (mainRegionId: string) => {
-  switch (mainRegionId) {
-    case 'kopf':
-      return kopfSubRegions
-    case 'beine':
-      return beineSubRegions
-    case 'arme':
-      return armeSubRegions
-    case 'torso':
-      return torsoSubRegions
-    default:
-      return []
-  }
+  return subRegionMap[mainRegionId] ?? []
 }
 
-// Helper function to get pain description by level
-export const getPainDescription = (level: number): string => {
-  const painLevel = painLevels.find(p => p.level === level)
-  return painLevel ? painLevel.description : ''
-}

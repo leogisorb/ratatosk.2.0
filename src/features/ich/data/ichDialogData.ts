@@ -208,3 +208,31 @@ export function getSubRegionTitle(subRegionId: string | null): string {
   const region = allSubRegions.find(r => r.id === subRegionId)
   return region ? region.title : ''
 }
+
+/**
+ * Generates a confirmation sentence based on selected main and sub regions
+ * @param mainRegionId The main region ID (ernaehrung, gefuehle, etc.)
+ * @param subRegion The sub region object with ttsText
+ * @returns The confirmation sentence
+ */
+export function generateConfirmationSentence(mainRegionId: string | null, subRegion: IchSubRegion | null): string {
+  if (!mainRegionId || !subRegion || !subRegion.ttsText) {
+    return ''
+  }
+  
+  // Generate confirmation sentence based on main region
+  switch (mainRegionId) {
+    case 'ernaehrung':
+      return `Ich möchte gerne ${subRegion.ttsText} zu mir nehmen.`
+    case 'gefuehle':
+      return `Ich fühle mich ${subRegion.ttsText}.`
+    case 'kleidung':
+      return `Ich möchte ${subRegion.ttsText} anziehen.`
+    case 'hygiene':
+      return `Ich möchte ${subRegion.ttsText}.`
+    case 'bewegung':
+      return `Ich möchte ${subRegion.ttsText}.`
+    default:
+      return `Ich möchte ${subRegion.ttsText}.`
+  }
+}

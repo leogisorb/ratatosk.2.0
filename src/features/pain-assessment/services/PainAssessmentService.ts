@@ -1,8 +1,12 @@
 import type { PainRecord, PainSession, BodyPart } from '../../../core/domain/entities/PainRecord'
+import { uiIdToDomainId } from '../data/painAssessmentMapping'
 
 /**
  * Pain Assessment Service
  * Handles pain assessment business logic
+ * 
+ * Note: When recording pain with UI IDs (from painAssessmentData.ts),
+ * use recordPainWithUiId() which automatically converts UI IDs to Domain IDs
  */
 export class PainAssessmentService {
   private painRecords: PainRecord[] = []
@@ -28,7 +32,7 @@ export class PainAssessmentService {
   }
 
   /**
-   * Record a pain assessment
+   * Record a pain assessment with domain ID (e.g., 'forehead', 'back_of_head')
    */
   recordPain(
     bodyPart: string,
@@ -61,6 +65,34 @@ export class PainAssessmentService {
     this.updateSessionStats()
 
     return record
+  }
+
+  /**
+   * ✅ Record a pain assessment with UI ID (e.g., 'stirn', 'hinterkopf')
+   * Automatically converts UI ID to Domain ID using the mapping table
+   */
+  recordPainWithUiId(
+    uiBodyPartId: string,
+    painLevel: number,
+    userId: string,
+    description?: string,
+    affectsSleep?: boolean,
+    affectsMobility?: boolean,
+    affectsDailyActivities?: boolean
+  ): PainRecord {
+    // Convert UI ID to Domain ID
+    const domainId = uiIdToDomainId(uiBodyPartId)
+    
+    // Record with domain ID
+    return this.recordPain(
+      domainId,
+      painLevel,
+      userId,
+      description,
+      affectsSleep,
+      affectsMobility,
+      affectsDailyActivities
+    )
   }
 
   /**
@@ -121,18 +153,30 @@ export class PainAssessmentService {
     const maxPainLevel = Math.max(...painLevels)
     const minPainLevel = Math.min(...painLevels)
 
-    // Find most painful body part
+    // ✅ Verbesserte Berechnung: Durchschnitt statt Summe für "most painful body part"
     const bodyPartPain = userRecords.reduce((acc, record) => {
-      acc[record.bodyPart] = (acc[record.bodyPart] || 0) + record.painLevel
+      if (!acc[record.bodyPart]) {
+        acc[record.bodyPart] = { total: 0, count: 0 }
+      }
+      acc[record.bodyPart].total += record.painLevel
+      acc[record.bodyPart].count += 1
       return acc
-    }, {} as Record<string, number>)
+    }, {} as Record<string, { total: number; count: number }>)
 
-    const mostPainfulBodyPart = Object.entries(bodyPartPain)
-      .sort(([,a], [,b]) => b - a)[0]?.[0] || ''
+    // Berechne Durchschnitte und finde das schmerzhafteste Körperteil
+    const bodyPartAverages = Object.entries(bodyPartPain).map(([bodyPart, stats]) => ({
+      bodyPart,
+      average: stats.total / stats.count
+    }))
 
-    // Calculate recent trend (last 5 records)
+    const mostPainfulBodyPart = bodyPartAverages
+      .sort((a, b) => b.average - a.average)[0]?.bodyPart || ''
+
+    // ✅ Verbesserte Trend-Berechnung mit zeitlichen Abständen
     const recentRecords = userRecords.slice(-5)
-    const recentTrend = this.calculateTrend(recentRecords.map(r => r.painLevel))
+    const recentTrend = this.calculateTrendWithTime(
+      recentRecords.map(r => ({ painLevel: r.painLevel, timestamp: r.timestamp }))
+    )
 
     return {
       totalRecords: userRecords.length,
@@ -209,6 +253,7 @@ export class PainAssessmentService {
     this.currentSession.minPainLevel = Math.min(...painLevels)
   }
 
+  // ✅ Alte calculateTrend Methode (behalten für Rückwärtskompatibilität)
   private calculateTrend(painLevels: number[]): 'increasing' | 'decreasing' | 'stable' {
     if (painLevels.length < 2) return 'stable'
 
@@ -226,11 +271,70 @@ export class PainAssessmentService {
     return 'stable'
   }
 
+  // ✅ Neue verbesserte Trend-Berechnung mit Median und zeitlichen Abständen
+  private calculateTrendWithTime(
+    records: Array<{ painLevel: number; timestamp: Date }>
+  ): 'increasing' | 'decreasing' | 'stable' {
+    if (records.length < 2) return 'stable'
+
+    // Sortiere nach Zeitstempel (älteste zuerst)
+    const sortedRecords = [...records].sort((a, b) => 
+      a.timestamp.getTime() - b.timestamp.getTime()
+    )
+
+    // Teile in zwei Hälften
+    const midpoint = Math.floor(sortedRecords.length / 2)
+    const firstHalf = sortedRecords.slice(0, midpoint)
+    const secondHalf = sortedRecords.slice(midpoint)
+
+    // ✅ Verwende Median statt Durchschnitt (robuster gegen Ausreißer)
+    const firstMedian = this.calculateMedian(firstHalf.map(r => r.painLevel))
+    const secondMedian = this.calculateMedian(secondHalf.map(r => r.painLevel))
+
+    // ✅ Berücksichtige zeitliche Abstände (gewichteter Trend)
+    const timeSpan = sortedRecords[sortedRecords.length - 1].timestamp.getTime() - 
+                     sortedRecords[0].timestamp.getTime()
+    const daysDiff = timeSpan / (1000 * 60 * 60 * 24) // Konvertiere zu Tagen
+
+    // Wenn weniger als 1 Tag zwischen den Daten, verwende normalen Threshold
+    // Wenn mehr, passe Threshold an (Trend ist signifikanter über längere Zeit)
+    const threshold = daysDiff < 1 ? 0.5 : 0.3
+
+    const difference = secondMedian - firstMedian
+
+    if (difference > threshold) return 'increasing'
+    if (difference < -threshold) return 'decreasing'
+    return 'stable'
+  }
+
+  // ✅ Helper: Median-Berechnung
+  private calculateMedian(numbers: number[]): number {
+    if (numbers.length === 0) return 0
+    
+    const sorted = [...numbers].sort((a, b) => a - b)
+    const midpoint = Math.floor(sorted.length / 2)
+    
+    if (sorted.length % 2 === 0) {
+      return (sorted[midpoint - 1] + sorted[midpoint]) / 2
+    } else {
+      return sorted[midpoint]
+    }
+  }
+
+  // ✅ Verbesserte ID-Generierung mit UUID (kollisionssicher)
   private generateSessionId(): string {
-    return `session_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`
+    if (typeof crypto !== 'undefined' && crypto.randomUUID) {
+      return crypto.randomUUID()
+    }
+    // Fallback für ältere Browser
+    return `session_${Date.now()}_${Math.random().toString(36).substr(2, 9)}_${Math.random().toString(36).substr(2, 9)}`
   }
 
   private generateRecordId(): string {
-    return `record_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`
+    if (typeof crypto !== 'undefined' && crypto.randomUUID) {
+      return crypto.randomUUID()
+    }
+    // Fallback für ältere Browser
+    return `record_${Date.now()}_${Math.random().toString(36).substr(2, 9)}_${Math.random().toString(36).substr(2, 9)}`
   }
 }
