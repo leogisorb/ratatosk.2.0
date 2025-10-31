@@ -137,7 +137,7 @@ export class InputManager {
 
     // ✅ Cleanup Click Detection
     if (this.clickHandler) {
-      document.removeEventListener('contextmenu', this.clickHandler)
+      document.removeEventListener('mousedown', this.clickHandler)
       this.clickHandler = null
     }
 
@@ -179,7 +179,7 @@ export class InputManager {
           }
         }
         if (type === 'click' && this.clickHandler) {
-          document.removeEventListener('contextmenu', this.clickHandler)
+          document.removeEventListener('mousedown', this.clickHandler)
           this.clickHandler = null
         }
         if (type === 'touch' && this.touchHandler) {
@@ -260,11 +260,20 @@ export class InputManager {
   }
 
   /**
-   * Setup Click Detection (Right-Click als Blink-Ersatz)
+   * Setup Click Detection (Linke Maustaste)
    */
   private setupClickDetection() {
     this.clickHandler = (event: MouseEvent) => {
       if (!this.isActive) return
+      
+      // ✅ Nur linke Maustaste (button 0)
+      if (event.button !== 0) return
+      
+      // ✅ Nur normale Clicks, nicht auf interaktive Elemente (z.B. Buttons)
+      const target = event.target as HTMLElement
+      if (target.tagName === 'BUTTON' || target.tagName === 'A' || target.closest('button') || target.closest('a')) {
+        return // Ignoriere Clicks auf Buttons/Links - die haben ihre eigenen Handler
+      }
       
       event.preventDefault()
       event.stopPropagation()
@@ -276,7 +285,8 @@ export class InputManager {
       })
     }
 
-    document.addEventListener('contextmenu', this.clickHandler, { passive: false })
+    // ✅ Linke Maustaste statt contextmenu
+    document.addEventListener('mousedown', this.clickHandler, { passive: false })
   }
 
   /**

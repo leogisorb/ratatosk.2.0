@@ -235,13 +235,14 @@ const handlePainScaleClick = (event: MouseEvent) => {
 }
 
 // ✅ Input Manager - Zentrale Abstraktion für alle Eingabemedien
+// ✅ Nur Blinzeln und linke Maustaste
 const inputManager = useInputManager({
   onSelect: (event: InputEvent) => {
     console.log('InputManager: Input detected', event.type, event.source)
-    // ✅ Einheitlicher Callback für Blink, Click, Touch
+    // ✅ Einheitlicher Callback für Blink und linke Maustaste
     handleBlink()
   },
-  enabledInputs: ['blink', 'click', 'touch'], // ✅ Einfach erweiterbar
+  enabledInputs: ['blink', 'click'], // ✅ Nur Blinzeln und linke Maustaste
   cooldown: 300 // ✅ Verhindert zu häufige Inputs
 })
 
