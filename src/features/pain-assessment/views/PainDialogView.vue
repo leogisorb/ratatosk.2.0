@@ -23,7 +23,7 @@
                 autoMode.index.value === index ? 'tile-active' : 'tile-inactive',
                 region.id === 'zurueck' ? 'back-tile' : ''
               ]"
-              @click="region.id === 'zurueck' ? goBack() : selectMainRegion(String(region.id))"
+              @click="autoMode.index.value === index ? (region.id === 'zurueck' ? goBack() : selectMainRegion(String(region.id))) : null"
             >
               <div 
                 class="tile-icon-container"
@@ -68,7 +68,7 @@
                   '--offset': index - autoMode.index.value,
                   '--rotation': (index < autoMode.index.value ? -20 : index > autoMode.index.value ? 20 : 0) + 'deg'
                 }"
-                @click="selectSubRegion(String(subRegion.id))"
+                @click="autoMode.index.value === index ? selectSubRegion(String(subRegion.id)) : null"
               >
                 <div class="carousel-item-content">
                   <div 

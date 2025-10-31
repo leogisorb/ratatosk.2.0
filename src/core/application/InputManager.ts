@@ -261,6 +261,7 @@ export class InputManager {
 
   /**
    * Setup Click Detection (Linke Maustaste)
+   * Nur für aktive Kachel (wie im HomeView)
    */
   private setupClickDetection() {
     this.clickHandler = (event: MouseEvent) => {
@@ -273,6 +274,13 @@ export class InputManager {
       const target = event.target as HTMLElement
       if (target.tagName === 'BUTTON' || target.tagName === 'A' || target.closest('button') || target.closest('a')) {
         return // Ignoriere Clicks auf Buttons/Links - die haben ihre eigenen Handler
+      }
+      
+      // ✅ Prüfe ob Click auf aktiver Kachel (nur .tile-active oder .carousel-item-active)
+      const clickedTile = target.closest('.tile-active, .carousel-item-active')
+      if (!clickedTile) {
+        // Click war nicht auf aktiver Kachel - ignorieren
+        return
       }
       
       event.preventDefault()
