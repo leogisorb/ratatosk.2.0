@@ -1638,6 +1638,13 @@ Das Ratatosk-Projekt richtet sich an Menschen mit Behinderungen, die auf alterna
 
 ### Major Architecture Overhaul - Pain Assessment System
 
+**Datum:** 2025-01-XX  
+**Umfang:** Vollständige Refaktorierung des Pain Dialogs zu modularer Architektur  
+**Dauer:** ~1 Tag  
+**Ziel:** Robuste, wartbare, erweiterbare Dialog-Architektur
+
+---
+
 **Problem:**
 - Pain Dialog hatte viele Bugs und Race Conditions
 - TTS wurde doppelt gesprochen
@@ -1645,74 +1652,409 @@ Das Ratatosk-Projekt richtet sich an Menschen mit Behinderungen, die auf alterna
 - Index-Synchronisation zwischen TTS und visueller Darstellung war nicht korrekt
 - Input-Handler (Blink, Click, Touch) waren überall verteilt
 - Keine zentrale Abstraktion für verschiedene Eingabemedien
+- Hover-Effekte störten die Barrierefreiheit
+- Linksklick funktionierte auch auf inaktiven Kacheln
 
-**Lösung: Modulare Architektur**
+**Lösung: Modulare Architektur + Input Manager**
 
-#### 1. Neue Modulare Architektur für Pain Assessment
+---
 
-**Erstellte Module:**
+#### Phase 1: Modulare Architektur erstellen
 
-1. **`useTTS.ts`** - Robuste TTS-Implementierung
-   - Kein Deadlock mehr
-   - Promise-basiert
-   - Automatisches Timeout (10 Sekunden)
-   - Einheitliche API
+**1.1 TTS-Modul (`useTTS.ts`)** - Robuste TTS-Implementierung
 
-2. **`useAutoMode.ts`** - Synchronisierter Auto-Mode
-   - Nur ein aktiver Timer
-   - Wartet auf TTS-Completion
-   - Index-Synchronisation mit visueller Darstellung
-   - Unterstützt `skipTitle` Parameter für doppeltes TTS
+**Erstellt:** `src/features/pain-assessment/composables/useTTS.ts`
 
-3. **`usePainDictionary.ts`** - Zentrale Daten- und Sprachlogik
-   - Alle Regionen und Pain Levels
-   - Grammatik-System für deutsche Texte
-   - Confirmation-Text-Generierung
+**Features:**
+- ✅ Promise-basierte API (await-able)
+- ✅ Deadlock-Schutz durch 10-Sekunden Timeout
+- ✅ Automatisches Cleanup bei Fehlern
+- ✅ Einheitliche API für alle Dialoge
+- ✅ `isSpeaking` State für Reaktivität
 
-4. **`usePainDialogMachine.ts`** - Zentrale State-Machine
-   - Klarer State-Flow: mainView → subRegionView → painScaleView → confirmation
-   - Alle Actions zentralisiert
-   - Integriert TTS, AutoMode, Dictionary
+**Code-Struktur:**
+```typescript
+export function useTTS() {
+  const isSpeaking = ref(false)
+  const enabled = ref(true)
 
-**Daten-Dateien reorganisiert:**
-- `regions.ts` - Alle Haupt- und Sub-Regionen
-- `painLevels.ts` - Pain Scale Daten
-- `painAssessmentGrammar.ts` - Deutsche Grammatik-Regeln
-- `painAssessmentMapping.ts` - UI ↔ Domain ID Mapping
+  function speak(text: string): Promise<void> {
+    // Promise-basierte Implementierung
+    // Timeout-Fallback für hängende TTS
+    // Automatisches Cleanup
+  }
+}
+```
+
+**Vorteile:**
+- Keine Deadlocks mehr
+- Konsistentes Timing
+- Wiederverwendbar in allen Dialogen
+
+---
+
+**1.2 AutoMode-Modul (`useAutoMode.ts`)** - Synchronisierter Auto-Mode
+
+**Erstellt:** `src/features/pain-assessment/composables/useAutoMode.ts`
+
+**Features:**
+- ✅ Nur ein aktiver Timer (keine Race Conditions)
+- ✅ Wartet auf TTS-Completion vor nächstem Cycle
+- ✅ Index-Synchronisation mit visueller Darstellung
+- ✅ Unterstützt `skipTitle` Parameter (Titel bereits gesprochen)
+- ✅ Dynamische Items via `getItems()` Callback
+
+**Wichtige Logik:**
+1. **Start:** Titel sprechen → 3s warten → Loop starten
+2. **Loop:** Item sprechen → 3s warten → Index aktualisieren → Nächstes Item
+3. **Index-Update:** Erst NACH TTS + 3s (visuelle Synchronisation)
+
+**Code-Highlight:**
+```typescript
+async function start(skipTitle = false) {
+  // Wenn skipTitle = true: Titel wurde bereits in select-Funktion gesprochen
+  if (!skipTitle) {
+    await speak(getTitle())
+  }
+  // Nach 3 Sekunden Loop starten
+  initialTimer = window.setTimeout(() => loop(), 3000)
+}
+
+function loop() {
+  speak(itemTitle).then(() => {
+    // WICHTIG: Index erst nach TTS + 3s aktualisieren
+    timer = window.setTimeout(() => {
+      index.value = (index.value + 1) % items.length
+      loop()
+    }, 3000)
+  })
+}
+```
+
+**Vorteile:**
+- Keine Timer-Rennen
+- Visuelle Darstellung bleibt synchron
+- Flexibel für verschiedene Dialoge
+
+---
+
+**1.3 Dictionary-Modul (`usePainDictionary.ts`)** - Zentrale Daten- und Sprachlogik
+
+**Erstellt:** `src/features/pain-assessment/composables/usePainDictionary.ts`
+
+**Features:**
+- ✅ Alle Daten zentralisiert
+- ✅ Grammatik-System für deutsche Texte
+- ✅ Helper-Funktionen für Daten-Zugriff
+- ✅ Confirmation-Text-Generierung
+
+**Exports:**
+- `mainRegions` - Alle Haupt-Regionen
+- `subRegionMap` - Mapping: Main → Sub Regions
+- `painLevels` - Pain Scale Daten
+- `getSubRegions(mainRegionId)` - Sub-Regionen abrufen
+- `getSubRegionViewTitle(mainRegionId)` - Titel generieren (Singular/Plural)
+- `generateConfirmation(subRegionId, level)` - Bestätigungstext
+
+**Vorteile:**
+- Daten-Logik getrennt von UI-Logik
+- Einfach testbar
+- Wiederverwendbar
+
+---
+
+**1.4 State Machine (`usePainDialogMachine.ts`)** - Zentrale State-Machine
+
+**Erstellt:** `src/features/pain-assessment/composables/usePainDialogMachine.ts`
+
+**Features:**
+- ✅ Klarer State-Flow: `mainView → subRegionView → painScaleView → confirmation`
+- ✅ Alle Actions zentralisiert
+- ✅ Integriert TTS, AutoMode, Dictionary
+- ✅ State-spezifische Computeds
+
+**State-Flow:**
+```
+mainView (Haupt-Regionen)
+  ↓ selectMainRegion(id)
+subRegionView (Sub-Regionen)
+  ↓ selectSubRegion(id)
+painScaleView (Pain Scale 1-10)
+  ↓ selectPainLevel(level)
+confirmation (Bestätigung)
+  ↓ 5s Timeout
+mainView (Reset)
+```
+
+**Code-Struktur:**
+```typescript
+export function usePainDialogMachine() {
+  const tts = useTTS()
+  const dict = usePainDictionary()
+  
+  // State
+  const state = ref<PainDialogState>('mainView')
+  const mainRegionId = ref<string | null>(null)
+  const subRegionId = ref<string | null>(null)
+  const painLevel = ref<number | null>(null)
+  
+  // Computed
+  const items = computed(() => { /* State-abhängig */ })
+  const title = computed(() => { /* State-abhängig */ })
+  
+  // AutoMode
+  const autoMode = useAutoMode({
+    speak: tts.speak,
+    getItems: () => items.value,
+    getTitle: () => title.value,
+  })
+  
+  // Actions
+  async function selectMainRegion(id: string) {
+    autoMode.stop()
+    // State ändern
+    await tts.speak(title.value)
+    setTimeout(() => autoMode.start(true), 3000) // skipTitle = true
+  }
+  
+  function handleBlink() {
+    // Aktive Kachel auswählen
+  }
+}
+```
+
+**Vorteile:**
+- Klarer State-Flow
+- Alle Logik zentral
+- Einfach erweiterbar
+
+---
+
+**1.5 Daten-Dateien reorganisiert:**
+
+**Erstellt:**
+- `src/features/pain-assessment/data/regions.ts`
+  - `mainRegions` - Alle Haupt-Regionen (Kopf, Beine, Arme, Torso)
+  - `kopfSubRegions`, `beineSubRegions`, `armeSubRegions`, `torsoSubRegions`
+  - `subRegionMap` - Mapping für schnellen Zugriff
+  - `getAllSubRegions()` - Alle Sub-Regionen in einem Array
+
+- `src/features/pain-assessment/data/painLevels.ts`
+  - `painLevels` - Pain Scale 1-10 mit Titel, Level, Description
+  - Helper-Funktionen: `getPainDescription()`, `getPainLevelById()`, etc.
+
+- `src/features/pain-assessment/data/painAssessmentGrammar.ts`
+  - `GrammarRule` Interface
+  - `grammarRules` - Mapping für komplexe Regionen
+  - `generatePainConfirmationText()` - Grammatisch korrekte Texte
+
+- `src/features/pain-assessment/data/painAssessmentMapping.ts`
+  - `uiToDomainIdMap` - UI ID → Domain ID Mapping
+  - `uiIdToDomainId()` - Konverter-Funktion
+
+**Vorteile:**
+- Daten strukturiert organisiert
+- Einfach wartbar
+- Testbar isoliert
+
+---
+
+#### Phase 5: Bug-Fixes
 
 **Korrigierte Bugs:**
 
-1. **Doppeltes TTS-Sprechen:**
-   - `autoMode.start()` akzeptiert jetzt `skipTitle` Parameter
-   - Titel wird nur einmal gesprochen (in select-Funktionen ODER autoMode)
+**5.1 Doppeltes TTS-Sprechen**
 
-2. **Index-Synchronisation:**
-   - Index wird erst NACH TTS + 3s Wartezeit aktualisiert
-   - Visuelle Darstellung bleibt während TTS beim korrekten Item
+**Problem:**
+- Titel wurde zweimal gesprochen:
+  1. Einmal in `selectMainRegion`/`selectSubRegion`
+  2. Einmal in `autoMode.start()`
 
-3. **Pain Scale Darstellung:**
-   - Statt "Drei", "leicht", "EINS;ZWEI;DREI" → jetzt "3, leicht" in einer Zeile
-   - Orange (#FF8C00), 1.25x größer als Titel
-   - TTS spricht auch "3, leicht" statt "Drei"
+**Lösung:**
+- `autoMode.start()` akzeptiert jetzt `skipTitle` Parameter
+- Nach State-Wechsel: `autoMode.start(true)` → Titel wird übersprungen
 
-4. **TypeScript-Fehler:**
-   - Alle Type-Checks korrigiert
-   - `autoMode.index.value` statt `autoMode.index` im Template
+**Code:**
+```typescript
+async function selectMainRegion(id: string) {
+  autoMode.stop()
+  state.value = 'subRegionView'
+  await tts.speak(title.value) // ✅ Titel hier gesprochen
+  setTimeout(() => {
+    autoMode.start(true) // ✅ skipTitle = true
+  }, 3000)
+}
+```
 
-#### 2. Zentraler Input-Manager
+**Ergebnis:**
+- ✅ Titel wird nur einmal gesprochen
+- ✅ Konsistentes Verhalten
 
-**Erstellt:**
-- **`InputManager.ts`** (`src/core/application/`)
-  - Zentraler Manager für alle Eingabemedien
-  - Unterstützt: Blink, Click, Touch (und zukünftig Voice, Gestures)
-  - Einheitliche API: Ein `onSelect` Callback für alle Input-Typen
-  - Cooldown-System verhindert zu häufige Inputs
-  - Automatisches Setup/Cleanup
+---
 
-- **`useInputManager.ts`** (`src/shared/composables/`)
-  - Vue Composable für einfache Verwendung
-  - Auto-Cleanup beim Unmount
-  - Reaktive `isActive` State
+**5.2 Index-Synchronisation**
+
+**Problem:**
+- TTS las "Beine" vor, während visuelle Darstellung bereits auf "Arme" sprang
+- Index wurde zu früh aktualisiert
+
+**Lösung:**
+- Index wird erst NACH TTS + 3s Wartezeit aktualisiert
+- Visuelle Darstellung bleibt während TTS beim korrekten Item
+
+**Code:**
+```typescript
+function loop() {
+  speak(itemTitle).then(() => {
+    // WICHTIG: Index erst nach TTS + 3s aktualisieren
+    timer = window.setTimeout(() => {
+      index.value = (index.value + 1) % items.length
+      loop()
+    }, 3000)
+  })
+}
+```
+
+**Ergebnis:**
+- ✅ TTS und visuelle Darstellung sind synchronisiert
+- ✅ Kein "Springen" während TTS
+
+---
+
+**5.3 Pain Scale Darstellung**
+
+**Problem:**
+- Drei separate Texte: "Drei", "leicht", "EINS;ZWEI;DREI"
+- TTS sprach "Drei" statt "3, leicht"
+
+**Lösung:**
+- Kombinierte Anzeige: "3, leicht" in einer Zeile
+- Orange (#FF8C00), 1.25x größer als Titel
+- TTS formatiert automatisch: "3, leicht"
+
+**Ergebnis:**
+- ✅ Kompakte, übersichtliche Darstellung
+- ✅ Korrekte TTS-Ausgabe
+
+---
+
+**5.4 TypeScript-Fehler**
+
+**Problem:**
+- `autoMode.index` war `computed`, aber im Template direkt verwendet
+- Type-Checks schlugen fehl
+
+**Lösung:**
+- `autoMode.index` ist jetzt direktes `ref`
+- Im Template: `autoMode.index.value` statt `autoMode.index`
+- Alle Type-Checks korrigiert
+
+**Ergebnis:**
+- ✅ Keine TypeScript-Fehler mehr
+- ✅ Korrekte Reaktivität
+
+---
+
+#### Phase 2: Zentraler Input-Manager
+
+**Problem:**
+- Input-Handler (Blink, Click, Touch) waren überall verteilt
+- Keine einheitliche API für verschiedene Eingabemedien
+- Schwer erweiterbar für neue Input-Typen (Voice, Gestures)
+- Inkonsistentes Verhalten zwischen Dialogen
+
+**Lösung:** Zentraler InputManager mit einheitlicher API
+
+**2.1 InputManager-Klasse**
+
+**Erstellt:** `src/core/application/InputManager.ts`
+
+**Features:**
+- ✅ Zentraler Manager für alle Eingabemedien
+- ✅ Unterstützt: Blink, Click, Touch (erweiterbar für Voice, Gestures)
+- ✅ Einheitliche API: Ein `onSelect` Callback für alle Input-Typen
+- ✅ Cooldown-System verhindert zu häufige Inputs (300ms Standard)
+- ✅ Automatisches Setup/Cleanup von Event-Listenern
+
+**Input-Typen:**
+- `'blink'` - Face Recognition Blink Detection
+  - Event-basiert: `faceBlinkDetected` Event
+  - Polling-basiert: `faceRecognition.isBlinking()` (Fallback)
+  
+- `'click'` - Rechtsklick (contextmenu)
+  - Funktioniert überall auf der Seite
+  - Ignoriert Clicks auf Buttons/Links
+  - Wählt automatisch aktive Kachel über `handleBlink()`
+  
+- `'touch'` - Touch Events (aktuell deaktiviert im Pain Dialog)
+- `'voice'` - Voice Commands (zukünftig)
+- `'gesture'` - Gesture Recognition (zukünftig)
+
+**Code-Struktur:**
+```typescript
+export class InputManager {
+  constructor(config: InputManagerConfig) {
+    // Config: onSelect, enabledInputs, cooldown
+  }
+
+  start() {
+    // Setup für alle enabledInputs
+    if (enabledInputs.includes('blink')) setupBlinkDetection()
+    if (enabledInputs.includes('click')) setupClickDetection()
+    if (enabledInputs.includes('touch')) setupTouchDetection()
+  }
+
+  stop() {
+    // Cleanup aller Event-Listener
+  }
+
+  enableInput(type: InputType, enable: boolean) {
+    // Dynamisch Input-Typen aktivieren/deaktivieren
+  }
+}
+```
+
+**Wichtige Logik:**
+- **Cooldown:** Verhindert zu häufige Inputs (300ms Standard)
+- **Rechtsklick:** Funktioniert überall, nicht nur auf aktiven Kacheln
+- **Cleanup:** Automatisches Entfernen aller Event-Listener beim Stop
+
+---
+
+**2.2 Vue Composable (`useInputManager.ts`)**
+
+**Erstellt:** `src/shared/composables/useInputManager.ts`
+
+**Features:**
+- ✅ Vue Composable für einfache Verwendung
+- ✅ Auto-Cleanup beim Unmount
+- ✅ Reaktive `isActive` State
+
+**Verwendung:**
+```typescript
+const inputManager = useInputManager({
+  onSelect: (event: InputEvent) => {
+    console.log('Input detected:', event.type, event.source)
+    machine.handleBlink() // Wählt aktive Kachel aus
+  },
+  enabledInputs: ['blink', 'click'], // Nur Blinzeln und Rechtsklick
+  cooldown: 300
+})
+
+// Im Lifecycle:
+onMounted(() => {
+  inputManager.start() // Alle Handler werden registriert
+})
+
+onUnmounted(() => {
+  inputManager.stop() // Alle Handler werden entfernt
+})
+```
+
+**Vorteile:**
+- Einfache Integration
+- Automatisches Cleanup
+- Konsistentes Verhalten überall
 
 **Vorteile:**
 - ✅ Einheitliche API für alle Input-Typen
@@ -1733,31 +2075,217 @@ const inputManager = useInputManager({
 inputManager.start() // Alle Handler werden automatisch registriert
 ```
 
-#### 3. Pain Scale View Optimierung
+---
+
+#### Phase 3: Pain Scale View Optimierung
+
+**Problem:**
+- Drei separate Texte: "Drei", "leicht", "EINS;ZWEI;DREI"
+- Zu groß und unübersichtlich
+- TTS spricht "Drei" statt "3, leicht"
+
+**Lösung:** Kombinierte Anzeige mit korrekter Formatierung
 
 **Änderungen:**
-- Kombinierte Anzeige: "3, leicht" statt drei separate Texte
-- Orange Farbe (#FF8C00)
-- 1.25x größer als Titel
-- Responsive für alle Breakpoints
-- TTS spricht auch kombiniert: "3, leicht"
 
-**Technische Details:**
-- Neue CSS-Klasse: `.pain-scale-level-combined`
-- Computed Property: `getCurrentPainLevelCombined`
-- `useAutoMode` erkennt Pain Levels automatisch und formatiert TTS
+1. **Template:**
+   ```vue
+   <!-- Vorher -->
+   <div class="pain-scale-level">{{ getCurrentPainLevelTitle }}</div>
+   <div class="pain-scale-description">{{ getCurrentPainLevelDescription }}</div>
+   
+   <!-- Nachher -->
+   <div class="pain-scale-level-combined">{{ getCurrentPainLevelCombined }}</div>
+   ```
 
-#### 4. Code-Bereinigung
+2. **Computed Property:**
+   ```typescript
+   const getCurrentPainLevelCombined = computed(() => {
+     const currentItem = items.value[autoMode.index.value]
+     const level = currentItem?.level
+     const description = currentItem?.description
+     return `${level}, ${description}` // "3, leicht"
+   })
+   ```
+
+3. **CSS:**
+   ```css
+   .pain-scale-level-combined {
+     font-size: 5.25rem; /* 1.25x größer als Titel (4.2rem) */
+     color: #FF8C00; /* Orange */
+     font-weight: bold;
+   }
+   ```
+   - Desktop: `5.25rem` (4.2rem × 1.25)
+   - Tablet: `3.5rem` (2.8rem × 1.25)
+   - Mobile: Responsive Werte für alle Breakpoints
+
+4. **TTS-Anpassung:**
+   - `useAutoMode.ts` erkennt Pain Levels automatisch
+   - Formatiert TTS: "3, leicht" statt "Drei"
+   ```typescript
+   // In useAutoMode.ts loop():
+   if ('level' in item && 'description' in item) {
+     itemTitle = `${item.level}, ${item.description}` // "3, leicht"
+   } else {
+     itemTitle = item.title // Normales Item
+   }
+   ```
+
+**Ergebnis:**
+- ✅ Kompakte, übersichtliche Darstellung
+- ✅ Orange Farbe für bessere Sichtbarkeit
+- ✅ 1.25x größer als Titel
+- ✅ Responsive für alle Geräte
+- ✅ TTS spricht korrekt: "3, leicht"
+
+---
+
+#### Phase 4: Code-Bereinigung & UI-Optimierung
+
+**4.1 Hover-Effekte entfernt**
+
+**Problem:**
+- Hover-Effekte störten die Barrierefreiheit
+- Verwirrten Nutzer (nur aktive Kachel sollte reagieren)
+
+**Lösung:** Alle Hover-Effekte entfernt
+
+**Entfernt:**
+- `.pain-dialog .menu-tile:hover` - Hover auf Menu Tiles
+- `.pain-dialog .menu-tile:hover .tile-icon-container` - Hover auf Icons
+- `.pain-dialog .menu-tile:hover .tile-icon` - Hover auf Icon Transform
+- `.pain-dialog .menu-tile.back-tile:hover` - Hover auf Back Tile
+- `.pain-dialog .carousel-indicator:hover` - Hover auf Carousel Indicators
+
+**Ersetzt mit:**
+```css
+/* Hover Effects entfernt */
+```
+
+**Vorteile:**
+- ✅ Saubere UI ohne Hover-Ablenkungen
+- ✅ Fokus auf aktive Kachel
+- ✅ Barrierefreier
+
+---
+
+**4.2 Linksklick-Verhalten angepasst**
+
+**Problem:**
+- Linksklick funktionierte auch auf inaktiven Kacheln
+- Inkonsistent mit HomeView (nur aktive Kachel)
+
+**Lösung:** Linksklick nur auf aktiver Kachel aktiv
+
+**Template-Änderung:**
+```vue
+<!-- Vorher -->
+@click="selectMainRegion(String(region.id))"
+
+<!-- Nachher -->
+@click="autoMode.index.value === index ? selectMainRegion(String(region.id)) : null"
+```
+
+**Vorteile:**
+- ✅ Konsistent mit HomeView
+- ✅ Nur aktive Kachel reagiert auf Click
+- ✅ Klarer UX-Flow
+
+---
+
+**4.3 Gelöschte Dateien**
+
+**Entfernt:**
+- `src/features/pain-assessment/views/PainScaleView.vue`
+  - Funktionalität in `PainDialogView.vue` integriert
+  
+- `src/features/pain-assessment/views/PainScaleView.css`
+  - Styles in `DialogBase.css` integriert
+  
+- `src/features/pain-assessment/views/PainDialogView.example.vue`
+  - Beispiel-Datei nicht mehr nötig
+
+**Funktionen entfernt:**
+- `navigateToPainScale()` aus `usePainAssessment.ts`
+  - Route existiert nicht mehr
+
+**Vorteile:**
+- ✅ Weniger Code-Duplikation
+- ✅ Einfachere Navigation
+- ✅ Konsistente UI
 
 **Gelöschte Dateien:**
 - `PainScaleView.vue` (Funktionalität in PainDialogView integriert)
 - `PainScaleView.css` (Styles in DialogBase.css integriert)
 - `navigateToPainScale()` Funktion aus usePainAssessment.ts entfernt
 
-**Refactored:**
-- `PainDialogView.vue` - Verwendet jetzt neue modulare Architektur
-- Alle TypeScript-Fehler behoben
-- Cleaner Code-Struktur
+---
+
+#### Phase 6: Dokumentation
+
+**6.1 Migrations-Guide erstellt**
+
+**Erstellt:** `MIGRATION_GUIDE.md`
+
+**Inhalt:**
+- ✅ Vollständige Schritt-für-Schritt Anleitung
+- ✅ Code-Beispiele für alle Module
+- ✅ Best Practices und Patterns
+- ✅ Checkliste für Migration anderer Dialoge
+- ✅ Bekannte Patterns dokumentiert
+
+**Zweck:**
+- Leitfaden für Migration von Ich-Dialog, Umgebung-Dialog, etc.
+- Dokumentation der Architektur-Entscheidungen
+- Referenz für zukünftige Entwickler
+
+---
+
+### 📊 Ergebnisse & Metriken
+
+**Vorher:**
+- ❌ Viele Bugs und Race Conditions
+- ❌ Inkonsistentes Verhalten
+- ❌ Schwer wartbar (Code verteilt)
+- ❌ Keine zentrale Abstraktion
+- ❌ Hover-Effekte störend
+
+**Nachher:**
+- ✅ Robuste, wartbare Architektur
+- ✅ Konsistentes Verhalten
+- ✅ Modulare Struktur (einfach erweiterbar)
+- ✅ Zentrale Input-Abstraktion
+- ✅ Saubere UI ohne Hover-Ablenkungen
+
+**Code-Statistik:**
+- **Neue Module:** 4 (useTTS, useAutoMode, usePainDictionary, usePainDialogMachine)
+- **Reorganisierte Daten:** 4 Dateien
+- **Neue Core-Module:** 2 (InputManager, useInputManager)
+- **Gelöschte Dateien:** 3
+- **Zeilen Code:** ~600 Zeilen hinzugefügt, ~400 Zeilen entfernt
+
+**Zeitaufwand:**
+- Architektur-Design: ~1 Stunde
+- Implementation: ~4 Stunden
+- Testing & Bug-Fixes: ~2 Stunden
+- Dokumentation: ~1 Stunde
+- **Gesamt:** ~8 Stunden
+
+---
+
+### 🎯 Nächste Schritte
+
+**Empfohlene Reihenfolge für Migration anderer Dialoge:**
+1. ✅ Pain Dialog (fertig)
+2. Ich Dialog
+3. Umgebung Dialog
+4. Settings Dialog (falls nötig)
+
+**Verwendung des Migrations-Guides:**
+- `MIGRATION_GUIDE.md` als Schritt-für-Schritt Anleitung verwenden
+- Pain Dialog als Referenz-Implementierung
+- Patterns aus Guide übernehmen
 
 ---
 
