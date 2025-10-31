@@ -24,7 +24,6 @@
                 region.id === 'zurueck' ? 'back-tile' : ''
               ]"
               @click="region.id === 'zurueck' ? goBack() : selectMainRegion(String(region.id))"
-              @contextmenu.prevent="region.id === 'zurueck' ? goBack() : handleRightClick($event)"
             >
               <div 
                 class="tile-icon-container"
@@ -70,7 +69,6 @@
                   '--rotation': (index < autoMode.index.value ? -20 : index > autoMode.index.value ? 20 : 0) + 'deg'
                 }"
                 @click="selectSubRegion(String(subRegion.id))"
-                @contextmenu.prevent="handleRightClick($event)"
               >
                 <div class="carousel-item-content">
                   <div 
@@ -162,6 +160,8 @@
 import { computed, onMounted, onUnmounted } from 'vue'
 import { usePainDialogMachine } from '../composables/usePainDialogMachine'
 import { useFaceRecognition } from '../../face-recognition/composables/useFaceRecognition'
+import { useInputManager } from '../../../shared/composables/useInputManager'
+import type { InputEvent } from '../../../core/application/InputManager'
 import AppHeader from '../../../shared/components/AppHeader.vue'
 
 // ✅ Neue modulare Architektur
@@ -216,12 +216,7 @@ const goToSubRegion = (index: number) => {
   }
 }
 
-// ✅ Event Handlers
-const handleRightClick = (event: MouseEvent) => {
-  event.preventDefault()
-  handleBlink()
-}
-
+// ✅ Pain Scale Touch/Click Handler (spezifisch für Pain Scale Bar)
 const handlePainScaleTouch = (event: TouchEvent) => {
   event.preventDefault()
   const target = event.target as HTMLElement
@@ -239,6 +234,17 @@ const handlePainScaleClick = (event: MouseEvent) => {
   }
 }
 
+// ✅ Input Manager - Zentrale Abstraktion für alle Eingabemedien
+const inputManager = useInputManager({
+  onSelect: (event: InputEvent) => {
+    console.log('InputManager: Input detected', event.type, event.source)
+    // ✅ Einheitlicher Callback für Blink, Click, Touch
+    handleBlink()
+  },
+  enabledInputs: ['blink', 'click', 'touch'], // ✅ Einfach erweiterbar
+  cooldown: 300 // ✅ Verhindert zu häufige Inputs
+})
+
 // ✅ Lifecycle
 onMounted(() => {
   // Start Face Recognition
@@ -249,30 +255,16 @@ onMounted(() => {
   // Start AutoMode
   autoMode.start()
   
-  // Setup Right-Click Handler (Blink-Ersatz)
-  document.addEventListener('contextmenu', handleRightClick, { passive: false })
-  
-  // ✅ Blink Detection via Event-Listener (falls vorhanden)
-  const handleBlinkEvent = () => handleBlink()
-  window.addEventListener('faceBlinkDetected', handleBlinkEvent as EventListener)
-  
-  // Cleanup-Funktion für onUnmounted
-  ;(machine as any).__cleanupBlink = () => {
-    window.removeEventListener('faceBlinkDetected', handleBlinkEvent as EventListener)
-  }
+  // ✅ Start Input Manager - alle Handler werden automatisch registriert!
+  inputManager.start()
 })
 
 onUnmounted(() => {
   // Stop AutoMode
   autoMode.stop()
   
-  // Cleanup Event Listeners
-  document.removeEventListener('contextmenu', handleRightClick)
-  
-  // ✅ Cleanup Blink Event
-  if ((machine as any).__cleanupBlink) {
-    ;(machine as any).__cleanupBlink()
-  }
+  // ✅ Stop Input Manager - alle Handler werden automatisch entfernt!
+  inputManager.stop()
   
   // Stop Face Recognition
   if (faceRecognition.isActive.value) {
