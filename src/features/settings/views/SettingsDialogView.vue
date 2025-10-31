@@ -8,39 +8,37 @@
       <div class="content-wrapper">
         
         <!-- Main View: Settings Categories -->
-        <div v-if="currentState === 'mainView'">
+        <div v-if="state === 'mainView'">
           <div class="main-title">
-            Welche Einstellung möchten Sie ändern?
+            {{ title }}
           </div>
 
           <div class="grid-container">
             <!-- Dynamic Menu Tiles -->
             <div 
-              v-for="(category, index) in settingsCategories"
+              v-for="(category, index) in items"
               :key="category.id"
               class="menu-tile"
               :class="[
-                currentTileIndex === index ? 'tile-active' : 'tile-inactive',
-                category.id === 'zurueck' ? 'back-tile' : ''
+                autoMode.index.value === index ? 'tile-active' : 'tile-inactive',
+                category.id === dict.ID_BACK ? 'back-tile' : ''
               ]"
-              @click="category.id === 'zurueck' ? goBack() : selectCategory(category.id)"
-              @contextmenu.prevent="category.id === 'zurueck' ? goBack() : handleCategoryRightClick($event, category.id)"
             >
               <div 
                 class="tile-icon-container"
-                :class="currentTileIndex === index ? 'icon-active' : 'icon-inactive'"
+                :class="autoMode.index.value === index ? 'icon-active' : 'icon-inactive'"
               >
                 <img 
-                  v-if="category.icon" 
-                  :src="category.icon" 
+                  v-if="'icon' in category && category.icon" 
+                  :src="String(category.icon)" 
                   :alt="category.title" 
                   class="tile-icon"
-                  :class="currentTileIndex === index ? 'icon-inverted' : ''"
+                  :class="autoMode.index.value === index ? 'icon-inverted' : ''"
                 />
               </div>
               <div 
                 class="tile-text"
-                :class="currentTileIndex === index ? 'text-active' : 'text-inactive'"
+                :class="autoMode.index.value === index ? 'text-active' : 'text-inactive'"
               >
                 {{ category.title }}
               </div>
@@ -49,77 +47,135 @@
         </div>
 
         <!-- Settings Options View -->
-        <div v-if="currentState === 'optionsView'">
+        <div v-if="state === 'optionsView'">
           <div class="main-title">
-            {{ getCategoryTitle(selectedCategory) }} - Aktuell: {{ getCurrentValue(selectedCategory || '') }}
+            {{ title }}
           </div>
 
-          <!-- Karussell Wrapper für vertikale Zentrierung -->
-          <div class="carousel-wrapper">
-            <!-- Karussell Container -->
-            <div class="carousel-container">
-              <!-- Karussell Content -->
-              <div class="carousel-content">
-                <div 
-                  v-for="(option, index) in currentOptions"
-                  :key="option.id"
-                  class="carousel-item"
-                  :class="currentTileIndex === index ? 'carousel-item-active' : 'carousel-item-inactive'"
-                  :style="getCarouselItemStyle(index)"
-                  @click="selectOption(option.id)"
-                  @contextmenu.prevent="handleOptionRightClick($event, option.id)"
-                >
-                  <div class="carousel-item-content">
-                    <div 
-                      class="tile-icon-container"
-                      :class="currentTileIndex === index ? 'icon-active' : 'icon-inactive'"
-                    >
-                      <div v-if="option.emoji" class="tile-emoji">{{ option.emoji }}</div>
-                      <img 
-                        v-else-if="(option as any).icon" 
-                        :src="(option as any).icon" 
-                        :alt="option.title" 
-                        class="tile-icon"
-                        :class="currentTileIndex === index ? 'icon-inverted' : ''"
-                      />
-                    </div>
-                    <div 
-                      class="tile-text"
-                      :class="currentTileIndex === index ? 'text-active' : 'text-inactive'"
-                    >
-                      {{ option.title }}
-                    </div>
-                    <div 
-                      v-if="option.description"
-                      class="tile-description"
-                      :class="currentTileIndex === index ? 'text-active' : 'text-inactive'"
-                    >
-                      {{ option.description }}
+          <!-- Spezielles Kamera-Interface -->
+          <div v-if="categoryId === 'kamera'" class="camera-settings-view">
+            <!-- Kamerabild -->
+            <div class="camera-preview-wrapper">
+              <video 
+                ref="cameraVideo"
+                class="camera-preview"
+                autoplay 
+                muted 
+                playsinline
+                :style="{
+                  filter: `brightness(${brightness}%)`,
+                  transform: `scale(${zoom})`
+                }"
+              ></video>
+            </div>
+
+            <!-- Helligkeits-Slider -->
+            <div class="camera-control-slider">
+              <label class="slider-label">
+                Helligkeit: {{ brightness }}%
+              </label>
+              <input
+                type="range"
+                min="0"
+                max="100"
+                :value="brightness"
+                @input="updateBrightness"
+                class="slider-input"
+              />
+            </div>
+
+            <!-- Zoom-Slider -->
+            <div class="camera-control-slider">
+              <label class="slider-label">
+                Zoom: {{ zoom }}x
+              </label>
+              <input
+                type="range"
+                min="1"
+                max="10"
+                step="0.1"
+                :value="zoom"
+                @input="updateZoom"
+                class="slider-input"
+              />
+            </div>
+          </div>
+
+          <!-- Normales Karussell für andere Einstellungen -->
+          <template v-else>
+            <!-- Karussell Wrapper für vertikale Zentrierung -->
+            <div class="carousel-wrapper">
+              <!-- Karussell Container -->
+              <div class="carousel-container">
+                <!-- Karussell Content -->
+                <div class="carousel-content">
+                  <div 
+                    v-for="(option, index) in items"
+                    :key="option.id"
+                    class="carousel-item"
+                    :class="autoMode.index.value === index ? 'carousel-item-active' : 'carousel-item-inactive'"
+                    :style="{
+                      '--offset': index - autoMode.index.value,
+                      '--rotation': (index < autoMode.index.value ? -20 : index > autoMode.index.value ? 20 : 0) + 'deg'
+                    }"
+                  >
+                    <div class="carousel-item-content">
+                      <div 
+                        class="tile-icon-container"
+                        :class="autoMode.index.value === index ? 'icon-active' : 'icon-inactive'"
+                      >
+                        <div 
+                          v-if="'emoji' in option && option.emoji" 
+                          class="tile-emoji"
+                        >
+                          {{ option.emoji }}
+                        </div>
+                        <img 
+                          v-else-if="'icon' in option && option.icon" 
+                          :src="String(option.icon)" 
+                          :alt="option.title" 
+                          class="tile-icon"
+                          :class="autoMode.index.value === index ? 'icon-inverted' : ''"
+                        />
+                      </div>
+                      <div 
+                        class="tile-text"
+                        :class="autoMode.index.value === index ? 'text-active' : 'text-inactive'"
+                      >
+                        {{ option.title }}
+                      </div>
+                      <div 
+                        v-if="'description' in option && option.description"
+                        class="tile-description"
+                        :class="autoMode.index.value === index ? 'text-active' : 'text-inactive'"
+                      >
+                        {{ option.description }}
+                      </div>
                     </div>
                   </div>
                 </div>
               </div>
             </div>
-          </div>
-        </div>
 
-        <!-- Karussell Indicators - außerhalb des optionsView -->
-        <div v-if="currentState === 'optionsView'" class="carousel-indicators">
-          <button 
-            v-for="(option, index) in currentOptions"
-            :key="`indicator-${option.id}`"
-            class="carousel-indicator"
-            :class="currentTileIndex === index ? 'carousel-indicator-active' : 'carousel-indicator-inactive'"
-            @click="goToOption(index)"
-          >
-          </button>
+            <!-- Karussell Indicators -->
+            <div class="carousel-indicators">
+              <button 
+                v-for="(option, index) in items"
+                :key="`indicator-${option.id}`"
+                class="carousel-indicator"
+                :class="autoMode.index.value === index ? 'carousel-indicator-active' : 'carousel-indicator-inactive'"
+                @click="goToIndex(index)"
+              >
+              </button>
+            </div>
+          </template>
         </div>
 
         <!-- Confirmation View -->
-        <div v-if="currentState === 'confirmation'">
+        <div v-if="state === 'confirmation'">
           <div class="confirmation-container">
-            <div class="confirmation-title">Einstellung gespeichert</div>
-            <div class="confirmation-text">{{ getCategoryTitle(selectedCategory) }} - {{ getSelectedOptionTitle() }}</div>
+            <div class="confirmation-title">{{ title }}</div>
+            <div class="confirmation-text">{{ confirmationText }}</div>
           </div>
         </div>
       </div>
@@ -128,262 +184,237 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted, onUnmounted, watch } from 'vue'
-import { useSettingsDialogLogic } from './SettingsDialogView'
+import { onMounted, onUnmounted, ref, computed, watch, nextTick } from 'vue'
+import { useSettingsDialogMachine } from '../composables/useSettingsDialogMachine'
+import { useSettingsDictionary } from '../composables/useSettingsDictionary'
+import { useTTS } from '../composables/useTTS'
+import { useInputManager } from '../../../shared/composables/useInputManager'
+import { useSettingsStore } from '../stores/settings'
+import { useFaceRecognition } from '../../../features/face-recognition/composables/useFaceRecognition'
 import AppHeader from '../../../shared/components/AppHeader.vue'
 
-// Settings dialog states
-type SettingsDialogState = 'mainView' | 'optionsView' | 'confirmation'
+// Dialog Machine
+const machine = useSettingsDialogMachine()
+const dict = useSettingsDictionary()
+const tts = useTTS()
+const settingsStore = useSettingsStore()
+const faceRecognition = useFaceRecognition()
 
-// Reactive state
-const currentState = ref<SettingsDialogState>('mainView')
-const selectedCategory = ref<string | null>(null)
-const selectedOption = ref<string | null>(null)
-const hasUserInteracted = ref(false)
+// Kamera-spezifische State
+const cameraVideo = ref<HTMLVideoElement | null>(null)
+const brightness = ref(settingsStore.settings.cameraBrightness || 50)
+const zoom = ref(settingsStore.settings.cameraZoom || 1)
 
-// Use settings dialog composable
+// State & Computed
 const {
-  currentTileIndex,
-  isAutoMode,
-  startAutoMode,
-  pauseAutoMode,
-  stopAutoMode,
-  speakText,
-  setupLifecycle,
-  settingsCategories,
-  getCategoryOptions,
-  getCategoryTitle,
-  getOptionTitle,
-  getCurrentValue,
-  saveSetting
-} = useSettingsDialogLogic()
+  state,
+  categoryId,
+  optionId,
+  items,
+  title,
+  confirmationText,
+  autoMode,
+  selectCategory,
+  selectOption,
+  resetToMainView,
+  goBack,
+  handleBlink,
+  goToIndex
+} = machine
 
-// Computed properties
-const currentOptions = computed(() => {
-  if (!selectedCategory.value) return []
-  return getCategoryOptions(selectedCategory.value)
+// Input Manager
+const inputManager = useInputManager({
+  onSelect: (event) => {
+    console.log('Input detected:', event.type, event.source)
+    handleBlink()
+  },
+  enabledInputs: ['blink', 'click'],
+  cooldown: 300
 })
 
-// Helper functions
-const getSelectedOptionTitle = () => {
-  if (!selectedOption.value) return ''
-  return getOptionTitle(selectedCategory.value!, selectedOption.value)
-}
-
-// Navigation functions
-const selectCategory = async (categoryId: string) => {
-  console.log('Selecting category:', categoryId)
+// Kamera-Funktionen
+async function initializeCamera() {
+  if (categoryId.value !== 'kamera' || !cameraVideo.value) return
   
-  // Spezielle Behandlung für Zurück-Kachel
-  if (categoryId === 'zurueck') {
-    goBack()
-    return
-  }
-  
-  if (!hasUserInteracted.value) {
-    hasUserInteracted.value = true
-    console.log('User first interaction - TTS now enabled')
-  }
-  
-  selectedCategory.value = categoryId
-  currentState.value = 'optionsView'
-  currentTileIndex.value = 0
-  
-  const category = settingsCategories.find((c: any) => c.id === categoryId)
-  if (category) {
-    console.log(`Einstellungen für ${category.title}`)
-  }
-}
-
-const selectOption = async (optionId: string) => {
-  console.log('Selecting option:', optionId)
-  
-  if (optionId === 'zurueck') {
-    // Zurück zu den Kategorien
-    currentState.value = 'mainView'
-    currentTileIndex.value = 0
-    selectedCategory.value = null
-    selectedOption.value = null
-    return
-  }
-  
-  selectedOption.value = optionId
-  currentState.value = 'confirmation'
-  
-  // Speichere die Einstellung
-  await saveSetting(selectedCategory.value!, optionId)
-  
-  const categoryTitle = getCategoryTitle(selectedCategory.value)
-  const optionTitle = getOptionTitle(selectedCategory.value!, selectedOption.value)
-  console.log(`Einstellung gespeichert: ${categoryTitle} - ${optionTitle}`)
-  
-  // TTS für Bestätigung
-  setTimeout(() => {
-    speakText('Einstellung gespeichert')
-  }, 500)
-  
-  setTimeout(() => {
-    speakText(`${categoryTitle} - ${optionTitle}`)
-  }, 2000)
-  
-  // After confirmation, return to main view after 6.5 seconds
-  setTimeout(() => {
-    resetToMainView()
-  }, 6500)
-}
-
-const resetToMainView = async () => {
-  console.log('Resetting to main view...')
-  
-  // Stoppe aktuellen Auto-Mode
-  stopAutoMode()
-  
-  // Clean up previous lifecycle
-  if (cleanup) {
-    cleanup()
-    cleanup = null
-  }
-  
-  // Reset state
-  currentState.value = 'mainView'
-  currentTileIndex.value = 0
-  selectedCategory.value = null
-  selectedOption.value = null
-  
-  console.log('Welche Einstellung möchten Sie ändern?')
-  
-  // Der Watch-Handler wird automatisch den Auto-Mode starten
-  // Keine manuelle Auto-Mode-Initialisierung hier nötig
-}
-
-// Right-click handlers
-const handleCategoryRightClick = (event: MouseEvent, categoryId: string) => {
-  event.preventDefault()
-  event.stopPropagation()
-  event.stopImmediatePropagation()
-  console.log('SettingsDialogView: Right click detected on category:', categoryId)
-  selectCategory(categoryId)
-  return false
-}
-
-const handleOptionRightClick = (event: MouseEvent, optionId: string) => {
-  event.preventDefault()
-  event.stopPropagation()
-  event.stopImmediatePropagation()
-  console.log('SettingsDialogView: Right click detected on option:', optionId)
-  selectOption(optionId)
-  return false
-}
-
-// Selection handlers for different views
-const handleCategorySelection = (item: any) => {
-  console.log('Category selection handler called with:', item)
-  if (item && item.id) {
-    selectCategory(item.id)
-  }
-}
-
-const handleOptionSelection = (item: any) => {
-  console.log('Option selection handler called with:', item)
-  selectOption(item.id)
-}
-
-const goBack = () => {
-  console.log('SettingsDialogView: Going back to main app')
-  window.location.href = '/ratatosk.2.0/app'
-}
-
-const goToOption = (index: number) => {
-  console.log('goToOption called with index:', index, 'current:', currentTileIndex.value)
-  if (index >= 0 && index < currentOptions.value.length) {
-    currentTileIndex.value = index
-    console.log('currentTileIndex updated to:', currentTileIndex.value)
-  } else {
-    // Reibungsloser Loop
-    if (index < 0) {
-      currentTileIndex.value = currentOptions.value.length - 1
-    } else if (index >= currentOptions.value.length) {
-      currentTileIndex.value = 0
+  try {
+    // Hole den Kamera-Stream von Face Recognition
+    if (!faceRecognition.isActive.value) {
+      await faceRecognition.start()
     }
-    console.log('Looped currentTileIndex to:', currentTileIndex.value)
+    
+    // Warte auf Video-Element und setze den Stream
+    await nextTick()
+    
+    // Finde das Video-Element von Face Recognition
+    const faceRecognitionVideo = document.querySelector('video') as HTMLVideoElement
+    if (faceRecognitionVideo && faceRecognitionVideo.srcObject && cameraVideo.value) {
+      cameraVideo.value.srcObject = faceRecognitionVideo.srcObject as MediaStream
+      await cameraVideo.value.play()
+    }
+  } catch (error) {
+    console.error('Kamera-Initialisierung fehlgeschlagen:', error)
   }
 }
 
-// Karussell Style-Funktion (wie im Pain Dialog)
-const getCarouselItemStyle = (index: number) => {
-  const offset = index - currentTileIndex.value
-  const rotation = index < currentTileIndex.value ? -20 : index > currentTileIndex.value ? 20 : 0
-  
-  return {
-    '--offset': offset,
-    '--rotation': `${rotation}deg`
-  }
+function updateBrightness(event: Event) {
+  const target = event.target as HTMLInputElement
+  const value = parseInt(target.value)
+  brightness.value = value
+  settingsStore.updateSettings({ cameraBrightness: value })
 }
 
-// Lifecycle management
-let cleanup: (() => void) | null = null
+function updateZoom(event: Event) {
+  const target = event.target as HTMLInputElement
+  const value = parseFloat(target.value)
+  zoom.value = value
+  settingsStore.updateSettings({ cameraZoom: value })
+}
+
+// Watch für Kamera-Kategorie
+watch([categoryId, cameraVideo], ([newCategoryId]) => {
+  if (newCategoryId === 'kamera' && cameraVideo.value) {
+    initializeCamera()
+  }
+}, { immediate: true })
+
+// Lifecycle - Timer für Cleanup
+const mountedTimers = ref<number[]>([])
 
 onMounted(() => {
-  console.log('SettingsDialogView mounted, current state:', currentState.value)
+  console.log('SettingsDialogView mounted')
   
-  // Erst die Überschrift vorlesen, dann Auto-Mode starten
-  setTimeout(() => {
-    speakText('Welche Einstellung möchten Sie ändern?')
-  }, 500)
+  // Input Manager starten
+  inputManager.start()
   
-  // Auto-Mode nach 4 Sekunden starten (nach TTS)
-  setTimeout(() => {
-    cleanup = setupLifecycle(settingsCategories, handleCategorySelection)
-  }, 4000)
+  // Kamera initialisieren wenn Kamera-Kategorie aktiv
+  if (categoryId.value === 'kamera') {
+    nextTick(() => {
+      initializeCamera()
+    })
+  }
+  
+  // Initial greeting - Titel sprechen, dann AutoMode starten (skipTitle = true, da Titel bereits gesprochen)
+  const timer1 = window.setTimeout(async () => {
+    await tts.speak(title.value)
+    const timer2 = window.setTimeout(() => {
+      if (autoMode && categoryId.value !== 'kamera') {
+        autoMode.start(true) // skipTitle = true, da Titel bereits gesprochen
+      }
+    }, 3000)
+    mountedTimers.value.push(timer2)
+  }, 1000)
+  mountedTimers.value.push(timer1)
 })
 
 onUnmounted(() => {
-  if (cleanup) {
-    cleanup()
-  }
-  stopAutoMode()
-})
-
-// Watch for state changes to update lifecycle
-watch(currentState, (newState) => {
-  console.log('State changed to:', newState)
-  stopAutoMode()
+  console.log('SettingsDialogView unmounted')
   
-  // Clean up previous lifecycle
-  if (cleanup) {
-    cleanup()
-  }
+  // Alle Timer löschen
+  mountedTimers.value.forEach(timer => clearTimeout(timer))
+  mountedTimers.value = []
   
-  // Reset tile index for new state
-  currentTileIndex.value = 0
+  // AutoMode stoppen (stoppt auch alle Timer)
+  autoMode.stop()
   
-  // Setup new lifecycle based on state
-  switch (newState) {
-    case 'mainView':
-      console.log('Setting up main view with', settingsCategories.length, 'categories')
-      // Erst Überschrift vorlesen, dann Auto-Mode
-      setTimeout(() => {
-        speakText('Welche Einstellung möchten Sie ändern?')
-      }, 500)
-      setTimeout(() => {
-        cleanup = setupLifecycle(settingsCategories, handleCategorySelection)
-      }, 4000)
-      break
-    case 'optionsView':
-      console.log('Setting up options view with', currentOptions.value.length, 'options')
-      // Erst Kategorie-Titel vorlesen, dann Auto-Mode
-      const categoryTitle = getCategoryTitle(selectedCategory.value)
-      setTimeout(() => {
-        speakText(`Einstellungen für ${categoryTitle}`)
-      }, 500)
-      setTimeout(() => {
-        cleanup = setupLifecycle(currentOptions.value, handleOptionSelection)
-      }, 4000)
-      break
-  }
+  // TTS stoppen
+  tts.cancel()
+  
+  // Input Manager stoppen (entfernt alle Event-Listener)
+  inputManager.stop()
 })
 </script>
 
 <style scoped>
 @import '../../../shared/styles/DialogBase.css';
+
+/* Kamera-Interface Styles */
+.camera-settings-view {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2rem;
+  padding: 2rem;
+  height: 100%;
+}
+
+.camera-preview-wrapper {
+  width: 100%;
+  max-width: 640px;
+  aspect-ratio: 4/3;
+  background: #000;
+  border-radius: 12px;
+  overflow: hidden;
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.camera-preview {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transform-origin: center center;
+}
+
+.camera-control-slider {
+  width: 100%;
+  max-width: 500px;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.slider-label {
+  font-size: 1.5rem;
+  font-weight: 600;
+  color: var(--text-primary, #333);
+  text-align: center;
+}
+
+.slider-input {
+  width: 100%;
+  height: 8px;
+  border-radius: 4px;
+  background: #ddd;
+  outline: none;
+  -webkit-appearance: none;
+  appearance: none;
+}
+
+.slider-input::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  background: var(--primary-color, #007bff);
+  cursor: pointer;
+}
+
+.slider-input::-moz-range-thumb {
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  background: var(--primary-color, #007bff);
+  cursor: pointer;
+  border: none;
+}
+
+/* Dark Mode Support */
+.dark-mode .slider-label {
+  color: var(--text-primary-dark, #fff);
+}
+
+.dark-mode .slider-input {
+  background: #555;
+}
+
+.dark-mode .slider-input::-webkit-slider-thumb {
+  background: var(--primary-color-dark, #4da3ff);
+}
+
+.dark-mode .slider-input::-moz-range-thumb {
+  background: var(--primary-color-dark, #4da3ff);
+}
 </style>

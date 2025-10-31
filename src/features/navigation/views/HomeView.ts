@@ -109,7 +109,7 @@ export function useHomeViewLogic() {
       id: 'settings',
       title: 'EINSTELLUNGEN',
       icon: '/settings-sliders.svg',
-      route: '/einstellungen-dialog',
+      route: '/einstellungen',
       category: 'settings'
     }
   ]

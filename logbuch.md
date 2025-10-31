@@ -3282,4 +3282,96 @@ dist/
 
 ---
 
+### 2025-10-31 - Settings-Dialog Routing, Benennungskorrektur und Kamera-Interface Überarbeitung
+
+**Problem:**
+- Settings-Dialog Route war falsch (`/einstellungen-dialog` statt `/einstellungen`)
+- "Blitzdauer" sollte "Blinzeldauer" heißen (falsche Benennung)
+- Kamera-Einstellung nutzte Karussell statt speziellem Interface mit Bild, Helligkeit und Zoom
+
+**Lösung:**
+
+#### **1. Routing-Korrektur für Settings-Dialog:**
+- `HomeView.ts`: Route von `/einstellungen-dialog` zu `/einstellungen` korrigiert
+- `SettingsDialogView.ts` (alte Datei): Referenz ebenfalls korrigiert
+- Router-Definition prüft und bestätigt `/einstellungen` Route
+
+#### **2. Benennungskorrektur: "Blitzdauer" → "Blinzeldauer":**
+- **ID-Änderung**: `blitzdauer` → `blinzeldauer` (konsistent mit Settings-Store)
+- **Titel-Änderung**: `BLITZDAUER` → `BLINZELDAUER`
+- **Geänderte Dateien**:
+  - `categories.ts`: ID und Titel
+  - `settingsGrammar.ts`: Titel für Options-View
+  - `options.ts`: Key im Options-Map
+  - `useSettingsDictionary.ts`: Case-Statements
+  - `useSettingsDialogMachine.ts`: Case-Statement beim Speichern
+  - `SettingsDialogView.ts` (alte Datei): alle Vorkommen
+
+#### **3. Kamera-Interface Überarbeitung:**
+- **Neue Settings-Types**:
+  - `cameraBrightness: number` (0-100, default: 50)
+  - `cameraZoom: number` (1-10, default: 1)
+- **Settings-Store erweitert**: Default-Werte für neue Kamera-Einstellungen
+- **Spezielles Kamera-Interface**:
+  - Video-Element für Kamerabild-Anzeige (nutzt Stream von Face Recognition)
+  - Helligkeits-Slider (0-100%) mit Live-Vorschau
+  - Zoom-Slider (1-10x) mit Live-Vorschau
+  - Kein Karussell für Kamera-Kategorie
+  - CSS Filter für Helligkeit (`brightness()`)
+  - CSS Transform für Zoom (`scale()`)
+- **Conditional Rendering**: 
+  - Wenn `categoryId === 'kamera'` → spezielles Interface
+  - Sonst → normales Karussell-Interface
+- **AutoMode**: Wird für Kamera-Kategorie nicht gestartet
+
+**Technische Details:**
+
+#### **Kamera-Interface Implementation:**
+```typescript
+// Settings-Types erweitert
+interface UserSettings {
+  // ...
+  cameraBrightness: number // 0-100 (default: 50)
+  cameraZoom: number // 1-10 (default: 1)
+}
+
+// Kamera-Initialisierung
+async function initializeCamera() {
+  // Nutzt Face Recognition Stream
+  // Zeigt Kamerabild in Video-Element
+}
+
+// Helligkeit und Zoom Updates
+function updateBrightness(event: Event) {
+  // CSS Filter: brightness()
+  // Persistiert in Settings-Store
+}
+
+function updateZoom(event: Event) {
+  // CSS Transform: scale()
+  // Persistiert in Settings-Store
+}
+```
+
+**Geänderte Dateien:**
+- `src/shared/types/index.ts`: Settings-Types erweitert
+- `src/features/settings/stores/settings.ts`: Default-Werte hinzugefügt
+- `src/features/settings/views/SettingsDialogView.vue`: Spezielles Kamera-Interface implementiert
+- `src/features/navigation/views/HomeView.ts`: Route korrigiert
+- `src/features/settings/data/categories.ts`: "Blitzdauer" → "Blinzeldauer"
+- `src/features/settings/data/settingsGrammar.ts`: Titel korrigiert
+- `src/features/settings/data/options.ts`: Key korrigiert
+- `src/features/settings/composables/useSettingsDictionary.ts`: Case-Statements korrigiert
+- `src/features/settings/composables/useSettingsDialogMachine.ts`: Case-Statement korrigiert
+
+**Ergebnis:**
+- ✅ Settings-Dialog Routing korrekt
+- ✅ Konsistente Benennung: "Blinzeldauer" überall
+- ✅ Kamera-Interface mit Live-Vorschau funktional
+- ✅ Helligkeits- und Zoom-Einstellungen werden gespeichert
+- ✅ Keine Linter-Fehler
+- ✅ Saubere Conditional Rendering-Logik
+
+---
+
 **Das Ratatosk-Projekt ist vollständig abgeschlossen und produktionsreif!** 🎉

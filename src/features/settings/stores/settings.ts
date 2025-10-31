@@ -18,6 +18,8 @@ export const useSettingsStore = defineStore('settings', () => {
     blinzeldauer: 0.7, // 0.7 Sekunden - wie lange man blinzeln muss
     farbmodus: 'neutral', // neutral color mode
     kamera: 'back', // back camera
+    cameraBrightness: 50, // camera brightness 0-100 (default: 50)
+    cameraZoom: 1, // camera zoom 1-10 (default: 1)
     accessibility: {
       highContrast: false,
       largeText: false,
@@ -76,6 +78,8 @@ export const useSettingsStore = defineStore('settings', () => {
       blinzeldauer: 0.7, // 0.7 Sekunden - wie lange man blinzeln muss
       farbmodus: 'neutral', // neutral color mode
       kamera: 'back', // back camera
+      cameraBrightness: 50, // camera brightness 0-100 (default: 50)
+      cameraZoom: 1, // camera zoom 1-10 (default: 1)
       accessibility: {
         highContrast: false,
         largeText: false,

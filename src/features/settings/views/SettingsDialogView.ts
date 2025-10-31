@@ -86,8 +86,8 @@ export function useSettingsDialogLogic() {
       category: 'settings' as const
     },
     {
-      id: 'blitzdauer',
-      title: 'BLITZDAUER',
+      id: 'blinzeldauer',
+      title: 'BLINZELDAUER',
       icon: blinzeldauerIcon,
       category: 'settings' as const
     },
@@ -127,7 +127,7 @@ export function useSettingsDialogLogic() {
       { id: 'lang', title: 'Lang', description: '5 Sekunden', value: 5, emoji: '⏰' },
       { id: 'zurueck', title: 'Zurück', description: '', value: null, emoji: '↩️' }
     ],
-    blitzdauer: [
+    blinzeldauer: [
       { id: 'sehr-kurz', title: 'Sehr kurz', description: '0,3 Sekunden', value: 0.3, emoji: '⚡' },
       { id: 'kurz', title: 'Kurz', description: '0,5 Sekunden', value: 0.5, emoji: '💫' },
       { id: 'normal', title: 'Normal', description: '0,7 Sekunden', value: 0.7, emoji: '✨' },
@@ -178,7 +178,7 @@ export function useSettingsDialogLogic() {
     switch (categoryId) {
       case 'leuchtdauer':
         return settingsStore.settings.leuchtdauer === value
-      case 'blitzdauer':
+      case 'blinzeldauer':
         return settingsStore.settings.blinzeldauer === value
       case 'farbmodus':
         return settingsStore.isDarkMode === value
@@ -207,7 +207,7 @@ export function useSettingsDialogLogic() {
     switch (categoryId) {
       case 'leuchtdauer':
         return `${settingsStore.settings.leuchtdauer} Sekunden`
-      case 'blitzdauer':
+      case 'blinzeldauer':
         return `${settingsStore.settings.blinzeldauer} Sekunden`
       case 'farbmodus':
         return settingsStore.isDarkMode ? 'Dunkel' : 'Hell'
@@ -246,7 +246,7 @@ export function useSettingsDialogLogic() {
       case 'leuchtdauer':
         settingsStore.updateSettings({ leuchtdauer: option.value as number })
         break
-      case 'blitzdauer':
+      case 'blinzeldauer':
         settingsStore.updateSettings({ blinzeldauer: option.value as number })
         break
       case 'farbmodus':
@@ -388,7 +388,7 @@ export function useSettingsDialogLogic() {
   // Lifecycle
   onMounted(() => {
     // Setze SettingsDialogView als aktiven View
-    simpleFlowController.setActiveView('/einstellungen-dialog')
+    simpleFlowController.setActiveView('/einstellungen')
     
     if (!faceRecognition.isActive.value) {
       faceRecognition.start()

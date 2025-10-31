@@ -953,3 +953,357 @@
     color: white;
   }
 }
+
+/* === ICH-DIALOG STYLES (basierend auf pain-dialog) === */
+.ich-dialog .main-content {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 2rem;
+  background-color: var(--bg-primary);
+  transition: background-color 0.3s ease;
+}
+
+.ich-dialog .main-title {
+  font-family: 'Source Code Pro', monospace;
+  font-size: 3rem;
+  font-weight: 450;
+  color: var(--text-primary);
+  margin: 0 0 4rem 0;
+  text-align: center;
+  transition: color 0.3s ease;
+}
+
+.ich-dialog .grid-container {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(clamp(180px, 25vw, 400px), 1fr));
+  gap: clamp(0.5rem, 2vw, 1.5rem);
+  max-width: 1440px;
+  width: 100%;
+  margin: 0 auto;
+  padding: 0 clamp(1rem, 3vw, 2rem);
+  justify-content: center;
+  align-content: center;
+  margin-top: 2rem;
+}
+
+.ich-dialog .menu-tile {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: clamp(1rem, 2vw, 3rem);
+  width: clamp(180px, 25vw, 400px);
+  height: clamp(154px, 17vw, 299px);
+  border: 3px solid transparent;
+  background-color: var(--bg-secondary);
+  border-radius: 1.5rem;
+  cursor: pointer;
+  transition: all 0.8s ease-in-out;
+  position: relative;
+  z-index: 1;
+  user-select: none;
+}
+
+.ich-dialog .tile-icon-container {
+  width: clamp(80px, 10vw, 160px);
+  height: clamp(80px, 10vw, 160px);
+  margin-bottom: clamp(0.5rem, 1vw, 1.5rem);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  transition: all 0.8s ease-in-out;
+}
+
+.ich-dialog .icon-active {
+  background-color: transparent;
+  border: none;
+}
+
+.ich-dialog .icon-inactive {
+  background-color: transparent;
+  border: none;
+}
+
+.ich-dialog .tile-icon {
+  width: clamp(80px, 10vw, 160px);
+  height: clamp(80px, 10vw, 160px);
+  transition: all 0.8s ease-in-out;
+  object-fit: contain;
+}
+
+.ich-dialog .tile-text {
+  font-family: 'Source Code Pro', monospace;
+  font-size: clamp(1rem, 1.5vw, 1.8rem);
+  font-weight: 500;
+  color: var(--text-primary);
+  text-align: center;
+  transition: color 0.3s ease;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.ich-dialog .tile-emoji {
+  font-size: 7.5rem;
+  line-height: 1;
+  user-select: none;
+}
+
+.ich-dialog .tile-active {
+  background-color: #00B098 !important;
+  border: 3px solid #00B098 !important;
+  box-shadow: 0 15px 35px rgba(0, 176, 152, 0.3);
+  transform: scale(1);
+}
+
+.ich-dialog .tile-inactive {
+  background-color: var(--bg-secondary);
+  border: 3px solid var(--border-primary);
+}
+
+.ich-dialog .grid-container .icon-active .tile-icon {
+  filter: brightness(0) invert(1);
+}
+
+.ich-dialog .grid-container .icon-inverted {
+  filter: brightness(0) invert(1);
+}
+
+.ich-dialog .text-active {
+  color: white;
+  font-weight: 600;
+}
+
+.ich-dialog .carousel-container .icon-active .tile-icon {
+  filter: none;
+}
+
+.ich-dialog .carousel-container .icon-inverted {
+  filter: none;
+}
+
+.ich-dialog .confirmation-container {
+  text-align: center;
+  padding: 2rem;
+}
+
+.ich-dialog .confirmation-text {
+  font-family: 'Source Code Pro', monospace;
+  font-size: 5.25rem;
+  font-weight: 450;
+  color: #FF6B35;
+  margin: 0 0 2rem 0;
+  text-align: center;
+  transition: color 0.3s ease;
+}
+
+.ich-dialog .confirmation-title {
+  font-family: 'Source Code Pro', monospace;
+  font-size: 5.25rem;
+  font-weight: 450;
+  color: black;
+  margin: 0 0 2rem 0;
+  text-align: center;
+  transition: color 0.3s ease;
+}
+
+.dark .ich-dialog .confirmation-title {
+  color: white;
+}
+
+.ich-dialog .menu-tile.back-tile {
+  background-color: var(--bg-secondary);
+  border: 3px solid transparent;
+  z-index: 999;
+}
+
+.ich-dialog .carousel-wrapper {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  width: 100%;
+  position: relative;
+  margin: 0 auto;
+  padding: 0;
+  min-height: clamp(300px, 40vh, 500px);
+}
+
+.ich-dialog .carousel-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  width: 100%;
+  position: relative;
+  transform-style: preserve-3d;
+  perspective: 2000px;
+  overflow: visible;
+  height: clamp(250px, 35vh, 400px);
+}
+
+.ich-dialog .carousel-content {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  transition: transform 0.8s ease-in-out;
+  transform-style: preserve-3d;
+}
+
+.ich-dialog .carousel-item {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform-origin: center center;
+  transform: translate(-50%, -50%) translateX(calc(var(--offset, 0) * 350px)) rotateY(var(--rotation, 0deg)) scale(0.8);
+  opacity: 0;
+  pointer-events: none;
+  transition: transform 0.8s ease-in-out, opacity 0.8s ease-in-out;
+  will-change: transform;
+  backface-visibility: hidden;
+  width: 300px;
+  height: 400px;
+  cursor: pointer;
+  z-index: 0;
+}
+
+.ich-dialog .carousel-item[style*="--offset: -1"],
+.ich-dialog .carousel-item[style*="--offset: 0"],
+.ich-dialog .carousel-item[style*="--offset: 1"] {
+  opacity: 1;
+  pointer-events: auto;
+  z-index: 1;
+}
+
+.ich-dialog .carousel-item-active {
+  transform: translate(-50%, -50%) translateX(0) rotateY(0deg) scale(1);
+  opacity: 1;
+  z-index: 10;
+}
+
+.ich-dialog .carousel-item-content {
+  max-width: 500px;
+  height: 450px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  background-color: var(--bg-secondary);
+  border-radius: 1.5rem;
+  padding: 2.5rem;
+  box-shadow: 0 0 25px rgba(0, 176, 152, 0.2);
+  transition: all 0.8s ease-in-out;
+  border: 3px solid transparent;
+  transform: scale(0.9);
+}
+
+.ich-dialog .carousel-item-active .carousel-item-content {
+  transform: scale(1);
+  box-shadow: 0 0 35px rgba(0, 176, 152, 0.4);
+  border: 3px solid rgba(0, 176, 152, 0.6);
+}
+
+.ich-dialog .carousel-item-content .tile-icon-container {
+  width: 250px;
+  height: 250px;
+  margin-bottom: 1.5rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  transition: all 0.8s ease-in-out;
+}
+
+.ich-dialog .carousel-item-content .tile-icon {
+  width: 173px;
+  height: 173px;
+  transition: all 0.8s ease-in-out;
+}
+
+.ich-dialog .carousel-item-content .tile-text {
+  font-family: 'Source Code Pro', monospace;
+  font-size: 1.44rem;
+  font-weight: 500;
+  color: var(--text-primary);
+  text-align: center;
+  transition: color 0.3s ease;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.ich-dialog .carousel-item-active .carousel-item-content .tile-text {
+  color: black !important;
+  font-size: 1.872rem;
+  font-weight: 700;
+}
+
+.dark .ich-dialog .carousel-item-active .carousel-item-content .tile-text {
+  color: white !important;
+}
+
+.ich-dialog .carousel-indicators {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 1rem;
+  margin-top: 3rem;
+  margin-bottom: 2rem;
+  position: absolute;
+  bottom: 2rem;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 100%;
+}
+
+.ich-dialog .carousel-indicator {
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background-color: rgba(0, 176, 152, 0.3);
+  border: none;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  margin: 0 0.5rem;
+}
+
+.ich-dialog .carousel-indicator-active {
+  background-color: rgba(0, 176, 152, 0.8);
+  transform: scale(1.2);
+  box-shadow: 0 0 10px rgba(0, 176, 152, 0.5);
+}
+
+/* Responsive Ich-Dialog Styles */
+@media (max-width: 768px) {
+  .ich-dialog .grid-container {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 0.3rem;
+    padding: 0 0.3rem 2rem 0.3rem;
+    margin-top: 1rem;
+  }
+  
+  .ich-dialog .main-title {
+    font-size: 2.25rem;
+    margin: 0.5rem 0 1.5rem 0;
+  }
+  
+  .ich-dialog .tile-text {
+    font-size: 1.6rem;
+  }
+  
+  .ich-dialog .tile-emoji {
+    font-size: 4.5rem;
+  }
+  
+  .ich-dialog .confirmation-text {
+    font-size: 1.96875rem;
+    margin: 0.5rem 0 1.5rem 0;
+  }
+  
+  .ich-dialog .confirmation-title {
+    font-size: 1.96875rem;
+    margin: 0.5rem 0 1.5rem 0;
+  }
+}

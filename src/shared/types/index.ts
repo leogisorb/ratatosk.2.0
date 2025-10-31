@@ -45,6 +45,8 @@ export interface UserSettings {
   blinzeldauer: number // in seconds (default: 0.7) - wie lange man blinzeln muss
   farbmodus: string // color mode (default: 'neutral')
   kamera: string // camera setting (default: 'back')
+  cameraBrightness: number // camera brightness 0-100 (default: 50)
+  cameraZoom: number // camera zoom 1-10 (default: 1)
   accessibility: {
     highContrast: boolean
     largeText: boolean
