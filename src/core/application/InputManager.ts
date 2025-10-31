@@ -137,7 +137,7 @@ export class InputManager {
 
     // ✅ Cleanup Click Detection
     if (this.clickHandler) {
-      document.removeEventListener('mousedown', this.clickHandler)
+      document.removeEventListener('contextmenu', this.clickHandler)
       this.clickHandler = null
     }
 
@@ -179,7 +179,7 @@ export class InputManager {
           }
         }
         if (type === 'click' && this.clickHandler) {
-          document.removeEventListener('mousedown', this.clickHandler)
+          document.removeEventListener('contextmenu', this.clickHandler)
           this.clickHandler = null
         }
         if (type === 'touch' && this.touchHandler) {
@@ -260,15 +260,11 @@ export class InputManager {
   }
 
   /**
-   * Setup Click Detection (Linke Maustaste)
-   * Nur für aktive Kachel (wie im HomeView)
+   * Setup Click Detection (Rechtsklick) - überall auf der Seite
    */
   private setupClickDetection() {
     this.clickHandler = (event: MouseEvent) => {
       if (!this.isActive) return
-      
-      // ✅ Nur linke Maustaste (button 0)
-      if (event.button !== 0) return
       
       // ✅ Nur normale Clicks, nicht auf interaktive Elemente (z.B. Buttons)
       const target = event.target as HTMLElement
@@ -276,13 +272,8 @@ export class InputManager {
         return // Ignoriere Clicks auf Buttons/Links - die haben ihre eigenen Handler
       }
       
-      // ✅ Prüfe ob Click auf aktiver Kachel (nur .tile-active oder .carousel-item-active)
-      const clickedTile = target.closest('.tile-active, .carousel-item-active')
-      if (!clickedTile) {
-        // Click war nicht auf aktiver Kachel - ignorieren
-        return
-      }
-      
+      // ✅ Rechtsklick überall auf der Seite wird als Input erkannt
+      // Die aktive Kachel wird automatisch über handleBlink() ausgewählt
       event.preventDefault()
       event.stopPropagation()
       
@@ -293,8 +284,8 @@ export class InputManager {
       })
     }
 
-    // ✅ Linke Maustaste statt contextmenu
-    document.addEventListener('mousedown', this.clickHandler, { passive: false })
+    // ✅ Rechtsklick (contextmenu) - überall auf der Seite
+    document.addEventListener('contextmenu', this.clickHandler, { passive: false })
   }
 
   /**
