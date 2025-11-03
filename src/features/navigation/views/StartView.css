@@ -63,12 +63,14 @@
   width: 100%;
 }
 
-/* Status Display - Zentriert */
+/* Status Display - Zentriert, in einer Reihe */
 .status-container {
   display: flex;
-  flex-direction: column;
+  flex-direction: row;
   align-items: center;
-  gap: 1rem;
+  justify-content: center;
+  gap: 2rem;
+  flex-wrap: wrap;
 }
 
 .status-item {
