@@ -1,0 +1,1823 @@
+{\rtf1\ansi\ansicpg1252\cocoartf2822
+\cocoatextscaling0\cocoaplatform0{\fonttbl\f0\fswiss\fcharset0 Arial-BoldMT;\f1\froman\fcharset0 TimesNewRomanPSMT;\f2\fswiss\fcharset0 Helvetica;
+\f3\froman\fcharset0 TimesNewRomanPS-ItalicMT;\f4\froman\fcharset0 TimesNewRomanPS-BoldMT;\f5\fmodern\fcharset0 CourierNewPSMT;
+}
+{\colortbl;\red255\green255\blue255;\red0\green0\blue0;}
+{\*\expandedcolortbl;;\cspthree\c0\c0\c0;}
+\paperw11900\paperh16840\margl1440\margr1440\vieww11520\viewh8400\viewkind0
+\pard\tx560\tx1120\tx1680\tx2240\tx2800\tx3360\tx3920\tx4480\tx5040\tx5600\tx6160\tx6720\pardirnatural\partightenfactor0
+
+\f0\b\fs36\fsmilli18001 \cf2 Inhaltsverzeichnis\
+
+\f1\b0\fs24 1
+\f2\fs22\fsmilli11040  
+\f1\fs24 Abk\'fcrzungsverzeichnis ...................................................................................................... 5\
+2
+\f2\fs22\fsmilli11040  
+\f1\fs24 Einleitung ........................................................................................................................... 6\
+2.1
+\f2\fs22\fsmilli11040  
+\f1\fs24 Motivation .................................................................................................................... 6\
+2.2
+\f2\fs22\fsmilli11040  
+\f1\fs24 Themenfindung ............................................................................................................ 7\
+2.3
+\f2\fs22\fsmilli11040  
+\f1\fs24 Ziel ............................................................................................................................... 7\
+2.4
+\f2\fs22\fsmilli11040  
+\f1\fs24 Nutzungshinweise ........................................................................................................ 9\
+3
+\f2\fs22\fsmilli11040  
+\f1\fs24 Begriffe ............................................................................................................................. 10\
+3.1
+\f2\fs22\fsmilli11040  
+\f1\fs24 Framework ................................................................................................................. 10\
+3.2
+\f2\fs22\fsmilli11040  
+\f1\fs24 Server ......................................................................................................................... 10\
+3.3
+\f2\fs22\fsmilli11040  
+\f1\fs24 Domain ....................................................................................................................... 10\
+3.4
+\f2\fs22\fsmilli11040  
+\f1\fs24 W3C ........................................................................................................................... 11\
+3.5
+\f2\fs22\fsmilli11040  
+\f1\fs24 K\'fcnstliche Intelligenz ................................................................................................ 11\
+3.6
+\f2\fs22\fsmilli11040  
+\f1\fs24 K\'fcnstliches neuronales Netz ...................................................................................... 12\
+3.7
+\f2\fs22\fsmilli11040  
+\f1\fs24 Webapplikation .......................................................................................................... 13\
+3.8
+\f2\fs22\fsmilli11040  
+\f1\fs24 Usability ..................................................................................................................... 14\
+4
+\f2\fs22\fsmilli11040  
+\f1\fs24 Recherche ......................................................................................................................... 14\
+4.1
+\f2\fs22\fsmilli11040  
+\f1\fs24 Design ........................................................................................................................ 14\
+4.2
+\f2\fs22\fsmilli11040  
+\f1\fs24 Programm Architektur ............................................................................................... 15\
+4.2.1
+\f2\fs22\fsmilli11040  
+\f1\fs24 Mediapipe und FaceMesh ................................................................................... 15\
+4.2.2
+\f2\fs22\fsmilli11040  
+\f1\fs24 Web Assembly .................................................................................................... 16\
+4.2.3
+\f2\fs22\fsmilli11040  
+\f1\fs24 Framework Vue.js ............................................................................................... 16\
+4.2.4
+\f2\fs22\fsmilli11040  
+\f1\fs24 Node.js und npm ................................................................................................. 17\
+4.2.5
+\f2\fs22\fsmilli11040  
+\f1\fs24 Entwicklungsumgebung ..................................................................................... 17\
+5
+\f2\fs22\fsmilli11040  
+\f1\fs24 Grundlagen ....................................................................................................................... 17\
+5.1
+\f2\fs22\fsmilli11040  
+\f1\fs24 Programmiersprache JavaScript................................................................................. 17\
+5.2
+\f2\fs22\fsmilli11040  
+\f1\fs24 Auszeichnungssprache HTML .................................................................................. 18\
+5.3
+\f2\fs22\fsmilli11040  
+\f1\fs24 Stylesheet Sprache CSS ............................................................................................. 19\
+5.4
+\f2\fs22\fsmilli11040  
+\f1\fs24 Grafikformate ............................................................................................................. 20\
+6
+\f2\fs22\fsmilli11040  
+\f1\fs24 Umsetzung ........................................................................................................................ 21\
+6.1
+\f2\fs22\fsmilli11040  
+\f1\fs24 Schwierigkeiten mit OpenCV/ohne KI ...................................................................... 22\
+6.2
+\f2\fs22\fsmilli11040  
+\f1\fs24 Facemesh im Web ...................................................................................................... 22\
+6.3
+\f2\fs22\fsmilli11040  
+\f1\fs24 Vue Projekt erstellen .................................................................................................. 22\
+Seite 46.4
+\f2\fs22\fsmilli11040  
+\f1\fs24 Augenerkennung mit Facemesh ................................................................................. 26\
+6.5
+\f2\fs22\fsmilli11040  
+\f1\fs24 Erstellen eines geeigneten Men\'fcs .............................................................................. 30\
+6.5.1
+\f2\fs22\fsmilli11040  
+\f1\fs24 Startseite ............................................................................................................. 32\
+6.5.2
+\f2\fs22\fsmilli11040  
+\f1\fs24 Hauptmen\'fc ......................................................................................................... 34\
+6.5.3
+\f2\fs22\fsmilli11040  
+\f1\fs24 Warnruf-Men\'fc .................................................................................................... 35\
+6.5.4
+\f2\fs22\fsmilli11040  
+\f1\fs24 Schmerz-Men\'fc ................................................................................................... 35\
+6.5.5
+\f2\fs22\fsmilli11040  
+\f1\fs24 Nachrichten-Men\'fc .............................................................................................. 37\
+6.5.6
+\f2\fs22\fsmilli11040  
+\f1\fs24 \'84Umwelt\'93 und \'84Ich\'93 Schnellbaustein Men\'fc ...................................................... 37\
+6.5.7
+\f2\fs22\fsmilli11040  
+\f1\fs24 Einstellungs-Men\'fc .............................................................................................. 39\
+6.6
+\f2\fs22\fsmilli11040  
+\f1\fs24 Augenaktion ............................................................................................................... 40\
+7
+\f2\fs22\fsmilli11040  
+\f1\fs24 Design ............................................................................................................................... 42\
+7.1
+\f2\fs22\fsmilli11040  
+\f1\fs24 Tastaturlayout ............................................................................................................. 42\
+7.2
+\f2\fs22\fsmilli11040  
+\f1\fs24 Namensgebung ........................................................................................................... 44\
+7.3
+\f2\fs22\fsmilli11040  
+\f1\fs24 Farbauswahl ............................................................................................................... 45\
+8
+\f2\fs22\fsmilli11040  
+\f1\fs24 Ausblick ............................................................................................................................ 47\
+8.1
+\f2\fs22\fsmilli11040  
+\f1\fs24 Deployment ................................................................................................................ 47\
+8.1
+\f2\fs22\fsmilli11040  
+\f1\fs24 Auftretende Fehler ..................................................................................................... 47\
+8.1
+\f2\fs22\fsmilli11040  
+\f1\fs24 Sprachsynthese ........................................................................................................... 48\
+8.2
+\f2\fs22\fsmilli11040  
+\f1\fs24 Lange Nacht der Wissenschaften ............................................................................... 49\
+9
+\f2\fs22\fsmilli11040  
+\f1\fs24 Abbildungsverzeichnis ..................................................................................................... 50\
+10
+\f2\fs22\fsmilli11040  
+\f1\fs24 Tabellenverzeichnis .......................................................................................................... 51\
+11
+\f2\fs22\fsmilli11040  
+\f1\fs24 Literaturverzeichnis .......................................................................................................... 51\
+
+\f0\b\fs36\fsmilli18001 1 Abk\'fcrzungsverzeichnis\
+
+\f1\b0\fs24 DNS ........................................................................................................... 
+\f3\i Domain Name System\
+
+\f1\i0 HTML ............................................................................................ 
+\f3\i Hypertext Markup Language\
+
+\f1\i0 ID .............................................................................................................. 
+\f3\i Identifikationsnummer\
+
+\f1\i0 KI ............................................................................................................... 
+\f3\i K\'fcnstliche Intelligenz\
+
+\f1\i0 KNN ................................................................................................ 
+\f3\i k\'fcnstliches neuronales Netz\
+
+\f1\i0 W3C ................................................................................................ 
+\f3\i World Wide Web Consortium\
+
+\f1\i0 Wasm ..................................................................................................................... 
+\f3\i Web Assembly\
+
+\f1\i0 Seite 5
+\f0\b\fs36\fsmilli18001 2 Einleitung\
+
+\fs31\fsmilli15961 2.1 Motivation\
+
+\f1\b0\fs24 Es wurde innerhalb einer Projektarbeit von Gwendolyn Holz, Nathalie Kamenicek, Lora\
+Shishkova, Jennifer Ulrich und Leonie Wirth
+\f4\b  
+\f1\b0 im Jahr
+\f4\b  
+\f1\b0 2019 an der Technischen Hochschule\
+N\'fcrnberg Georg Simon Ohm die Voca-App entwickelt. Sie dient der assistierten\
+Kommunikation mit Hilfe der Tiefenkamera des iPad Pro 2018 sowie des iPhone X.
+\f4\b  
+\f1\b0 Das Ziel\
+war es, unter anderem, intubierten Patienten oder Personen mit Amyotropher Lateralsklerose\
+die Kommunikation zu erm\'f6glichen oder zu erleichtern. Die Inspiration f\'fcr die Voca-App\
+entstand aus einer vorangegangenen Projektarbeit von Felix Mitterer, Annika Filipp und Daniel\
+Lochner. In dieser wurde die Problematik der Kommunikationsschwierigkeiten von intubierten\
+Patienten behandelt und eine Android-App als L\'f6sung entwickelt. Diese nutzt einen\
+umgebauten Kontroller zur Steuerung der App. Voca wird, statt mit einem Kontroller, mit den\
+Augen gesteuert. \'dcber die Kamera wird ein Videostream an die App gesendet, welche zun\'e4chst\
+die Gesichter im Video erkennt und daraufhin die Augen- und Augenlidbewegung der Person\
+analysiert. Im Verlauf leuchten w\'e4hrend der Anwendung auf dem Bildschirm Symbole auf, um\
+die einzelnen Men\'fcs der App zu kennzeichnen. Wird nun zur richtigen Zeit mit den Augen\
+lange genug \'84geblinzelt\'93, wird das aktuell aufleuchtende Symbol ausgew\'e4hlt. Die App enth\'e4lt\
+f\'fcr die Kommunikation eine Bildschirmtastatur, mit der sich Texte frei verfassen lassen. Dazu\
+geh\'f6rt eine gro\'dfe Auswahl verschiedener Wortsammlungen, welche das Erstellen von S\'e4tzen\
+vereinfachen, ein Favoriten-Men\'fc, in welchem h\'e4ufig benutzte S\'e4tze oder W\'f6rter gespeichert\
+werden, sowie ein Men\'fc, um vom Endger\'e4t aus einen Warnton abspielen zu k\'f6nnen, und auf\
+eventuelle Notsituationen aufmerksam zu machen. Die Wortsammlungen dienen als\
+Satzbausteine f\'fcr bestimmte Themen (Holz, Kamenicek, Shishkova, Ulrich, & Wirth, 2019 ;\
+Mitterer, Filipp, & Lochner, 2015).\
+In der auf dieser Projektarbeit folgenden Bachelorarbeit von Leonie Wirth wurden Funktionen\
+der Tastatur und der Men\'fcs verbessert. Zus\'e4tzlich wurde eine Eye-Tracking-Steuerung\
+implementiert. Es wurde darauf eingegangen f\'fcr die Zukunft diese App im Rahmen einer\
+weiteren Projekt- oder Bachelorarbeit in den App-Store von Apple zu ver\'f6ffentlichen (Wirth,\
+2020). Daf\'fcr muss die App von Apple genehmigt werden. Dies kann eine unbestimmte Zeit in\
+Anspruch nehmen. Ohne den App-Store muss die App manuell installiert werden, was der\
+Hersteller nicht empfiehlt. Die Einbindung in den App-Store w\'fcrde es erm\'f6glichen, dass jeder\
+Besitzer eines iPad Pro 2018 oder iPhone X diese App herunterladen und benutzen kann. Es\
+Seite 6k\'f6nnen keine anderen Ger\'e4te diese App nutzen, da sie nur auf iOS-Systemen funktionsf\'e4hig ist\
+und speziell f\'fcr die Tiefen-Kamera entwickelt wurde. Um Endger\'e4te mit den g\'e4ngigen\
+Betriebssystemen Android oder Windows zu integrieren, muss diese App neu entwickelt\
+werden. Die Integration des Eye-Tracking ist dabei die gr\'f6\'dfte H\'fcrde, da die wenigsten Ger\'e4te\
+mit diesen Betriebssystemen eine Tiefen-Kamera besitzen. (Mitgliedschaft Details, 2023 ;\
+Wirth, 2020)\
+
+\f0\b\fs31\fsmilli15961 2.2 Themenfindung\
+
+\f1\b0\fs24 Hauptbestandteil dieser Untersuchung war eine Verbreitung der App auf Android-Endger\'e4ten.\
+Eine solche L\'f6sung ben\'f6tigt eine Gesichtserkennung mit einer handels\'fcblichen Kamera. Wenn\
+dieses Problem gel\'f6st ist, dann braucht es eine Programmiersprache, welche von unter-\
+schiedlichen Betriebssystemen unterst\'fctzt wird. Eine Programmiersprache, die hierf\'fcr\
+verwendet werden k\'f6nnte, ist Java. Es m\'fcsste die App in Java umprogrammiert werden, um sie\
+f\'fcr mehrere Betriebssysteme nutzbar zu machen. Ein Ziel dieser Neuentwicklung ist es, die\
+g\'e4ngigsten Bildschirmaufl\'f6sungen zu unterst\'fctzen. Die daraus entstehende App muss\
+allerdings nicht nur in den Apple eigenen App-Store, sondern auch in den auf Android\
+verbreiteten Play Store ver\'f6ffentlicht werden.\
+Die effektivste M\'f6glichkeit, die verschiedensten Ger\'e4tetypen miteinander zu verbinden, ist eine\
+Schnittstelle \'fcber das Internet. Websites sind unabh\'e4ngig von den Endger\'e4ten erstellbar und\
+meist auf die verschiedenen Bildschirmaufl\'f6sungen oder Bildseitenverh\'e4ltnisse anpassbar.\
+Damit l\'e4sst sich eine ger\'e4teunabh\'e4ngige L\'f6sung entwickeln. Zudem kann die Website, sobald\
+sie auf einem Server zur Verf\'fcgung steht und dieser eine Domain erh\'e4lt, wie gewohnt abgerufen\
+werden. (Tanenbaum & Wetherall, 2012, S. 734 - 738)\
+
+\f0\b\fs31\fsmilli15961 2.3 Ziel\
+
+\f1\b0\fs24 Im Rahmen dieser Bachelorarbeit wird eine Website erstellt, welche die Kommunikation von\
+Patienten mit Sprech- und Bewegungseinschr\'e4nkungen zu anderen Personen erleichtern soll.\
+Zudem soll diese Website auf allen herk\'f6mmlichen Endger\'e4ten, wie Handy oder Tablet,\
+funktionsf\'e4hig sein. Zus\'e4tzliche Voraussetzungen sind eine einmalige Verbindung mit dem\
+Netz, sowie eine funktionsf\'e4hige Kamera, welche auf den Benutzer gerichtet werden kann.\
+Seite 7Als Teil dieses Ziels muss die Voca-App in einer f\'fcr Webanwendungen vorgesehenen Sprache\
+neu geschrieben werden. Die Programmiersprache JavaScript wurde f\'fcr diese Anwendung\
+ausgew\'e4hlt, weil sie die am h\'e4ufigsten verwendete Programmiersprache in der Entwicklung\
+interaktiver Websites ist. Aufgrund der unterschiedlichen Programmiersprachen konnte kein\
+bestehender Programmcode von Voca \'fcbernommen werden. Ebenso war es nicht m\'f6glich die\
+Algorithmen zu \'fcbernehmen, da diese speziell auf die Funktion des iOS-Betriebssystems\
+abgestimmt wurden.\
+Aus dem Feedback zur Voca-App sowie aufgrund Eigenrecherche ergab sich unter anderem die\
+Notwendigkeit f\'fcr Optimierung des Designs und der Navigation. Es wird ein Farbdesign mit\
+h\'f6herem Kontrast gew\'e4hlt, sowie ein kleineres Hauptmen\'fc, um die Navigationsdauer erheblich\
+zu reduzieren. Auf Eye-Tacking Technologie wird verzichtet, weil diese bei l\'e4ngerem Gebrauch\
+zu erh\'f6hter M\'fcdigkeit f\'fchrt und durch die verschiedenen Bildschirmgr\'f6\'dfen und Kamera-\
+positionierungen der Endger\'e4te nicht zuverl\'e4ssig implementiert werden kann.\
+Notwendig sind zudem neue, skalierbare Grafiken f\'fcr die optimale Darstellung auf den\
+unterschiedlichen Bildschirmgr\'f6\'dfen, da die Voca-App eben keine skalierbaren Grafiken nutzt.\
+Au\'dferdem werden die Kategorien der Wortsammlungen \'fcbernommen, aber angepasst und in\
+zwei gro\'dfe Bereiche unterteilt (Holz, Kamenicek, Shishkova, Ulrich, & Wirth, 2019).\
+Nachdem in Pflegeeinrichtungen nicht immer eine permanente Verbindung zu einem f\'fcr\
+Anwender nutzbaren Netzwerk wird eine m\'f6glichst netzwerk-unabh\'e4ngige Website angestrebt.\
+Die Website soll nach einmaligem Laden vollst\'e4ndig nutzbar sein, selbst wenn das Endger\'e4t\
+vom Netzwerk getrennt wird. Daf\'fcr m\'fcssen alle ben\'f6tigten Dateien vorgeladen werden. Diese\
+beinhalten Funktionen, Klassen, Grafiken und das neuronale Netz, f\'fcr die Analyse des\
+Kameravideos. Diese Dateien werden auf dem Endger\'e4t zwischengespeichert und stehen,\
+solange die Website nicht geschlossen wird, zur Verf\'fcgung.\
+Ein erneutes Laden der Website f\'fcr den Zugriff auf alle Elemente ist nicht notwendig.\
+Allerdings kann die Startseite aus technischen Gr\'fcnden nur einmalig nach dem Laden der\
+Website zur Verf\'fcgung stehen. Sollte die Website auf Wunsch des Nutzers neu geladen werden,\
+muss dies vom Browser aus geschehen, und es wird wieder eine Verbindung zum Netzwerk\
+ben\'f6tigt.\
+Es handelt sich bei dieser Bachelorarbeit um eine Neuentwicklung, basierend auf Design und\
+Modell der Voca-App. Daf\'fcr wurde ein eigener Name gew\'e4hlt und fortan wird diese\
+Webapplikation als Ratatosk bezeichnet.\
+Seite 8
+\f0\b\fs31\fsmilli15961 2.4 Nutzungshinweise\
+
+\f1\b0\fs24 Die Webapp Ratatosk dient zur assistierten Kommunikation f\'fcr Personen mit eingeschr\'e4nkter\
+Sprech- oder Bewegungsf\'e4higkeit. Sie sollte nicht in Notf\'e4llen benutzt und nicht f\'fcr oder in\
+lebensnotwendigen Entscheidungen verwendet werden.\
+Um eine reibungslose und optimale Nutzung von Ratatosk zu erm\'f6glichen, muss die Website\
+im Breitbildmodus aufgerufen werden. Eine Nutzung im Hochformat ist ber\'fccksichtigt, wird\
+aber nicht empfohlen, da hier Grafiken und Texte kleiner dargestellt werden m\'fcssen und somit\
+die Lesbarkeit beeintr\'e4chtigt ist. Das Gesicht des Benutzers muss im Kamerabild vollst\'e4ndig\
+zu sehen und beide Augen sollten deutlich zu erkennen sein. Der Hintergrund muss f\'fcr die\
+bestm\'f6gliche Erkennung gut ausgeleuchtet sein. Umgebungen mit geringer Helligkeit,\
+gr\'f6\'dferen Rauschverh\'e4ltnissen oder mit schnellen Bewegungen erschweren die Erkennung des\
+Gesichts.\
+Die besten Ergebnisse werden erreicht, wenn das Gesicht weniger als 80\'b0 horizontal oder\
+weniger als 8\'b0 vertikal geneigt ist, mehr als 50% des Gesichtes erkennbar sind und das Video\
+horizontal aufgenommen wird. Das Gesicht sollte im Frame mit der Stirn in Richtung der\
+oberen oder der linken Bildkante ausgerichtet sein. Es wird ein Mindestabstand von 30\
+Zentimetern zum Bildschirm des Endger\'e4tes empfohlen, um die Augen des Benutzers zu\
+schonen.\
+Die Website Ratatosk z\'e4hlt nicht als Medizinprodukt, da sie nicht beitr\'e4gt zur \'84Diagnose,\
+Verh\'fctung, \'dcberwachung, Vorhersage, Prognose, Behandlung oder Linderung von\
+Krankheiten, [oder der] Diagnose, \'dcberwachung, Behandlung, Linderung von oder\
+Kompensierung von Verletzungen oder Behinderungen, [oder der] Untersuchung, Ersatz oder\
+Ver\'e4nderung der Anatomie oder eines physiologischen oder pathologischen Vorgangs oder\
+Zustands, [oder der] Gewinnung von Informationen durch die In-vitro-Untersuchung von aus\
+dem menschlichen K\'f6rper - auch aus Organ-, Blut- und Gewebespenden - stammenden\
+Proben\'93 (VO (EU) 2017/745 (MDR) Art.2, Abs.1).\
+Seite 9
+\f0\b\fs36\fsmilli18001 3 Begriffe\
+
+\fs31\fsmilli15961 3.1 Framework\
+
+\f1\b0\fs24 Ein Framework ist eine Hilfestellung f\'fcr die objektorientierte Programmierung. Diese\
+beinhaltet meist mehrere Bibliotheken, welche wiederum mehrere Klassen und Methoden f\'fcr\
+ein bestimmtes Problem bereitstellen. \'84Frameworks sind von ausschlaggebender Wichtigkeit\
+f\'fcr das Entwickeln von gro\'dfen, objektorientierten Softwaresystemen. Sie versprechen hohe\
+Effizienz und k\'fcrzere Produkteinf\'fchrungszeiten durch Design und Wiederverwendbarkeit des\
+Programmcodes\'93 (Riehle, 2000, S. 18). Um bekannte Probleme in der Programmierung zu\
+vereinfachen und um zu vermeiden, dass bereits gel\'f6ste Problemstellungen von mehreren\
+Programmierern erneut gel\'f6st werden m\'fcssen, ist eine Nutzung von Frameworks\
+empfehlenswert. Ein Webframework \'fcbernimmt die Verantwortung f\'fcr eine einzige\
+Problemstellung, wie z.B. Webanwendungen, Grafikformate oder KI-Entwicklung (Riehle,\
+2000).\
+
+\f0\b\fs31\fsmilli15961 3.2 Server\
+
+\f1\b0\fs24 Es wird in der Informatik zwischen zwei Bedeutungen des Wortes Server unterschieden. Zum\
+einen wird damit die Hardware bezeichnet, auf der sich die Software befindet, welche in einem\
+Netzwerk angebunden ist. Zum anderen wird damit eben diese Software beschrieben, mit\
+welcher ein Client den Dienst des Servers nutzen kann. Daraus folgt, dass jeder normale\
+Computer mit der n\'f6tigen Software und bestimmten Einstellungen im Netzwerk zum Server\
+umfunktioniert werden kann. Da dies nicht immer sinnvoll oder von gro\'dfem Nutzen ist, werden\
+speziell daf\'fcr angefertigte Ger\'e4te verwendet, welche von gro\'dfen Firmen in ihren eigenen\
+Rechenzentren bereitgestellt werden. F\'fcr Privatnutzer oder kleine Firmen gibt es die\
+M\'f6glichkeit Server zu mieten. Diese werden von Rechenzentren Providern zur Verf\'fcgung\
+gestellt und bieten verschiedene Stufen der Leistung, um ein ideales Nutzen-Kosten-Verh\'e4ltnis\
+zu erzielen. (Tanenbaum & Wetherall, 2012, S. 24 - 27)\
+
+\f0\b\fs31\fsmilli15961 3.3 Domain\
+
+\f1\b0\fs24 Um eine Website auf einem Server wie gewohnt zu erreichen, ben\'f6tigt diese eine Domain. Eine\
+Domain ist der Name, mit welchem eine Website sich im Internet aufrufen l\'e4sst. Im Normalfall\
+Seite 10beschreibt eine einzelne Domain einen einzelnen Domain-name-system (DNS) Eintrag,\
+welcher zu einer g\'fcltigen IP-Adresse aufgel\'f6st wird. Diese IP-Adresse ben\'f6tigt das Endger\'e4t\
+des Nutzers um sich erfolgreich mit dem dazugeh\'f6rigen Server verbinden zu k\'f6nnen. Websiten\
+k\'f6nnen mehrere Domains, sowie mehrere IP-Adressen haben. Zu einer Domain geh\'f6rt die Top-\
+Level-Domain wie zum Beispiel \'82.de\'91, .com, oder .gov. Gro\'dfe Websiten wie Google, Facebook\
+oder Twitter verwenden verschiedene Top-Level-Domains, um die Websiten in der jeweiligen\
+Landessprache direkt anzeigen zu k\'f6nnen. DNS-Server bieten den Dienst f\'fcr die Aufl\'f6sung des\
+Namens in der IP-Adresse an. (Tanenbaum & Wetherall, 2012, S. 695 - 699, 703 - 707)\
+
+\f0\b\fs31\fsmilli15961 3.4 W3C\
+
+\f1\b0\fs24 Nachdem Tim Berners-Lee mit HTML den Grundstein des Word-Wide-Web gelegt hatte,\
+musste er erkennen, dass ohne Standardisierung kein gro\'dfer Nutzen daraus gezogen werden\
+k\'f6nne. Er gr\'fcndete in Zusammenarbeit mit dem 
+\f3\i European Council for nuclear Research
+\f1\i0  (kurz\
+CERN) und dem 
+\f3\i Massachusetts Institute of Technology
+\f1\i0  (kurz MIT) im Oktober 1994 das 
+\f3\i World\
+Wide Web Consortium
+\f1\i0  auch bekannt als W3C. Dieses Konsortium entwickelt Standards f\'fcr das\
+Internet, welche von allen Websites, Server, Diensten und Programmiersprachen eingehalten\
+werden. Diese Standards sorgen unter anderem f\'fcr die einheitliche Zug\'e4nglichkeit, Sicherheit\
+und den Datenschutz auf Websites (W3C History, 2023 ; Tanenbaum & Wetherall, 2012, S.\
+735).\
+Diese Richtlinien werden in Ratatosk vollumf\'e4nglich eingehalten, um eine sp\'e4tere\
+Weiterentwicklung der Website zu erm\'f6glichen und daraus entstehende weiterf\'fchrende\
+Projekte zu erleichtern.\
+
+\f0\b\fs31\fsmilli15961 3.5 K\'fcnstliche Intelligenz\
+
+\f1\b0\fs24 Die Idee einer maschinellen Intelligenz wurde \'fcber die Jahrtausende verbreitet. 1950\
+ver\'f6ffentlichte Alan Turing seinen Turing Test, welcher erstmalig eine m\'f6gliche Definition von\
+Intelligenz aufzeigte. Bis heute ist die Definition \'84Was ist Intelligenz\'93 nicht gekl\'e4rt, weshalb\
+die Frage, ob Maschinen \'fcberhaupt Intelligenz aufweisen k\'f6nnen, ebenfalls offenbleibt (Paa\'df\
+& Hecker, 2020, S. 1 - 3).\
+Seite 11Zwei Jahre sp\'e4ter entwickelten Christopher Strachey und Dietrich Prinz Programme mit\
+K\'fcnstlicher Intelligenz (kurz: KI) um Dame oder Schach zu spielen. Seitdem wurde die Technik\
+weiterentwickelt und verbessert (Stuart & Norvig, 2012, S. 239 - 240 ).\
+Zum Zeitpunkt dieser Bachelorarbeit gibt es Programme mit K\'fcnstlicher Intelligenz, welche\
+Texte verfassen, zusammenfassen und bewerten, Bilder zeichnen und erkennen, Musik\
+komponieren, Sprache erkennen und generieren, und Gedichte schreiben k\'f6nnen.\
+Eine solche KI besteht aus mindestens einem neuronalen Netz, welches die Funktionalit\'e4t der\
+K\'fcnstlichen Intelligenz erm\'f6glicht. Eine K\'fcnstliche Intelligenz, welche zum Erschaffen von\
+Texten trainiert wurde, kann demnach keine Bilder zeichnen oder Sprachen erkennen.\
+In dieser Abschlussarbeit wird das neuronale Netz einer K\'fcnstlichen Intelligenz verwendet, um\
+akkurat Gesichter zu erkennen und auswerten zu k\'f6nnen. Dieses neuronale Netz erkennt in\
+Bildern oder Videos Gesichter und liefert Informationen \'fcber dieses Gesicht, welche im\
+Anschluss verarbeitet werden.\
+
+\f0\b\fs31\fsmilli15961 3.6 K\'fcnstliches neuronales Netz\
+
+\f1\b0\fs24 Basierend auf der Funktionsweise der biologischen neuronalen Netzwerke (kurz: BNN) von\
+Tieren und Menschen entstand die Funktionsweise der k\'fcnstlichen neuronalen Netzwerke\
+(kurz: KNN). Die Nervenzellen im menschlichen Gehirn werden durch sogenannte Knoten im\
+neuronalen Netz einer k\'fcnstlichen Intelligenz dargestellt. Im Folgenden soll bei der Erw\'e4hnung\
+eines neuronalen Netzes immer vom k\'fcnstlichen neuronalen Netz ausgegangen werden. Der\
+Entstehungsprozess und die Theorie eines KNN werden hier nur oberfl\'e4chlich erkl\'e4rt, da eine\
+detaillierte Beschreibung den Rahmen einer Abschlussarbeit \'fcberschreiten w\'fcrde.\
+Zwischenschicht\
+Input Knoten Output Knoten\
+
+\f3\i Abbildung 1: Modell eines neuronalen Netzwerkes\
+
+\f1\i0 Seite 12Ein neuronales Netz besteht, wie Abbildung 1 zeigt, aus mehreren Knoten, die hier als Kreise\
+dargestellt werden. Es existieren Knoten, welche die Eingaben empfangen, in versteckten\
+Zwischenschichten die Daten bearbeiten oder die Ausgaben weitergeben. Diese Knoten sind\
+miteinander verbunden und geben somit die Daten nach der Bearbeitung weiter an die n\'e4chsten\
+Knoten. Ist das Grundger\'fcst des Netzes erstellt, muss es mit vorbereiteten Daten trainiert\
+werden. In der Trainingsphase eines neuronalen Netzes wird dieses mit Eingabedaten und den\
+gew\'fcnschten Resultaten als Ausgabedaten versorgt. Das neuronale Netz wird so angepasst, dass\
+die Eingabedaten die gew\'fcnschten Ausgabedaten erzeugen k\'f6nnen (Stuart & Norvig, 2012, S.\
+32 - 35 & 846 - 848).\
+Dieser Schritt ist der wichtigste im Erstellen eines KNN. Sind die Trainingsdaten hinsichtlich\
+der Quantit\'e4t und Qualit\'e4t ungen\'fcgend, wird das neuronale Netz in der sp\'e4teren Testphase oder\
+Anwendung fehlerhafte Daten ausgeben. Es besteht unter anderem die Gefahr des sogenannten\
+Overfitting, wobei das neuronale Netz sich zu sehr auf die Trainingsdaten spezialisiert und diese\
+quasi \'84auswendig\'93 lernt, ohne das zugrundeliegende Muster zu erkennen. Tests mit neuen\
+Inputdaten schlagen somit immer fehl (Stuart & Norvig, 2012, S. 821 - 823).\
+Dies sind nur einige der H\'fcrden, welche bei dem Erstellen eines neuronalen Netzes auftreten\
+k\'f6nnen. Die Erstellung eines neuronalen Netzes ben\'f6tigt neben dem daf\'fcr n\'f6tigen technischen\
+Wissen und den Testdaten zudem enorme Rechenleistung und Zeitaufwand. Aus diesen\
+Gr\'fcnden wird in dieser Abschlussarbeit ein bereits trainiertes und getestetes KNN verwendet\
+(Chollet, 2018, S. 16 & 432 -434).\
+
+\f0\b\fs31\fsmilli15961 3.7 Webapplikation\
+
+\f1\b0\fs24 Eine Webapplikation, Webanwendung oder auch Webapp genannt ist eine Website, welche dem\
+Nutzer eine Software \'fcber eine Website zur Verf\'fcgung stellt. Eine Anwendung, die\
+normalerweise auf dem Endger\'e4t eines Benutzers installiert werden muss, wird nun auf einem\
+Server zur Verf\'fcgung gestellt. Dieser bringt die ben\'f6tigte Leistung auf und sendet dem Nutzer\
+die Resultate seiner Anfragen.\
+Eine Webapplikation hat im Gegensatz zu einer installierbaren Software einige Vorteile. Sie ist\
+unabh\'e4ngig des Betriebssystems nutzbar, Versions-Unterschiede zwischen Benutzern und\
+daraus entstehende Probleme der Kompatibilit\'e4t werden eliminiert, die notwendige\
+Instandhaltung der Hard- und Software wird ebenfalls f\'fcr Firmen kosteng\'fcnstiger, und zudem\
+Seite 13werden der ben\'f6tigte Speicher und die Rechenleistung des Endger\'e4tes auf ein Minimum\
+reduziert
+\fs16\fsmilli8040  
+\fs24 (Tanenbaum & Wetherall, 2012, S. 737).\
+
+\f0\b\fs31\fsmilli15961 3.8 Usability\
+
+\f1\b0\fs24 Unter dem Begriff Usability versteht sich die Gebrauchstauglichkeit eines Produktes. In diesem\
+Fall ist es, wie der Benutzer die Website gebrauchen oder f\'fcr seinen individuellen Nutzen\
+anpassen kann. Da die Website f\'fcr Benutzer mit motorischer Behinderung entwickelt wurde,\
+ist im Bereich der Usability besonders auf diese Personengruppe R\'fccksicht zu nehmen. Es wird\
+deshalb darauf Wert gelegt, die wichtigsten Eigenschaften, wie etwa das Tastatur-layout, die\
+Geschwindigkeit der leuchtenden Symbole und die Dauer der geschlossenen Augen, f\'fcr den\
+Benutzer konfigurierbar zu gestalten. Es wurde zudem auf einen hohen farblichen Kontrast\
+geachtet, welcher selbst Nutzern mit Farbblindheit eine hohe Lesbarkeit der Website erm\'f6glicht\
+(Hellbusch, 2005, S. 46 - 49).\
+
+\f0\b\fs36\fsmilli18001 4 Recherche\
+
+\fs31\fsmilli15961 4.1 Design\
+
+\f1\b0\fs24 Im Zuge dieser Bachelorarbeit wurde das Klinikum N\'fcrnberg S\'fcd kontaktiert, um\
+Nachforschungen des zu erstrebenden Designs und der Navigation der Men\'fcs zu starten. Aus\
+einem vorangegangenem Praktikum bestanden noch pers\'f6nliche Netzwerke in die Abteilung\
+Medizintechnik des Klinikums, welche dankenswerterweise genutzt werden konnten. In einem\
+pers\'f6nlichen Treffen konnten die bereits bestehenden Elemente der Website vorgef\'fchrt und\
+anschlie\'dfend auf dieser Grundlage eine effektive Nachforschung gestartet werden. Der Kontakt\
+beschr\'e4nkte sich auf die Abteilung Medizintechnik, weil diese das n\'f6tige technische\
+Fachwissen besitzt und gleichzeitig t\'e4glich als Br\'fccke zwischen Patient und Maschine dient.\
+Aus dem pers\'f6nlichen Gespr\'e4ch mit dem Leiter der medizintechnischen Abteilung ergaben sich\
+Verbesserungen hinsichtlich der Benutzerfreundlichkeit. Es wurden unter den Symbolen des\
+Hauptmen\'fcs Beschriftungen eingef\'fcgt und das Untermen\'fc, in welchem der Schmerz des\
+Patienten beschrieben werden kann, wurde nach der Priorit\'e4t des Schmerzes sortiert.\
+Aus den Erfahrungen der Mitarbeiter der medizintechnischen Abteilung ergaben sich weitere\
+n\'fctzliche Vorschl\'e4ge. Es wurde im Schmerz-Untermen\'fc eine Skala eingef\'fcgt, damit Patienten\
+Seite 14die St\'e4rke ihres Schmerzes besser angeben k\'f6nnen. Zudem wurden einige schwer zu\
+definierende Bereiche aus dem Men\'fc entfernt und durch allgemein gebr\'e4uchlichere Begriffe\
+der K\'f6rperbereiche ersetzt. Es wurde au\'dferdem empfohlen, die Satzbausteine der Voca-App in\
+zwei gro\'dfe Bereiche zu unterteilen und diese als Auswahl im Hauptmen\'fc zur Verf\'fcgung zu\
+stellen. Zudem wurde entschieden, diese Bereiche mit dem Untermen\'fc, in welchem man\
+Nachrichten selbst verfassen kann zu verkn\'fcpfen, um eine einfachere Navigation zwischen\
+diesen Bereichen zu erm\'f6glichen.\
+Auf der Basis der Ergebnisse dieser Kontakte wurde die App dementsprechend angepasst. Das\
+resultierende Design ist minimalistisch gehalten und erm\'f6glicht dem Benutzer eine schnellere\
+Bedienung und Navigation zu den einzelnen Modulen der Website.\
+
+\f0\b\fs31\fsmilli15961 4.2 Programm Architektur\
+
+\fs28\fsmilli14041 4.2.1 Mediapipe und FaceMesh\
+
+\f1\b0\fs24 MediaPipe ist ein Framework f\'fcr k\'fcnstliche Intelligenz von Google. Mit den KIs von\
+MediaPipe lassen sich \'fcber ein neuronales Netz Bilder und Videos von gew\'f6hnlichen Kameras\
+analysieren und Gestik, Mimik, K\'f6rperpositionen sowie Gesichter erkennen. Das Model mit\
+der Bezeichnung FaceMesh wird in dieser Arbeit verwendet und soll hier genauer beschrieben\
+werden.\
+Von Bildern mit Gesichtern werden bestimmte Merkmale mit je drei Koordinaten ausgeben.\
+Werden diese in einem passenden Koordinatensystem eingetragen und verbunden, l\'e4sst sich\
+daraus ein akkurates 3D-Abbild des Gesichtes erstellen. Mit \'fcber 400 dieser\
+Erkennungsmerkmale in jedem Gesicht kann man, neben vielen anderen Eigenschaften, die\
+Positionen der Augenlider, die Positionen der Mundwinkel oder die Gr\'f6\'dfe des Gesichtes\
+ausrechnen.\
+FaceMesh wurde zur Verwendung in Programmen mit erweiterter Realit\'e4t entwickelt, und nicht\
+als ausschlaggebende Hilfe f\'fcr grunds\'e4tzliche Entscheidungen oder Programme. Nachteilig bei\
+FaceMesh ist seine Anf\'e4lligkeit f\'fcr verschiedene Lichtverh\'e4ltnisse, Positionen und\
+Orientierungen des Gesichtes, sowie dem Rauschverh\'e4ltnis des Videoeingangs. Da Ratatosk\
+sich nur auf die Erweiterung der Kommunikationsf\'e4higkeit von Bewegungs- und Sprach-\
+eingeschr\'e4nkten Benutzern fokussiert, dient es nicht als Programm f\'fcr lebenswichtige\
+Situationen und darf somit Facemesh nutzen.\
+Seite 15Es wird ein bereits trainiertes neuronales Netz verwendet, in welchem keine Gesichter oder\
+besondere Details gespeichert oder gar an Dritte weitergesendet werden k\'f6nnen. Das neuronale\
+Netz wird auf den Endger\'e4ten der User zwischengespeichert, um eine schnelle Bedienung trotz\
+eventuell mangelhafter Verbindung zum Server zu erm\'f6glichen (MediaPipe APIs terms of\
+Service, 2021 ; MediaPipe FaceMesh, 2022).\
+
+\f0\b\fs28\fsmilli14041 4.2.2 Web Assembly\
+
+\f1\b0\fs24 Seit 2017 existiert der offene Standard Web Assembly (Wasm) zur Erstellung von Webapps.\
+Wasm wird von allen gro\'dfen Browserentwicklern (wie Google, Mozilla, Microsoft und Apple)\
+unterst\'fctzt und ist seit 2019 eine offizielle Empfehlung von W3C. Dieser Standard erm\'f6glich\
+es, leistungsintensive Algorithmen f\'fcr den Webbrowser zu entwickeln. Wasm ist au\'dferdem das\
+Herzst\'fcck f\'fcr die Web-basierte Anwendung der k\'fcnstlichen Intelligenz FaceMesh\
+(WebAssembly becomes a W3C Recommendation, 2019).\
+Durch Wasm wird die Berechnung der Koordinaten von FaceMesh auf dem Endger\'e4t des\
+Nutzers vorgenommen. Auf Grund dessen, dass Wasm in Bytecode kompiliert wird, erzielt es\
+deutlich bessere Ergebnisse als textinterpretiertes JavaScript. Allerdings sind durch den Einsatz\
+eines neuronalen Netzes diese Berechnungen begrenzt, wodurch Latenzen auf ein Mindestma\'df\
+gehalten werden.\
+
+\f0\b\fs28\fsmilli14041 4.2.3 Framework Vue.js\
+
+\f1\b0\fs24 Um eine Website f\'fcr Nutzer ansprechend zu gestalten, werden Frameworks verwendet. Die am\
+weitesten verbreiteten Webframeworks sind Angular, React und Vue. In dieser Arbeit wurde\
+Vue verwendet, da es sich hierbei um ein Framework handelt, das speziell auf die Reaktivit\'e4t,\
+Effizienz und Schnelligkeit der Programme setzt. Zudem ist es sofort einsatzbereit und l\'e4sst\
+sich in bereits bestehende Projekte ohne gro\'dfe Umst\'e4nde implementieren.\
+Evan You ver\'f6ffentlichte sein Webframework Vue.js im Jahr 2014. Er nutzte bereits das\
+Webframework AngularJS und erstellte in Anlehnung daran sein eigenes Framework, welches\
+schneller zu bedienen ist und besonders Einsteigern und unerfahrenen Entwicklern die\
+M\'f6glichkeit gibt, ihre Websites schnell und elegant zu programmieren.\
+Vue.js entwickelte sich zu einem der bekanntesten JavaScript Frameworks neben AngularJS\
+und React. Durch die flexible Integration von vue.js konnte es in bereits existierende Projekte\
+Seite 16eingebettet werden und verhalf so zu schnelleren, reaktiven Websites
+\fs16\fsmilli8040  
+\fs24 (Frequently Asked\
+Quesions vue ; Introducton).\
+
+\f0\b\fs28\fsmilli14041 4.2.4 Node.js und npm\
+
+\f1\b0\fs24 Um die Website auf Funktionalit\'e4t testen zu k\'f6nnen reicht es nicht aus, die HTML-Datei im\
+Browser zu \'f6ffnen. Es wird eine Laufzeitumgebung ben\'f6tigt, damit alle Ressourcen geladen\
+werden und die Website korrekt dargestellt wird. In dieser Abschlussarbeit wurde die Open-\
+Source JavaScript Laufzeitumgebung node.js verwendet. Open-Source hei\'dft, dass der\
+Quellcode der Software \'f6ffentlich zug\'e4nglich ist. Node.js erm\'f6glicht es einen Webserver zu\
+erstellen und mit verf\'fcgbaren Modulen diesen auf die individuellen Bed\'fcrfnisse des\
+Entwicklers anzupassen. Ein wichtiger Teil von node.js ist der Paketmanager npm. Dieser\
+verwaltet die verschiedenen Pakete und ber\'fccksichtigt die Abh\'e4ngigkeiten zwischen diesen bei\
+der Installation. Node.js unterst\'fctzt mit Windows, Linux und MacOS die h\'e4ufigsten Betriebs-\
+systeme (Springer, 2022, S. 35, 37, 47 - 52, 57 - 63, 615).\
+
+\f0\b\fs28\fsmilli14041 4.2.5 Entwicklungsumgebung\
+
+\f1\b0\fs24 Als Integrated Development Environment (IDE) wurde Sublime verwendet, da diese intuitiv\
+verwendbar und individuell anpassbar ist. Zudem ist Sublime auf Windows, Linux und MacOS\
+verf\'fcgbar (Sublime Text - Text Editing, Done Right).\
+
+\f0\b\fs36\fsmilli18001 5 Grundlagen\
+
+\fs31\fsmilli15961 5.1 Programmiersprache JavaScript\
+
+\f1\b0\fs24 JavaScript ist eine plattform\'fcbergreifende Programmiersprache zur objektorientierten\
+Programmierung f\'fcr Websiten. Die Entwickler des Browsers Netscape und der Technogigant\
+Sun Microsystems entwickelten JavaScript. JavaScript dient der Verbindung zwischen\
+Objekten und Ressourcen auf den Endger\'e4ten oder Servern.\
+Im Jahr 1996 startete die Entwicklung eines neuen Standards f\'fcr plattform\'fcbergreifende\
+Programmiersprachen. Der neue Standard der ECMA, International Organisation ECMA-262,\
+wurde in einer ersten Auflage im Jahr 1997 ver\'f6ffentlicht und basierte auf der JavaScript\
+Seite 17Version 1.1. Dieser seitdem weiter verbesserte Standard stellt sicher, dass Websites un-abh\'e4ngig\
+der verf\'fcgbaren Webbrowser, welche sich an diesen Standard orientieren, angezeigt werden\
+k\'f6nnen. Dies erm\'f6glicht eine einheitliche Programmierung von Websites frei vom Nutzer\
+verwendeten Webbrowser.\
+Durch Funktionen, welche auf Events basieren, und der Verbindung mit der Auszeichnungs-\
+sprache HTML und der Stylesheet-Sprache CSS, lassen sich interaktive Websites\
+programmieren (ECMA-262_1st_edition_june_1997, 1997, S. 1, Brief History ; JavaScript\
+Overview, 1998 ; https://wp.netscape.com/newsref/pr/newsrelease67.html, 1995, Archiviert\
+am 16.09.2007) .\
+
+\f0\b\fs31\fsmilli15961 5.2 Auszeichnungssprache HTML\
+
+\f1\b0\fs24 Tim Berners-Lee hat im Jahre 1989 dem CERN einen ersten Entwurf der\
+Auszeichnungssprache Hypertext Markup Language (kurz: HTML) vorgelegt, um sie von\
+seinem Projekt zu \'fcberzeugen. Um den Verlust an wichtigen Informationen zu verhindern,\
+wurde eine flexible L\'f6sung gesucht, um die Daten des Forschungszentrums unter den\
+Angestellten auszutauschen. Bereits neun Jahre zuvor hatte Tim Berners-Lee ein eigenes\
+Programm f\'fcr die Verwaltung von Projekten entwickelt, um diese Information mit anderen\
+Forschern zu teilen. Dieses Programm namens Enquire erlaubte es mehreren Benutzern\
+gleichzeitig auf die gleichen Daten zuzugreifen. Enquire wurde von vielen Forschern\
+verwendet, und erweitert und es entstand daraus die erste Version von HTML.\
+HTML diente der Archivierung von Programmen, Daten und dessen Zusammenh\'e4nge\
+untereinander, um insbesondere neue Forscher in ein Projekt schneller einzubinden und somit\
+die Einstiegsphase zu minimieren und alle Personen in einem Projekt auf den gleichen\
+Informationsstand zu halten.\
+HTML basiert auf sogenannten Tags, welche bestimmte Elemente beschreiben k\'f6nnen. Es\
+werden verschiedene Tags zur Verf\'fcgung gestellt, um unter anderem Elemente wie Textfelder,\
+Schaltfl\'e4chen, Links, Bilder darzustellen, sowie Videos und Audiodateien wiederzugeben. Tags\
+werden durch Kleiner-als- (<) und Gr\'f6\'dfer-als-Zeichen (>) gekennzeichnet und m\'fcssen meist\
+mit einem weiteren Tag geschlossen werden. Ein Tag f\'fcr einen Button, also einer\
+interagierbaren Schaltfl\'e4che, mit der Aufschrift \'84Hallo Welt\'93 hat den Aufbau\
+Seite 18
+\f5 <button>Hallo Welt</button>
+\f1 , wobei hier 
+\f5 <button>
+\f1  das Start- und 
+\f5 </button>\
+
+\f1 das End-Tag darstellt.\
+HTML ist eine M\'f6glichkeit zur textbasierten Codierung von schriftlichen Inhalten. HTML kann\
+nicht f\'fcr die Programmierung selbst verwendet werden, da es nur eine Struktur bietet f\'fcr den\
+entsprechenden Inhalt der Website (HTML Tags, 1992 ; Berners-Lee, 1990).\
+
+\f0\b\fs31\fsmilli15961 5.3 Stylesheet Sprache CSS\
+
+\f1\b0\fs24 Um die Usability von Websiten f\'fcr Benutzer zu steigern wurde 1994 von H\'e5kon Wium Lie die\
+Idee \'fcber ein Cascading Style Sheet ver\'f6ffentlicht (Lie, 1994).\
+CSS wird verwendet um die Anzeige von Elementen von Markup Sprachen zu beschreiben. Mit\
+CSS lassen sich unter anderem Farben, Schriftarten und Abst\'e4nde von HTML-Dokumenten\
+anpassen, um somit f\'fcr den Benutzer besondere Inhalte hervorzuheben und das Layout der Seite\
+interessanter zu gestalten.\
+CSS ist eine f\'fcr den Menschen lesbare Sprache, dient allerdings ebenfalls nicht zum\
+Programmieren, da nur das Layout und Design eines Dokumentes beschrieben wird (Cascading\
+Style Sheets, level 1, 2018).\
+Es wird in CSS zwischen zwei Methoden des Layouts unterschieden. Das Grid-Layout Modell\
+teilt die Website zweidimensional in mehrere Bereiche ein. Der Inhalt dieser Bereiche kann\
+variieren, aber Dimensionen und Position auf der Website bleiben stetig gleich.\
+Kopfzeile\
+Inhalt\
+Men\'fc\
+Fu\'dfzeile\
+
+\f3\i Abbildung 2: Darstellung eines Grid-Layout Modells\
+
+\f1\i0 Ein Beispiel, wie ein solches Grid-Layout in einer Website integriert werden kann, ist in\
+Abbildung 2 dargestellt. Die Kopfzeile ist f\'fcr das Logo und den Namen der Website reserviert,\
+w\'e4hrend die Fu\'dfzeile meist das Impressum oder rechtliche Hinweise enth\'e4lt. Um auf der\
+Website zwischen einzelnen Bereichen navigieren zu k\'f6nnen wird das Men\'fc entweder in seinen\
+eigenen Bereich links am Rand der Seite dargestellt oder in die Kopfzeile integriert. Der Inhalt\
+Seite 19der Website kann eine beliebig scrollbare L\'e4nge annehmen. Im Gegensatz dazu gibt es das Box-\
+Layout Modell. Hier wird der Inhalt in einzelne Boxen unterteilt, welche auf der Seite\
+positioniert werden.\
+
+\fs21\fsmilli10560 Au\'dfenabstand\
+Rahmen\
+Innenabstand\
+Inhalt\
+
+\f3\i\fs24 Abbildung 3: Darstellung eines Box-Layout Modells\
+
+\f1\i0 Ein solches Modell ist in Abbildung 3 dargestellt. Hier werden die Beziehungen zwischen den\
+einzelnen Elementen des Box-Layout Modells dargestellt, wobei es sich erkennen l\'e4sst, dass\
+diese ineinander verschachtelt sind. Es lassen sich Gr\'f6\'dfe und F\'e4rbung des Inhaltes, des\
+Innenabstandes, des Rahmens und des Au\'dfenabstandes einstellen. Im Zentrum steht der Inhalt\
+der Box. Dieser kann aus Text, Bildern, Beschriftungen von Buttons oder sogar aus Boxen\
+selbst bestehen. Danach kommt ein Polster, das den Abstand zwischen Inhalt und einem\
+eventuell vorhandenen Rahmen festlegt. Dieses Polster ist bei Buttons als Fl\'e4che bis zu dessen\
+Rahmen zu sehen, auf die sich mit der Maus klicken l\'e4sst. Der Rahmen selbst ist meist auf allen\
+Seiten um das Polster gleich breit und farblich gekennzeichnet. Um den Rahmen herum befindet\
+sich ein Rand, der den Abstand der Au\'dfengrenze zu einem anderen Element kennzeichnet. Alle\
+Bestandteile einer Box sind variabel einstellbar in Gr\'f6\'dfe und Farbe.\
+\'dcblicherweise wird f\'fcr das Haupt-Layout der Seite ein Grid-Layout verwendet. Damit lassen\
+sich zum Beispiel der Header, der Footer, der Inhalt und das Men\'fc genau einteilen. Das Box-\
+Layout Modell wird f\'fcr den Inhalt dieser einzelnen Abschnitte verwendet. Da Ratatosk\
+lediglich einen Header und daf\'fcr stetig wechselnden Inhalt besitzt, wurde auf ein Grid-Layout\
+verzichtet (Christopher & J\'f8rgen W., 2012, S. 38 - 40 & 419 ; Rachel & Dan, 2006, S. 173 -\
+176).\
+
+\f0\b\fs31\fsmilli15961 5.4 Grafikformate\
+
+\f1\b0\fs24 Grafiken werden in zwei verschiedenen Formaten gespeichert. Das am weitesten verbreitete\
+Format sind Rastergrafiken, welche die Bilder in Pixel unterteilen. Durch eine zu starke\
+Seite 20Vergr\'f6\'dferung des Bildes werden die Pixel gestreckt und das Bild wird unscharf dargestellt.\
+Rastergrafiken sind somit eine aufl\'f6sungsabh\'e4ngige Formatierung f\'fcr Bilder. Die h\'e4ufigsten\
+Dateiformate f\'fcr Rastergrafiken sind JPG, PNG und BMP.\
+Neben diesen existieren Vektorgrafiken, welche Bilder als eine Ansammlung von Formeln und\
+Algorithmen speichern. Durch Vergr\'f6\'dferung des Bildes werden die Gleichungen mit den neuen\
+Seitenverh\'e4ltnissen neu berechnet. Damit erscheinen Vektorgrafiken immer mit scharfen\
+Kanten und klaren Farben und sind somit eine aufl\'f6sungsunabh\'e4ngige Formatierungsart. Die\
+bekanntesten Dateiformate f\'fcr Vektorgrafiken sind SVG und AI. F\'fcr Websiten sollten f\'fcr Logos\
+und Symbole Vektorgrafiken verwendet werden (Hellbusch, 2005, S. 150 \'96 151 ; Design &\
+Layout: Was ist eine Vektorgrafik? ; Grafik-Design: Erkl\'e4rung des Begriffs Vektorgrafik).\
+
+\f0\b\fs36\fsmilli18001 6 Umsetzung\
+
+\f1\b0\fs24 Die Entwicklung von Ratatosk fand auf einem Ubuntu 20.04.6 LTS-Betriebssystem statt. Es ist\
+mit gewissen Modifikationen m\'f6glich, die Entwicklung auf einem Windows oder MacOS\
+Betriebssystem zu reproduzieren. Die Tests der Website wurden in einem Firefox-Webbrowser\
+der Version 116.0.3 durchgef\'fchrt. Einige Befehle wurden in einer Kommandozeile der Konsole\
+in Ubuntu eingegeben. Diese Befehle werden im Folgendem mit einem vorangestellten Gr\'f6\'dfer-\
+als-Zeichen (>) gekennzeichnet.\
+Um die Funktionsweise verschiedener Abschnitte der Website anschaulicher zu gestalten,\
+wurden Diagramme eingef\'fcgt. Statt dem sonst bei der Programmierung \'fcblichen Fluss-\
+diagramm zur Darstellung komplexer Vorg\'e4nge wurden hier mehrere Aktivit\'e4ts-diagramme\
+verwendet. Dies war notwendig, da die Funktionen der Website auf Events und Aktionen des\
+Benutzers und anderer Elemente der Website reagieren. Dadurch konnte kein stetiger Fluss der\
+Funktion dargestellt werden. Die Diagramme veranschaulichen die Prozesse, welche im\
+Hintergrund ablaufen. Die Namen der Variablen wurden zur verbesserten Verst\'e4ndlichkeit\
+angepasst. Die Diagramme wurden mit astahUML Version 9.1.0/44a59, Model Version 40,\
+unter der kostenlosen Lizenz f\'fcr Studenten erstellt (Sommerville, 2018, S. 167 \'96 168 ; astah\
+UML, 2023 ; Forbrig, 2007).\
+Seite 21
+\f0\b\fs31\fsmilli15961 6.1 Schwierigkeiten mit OpenCV/ohne KI\
+
+\f1\b0\fs24 Da Mediapipe auf der Open-Source Bibliothek OpenCV basiert wurde anfangs versucht, ohne\
+k\'fcnstliche Intelligenz die Positionen der Augenlider zu erkennen. Es wurden mehrere\
+Funktionen erstellt, welche mit einem Graubild des Gesichtes den Wei\'dfeanteil der Augen-partie\
+ausrechnen, und ab einem gewissen Schwellwert diese als geschlossen erkennen sollten.\
+Aus eigenen Tests ergab sich bei abweichenden, nicht idealen Umgebungen, eine Trefferquote\
+von ca. 60%. W\'e4hrend dieses System der Augenerkennung zwar geringf\'fcgig schneller als\
+FaceMesh ist, sind die auftretenden Fehler nicht akzeptabel. Die Webapp Ratatosk soll Benutzer\
+in m\'f6glichst vielen Umgebungen erkennen und fehlerresistent dem Benutzer eine angenehme\
+und vorhersehbare Verwendung erm\'f6glichen.\
+Aus diesen Gr\'fcnden wird eine k\'fcnstliche Intelligenz verwendet um Fehler in Berechnungen zu\
+vermeiden.\
+
+\f0\b\fs31\fsmilli15961 6.2 Facemesh im Web\
+
+\f1\b0\fs24 Mediapipe bietet eine M\'f6glichkeit, sein FaceMesh Model in Websiten oder JavaScript\
+Anwendungen einzubetten. Daf\'fcr wird der Paketmanager
+\f3\i  npm
+\f1\i0  von 
+\f3\i node.js
+\f1\i0  ben\'f6tigt. Das\
+neuronale Netz und die zugeh\'f6rigen Funktionen werden mit dem Befehl\
+
+\f5 >npm install @mediapipe/tasks-vision\
+
+\f1 in die aktuelle Projektumgebung installiert. Danach wird das gew\'fcnschte Model FaceMesh\
+heruntergeladen und in der Projektumgebung in dem Verzeichnis 
+\f5 /apps/shared/models/\
+
+\f1 installiert. Mit diesen Schritten steht nun dem Pro-jekt das neuronale Netz zur Verf\'fcgung und\
+kann im Vue Projekt innerhalb des JavaScript Codes verwendet werden.\
+
+\f0\b\fs31\fsmilli15961 6.3 Vue Projekt erstellen\
+
+\f1\b0\fs24 Zur Installation von Vue ist ebenfalls node.js notwendig. In der aktuellen Projektumgebung\
+wird mit dem Befehl 
+\f5 >npm create vue@latest
+\f1  in der Kommandozeile Vue installiert\
+und die f\'fcr Vue ben\'f6tigte Verzeichnisstruktur erstellt. Nach Angabe eines Projektnamens und\
+weiteren Parametern wird die vorgefertigte Verzeichnisstruktur f\'fcr Vue im aktuellen\
+Verzeichnis angefertigt.\
+Seite 22Wird nun in dieses Verzeichnis in der Konsole gewechselt und man gibt den Befehl 
+\f5 >npm\
+install
+\f1  ein, so werden alle Module in der 
+\f3\i package.json
+\f1\i0  Datei und dessen Abh\'e4ngigkeiten\
+installiert. Damit ist das Projekt erfolgreich erstellt und es kann die 
+\f3\i index.html
+\f1\i0  Datei bearbeitet\
+werden. Diese stellt das Grundger\'fcst f\'fcr alle Komponenten dar, alle weiteren Dateien werden\
+darin eingebunden. Wird nun den Befehl 
+\f5 >npm run dev 
+\f1 eingegeben, so wird der lokale\
+Server gestartet und es kann die 
+\f3\i index.html
+\f1\i0  Datei auf der in der Konsole angegebenen Adresse\
+im Webbrowser aufgerufen und angesehen werden.\
+
+\f3\i Abbildung 4: Klassendiagramm von Vue (erstellt mit astahUML)\
+
+\f1\i0 Abbildung 4 zeigt die erstellte Vue Klasse element_click
+\f4\b  
+\f1\b0 in einem Klassendiagramm. Die\
+meisten Elemente auf der Website befinden sich innerhalb dem G\'fcltigkeitsbereich dieser Klasse\
+und werden von Methoden oder Attributen dieser Klasse beeinflusst oder rufen gewisse\
+Methoden dieser Klasse auf. Daher ist ein Grundverst\'e4ndnis dieser Klasse ausschlaggebend,\
+um die Funktionsweise der Website zu verstehen.\
+Seite 23Das Attribut 
+\f3\i auswahl 
+\f1\i0 beinhaltet das aktuell ausgew\'e4hlte K\'f6rperteil im Schmerz-Untermen\'fc,\
+w\'e4hrend das Attribut 
+\f3\i nachricht
+\f1\i0  den verfassten Text im Nachrichtenmen\'fc anzeigt. Der String\
+
+\f3\i selectedElement
+\f1\i0  beinhaltet die ID des momentan aktivierten Symboles, w\'e4hrend 
+\f3\i element 
+\f1\i0 die\
+ID des Symboles enth\'e4lt, welches aufleuchtete, als der Nutzer seine Augen geschlossen hat.\
+Die gro\'df geschriebenen Attribute 
+\f3\i Keyboards
+\f1\i0 ,
+\f3\i  Schmerz
+\f1\i0 ,
+\f3\i  ZahlenMenu
+\f1\i0 ,
+\f3\i  UmgebungMenu
+\f1\i0 ,\
+
+\f3\i IchMenu
+\f1\i0 ,
+\f3\i  Schmerzskala
+\f1\i0  und 
+\f3\i Blinkzeiten 
+\f1\i0 beinhalten ein- bis mehrdimensionale Arrays mit den\
+verschiedenen Auswahlm\'f6glichkeiten innerhalb mehrerer Men\'fcs. Diese werden alle als Button\
+auf der Website dynamisch generiert. Dies wird in Kapitel 6.5 genauer erkl\'e4rt. Der Integer\
+
+\f3\i selectedKeyboard
+\f1\i0  gibt an, welche Tastatur im Nachrichten Men\'fc angezeigt werden soll. Das\
+Attribut 
+\f3\i waittime
+\f1\i0  speichert die Anzahl der Millisekunden, auf welche zwischen dem\
+Aufleuchten der einzelnen Elemente der Website gewartet werden soll. Das Attribut\
+
+\f3\i closed_frames
+\f1\i0  speichert die Anzahl der Frames, in welchen der Nutzer nacheinander seine\
+Augen geschlossen h\'e4lt, w\'e4hrend 
+\f3\i cngtime_closed
+\f1\i0  den Schwellwert der Framezahl festlegt, f\'fcr\
+die der Benutzer die Augen geschlossen halten muss. Der Boolean 
+\f3\i eyes_closed
+\f1\i0  legt fest, ob eine\
+vom Nutzer gew\'fcnschte Aktion bereits ausgef\'fchrt wurde, und verhindert, dass mehrere\
+Aktionen unmittelbar nacheinander ausgef\'fchrt werden. Um den Wechsel zwischen dunklem\
+und hellen Design zu erm\'f6glichen, wurde der Boolean 
+\f3\i black_design
+\f1\i0  hinzugef\'fcgt. Das 
+\f3\i dbug\
+
+\f1\i0 Attribut dient lediglich der Fehlersuche bei einem auftretenden Problem und sollte f\'fcr den\
+Endnutzer immer auf 
+\f3\i false
+\f1\i0  gesetzt sein. Das Attribut 
+\f3\i showMenu 
+\f1\i0 beinhaltet als Zahlenwert das\
+aktuelle Men\'fc. Diese Variable wird von Vue mit einer eigenen watch-Option auf \'c4nderungen\
+\'fcberwacht und es werden je nach ge\'e4ndertem Wert der Variable andere Elemente angezeigt,\
+sowie die dementsprechenden Methoden zum Aufleuchten der Elemente aufgerufen.\
+
+\f3\i showMenu
+\f1\i0  ist damit das Kernelement f\'fcr die Bedienung der Website.\
+Die Methoden 
+\f3\i playBell
+\f1\i0  und 
+\f3\i stopBell
+\f1\i0  werden im Warnruf-Men\'fc aufgerufen, um das\
+Warnger\'e4usch abzuspielen oder pausieren zu lassen. Um die Auswahl des schmerzenden\
+K\'f6rperteiles, den Grad des Schmerzes, die Leuchtdauer, die Hinweisnachricht in den\
+Einstellungen und die oberste Leiste der Website \'e4ndern zu k\'f6nnen wurden jeweils die\
+Methoden 
+\f3\i cngAusw
+\f1\i0 , 
+\f3\i cngGrad
+\f1\i0 , 
+\f3\i cngLeuchtgsw
+\f1\i0 , 
+\f3\i cngHinweis
+\f1\i0  und 
+\f3\i cngOrientierung
+\f1\i0  hinzugef\'fcgt.\
+Damit ein Buchstabe im Textfeld im Nachrichtenmen\'fc erg\'e4nzt, entfernt oder die gesamte\
+Nachricht gel\'f6scht werden kann, wurden die Methoden 
+\f3\i addChar
+\f1\i0 , 
+\f3\i delChar
+\f1\i0  und 
+\f3\i delallChar\
+
+\f1\i0 eingef\'fcgt. Die Methode 
+\f3\i dayNight
+\f1\i0  dient der Umschaltung zwischen hellem und dunklem Design\
+der Website, welches in den Einstellungen ge\'e4ndert werden kann. Damit die verschiedenen\
+Elemente eingef\'e4rbt werden k\'f6nnen, wurden drei verschiedene Methoden eingef\'fcgt, und\
+Seite 24dementsprechend weitere drei Methoden um die F\'e4rbung r\'fcckg\'e4ngig zu machen. Die Methoden\
+
+\f3\i colorElement
+\f1\i0  und 
+\f3\i blancElement
+\f1\i0  f\'e4rben und entf\'e4rben die Grafiken der Website, w\'e4hrend\
+
+\f3\i colorDiv
+\f1\i0  und 
+\f3\i blancDiv
+\f1\i0  wiederrum eine Farb\'e4nderung der Rahmen einer Abteilung (box oder\
+div-Tag) auf der Website erm\'f6glichen. Um die Hintergrundfarbe der Buttons zu variieren\
+wurden dementsprechend die Methoden 
+\f3\i colorButton
+\f1\i0  und 
+\f3\i blancButton 
+\f1\i0 erstellt.\
+Damit eine ganze Liste an Boxen, auch divisoion genannt, Buttons und Grafiken nacheinander\
+aufleuchten, wurden die dementsprechenden Methoden 
+\f3\i colorListDiv
+\f1\i0 , 
+\f3\i colorListButtons
+\f1\i0  und\
+
+\f3\i colorListPictures
+\f1\i0  eingef\'fcgt. Da die Buttons in der Tastatur anders eingef\'e4rbt werden, musste\
+mit 
+\f3\i colorListKeys
+\f1\i0  eine weitere Methode f\'fcr diese erstellt werden. Um die aufgeleuchteten\
+Boxen wieder in der korrekten Reihenfolge zu entf\'e4rben, wurde mit 
+\f3\i blancListDiv
+\f1\i0  eine weitere\
+Methode eingef\'fcgt. Die Methode 
+\f3\i detectEyesOpen
+\f1\i0  berechnet, ob die Augen des Benutzers offen\
+oder geschlossen sind, und \'e4ndert dementsprechend das Attribut 
+\f3\i closed_frames
+\f1\i0 . Hat\
+
+\f3\i closed_frames
+\f1\i0  den Schwellwert der Variable 
+\f3\i time_closed
+\f1\i0  \'fcberschritten, dann wird in dieser\
+Methode die Funktion aufgerufen, welche unter dem gerade aktiven Element gespeichert ist.\
+Die letzte Methode 
+\f3\i frame_Abhandlung
+\f1\i0  \'fcberpr\'fcft, ob im aktuell aufgenommenen Frame ein\
+Gesicht aufgenommen wurde und ruft dementsprechend die Methode 
+\f3\i detectEyesOpen
+\f1\i0  auf\
+(Sommerville, 2018, S. 173 - 175).\
+Seite 25
+\f0\b\fs31\fsmilli15961 6.4 Augenerkennung mit Facemesh\
+
+\f1\b0\fs24 Im folgenden Abschnitt wird ein zentraler Punkt dieser Arbeit erl\'e4utert. Es wird beschrieben,\
+wie mit den erhaltenen Daten aus der Analyse der Facemesh KI eine Funktion erstellt wird,\
+
+\f3\i Abbildung 5: Gesicht mit eingetragenen Landmarks (MediaPipe FaceMesh, 2022)\
+
+\f1\i0 welche erkennt, ob die Augen des erkannten Gesichts ge\'f6ffnet oder geschlossen sind. Diese\
+Funktion ist zentraler Bestandteil f\'fcr die Funktionen der Webapp Ratatosk.\
+Die Facemesh KI gibt nach erfolgreicher Analyse eines Bildes ein Array mit den gefundenen\
+Merkmalen (sogenannte Landmarks) des Gesichtes im Bild zur\'fcck. Diese Landmarks werden\
+in Abbildung 5 gezeigt.\
+Diese Landmarks haben jeweils eine x, y und z Koordinate. F\'fcr dieses Projekt interessieren\
+uns allerdings nur die x- und y-Koordinaten. Diese beschreiben die Position entlang der\
+horizontalen und vertikalen Achse des Bildes. Die Werte dieser Koordinaten sind prozentual\
+zur Bildgr\'f6\'dfe angegeben, wobei der Ursprung dieser Koordinaten in der linken, oberen Ecke\
+des Bildes sitzt.\
+Hierbei ist zu beachten, dass nur ein Gesicht pro Bild betrachtet wird und die Stirn dieses\
+Gesichts zur oberen oder zur linken Bildkante orientiert sein muss, um eine optimale\
+Gesichtserkennung zu gew\'e4hrleisten.\
+Seite 26
+\f3\i Abbildung 6: Augenausschnitt mit Landmarks (MediaPipe FaceMesh, 2022)\
+
+\f1\i0 Mit jeweils vier Landmarks an den Augen wird der Abstand der Augenlider im Verh\'e4ltnis zur\
+gesamten Bildgr\'f6\'dfe berechnet. Diese sind in Abbildung 6 mit wei\'dfen Kreisen gekennzeichnet.\
+Es werden die jeweils zwei gegen\'fcberliegenden Werte voneinander subtrahiert und das Resultat\
+ist der prozentuale Anteil einer Linie, welche zwischen beiden Landmarks aufgespannt wird.\
+Es werden pro Auge zwei Abst\'e4nde zur Berechnung genommen, um eventuell auftretende\
+Fehler aufgrund verschiedener Augenformen zu vermeiden.\
+Zudem wird die H\'f6he des Gesichtes im Bild mit zwei weiteren Landmarks auf gleiche Weise\
+berechnet. Es wird eine Abh\'e4ngigkeit zwischen Gesichtsh\'f6he und Abstand der Augenlider\
+verwendet, um zu berechnen, ob die Augenlider als geschlossen oder offen erkannt werden.\
+Ohne diese Abh\'e4ngigkeit m\'fcsste sich der Benutzer in einem festen Abstand zum Endger\'e4t und\
+der darin enthaltenen Kamera halten, um eine fehlerfreie Erkennung der geschlossenen Augen\
+sicher zu stellen. Im Folgenden wird diese Abh\'e4ngigkeit zwischen Gesichtsh\'f6he und Abstand\
+der Augenlieder genauer erl\'e4utert.\
+Ein berechneter Faktor wird mit beiden berechneten Abst\'e4nden eines Augenlides multipliziert.\
+Ist das Resultat gr\'f6\'dfer als die H\'f6he des Gesichtes, wird das Auge als offen gekennzeichnet, ist\
+es kleiner als die H\'f6he des Gesichtes wird das Auge als geschlossen betrachtet. Sind beide\
+Augen geschlossen, wird f\'fcr jedes bearbeitete Frame innerhalb des Integer 
+\f3\i closed_frames\
+
+\f1\i0 hochgez\'e4hlt.\
+Sobald diese Variable einen benutzerdefinierten Wert \'fcberschreitet, wird die gew\'e4hlte Aktion\
+ausgef\'fchrt. Dies verhindert, dass ein kurzes Blinzeln als eine vom Nutzer gewollte Interaktion\
+gewertet wird, was eine zielgerichtete und st\'f6rungsfreie Verwendung der Website verhindern\
+w\'fcrde.\
+Der hierf\'fcr verwendete Faktor wurde, aus eigenen Experimenten entwickelt. Die Abst\'e4nde der\
+Augenlider und die Gesichtsh\'f6he wurden von unterschiedlichen Entfernungen zu einem\
+Endger\'e4t gemessen und der aus der Division beider entstehende Quotient wurde sp\'e4ter als\
+Faktor weiterverwendet. F\'fcr niedrige Entfernungen von bis zu 30 Zentimeter wurde ein\
+Seite 27Quotient von 35 als Grenze ermittelt. Bei Unterschreitung dieses Wertes wurden Augen nicht\
+mehr als geschlossen gekennzeichnet, wenn sie nicht kraftvoll zugedr\'fcckt waren. F\'fcr eine\
+Entfernung von bis zu drei Metern wurde ein Quotient von 60 als Grenze ermittelt. Bei\
+\'dcberschreitung dieses Wertes wurden selbst offene Augen als geschlossen gewertet. Der Wert\
+des idealen Faktors f\'fcr sowohl niedrige und gro\'dfe Entfernungen zwischen Benutzer und\
+Endger\'e4t liegt somit zwischen 35 und 60. Es wurde f\'fcr erste Versuche der Mittelwert 47\
+verwendet, welcher sich als gut geeignet bewiesen hat.\
+Um zu erkennen, ob eine Aktion des Nutzers gew\'fcnscht ist, mussten diese Berechnungen f\'fcr\
+jedes Frame, welches ein Gesicht enth\'e4lt, neu berechnet werden. Diese Funktionsweise wird\
+im Folgenden genauer erkl\'e4rt.\
+
+\f3\i Abbildung 7: Aktivit\'e4tsdiagramm der Auswahl eines aufleuchtenden Elementes (erstellt mit\
+astahUML)\
+
+\f1\i0 In Abbildung 7 ist der Prozess dargestellt, welcher durchlaufen wird, um ein momentan\
+aufleuchtendes Element und die hinterlegte Aktion auszuf\'fchren. Zun\'e4chst wird von der Kamera\
+ein Frame aufgenommen und von Facemesh analysiert, ob sich darin ein Gesicht befindet.\
+Sollte sich darin ein Gesicht befinden wird anschlie\'dfend \'fcberpr\'fcft, ob im Gesicht beide Augen\
+geschlossen sind. Ist kein Gesicht erkannt worden, wird das aktuelle Frame verworfen.\
+Seite 28Sollten die Augen ge\'f6ffnet sein, wird die boolesche Variable 
+\f3\i aktion_ausgef\'fchrt
+\f1\i0  auf falsch\
+gesetzt und das aktuelle Frame wird verworfen. Mit dieser Variable wird sichergestellt, dass aus\
+dem einmaligen Schlie\'dfen der Augen auch nur eine Aktion resultieren kann. Sind die Augen im\
+aktuellen Frame geschlossen, wird ein Z\'e4hler hochgez\'e4hlt, wodurch insgesamt die Frames\
+gez\'e4hlt werden, in welchen die Augen des Nutzers nacheinander geschlossen waren.\
+Anschlie\'dfend wird \'fcberpr\'fcft, ob der Z\'e4hler gr\'f6\'dfer oder gleich der vordefinierten Anzahl\
+entspricht, und gleichzeitig wird sichergestellt, dass 
+\f3\i aktion_ausgef\'fchrt
+\f1\i0  falsch ist. Ist beides\
+nicht der Fall, wird das aktuelle Frame verworfen. Erst wenn die Bedingungen erf\'fcllt sind, wird\
+die Aktion des aktuell ausgew\'e4hlten Elementes ausgef\'fchrt. Dies kann sich durch ein \'c4ndern\
+des Men\'fcs, einer Textzeile, des Textfeldes oder das Spielen des Warntones \'e4u\'dfern. Nach jeder\
+Aktion wird 
+\f3\i aktion_ausgef\'fchrt
+\f1\i0  auf wahr gesetzt um zu verhindern, dass weitere Aktionen\
+ausgef\'fchrt werden bevor der Nutzer seine Augen wieder \'f6ffnet.\
+Der Befehl 
+\f5 document.getElementById(ausgew\'e4hltes_Element).click();\
+
+\f1 ruft die Klick-Funktion f\'fcr das aktuelle Element auf. Dies ersetzt den Mausklick. Die Funktion\
+
+\f5 document.getElementByID()
+\f1  sorgt daf\'fcr, dass das Element mit der ID, welcher in den\
+Klammern dahinter angegeben werden kann, aus dem aktuellen Dokument geholt wird. Sollte\
+sich kein Element mit dieser ID in dem Dokument befinden, gibt diese Funktion 
+\f5 NULL
+\f1  zur\'fcck.\
+Der Aufruf 
+\f5 .click()
+\f1  dahinter ruft die Funktion auf, welche unter dem Element dieser ID\
+gespeichert ist und beim Klicken mit der Maus auf dieses Element aufgerufen wird. Ist das\
+Element allerdings nicht vorhanden und es wird versucht, die Klick-Funktion von 
+\f5 NULL\
+
+\f1 aufzurufen, entsteht ein schwerwiegender Fehler, welcher die Seite auf dem Endger\'e4t\
+lahmlegen k\'f6nnte. Aus diesem Grund wird vorher mit\
+
+\f5 if(document.getElementById(ausgew\'e4hltes_Element))
+\f1  \'fcberpr\'fcft, ob dieses\
+Element existiert und die Klick-Funktion aufgerufen werden kann.\
+Mit dieser Herangehensweise wurde die wesentliche Technik hinter der Webapp erfolgreich\
+implementiert. Damit ist sichergestellt, dass die Website sowohl von den Benutzern mit den\
+Augen gesteuert werden kann, sowie alternativ von Angeh\'f6rigen oder Pflegepersonal mit\
+Klicken oder Tippen auf ein Element, um eventuell Einstellungen selbst vornehmen zu k\'f6nnen.\
+Seite 29
+\f0\b\fs31\fsmilli15961 6.5 Erstellen eines geeigneten Men\'fcs\
+
+\f1\b0\fs24 Um dem Benutzer die Bedienung der Website mit den Augen zu erm\'f6glichen, muss ihm ein\
+Signal gegeben werden, welches Men\'fcelement gerade ausgew\'e4hlt werden kann. Die\
+ausw\'e4hlbare Option wird mit aufleuchtenden Grafiken, Buttons oder Umrandungen\
+gekennzeichnet.\
+Die Grafiken werden aus dem public Ordner des Projektes geladen. Sollten diese nicht\
+aufgerufen werden k\'f6nnen, hat jede Grafiken einen Alternativtext, um den Benutzer trotzdem\
+das Navigieren der Website zu erm\'f6glichen. Dies erh\'f6ht die Usability der Website besonders\
+in Fehlerf\'e4llen.\
+Die meisten Buttons werden in Boxen, sogenannten divisions, gruppiert dargestellt. Der Inhalt\
+jeder Box in ein Untermen\'fc und der Textinhalt jedes Buttons dieser Box wird in einem\
+mehrdimensionalem Array gespeichert. Die unterste Ebene dieses Arrays besteht aus den\
+Textinhalten der Buttons. Die dar\'fcber befindende Ebene gibt an welche Buttons in einer Box\
+zu sehen sind. Die oberste Ebene gibt an in welchem Untermen\'fc sie sich befindet muss.\
+
+\fs18 Schmerz[2] (Arme)\
+Schmerz\
+[2][0] Schulter Oberarm Unterarm\
+Schmerz\
+[2][1] Ellenbeuge Ellenbogen Hand\
+Schmerz[1] (Torso) Finger \'85\
+Schmerz\
+[1][0] Brust Lunge Schulter\
+Schmerz\
+[1][1] Magen Bauch Darm\
+Schmerz[0] (Kopf) Becken \'85\
+Schmerz\
+[0][0] Stirn Schl\'e4fe Sch\'e4del\
+Schmerz\
+[0][1] Augen Nase Mund\
+Schmerz\
+[0][2] Kiefer Kinn ...\
+
+\f3\i\fs24 Tabelle 1: Aufbau eines dreidimensionalen Arrays\
+
+\f1\i0 Die obenstehende Tabelle 1 zeigt den groben Aufbau eines solchen Arrays in der Ratatosk\
+Webapp. Zu sehen sind hier Ausz\'fcge aus dem Array, welches f\'fcr das Schmerzmen\'fc genutzt\
+wird. Arrays fangen nicht bei der ersten Position an, sondern bei Null (Flanagan, 2012, S. 5).\
+Um die r\'e4umliche Dimensionierung des Arrays erkennbarer zu gestalten, sind hier die Tabellen\
+Seite 30hintereinander angeordnet. Die drei kleinen Tabellen sind hierbei ein Teil der Untermen\'fcs,\
+welche sich im Schmerzmen\'fc befinden. Somit zeigt der Ausdruck 
+\f5 Schmerz[0]
+\f1  auf das erste\
+Untermen\'fc \'84Kopf\'93, der Ausdruck 
+\f5 Schmerz[1]
+\f1  auf das zweite Untermen\'fc \'84Torso\'93 und der\
+letzte Ausdruck 
+\f5 Schmerz[2]
+\f1  zeigt auf das Untermen\'fc \'84Arm\'93. Die Zeilen der Tabelle sind\
+die Boxen, welche untereinander im Men\'fc erscheinen. Das hei\'dft, der Ausdruck\
+
+\f5 Schmerz[0][1]
+\f1  zeigt auf die zweite Zeile des ersten Men\'fcs. Der Inhalt der Tabelle\
+beschreibt die einzelnen Buttons,
+\f3\i  
+\f1\i0 die in einer jeweiligen Box
+\f3\i  
+\f1\i0 in einem Untermen\'fc zu finden\
+sind. Somit ist der Button \'84Mund\'93 im Kopfschmerz Untermen\'fc aufzurufen mit\
+
+\f5 Schmerz[0][1][2]
+\f1 .\
+Die Boxen und Buttons werden in der Website prozedural mit vue.js generiert. Mit der\
+
+\f5 v-if="" 
+\f1 Abfrage von Vue, wird zuerst gepr\'fcft, welches Untermen\'fc ausgew\'e4hlt ist. Danach\
+werden die Abteilungen und die darin befindenden Buttons nacheinander mit den 
+\f5 v-for=""\
+
+\f1 Schleifen von Vue generiert. Im Folgenden ist ein einfaches Beispiel der dynamischen\
+Generierung aufgef\'fchrt.\
+
+\f5 <div v-if="Men\'fc==KopfSchmerzMen\'fc" v-for= "rows in Schmerz[0]">\
+<button v-for="symbol in rows";> \{\{symbol\}\} </button>\
+</div>\
+
+\f1 Die einzelnen Boxen unter 
+\f5 Schmerz[0]
+\f1  werden hier in der ersten Zeile mit 
+\f5 rows
+\f1  abgerufen.\
+In der n\'e4chsten Zeile wird in dem Button-Tag von HTML der Text in den einzelnen Zellen des\
+Arrays aufgerufen. Die Zellen werden unter 
+\f5 symbol
+\f1  gespeichert und als Text auf dem Button\
+angezeigt, indem 
+\f5 symbol
+\f1  in zwei geschweifte Klammern gesetzt wird. Dies signalisiert, dass\
+wir nicht das Wort \'84symbol\'93, sondern die in der tempor\'e4ren Variable 
+\f5 symbol
+\f1  gespeicherten\
+Werte verwenden wollen.\
+Zum Aufleuchten aller Objekte werden diesen spezielle Identifikations Namen gegeben, um im\
+sp\'e4teren Verlauf auf sie zugreifen zu k\'f6nnen. Mit der Hauptfarbe werden Boxen umrahmt und\
+Buttons eingef\'e4rbt, sobald diese ausw\'e4hlbar sind.\
+Um je nach angezeigtem Men\'fc die richtigen Elemente in der richtigen Reihenfolge zu\
+aktivieren, wurde die Variable 
+\f3\i showMenu
+\f1\i0  verwendet. Diese Variable wird von Vue stetig\
+\'fcberwacht. Bei einer \'c4nderung des Wertes von 
+\f3\i showMenu 
+\f1\i0 werden mit einem Switch-Case die\
+Seite 31entsprechenden Funktionen aufgerufen, welche wiederum die angezeigten Symbole\
+aufleuchten lassen.\
+
+\f0\b\fs28\fsmilli14041 6.5.1 Startseite\
+
+\f1\b0\fs24 Die schlicht gestaltete Startseite beinhaltet das Logo der Website und einem Text, welcher den\
+Benutzer darum bittet zu blinzeln.\
+
+\f3\i Abbildung 8: Startbildschirm der Ratatosk-Website\
+
+\f1\i0 Dieses Design wurde einer herk\'f6mmlichen Ladeanimation vorgezogen, weil hier\
+ger\'e4teunabh\'e4ngig die Mindestzeit gemessen wird, welche der Benutzer die Augen geschlossen\
+halten muss, bis eine Aktion registriert wird. Dies ist ausschlaggebend f\'fcr diese Website, da\
+kein Mittelma\'df hierf\'fcr gew\'e4hlt werden kann.\
+Seite 32
+\f3\i Abbildung 9: Aktivit\'e4tsdiagramm zur Messung der Variable time_closed auf der\
+Startseite
+\fs22\fsmilli11040  
+\fs24 (erstellt mit astahUML)\
+
+\f1\i0 In Abbildung 9 ist zu sehen, dass nach dem Anzeigen der Startseite und der Deklaration von\
+Variablen zun\'e4chst ein Frame der Kamera aufgenommen werden muss. Dieses Frame wird\
+durch FaceMesh \'fcberpr\'fcft, ob darauf ein Gesicht zu erkennen ist. Falls kein Gesicht im Frame\
+gefunden wird, wird dieses Frame verworfen und ein neues Frame wird analysiert. Ist auf\
+diesem Frame ein Gesicht zu erkennen, wird es daraufhin untersucht, ob beide Augen\
+geschlossen sind. Ist dies der Fall wird die Mess-Start Variable auf wahr gesetzt und ein Z\'e4hler\
+wird hochgez\'e4hlt. Die Variable Mess-Start kennzeichnet Start und Ende der Framemessung. Ist\
+die Variable wahr, so findet gerade ein Messvorgang statt. Werden beide Augen als offen\
+erkannt, wird analysiert, ob zuvor ein Start der Framemessung stattfand. Sind die Augen des\
+Nutzers zuvor nicht geschlossen und die Mess-Start Variable somit nicht auf wahr gesetzt, wird\
+das Frame verworfen. Wurde ein Start der Zeitmessung vorher initialisiert, wird der im Z\'e4hler\
+gespeicherte Wert in der 
+\f3\i time_closed
+\f1\i0  Variable gespeichert und die Messung wird gestoppt. Der\
+Wert 
+\f3\i time_closed
+\f1\i0  gibt an, f\'fcr wie viele aufeinanderfolgende Frames die Augen des Nutzers\
+geschlossen waren. Daraufhin wird die Hauptseite angezeigt und diese Aktivit\'e4t z\'e4hlt als\
+beendet.\
+Durch dieses Design wird sichergestellt, dass alle internen Prozesse geladen sind, bis der\
+Benutzer die Website vollst\'e4ndig nutzen kann. Sind noch nicht alle internen Prozesse gestartet\
+kann auch keine Framemessung initiiert werden. Dieses Design der Startseite erm\'f6glicht dem\
+Benutzer eine sofortige, auf ihn und das Endger\'e4t angepasste Anwendung.\
+Seite 33
+\f0\b\fs28\fsmilli14041 6.5.2 Hauptmen\'fc\
+
+\f1\b0\fs24 F\'fcr das Hauptmen\'fc wurde ein \'fcberschaubares Design mit sechs ausw\'e4hlbaren Untermen\'fcs\
+gew\'e4hlt.\
+
+\f3\i Abbildung 10: Hauptmen\'fc der Ratatosk-Website\
+
+\f1\i0 Diese Untermen\'fcs werden mit entsprechenden Symbolen dargestellt, welche der Reihe nach\
+aufleuchten. Um Verwirrungen vorzubeugen, wird unter den Symbolen in gro\'dfer Schrift das\
+Untermen\'fc beschrieben. Das ausw\'e4hlbare Men\'fc wird nur durch ein Aufleuchten des jeweiligen\
+Symbols mit der Hauptfarbe gekennzeichnet. Die Schriftfarbe bleibt in Schwarz um den\
+Lesefluss nicht zu st\'f6ren.\
+In jedem folgenden Untermen\'fc befindet sich links oben ein Home-Button. Wenn dieses Symbol\
+ausgew\'e4hlt wird, kehrt der Benutzer in das Hauptmen\'fc zur\'fcck. Alle Icons und Bilder auf der\
+Webseite stammen von der Webseite flaticon und d\'fcrfen f\'fcr pers\'f6nlichen und Kommerziellen\
+gebrauch genutzt werden. Die Icons im Schmerz-Men\'fc wurden angepasst. Eine entsprechende\
+Namensnennung muss der Website noch hinzugef\'fcgt werden (flaticon).\
+Seite 34
+\f0\b\fs28\fsmilli14041 6.5.3 Warnruf-Men\'fc\
+
+\f1\b0\fs24 In diesem ersten Untermen\'fc kann der Benutzer nach dem Aktivieren des Glocken-Symbols von\
+seinem Endger\'e4t einen Ton ausgeben lassen, welcher in Dauerschleife ert\'f6nt. Dieser Warnton\
+hilft dem Benutzer dabei, Aufmerksamkeit auf sich zu lenken und auch Personen, welche sich\
+nicht in seiner unmittelbarer N\'e4he befinden, zu alarmieren.\
+
+\f3\i Abbildung 11: Warnruf-Men\'fc der Ratatosk-Website\
+
+\f1\i0 Die Ausgabe dieses Warntons wird beendet, sobald das Glocken-Symbol erneut aktiviert, oder\
+das Men\'fc verlassen wird. Das Ger\'e4usch der Glocke wurde von Mike Koenig erstellt und wird\
+unver\'e4ndert unter der Creative Commons Lizenz \'84Namensnennung 3.0\'93 verwendet. Eine\
+entsprechende Namensnennung und ein Lizenz-Hinweis m\'fcssen der Seite noch beigef\'fcgt\
+werden. (Koenig)\
+
+\f0\b\fs28\fsmilli14041 6.5.4 Schmerz-Men\'fc\
+
+\f1\b0\fs24 Das Schmerz-Men\'fc dient dem Benutzer dazu, auftretende Schmerzen an seinem K\'f6rper zu\
+beschreiben. Hierf\'fcr wird der K\'f6rper in vier Bereiche eingeteilt. Der Patient w\'e4hlt zun\'e4chst\
+aus, ob sich sein Schmerz in der Kopf-, Arm-, Bein- oder Torso- Region befindet.\
+Seite 35
+\f3\i Abbildung 12: Schmerz-Men\'fc der Ratatosk-Website\
+
+\f1\i0 In den Men\'fcs der einzelnen K\'f6rperregionen befinden sich mehrere Zeilen von Buttons mit eine\
+Hinweis auf die bestimmten Orte, an welchen der Schmerz sitzen kann.\
+
+\f3\i Abbildung 13: Kopfschmerz-Men\'fc der Ratatosk-Website\
+
+\f1\i0 Die letzte Zeile jedes Untermen\'fcs besteht nur aus einem Button, welcher den Benutzer in ein\
+weiteres Untermen\'fc leitet. Hier kann der Benutzer die Intensit\'e4t seines empfundenen\
+Schmerzes mitteilen.\
+Seite 36
+\f0\b\fs28\fsmilli14041 6.5.5 Nachrichten-Men\'fc\
+
+\f1\b0\fs24 Um eine gute Kommunikation zu erm\'f6glichen, muss ein Benutzer eigene S\'e4tze verfassen\
+k\'f6nnen. Im Nachrichten-Men\'fc steht hierf\'fcr ein Textfeld und eine Vielzahl an Tastaturen zur\
+Verf\'fcgung. Im Textfeld wird der aktuell verfasste Text angezeigt. Darunter befinden sich auf\
+mehreren Zeilen verteilt die Buchstaben der Tastatur.\
+
+\f3\i Abbildung 14: Nachrichten-Men\'fc der Ratatosk-Website mit\
+alphabetisch sortierter Tastatur\
+
+\f1\i0 Unter der Tastatur befinden sich zus\'e4tzliche Zeilen. In der ersten dieser Zeilen befindet sich nur\
+ein Button f\'fcr die Leertaste, in der zweiten befinden sich zwei Buttons, um das letzte Zeichen\
+im Text zu entfernen oder das Textfeld vollst\'e4ndig zu leeren.\
+In der letzten Zeile kann der Benutzer in weitere Men\'fcs wechseln. Je nachdem, welche Tastatur\
+ausgew\'e4hlt wurde, besteht die M\'f6glichkeit ein Untermen\'fc aufzurufen, in dem der Benutzer\
+Zahlen schreiben kann. Zudem k\'f6nnen, ungeachtet der Tastaturauswahl, zu beiden\
+Schnellbaustein Men\'fcs gewechselt werden, welche im Folgenden beschrieben werden.\
+
+\f0\b\fs28\fsmilli14041 6.5.6 \'84Umwelt\'93 und \'84Ich\'93 Schnellbaustein Men\'fc\
+
+\f1\b0\fs24 Um Benutzern das Verfassen von Nachrichten zu erleichtern, wurden zwei Men\'fcs erstellt,\
+welche Satzbausteine erhalten. In dem ersten dieser beiden Schnellbausteine -Umwelt- werden\
+dem Benutzer mehrere Kategorien vorgeschlagen, welche seine n\'e4here Umgebung beinhalten.\
+Diese Kategorien werden beschrieben als \'84Gespr\'e4che\'93, \'84Gegenst\'e4nde\'93, \'84Im Zimmer\'93 und \'84Im\
+Bett\'93.\
+Seite 37
+\f3\i Abbildung 15: Schnellbaustein "Umwelt"-Men\'fc der Ratatosk-Website\
+
+\f1\i0 Diese Kategorien beinhalten Teile eines Gespr\'e4ches, Gegenst\'e4nde, die ein Benutzer eventuell\
+ben\'f6tigt, Zust\'e4nde im Zimmer wie das Fenster oder das Licht, sowie Gegenst\'e4nde im Bett des\
+Nutzers.\
+
+\f3\i Abbildung 16: Schnellbausteine "Ich"-Men\'fc der Ratatosk-\
+Website\
+
+\f1\i0 Im zweiten Men\'fc werden Kategorien vorgeschlagen, die pers\'f6nliche Bed\'fcrfnisse oder etwas in\
+der N\'e4he des Nutzers beschreiben. Zu diesen Kategorien geh\'f6ren \'84Ern\'e4hrung\'93, \'84Gef\'fchle\'93,\
+\'84Kleidung\'93, \'84Hygiene\'93 und \'84 Bewegung\'93. Jede Kategorie beinhaltet mehrere Zeilen mit\
+Wortvorschl\'e4gen und eine unterste Zeile, um zum Nachrichten Men\'fc zu navigieren und somit\
+Seite 38weiter mit der Tastatur schreiben zu k\'f6nnen. Wird das Hauptmen\'fc aufgerufen, wird das Textfeld\
+geleert.\
+Eine Besonderheit stellt hierbei die Kategorie \'84Gef\'fchle\'93 dar, welche unter anderem Smileys\
+enth\'e4lt. Personen mit eingeschr\'e4nkter Kommunikationsf\'e4higkeit haben n\'e4mlich kaum\
+M\'f6glichkeiten, ihren Emotionen Ausdruck zu verleihen. In Textnachrichten ist es schwierig,\
+seine Gef\'fchle dem Gegen\'fcber mitzuteilen, und es k\'f6nnte der Kontext von Nachrichten\
+missverstanden werden. Besonders bei einer erheblichen Sprachbehinderung, wodurch der\
+Benutzer teils nur Laute \'e4u\'dfern kann, ist die Kommunikation kompliziert. W\'e4hrend \'84der direkte\
+Partner, derjenige, mit dem [der Benutzer] t\'e4glich umgeht, die Laute sehr wohl richtig\
+interpretieren und verstehen [kann, sind] sie f\'fcr einen Au\'dfenstehenden oft\
+unverst\'e4ndlich\'93 (Fellbaum, 1987, S. 219). Die Laute des Patienten k\'f6nnen sehr schnell\
+fehlinterpretiert werden und es k\'f6nnen Missverst\'e4ndnisse entstehen.\
+Um diese L\'fccken in der Kommunikation vorzubeugen, wurden ein paar Smileys hinzugef\'fcgt,\
+damit Patienten die M\'f6glichkeit haben, ihren Nachrichten Gef\'fchle zu verleihen und sie somit\
+selbst f\'fcr au\'dfenstehende und fremde Personen verst\'e4ndlicher zu gestalten.\
+
+\f0\b\fs28\fsmilli14041 6.5.7 Einstellungs-Men\'fc\
+
+\f1\b0\fs24 Damit die Usability der Website erh\'f6ht wird, m\'fcssen gewisse Elemente auf den Benutzer\
+angepasst werden. Das letzte Men\'fc soll dem Benutzer die M\'f6glichkeit geben, die Seite auf\
+seine individuellen Bed\'fcrfnisse anzupassen.\
+
+\f3\i Abbildung 17: Einstellungs-Men\'fc der Ratatosk-Website\
+
+\f1\i0 Seite 39Es wird angeboten das Tastaturlayout zu wechseln, die Geschwindigkeit anzupassen, in welcher\
+die Symbole aufleuchten, sowie die Blinzeldauer. Falls zum Start der Website eine falsche Zeit\
+berechnet wurde, oder dieser Schritt zum Beispiel durch ein manuelles Tippen auf das Logo\
+\'fcbersprungen wurde, kann hier die Variable erneut eingestellt werden. Die Funktionsweise ist\
+die gleiche wie sie bereits auf der Startseite in Kapitel 6.5.1 erkl\'e4rt wurde.\
+
+\f0\b\fs31\fsmilli15961 6.6 Augenaktion\
+
+\f1\b0\fs24 Die in diesem Abschnitt beschriebene Vorgehensweise ist eine der technischen\
+Herausforderungen der Ratatosk Webapp.\
+Es wurde bereits in oberen Abschnitten eine Funktion beschrieben, welche die Position der\
+Augenlieder des Benutzers erkennt. Zudem pr\'fcft diese \'fcber einen Schwellwert, ob die Augen\
+des Benutzers lange genug geschlossen sind, um dies als Aktion zu werten. Ebenfalls konnten\
+einzelne Elemente der Seite farblich gekennzeichnet werden und der Reihe nach durchlaufen.\
+Einer der Problemstellungen war es nun diese beiden Funktionen zu verbinden. F\'fcr die\
+farbliche Markierung der Elemente wird jedem einzelnem Element ein eigener\
+Identifikationsname zugeordnet. Jedem dieser Elemente ist zudem ein eigener Funktionsaufruf\
+zugewiesen, welcher nach dem Klicken auf das Element ausgef\'fchrt werden soll.\
+Werden nun in der Zeit, in welcher dieses Element noch leuchtet, die Augen geschlossen, wird\
+diese Identifikation in einer Variable zwischengespeichert. Dieses Element wird f\'fcr die\
+Auswahl reserviert, selbst wenn weitere Elemente aufleuchten, w\'e4hrend der Benutzer seine\
+Augen geschlossen hat.\
+Seite 40
+\f3\i Abbildung 18: Aktivit\'e4tsdiagramm f\'fcr das Aufleuchten eines Elementes\
+(erstellt mit astahUML)\
+
+\f1\i0 In Abbildung 18 wird die Funktionsweise genauer erl\'e4utert. Es wird ein Element markiert,\
+welches somit anf\'e4ngt zu leuchten. Die Auswahl h\'e4ngt von dem angezeigtem Men\'fc und dem\
+zuvor leuchtenden Element ab und ist vorgegeben. Das Element wird eingef\'e4rbt und\
+gleichzeitig wird \'fcberpr\'fcft, ob das Element vom Benutzer ausgew\'e4hlt wird. Letzteres ist im\
+Aktivit\'e4tsdiagramm in Abbildung 7 im Kapitel 6.4 zu sehen. Wird darin erkannt, dass dieses\
+Element ausgew\'e4hlt und die Aktion vollendet wurde, dann kann das n\'e4chste Element eingef\'e4rbt\
+werden, sobald der Benutzer seine Augen wieder \'f6ffnet. Sollte keine Aktion des Nutzers folgen,\
+wird nach einer gewissen Wartezeit das aktuelle Element entf\'e4rbt und das n\'e4chste Element wird\
+eingef\'e4rbt.\
+Somit wurde die Schnittstelle zwischen Nutzer und Website erfolgreich und unmissverst\'e4ndlich\
+implementiert. Dies ist besonders in der assistierten Kommunikation ausschlaggebend f\'fcr die\
+Usability des Hilfsmittels und ist somit ein wichtiger Bestandteil der Website.\
+Seite 41
+\f0\b\fs36\fsmilli18001 7 Design\
+
+\fs31\fsmilli15961 7.1 Tastaturlayout\
+
+\f1\b0\fs24 Um den Benutzer nicht auf ein vorgeschriebenes Design festzulegen wird eine Auswahl von\
+drei Tastaturlayouts angeboten. Dies erh\'f6ht die Nutzerfreundlichkeit und die Usability der\
+Website, da nun Benutzer das f\'fcr sich passende Layout in den Einstellungen ausw\'e4hlen k\'f6nnen.\
+
+\f3\i Abbildung 19: H\'e4ufigkeits- Tastaturlayout der\
+Ratatosk- Webapp\
+Abbildung 20: Tastaturlayout der\
+Voca-App (Wirth, 2020)\
+
+\f1\i0 Die Voca-App nutzte ein auf H\'e4ufigkeit der Buchstaben der deutschen Schrift basiertes\
+Tastaturformat und hat Buchstaben des Alphabetes den Zeilen nach verteilt, wie in Abbildung\
+20 gezeigt. Dieses Design erm\'f6glicht es dem Nutzer schnell zu schreiben. Es erfordert dennoch\
+etwas \'dcbung, da dieses Layout keinem offiziellen Standard entspricht und dementsprechend\
+f\'fcr neue Benutzer ungewohnt erscheint. Dieses Tastaturdesign wurde leicht angepasst und\
+\'fcbernommen, um Nutzern der Voca-App den \'dcbergang zur Ratatosk-Website zu erleichtern,\
+wie in Abbildung 19 gezeigt wird. Es werden die h\'e4ufigsten Buchstaben der Spalte nach sortiert.\
+
+\f3\i Abbildung 21: QWERTZ-Tastaturlayout in der Ratatosk-Webapp\
+
+\f1\i0 Seite 42Das auf H\'e4ufigkeit basierte Tastaturformat fordert allerdings bei neuen Nutzern eine gewisse\
+Eingew\'f6hnungsphase, weshalb zudem ein Tastaturlayout im QWERTZ-Format gew\'e4hlt wurde.\
+Das QWERTZ-Tastaturlayout, wie in Abbildung 21 zu sehen, dient im deutschsprachigen Raum\
+als Standardlayout f\'fcr Computer-, Handy- und Tablett-Tastaturen und ist somit den meisten\
+Nutzern bereits bekannt. Das Verfassen von Texten mit diesem Layout ist f\'fcr die Zielgruppe\
+der Ratatosk-Website somit intuitiver. Im Gegensatz dazu befinden sich viele der h\'e4ufigen\
+Buchstaben im deutschen Alphabet in der Mitte der Tastatur, wodurch die Zeit, welche f\'fcr den\
+Aufbau eines gew\'f6hnlichen Satzes \'fcblich ist, in die L\'e4nge gezogen wird.\
+
+\f3\i Abbildung 22: Alphabetisches Tastaturlayout der Ratatosk-Webapp\
+
+\f1\i0 Als letztes Design wurde eine dem Alphabet nach sortierte Tastatur gew\'e4hlt, um die Vorteile\
+der H\'e4ufigkeit und QWERTZ Tastaturlayouts zu kombinieren. Diese ist in Abbildung 22\
+gezeigt. Durch die alphabetische Sortierung wird die Navigation der Buchstaben erleichtert.\
+Zudem wurden h\'e4ufig nacheinander vorkommende Buchstaben als eigene Tasten eingef\'fcgt,\
+ebenso wie die Zahlen eins bis vier, da diese in nat\'fcrlichen Umgebungen am h\'e4ufigsten\
+vorkommen. Dies ist in dem Newcomb-Benfordschen Gesetz beschrieben.
+\fs16\fsmilli8040  
+\fs24 Im Folgendem wird\
+dieses Gesetz genauer erl\'e4utert.\
+Im Jahre 1881 ver\'f6ffentlichte Simon Newcomb im 
+\f3\i American Journal of Mathematics
+\f1\i0  seine\
+Entdeckung, dass die H\'e4ufigkeit von Ziffern an den ersten Stellen von Zahlen logarithmisch\
+verteilt ist. Folgende Tabelle zeigt die von Newcomb entdeckten Wahrscheinlichkeiten der\
+Ziffern an bestimmten Stellen einer nat\'fcrlichen, nicht-logarithmischen Zahl.\
+Seite 43
+\fs19\fsmilli9960 Ziffern Erste Stelle Zweite Stelle\
+0 \'85 0,1197\
+1 0,3010 0,1139\
+2 0,1249 0,1088\
+3 0,1249 0,1043\
+4 0,0969 0,1003\
+5 0,0792 0,0967\
+6 0,0669 0,0934\
+7 0,0580 0,0904\
+8 0,0512 0,0876\
+9 0,0458 0,0850\
+
+\f3\i\fs24 Tabelle 2: Verteilung der Ziffern in nat\'fcrlichen Zahlen von Newcomb (Newcomb, 1881)\
+
+\f1\i0 Zu erkennen ist hier, dass sowohl an erster als auch an zweiter Stelle einer Zahl die\
+Wahrscheinlichkeiten der Ziffern mit zunehmender Zifferngr\'f6\'dfe abnimmt. Da vorangestellte\
+Nullen ignoriert werden, ist der Eintrag der Null an erster Stelle einer Zahl leer. Diese\
+Entdeckung empfing kein gr\'f6\'dferes Ansehen und geriet in Vergessenheit, bis im Jahr 1937 Frank\
+Benford im Artikel \'84The Law of anomalous Numbers\'93 die gleiche Erkenntnis in
+\f3\i  
+\f1\i0 seiner eigenen\
+Entdeckung ver\'f6ffentlichte. Daraufhin wurde diese Eigenschaft der Ziffern in nat\'fcrlichen\
+Zahlen Newcomb-Benfordsches Gesetz genannt (Newcomb, 1881 ; Benford, 1938).\
+
+\f0\b\fs31\fsmilli15961 7.2 Namensgebung\
+
+\f1\b0\fs24 F\'fcr den Namen dieser Webapp wurde ein passender Name aus der Mythologie gesucht. Da in\
+keiner Sagen\'fcberlieferung eine Gestalt beschrieben wird, welche die Kommunikation zwischen\
+den Menschen erm\'f6glicht oder daf\'fcr zust\'e4ndig ist, wurde nach Boten gesucht.\
+Nach einiger Recherche wurde sich f\'fcr das Wesen Ratatosk aus der nordischen Mythologie\
+entschieden. Dieses wie ein Eichh\'f6rnchen aussehende Wesen l\'e4uft der Legende nach den\
+Weltenbaum Yggdrasil auf und ab, um damit Nachrichten von der Baumkrone und den Wurzeln\
+auszutauschen. Im \'fcbertragenen Sinne soll die Webapp Ratatosk somit symbolisch die Br\'fccke\
+der Kommunikation zwischen Menschen darstellen.\
+Seite 44
+\f3\i Abbildung 23: Ratatosk Logo und minimiertes Ratatosk Logo\
+
+\f1\i0 Mit Adobe Illustrator wurde ein geeignetes Logo erstellt, welches ein Eichh\'f6rnchen darstellt.\
+Durch dieses minimalistische Logo und den au\'dfergew\'f6hnlichen Namen wird ein Wieder-\
+erkennungswert generiert (Lindow, 2002, S. 259).\
+
+\f0\b\fs31\fsmilli15961 7.3 Farbauswahl\
+
+\f1\b0\fs24 Angestrebt war eine Farbpalette mit m\'f6glichst hohen Kontrasten, um dem Benutzer das Lesen\
+der Schrift und das Erkennen der Symbole zu erleichtern. Da der Nutzer voraussichtlich f\'fcr\
+l\'e4ngere Zeiten ununterbrochen auf den Bildschirm blicken muss, muss die Farbauswahl f\'fcr das\
+Auge als angenehm empfundenen sein.\
+Die Grundfarbe hat einen rostbraunen Farbton. Diese Farbe dient zur Markierung von\
+ausw\'e4hlbaren Elementen und wird als Farbe des Webseitenlogos verwendet. Ausw\'e4hlbare\
+Bilder werden mit einem berechneten Filter gef\'e4rbt, Buttons mit einer \'c4nderung der\
+Hintergrundfarbe in der CSS-Klasse und Abteilungen mit dem Hinzuf\'fcgen und entfernen einer\
+CSS-Klasse (Sonntag, 2022).\
+Als Hintergrund und Kontrastfarbe dazu dient ein heller, beiger Farbton. Die zu lesende Schrift\
+und Symbole, welche momentan nicht ausw\'e4hlbar sind, sind schwarz gef\'e4rbt.\
+Um das Kontrastverh\'e4ltnis zwischen zwei Farben beschreiben zu k\'f6nnen, wird die Formel\
+
+\f2 (\uc0\u55349 \u56383 1 + 0,05)/(\u55349 \u56383 2 + 0,05)
+\f1  verwendet, wobei L1 \'84die relative Luminanz der helleren Farben\
+ist und L2 die relative Luminanz der dunkleren Farben ist\'93 (Caldwell, Cooper, Reid, &\
+Vanderheiden, 2008). Ein h\'f6heres Kontrastverh\'e4ltnis entspricht einem gr\'f6\'dferen Kontrast\
+zwischen den Farben. Dieses Verh\'e4ltnis kann zwischen 1 und 21 liegen und wird mit einem\
+darauffolgendem \'84:1\'93 gekennzeichnet (Caldwell, Cooper, Reid, & Vanderheiden, 2008).\
+Das Kontrastverh\'e4ltnis zwischen Grund- und Hintergrundfarbe der Webapp Ratatosk betr\'e4gt\
+3,49:1. Damit eignet sich dieser Kontrast f\'fcr gro\'dfe Schriften und Symbole. Im Vergleich haben\
+Seite 45die Hintergrundfarbe und die Schriftfarbe ein Kontrastverh\'e4ltnis von 20,18:1, wodurch\
+Symbole sowie gro\'dfe und kleine Texte hervorragend zu erkennen und zu lesen sind. Ein\
+Kontrastverh\'e4ltnis zwischen Grundfarbe und Schriftfarbe muss nicht ber\'fccksichtigt werden, da\
+diese Farben nie unmittelbar nebeneinander dargestellt werden (Color-contrast Analyzer).\
+Die besondere F\'e4rbung der Grafiken mit dem in dieser App verwendeten Filter verursacht\
+geringe Ungenauigkeiten. Der Filter \'e4ndert die S\'e4ttigung, Helligkeit und den Kontrast des\
+Bildes. Zudem werden die Farben invertiert, mit einer Sepia-F\'e4rbung versehen und die Farbe\
+wird auf dem Farbkreis rotiert. Die resultierenden Ungenauigkeiten sind mit blo\'dfem Auge aber\
+nicht zu erkennen, da es sich um eine Farbungenauigkeit von ca. 0,1% handelt. Dies beeinflusst\
+den Farbkontrast also nur geringf\'fcgig und ist daher zu vernachl\'e4ssigen. Auch wurde darauf\
+geachtet, dass bei diesen Farben kein Konflikt oder zu niedriger Kontrast bei farbblinden\
+Menschen auftritt, um das unbekannte, m\'f6glichst breite Spektrum von Nutzern abzudecken.\
+
+\f3\i Abbildung 24: Ausschnitt der Farbver\'e4nderungen bei\
+Farbblindheit (Color-accessibility)\
+
+\f1\i0 In Abbildung 24 sind die verwendeten Farben mit ihren jeweiligen Hexadezimal-, RGB- und\
+Helligkeits-Werten zu erkennen. Im unteren Bereich sind die resultierenden Farben bei Gr\'fcn-\
+Farbenblindheit (Deuteranopie), Rot-Farbenblindheit (Protanopie) und Blau-Farbenblindheit\
+(Triranopie) aufgezeigt. Aus dieser Darstellung l\'e4sst sich gut erkennen, dass trotz\
+Farbenblindheit ein gro\'dfer Kontrast zwischen Grundfarbe A und Hintergrundfarbe B, sowie\
+Hintergrundfarbe B und Schriftfarbe C besteht. Durch den Ausdruck dieser Arbeit k\'f6nnen auf\
+Papier gewisse farbliche Unterschiede nicht ideal erkennbar sein.\
+Seite 46
+\f0\b\fs36\fsmilli18001 8 Ausblick\
+
+\f1\b0\fs24 Diese App darf in Ihrem aktuellen Zustand noch nicht auf einem Server implementiert werden,\
+solange das Impressum fehlt. Zudem muss ein geeigneter Server zur Verf\'fcgung gestellt und\
+dementsprechend getestet werden.\
+Da diese Abschlussarbeit aufgrund mangelnden Servers nicht mit bewegungs- und sprach-\
+eingeschr\'e4nkten Benutzern getestet werden konnte, k\'f6nnen weitere, unvorhersehbare Probleme\
+auftreten. Diese sollten f\'fcr optimale Nutzerbetreuung schnell behoben werden. Es existieren\
+zudem weitere rechtliche Regelungen und Voraussetzungen f\'fcr Websiten, auf welche hier nicht\
+genauer eingegangen werden soll.\
+Die Webapp sollte in mehreren Sprachen zur Verf\'fcgung gestellt werden. Dies kann entweder\
+mit mehreren Dom\'e4nen realisiert werden oder mit der Vorauswahl einer Sprache vor dem\
+Startbildschirm. Auch die \'dcbersetzung des Inhalts stellt eine gro\'dfe Herausforderung dar und\
+k\'f6nnte Thema einer eigenen Arbeit werden.\
+
+\f0\b\fs31\fsmilli15961 8.1 Deployment\
+
+\f1\b0\fs24 Damit die Website in Zukunft von mehreren Personen \'fcber das Internet gleichzeitig aufgerufen\
+werden kann, muss ein Server zur Verf\'fcgung stehen. Auf diesem werden die ben\'f6tigten Daten\
+der Website gespeichert. Ist ein geeigneter Server vorhanden, ist noch eine Webserver-Software\
+erforderlich, damit auf die Website zugegriffen werden kann. Hierf\'fcr wird Nginx verwendet,\
+da dieses in 26,51% (Stand November 2022) der weltweit bekanntesten Websiten verwendet\
+wird. Damit ist es der am h\'e4ufigsten verwendete Webserver, welcher ebenfalls kostenlos und\
+als Open-Source jedem zur Verf\'fcgung steht. Damit Nutzer auf den Server zugreifen k\'f6nnen,\
+muss noch ein DNS-Eintrag erstellt werden. Danach folgen die Installation und Konfiguration\
+der Dienste. Somit ist das Deployment der Website vollendet und sie kann von jedem\
+aufgerufen und genutzt werden (Web Server Survey, 2022 ; Beginner's Guide Nginx).\
+
+\f0\b\fs31\fsmilli15961 8.1 Auftretende Fehler\
+
+\f1\b0\fs24 Ratatosk ist darauf ausgelegt, dass es nur mit dem Augenblinzeln des Benutzers bedient wird.\
+Es ist dennoch m\'f6glich, die Website mit Touchscreen oder mit der Computermaus zu benutzen.\
+Dies liegt an der Art und Weise, wie die Aktion der momentan ausgew\'e4hlten Elemente\
+Seite 47hinterlegt werden mussten. Durch das Bedienen der Website mit dem Touchdisplay oder einer\
+Computermaus kann es passieren, dass mehrere Symbole gleichzeitig auf der Website leuchten,\
+was f\'fcr Verwirrung beim Benutzer sorgen k\'f6nnte. Eine sinnvolle L\'f6sung dieses Problems,\
+welches nicht die Geschwindigkeit der Website beeinflussen w\'fcrde, war angesichts\
+beschr\'e4nkter Bearbeitungszeit dieser Abschlussarbeit nicht m\'f6glich. Es ist empfehlenswert,\
+sich diesem Problem in n\'e4herer Zukunft zu widmen.\
+
+\f0\b\fs31\fsmilli15961 8.1 Sprachsynthese\
+
+\f1\b0\fs24 Die auf den Markt bereits verf\'fcgbaren Softwarel\'f6sungen f\'fcr assistierte Kommunikation\
+besitzen eine Funktion, mit der das vom Benutzer Geschriebene anderen Personen im Raum\
+vermittelbar ist. In den meisten F\'e4llen wird hierf\'fcr eine sogenannte Sprachsynthese, auch als\
+Text-to-Speech bekannt, genutzt. Dabei wird ein Sprachpaket verwendet, um Zeichenketten in\
+einer vom Computer generierten Stimme auszusprechen und \'fcber Lautsprecher wiederzugeben.\
+Je nach Sprachpaket k\'f6nnen Geschwindigkeit, Tonh\'f6he oder sogar unterschiedliche Dialekte\
+ausgew\'e4hlt werden. Diese Technik setzt voraus, dass das gew\'fcnschte Sprachpaket auf dem\
+Endger\'e4t installiert ist und Lautsprecher zur Verf\'fcgung stehen. F\'fcr Anwendungen auf Handys,\
+Tabletts und Computern ist diese Technik bereits seit Jahren im Einsatz und wird konsequent\
+weiterentwickelt.\
+Seit ein paar Jahren geht der Trend dahin, Anwendungen im Browser zur Verf\'fcgung zu stellen.\
+Ein leichter und schneller Zugang zur Software und eine Entlastung des festen Speicherplatzes\
+der Endger\'e4te stehen dabei im Vordergrund. Durch Techniken wie Wasm ist es bereits m\'f6glich,\
+zum Beispiel Microsoft Word in einem Internetbrowser zu benutzen. Wie bereits erw\'e4hnt, war\
+HTML urspr\'fcnglich nur f\'fcr die \'dcbermittlung von Texten ausgelegt. Neue Techniken ben\'f6tigen\
+eine gewisse Zeit, um fehlerfrei auf Websiten integriert zu werden. Die Sprachsynthese ist dabei\
+keine Ausnahme.\
+Es existiert zwar bereits eine L\'f6sung der W3C Community, allerdings konnte diese nicht in\
+diese Abschlussarbeit integriert werden. Grund hierf\'fcr ist die fehlende Unterst\'fctzung auf dem\
+Testserver, welcher zur Programmierung von Ratatosk genutzt wurde. Zudem ben\'f6tigt diese\
+L\'f6sung einen konstanten Internetzugriff, da auf manchen Browsern das ben\'f6tigte Sprachpaket\
+beim Aufrufen der Website heruntergeladen werden muss. Hierf\'fcr werden Server mit gro\'dfer\
+Rechenleistung und einer ausreichenden Bandbreite ben\'f6tigt (Natal, Shires, & J\'e4genstedt,\
+2020).\
+Seite 48Da Ratatosk unter anderem in Krankenh\'e4user eingesetzt werden soll, um zum Beispiel die\
+Kommunikation zwischen Patienten und Angeh\'f6rigen oder dem Personal zu erm\'f6glichen,\
+sollte keine stetige Internetverbindung notwendig sein, um Hauptaspekte der Website nutzen\
+zu k\'f6nnen.\
+
+\f0\b\fs31\fsmilli15961 8.2 Lange Nacht der Wissenschaften\
+
+\f1\b0\fs24 Die Website wurde auf der Langen Nacht der Wissenschaften in N\'fcrnberg am 21.10.2023 der\
+\'d6ffentlichkeit vorgestellt und konnte somit einen ersten, gro\'dfen Testdurchlauf mit vielen\
+Personen und Ger\'e4ten erfahren. Besucher konnten auf ihren eigenen Endger\'e4ten oder auf zwei\
+zur Verf\'fcgung gestellten Laptops die Webseite testen. Es wurde hierf\'fcr ein eigener Test-Server\
+und eine eigene Domain gemietet und eingerichtet.\
+Die Website erfreute sich gro\'dfer Beliebtheit. Personen unterschiedlichen Berufen und\
+Altersgruppen haben die Website getestet. Die Gesichtserkennung \'fcber MediaPipe erf\'fcllte ihre\
+Anforderungen, da auch Personen mit Brillen die Website fehlerfrei verwenden konnten.\
+Ratatosk bewies eine hohe St\'f6rfaktorresistenz, da trotz mehreren Gesichtern und schnellen\
+Bewegungen die Nutzer richtig erkannt wurden.\
+
+\f3\i Abbildung 25: Stand der Ratatosk-Webseite an der langen Nacht der Wissenschaft\
+
+\f1\i0 Das Feedback aller Nutzer war \'e4u\'dferst positiv. Es haben sich besonders Rettungs- und\
+Pflegekr\'e4fte, sowie Krankenschwestern f\'fcr den Einsatz dieser Website in jeweiligen\
+Seite 49Einrichtungen interessiert. Ein, mit Amyotropher Lateralsklerose erkrankter Besucher kannte\
+bereits die Voca-App und \'e4u\'dferte, dass er gerne die Ratatosk Website in seinem privaten Umfeld\
+nutzen w\'fcrde. Dieser Besucher gab zudem auch wichtiges Feedback, nicht nur bez\'fcglich des\
+Interface, sondern auch aus eigener Erfahrung mit assistierter Kommunikationssoftware.\
+Das Feedback aus der langen Nacht der Wissenschaften soll in Zukunft verwendet werden, um\
+somit die Website weiter zu verbessern und die \'f6ffentliche Nutzung zu erm\'f6glichen.\
+
+\f0\b\fs36\fsmilli18001 9 Abbildungsverzeichnis\
+
+\f1\b0\fs24 Abbildung 1: Modell eines neuronalen Netzwerkes ................................................................ 12\
+Abbildung 2: Darstellung eines Grid-Layout Modells ............................................................. 19\
+Abbildung 3: Darstellung eines Box-Layout Modells .............................................................. 20\
+Abbildung 4: Klassendiagramm von Vue (erstellt mit astahUML) .......................................... 23\
+Abbildung 5: Gesicht mit eingetragenen Landmarks (MediaPipe FaceMesh, 2022)............... 26\
+Abbildung 6: Augenausschnitt mit Landmarks (MediaPipe FaceMesh, 2022) ........................ 27\
+Abbildung 7: Aktivit\'e4tsdiagramm der Auswahl eines aufleuchtenden Elementes (erstellt mit\
+astahUML) ................................................................................................................................ 28\
+Abbildung 8: Startbildschirm der Ratatosk-Website ................................................................ 32\
+Abbildung 9: Aktivit\'e4tsdiagramm zur Messung der Variable time_closed auf der Startseite\
+(erstellt mit astahUML) ............................................................................................................ 33\
+Abbildung 10: Hauptmen\'fc der Ratatosk-Website .................................................................... 34\
+Abbildung 11: Warnruf-Men\'fc der Ratatosk-Website ............................................................... 35\
+Abbildung 12: Schmerz-Men\'fc der Ratatosk-Website .............................................................. 36\
+Abbildung 13: Kopfschmerz-Men\'fc der Ratatosk-Website ...................................................... 36\
+Abbildung 14: Nachrichten-Men\'fc der Ratatosk-Website mit alphabetisch sortierter Tastatur 37\
+Abbildung 15: Schnellbaustein "Umwelt"-Men\'fc der Ratatosk-Website .................................. 38\
+Abbildung 16: Schnellbausteine "Ich"-Men\'fc der Ratatosk-Website ........................................ 38\
+Abbildung 17: Einstellungs-Men\'fc der Ratatosk-Website ........................................................ 39\
+Abbildung 18: Aktivit\'e4tsdiagramm f\'fcr das Aufleuchten eines Elementes (erstellt mit\
+astahUML) ................................................................................................................................ 41\
+Abbildung 19: H\'e4ufigkeits- Tastaturlayout der Ratatosk- Webapp .......................................... 42\
+Abbildung 20: Tastaturlayout der Voca-App (Wirth, 2020) ..................................................... 42\
+Abbildung 21: QWERTZ-Tastaturlayout in der Ratatosk-Webapp .......................................... 42\
+Seite 50Abbildung 22: Alphabetisches Tastaturlayout der Ratatosk-Webapp ....................................... 43\
+Abbildung 23: Ratatosk Logo und minimiertes Ratatosk Logo ............................................... 45\
+Abbildung 24: Ausschnitt der Farbver\'e4nderungen bei Farbblindheit (Color-accessibility) ..... 46\
+Abbildung 25: Stand der Ratatosk-Webseite an der langen Nacht der Wissenschaft............... 49\
+
+\f0\b\fs36\fsmilli18001 10 Tabellenverzeichnis\
+
+\f1\b0\fs24 Tabelle 1: Aufbau eines dreidimensionalen Arrays .................................................................. 30\
+Tabelle 2: Verteilung der Ziffern in nat\'fcrlichen Zahlen von Newcomb (Newcomb, 1881) ..... 44\
+
+\f0\b\fs36\fsmilli18001 11 Literaturverzeichnis\
+
+\f1\b0\fs24 (05. 04 2017). 
+\f3\i Verordnung (EU) 2017/745 (Mediacal Device Regulation)
+\f1\i0 . Abgerufen am 04. 11\
+2023 von http://data.europa.eu/eli/reg/2017/745/oj\
+
+\f3\i astah UML
+\f1\i0 . (2023). Abgerufen am 04. 11 2023 von astah: https://astah.net/products/astah-uml/\
+
+\f3\i Beginner's Guide Nginx
+\f1\i0 . (kein Datum). Abgerufen am 04. 11 2023 von nginx:\
+https://nginx.org/en/docs/beginners_guide.html\
+Benford, F. (31. 03 1938). The Law of Anomalous Numbers. 
+\f3\i American Philosophical Society
+\f1\i0 ,\
+551 - 572. Abgerufen am 04. 11 2023 von https://www.jstor.org/stable/984802\
+Berners-Lee, T. (05 1990). 
+\f3\i Information Management: A Proposal
+\f1\i0 . Abgerufen am 04. 11 2023\
+von W3C History Archive: https://www.w3.org/History/1989/proposal.html\
+Caldwell, B., Cooper, M., Reid, L. G., & Vanderheiden, G. (Hrsg.). (11. 12 2008). 
+\f3\i Web Content\
+Accessibility Guidelines (WCAG) 2.0
+\f1\i0 . Abgerufen am 04. 11 2023 von W3C:\
+https://www.w3.org/Translations/WCAG20-de/#contrast-ratiodef\
+
+\f3\i Cascading Style Sheets, level 1
+\f1\i0 . (13. 09 2018). Abgerufen am 04. 11 2023 von W3C:\
+https://www.w3.org/TR/CSS1/\
+Chollet, F. (2018). 
+\f3\i Deep Learning mit Python und Keras
+\f1\i0  (1. Auflage Ausg.). (K. Lorenzen,\
+\'dcbers.) Frechen: mitp.\
+Christopher, S., & J\'f8rgen W., L. (2012). 
+\f3\i CSS Kochbuch
+\f1\i0  (3. Auflage Ausg.). K\'f6ln: O'Reilly.\
+
+\f3\i Color-accessibility
+\f1\i0 . (kein Datum). Abgerufen am 04. 11 2023 von Adobe Color:\
+https://color.adobe.com/de/create/color-accessibility\
+
+\f3\i Color-contrast Analyzer
+\f1\i0 . (kein Datum). Abgerufen am 04. 11 2023 von Adobe Color:\
+https://color.adobe.com/de/create/color-contrast-analyzer\
+Seite 51
+\f3\i Design & Layout: Was ist eine Vektorgrafik?
+\f1\i0  (kein Datum). Abgerufen am 04. 11 2023 von\
+Adobe: https://www.adobe.com/de/creativecloud/design/discover/vector-graphic.html\
+ECMA-262_1st_edition_june_1997. (06 1997). 
+\f3\i ECMAScript: A general purpose, cross-\
+platform programming language, 1.
+\f1\i0  Abgerufen am 04. 11 2023 von https://www.ecma-\
+international.org/publications-and-standards/standards/ecma-262/\
+Fellbaum, K.-R. (1987). 
+\f3\i Elektronische Kommunikationshilfen.
+\f1\i0  Berlin: WEIDLER Buchverlag.\
+Flanagan, D. (2012). 
+\f3\i JavaScript - Das umfassende Referenzwerk
+\f1\i0  (6. Ausg.). (S. Lars, & D.\
+Thomas, \'dcbers.) K\'f6ln: O'Reily.\
+flaticon. (kein Datum). UIcons. Abgerufen am 04. 11 2023 von\
+https://www.flaticon.com/uicons\
+Forbrig, P. (2007). 
+\f3\i Objektorientierte Softwareentwicklung mit UML
+\f1\i0  (3. Auflage Ausg.). (M.\
+Lutz, & C. M\'e4rtin, Hrsg.) M\'fcnchen: Carl Hanser Verlag.\
+
+\f3\i Frequently Asked Quesions vue
+\f1\i0 . (kein Datum). Abgerufen am 04. 11 2023 von Vue.js:\
+https://vuejs.org/about/faq\
+
+\f3\i Grafik-Design: Erkl\'e4rung des Begriffs Vektorgrafik
+\f1\i0 . (kein Datum). Abgerufen am 04. 11 2023\
+von Adobe: https://www.adobe.com/at/creativecloud/design/discover/vector-file.html\
+Hellbusch, J. E. (2005). 
+\f3\i Barrierefreies Webdesign - Praxishandbuch f\'fcr Webgestaltung und\
+grafische Programmoberfl\'e4chen
+\f1\i0  (1. Auflage Ausg.). (C. B\'fchler, Hrsg.) Heidelberg:\
+dpunkt.verlag GmbH.\
+Holz, G., Kamenicek, N., Shishkova, L., Ulrich, J., & Wirth, L. (2019). Pr\'fcfungsbericht um\
+Projekt VOCA. 
+\f3\i Voca- Die iOS-App zur Kommunikation f\'fcr sprachunf\'e4hige Menschen
+\f1\i0 .\
+
+\f3\i HTML Tags
+\f1\i0 . (13. 11 1992). Abgerufen am 04. 11 2023 von W3C - Hostorical Archives:\
+https://www.w3.org/History/19921103-hypertext/hypertext/WWW/MarkUp/Tags.html\
+
+\f3\i Introducton
+\f1\i0 . (kein Datum). Abgerufen am 04. 11 2023 von vue.js:\
+https://vuejs.org/guide/introduction\
+
+\f3\i JavaScript Overview
+\f1\i0 . (12. 11 1998). Abgerufen am 04. 11 2023 von Oracle:\
+https://docs.oracle.com/cd/E19957-01/816-6411-10/intro.htm#1009369\
+Koenig, M. (kein Datum). Store Door Chime. Abgerufen am 04. 11 2023 von\
+https://soundbible.com/1599-Store-Door-Chime.html\
+Lie, H. W. (10. 10 1994). 
+\f3\i Cascading HTML style sheets -- a proposal
+\f1\i0 . Abgerufen am 04. 11\
+2023 von World Wide Web Consortium:\
+https://www.w3.org/People/howcome/p/cascade.html\
+Lindow, J. (2002). 
+\f3\i Norse Mythology - A guide to Gods, Heroes, Rituals and Beliefs.
+\f1\i0  New York:\
+Oxford University Press.\
+Seite 52
+\f3\i MediaPipe APIs terms of Service
+\f1\i0 . (12. 11. 2021). Abgerufen am 04. 11 2023 von MediaPipe:\
+https://developers.google.com/mediapipe/legal/tos\
+MediaPipe FaceMesh. (15. 09 2022). 
+\f3\i Facemesh Modelbeschreibung
+\f1\i0 . Abgerufen am 04. 11\
+2023 von\
+https://developers.google.com/mediapipe/solutions/vision/face_landmarker#get_starte\
+d\
+
+\f3\i Mitgliedschaft Details
+\f1\i0 . (2023). Abgerufen am 05. 11 23 von Apple Developer:\
+https://developer.apple.com/programs/whats-included/\
+Mitterer, F., Filipp, A., & Lochner, D. (29. 10 2015). Kommunikation mit intubierten Patienten.\
+Natal, A., Shires, G., & J\'e4genstedt, P. (18. 08 2020). 
+\f3\i Web Speech API
+\f1\i0 . Abgerufen am 04. 11\
+2023 von W3C Community Group: https://wicg.github.io/speech-api/\
+
+\f3\i Netscape and Sun announce JavaScript, the Open, Cross-Platform Object Scripting Language\
+for Enterprise Networks and the Internet
+\f1\i0 . (04. 12 1995). Abgerufen am 04. 11 2023 von\
+WayBackMachine:\
+https://web.archive.org/web/20070916144913/https://wp.netscape.com/newsref/pr/ne\
+wsrelease67.html\
+Newcomb, S. (1881). Note on the Frequency of Use of the Different Digits in Natural Numbers.\
+
+\f3\i American Journal of Mathematics
+\f1\i0 (4, Nr. 1), 39 - 40.\
+doi:https://doi.org/10.2307/2369148\
+Paa\'df, G., & Hecker, D. (2020). 
+\f3\i K\'fcnstliche Intelligenz - Was steckt hinter der Technologie der\
+Zukunft?
+\f1\i0  (1. Auflage Ausg.). Wiesbaden: Springer. doi: https://doi.org/10.1007/978-3-\
+658-30211-5\
+Rachel, A., & Dan, S. (2006). 
+\f3\i CSS - Anspruchsvolle Websites mit Cascading Stylesheets
+\f1\i0  (2.\
+Auflage Ausg.). Heidelberg: dpunkt.verlag GmbH.\
+Riehle, D. (2000). Framework Design: A Role modeling Approach. 
+\f3\i Dissertation Nr. 13509
+\f1\i0 .\
+Z\'fcrich, Schweiz: ETH Z\'fcrich. Abgerufen am 04. 11 2023 von\
+https://riehle.org/computer-science/research/dissertation/index.html\
+Sommerville, I. (2018). 
+\f3\i Software Engineering
+\f1\i0  (!0. Auflage Ausg.). M\'fcnchen: Pearson.\
+Sonntag, B. (15. 07 2022). 
+\f3\i CSS filter generator to convert from black to target hex color
+\f1\i0 .\
+Abgerufen am 04. 11 2023 von codepen: https://codepen.io/sosuke/pen/Pjoqqp\
+Springer, S. (2022). 
+\f3\i Node.js - The Comprehensive Guide
+\f1\i0  (1. Auflage Ausg.). Boston: Rheinwerk\
+Publishing Inc.\
+Stuart, R., & Norvig, P. (2012). 
+\f3\i K\'fcnstliche Intelligenz - Ein moderner Ansatz
+\f1\i0  (3. Auflage\
+Ausg.). M\'fcnchen: Pearson Deutschland GmbH.\
+Seite 53
+\f3\i Sublime Text - Text Editing, Done Right
+\f1\i0 . (kein Datum). Abgerufen am 04. 11 2023 von Sublime\
+Text: https://www.sublimetext.com/\
+Tanenbaum, A., & Wetherall, D. (2012). 
+\f3\i Computernetzwerke
+\f1\i0  (5. Auflage Ausg.). M\'fcnchen:\
+Pearson.\
+
+\f3\i W3C History
+\f1\i0 . (2023). Abgerufen am 04. 11 2023 von World Wide Web Consortium:\
+https://www.w3.org/about/history/\
+
+\f3\i Web Server Survey
+\f1\i0 . (10. 11 2022). Abgerufen am 04. 11 2023 von netcraft:\
+https://www.netcraft.com/blog/november-2022-web-server-survey/\
+Wirth, L. (30. 09 2020). Weiterentwicklung einer iOS-basierten, augengesteuerten Applikation\
+f\'fcr Intensivstationspatienten mt vor\'fcbergehener Sprechunf\'e4higkeit.\
+
+\f3\i World Wide Web Consortium (W3C) brings a new language to the Web as WebAssembly\
+becomes a W3C Recommendation
+\f1\i0 . (05. 12 2019). Abgerufen am 04. 11 2023 von W3C:\
+https://www.w3.org/press-releases/2019/wasm/}

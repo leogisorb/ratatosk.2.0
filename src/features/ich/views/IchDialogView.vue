@@ -39,7 +39,6 @@
               <div 
                 class="tile-text"
                 :class="autoMode.index.value === index ? 'text-active' : 'text-inactive'"
-                :style="autoMode.index.value === index ? 'color: white !important;' : ''"
               >
                 {{ region.title }}
               </div>
@@ -91,7 +90,6 @@
                     <div 
                       class="tile-text"
                       :class="autoMode.index.value === index ? 'text-active' : 'text-inactive'"
-                      :style="autoMode.index.value === index ? 'color: white !important;' : ''"
                     >
                       {{ subRegion.title }}
                     </div>
@@ -108,7 +106,6 @@
               :key="`indicator-${subRegion.id}`"
               class="carousel-indicator"
               :class="autoMode.index.value === index ? 'carousel-indicator-active' : 'carousel-indicator-inactive'"
-              @click="goToIndex(index)"
             >
             </button>
           </div>
@@ -152,8 +149,7 @@ const {
   selectSubRegion,
   resetToMainView,
   goBack,
-  handleBlink,
-  goToIndex
+  handleBlink
 } = machine
 
 // Input Manager

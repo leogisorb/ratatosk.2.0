@@ -1,0 +1,1310 @@
+{\rtf1\ansi\ansicpg1252\cocoartf2822
+\cocoatextscaling0\cocoaplatform0{\fonttbl\f0\fswiss\fcharset0 Arial-BoldMT;\f1\froman\fcharset0 TimesNewRomanPSMT;\f2\fswiss\fcharset0 Helvetica;
+\f3\froman\fcharset0 TimesNewRomanPS-ItalicMT;\f4\froman\fcharset0 TimesNewRomanPS-BoldMT;\f5\fmodern\fcharset0 CourierNewPSMT;
+}
+{\colortbl;\red255\green255\blue255;\red0\green0\blue0;}
+{\*\expandedcolortbl;;\cspthree\c0\c0\c0;}
+\paperw11900\paperh16840\margl1440\margr1440\vieww11520\viewh8400\viewkind0
+\pard\tx560\tx1120\tx1680\tx2240\tx2800\tx3360\tx3920\tx4480\tx5040\tx5600\tx6160\tx6720\pardirnatural\partightenfactor0
+
+\f0\b\fs36\fsmilli18001 \cf2 Inhaltsverzeichnis\
+
+\f1\b0\fs24 1
+\f2\fs22\fsmilli11040  
+\f1\fs24 Abk\'fcrzungsverzeichnis ...................................................................................................... 5\
+2
+\f2\fs22\fsmilli11040  
+\f1\fs24 Einleitung ........................................................................................................................... 6\
+2.1
+\f2\fs22\fsmilli11040  
+\f1\fs24 Motivation .................................................................................................................... 6\
+2.2
+\f2\fs22\fsmilli11040  
+\f1\fs24 Themenfindung ............................................................................................................ 7\
+2.3
+\f2\fs22\fsmilli11040  
+\f1\fs24 Ziel ............................................................................................................................... 8\
+2.4
+\f2\fs22\fsmilli11040  
+\f1\fs24 Nutzungshinweise ........................................................................................................ 10\
+3
+\f2\fs22\fsmilli11040  
+\f1\fs24 Begriffe ............................................................................................................................. 11\
+3.1
+\f2\fs22\fsmilli11040  
+\f1\fs24 Clean Architecture ..................................................................................................... 11\
+3.2
+\f2\fs22\fsmilli11040  
+\f1\fs24 Composition API ........................................................................................................ 12\
+3.3
+\f2\fs22\fsmilli11040  
+\f1\fs24 TypeScript ................................................................................................................... 13\
+3.4
+\f2\fs22\fsmilli11040  
+\f1\fs24 State Management ..................................................................................................... 13\
+3.5
+\f2\fs22\fsmilli11040  
+\f1\fs24 State Machine ............................................................................................................ 14\
+4
+\f2\fs22\fsmilli11040  
+\f1\fs24 Recherche ......................................................................................................................... 15\
+4.1
+\f2\fs22\fsmilli11040  
+\f1\fs24 Bestehende Implementierung ................................................................................... 15\
+4.2
+\f2\fs22\fsmilli11040  
+\f1\fs24 Architektur-Analyse ..................................................................................................... 16\
+4.3
+\f2\fs22\fsmilli11040  
+\f1\fs24 Problemfelder ............................................................................................................. 17\
+5
+\f2\fs22\fsmilli11040  
+\f1\fs24 Grundlagen ....................................................................................................................... 18\
+5.1
+\f2\fs22\fsmilli11040  
+\f1\fs24 Vue.js 3 Composition API ......................................................................................... 18\
+5.2
+\f2\fs22\fsmilli11040  
+\f1\fs24 TypeScript in Vue.js ................................................................................................... 19\
+5.3
+\f2\fs22\fsmilli11040  
+\f1\fs24 Reactive State ............................................................................................................ 20\
+5.4
+\f2\fs22\fsmilli11040  
+\f1\fs24 Modularisierung .......................................................................................................... 21\
+6
+\f2\fs22\fsmilli11040  
+\f1\fs24 Umsetzung ........................................................................................................................ 22\
+6.1
+\f2\fs22\fsmilli11040  
+\f1\fs24 Architektur-Refactoring ........................................................................................... 22\
+6.2
+\f2\fs22\fsmilli11040  
+\f1\fs24 Input Manager ........................................................................................................... 24\
+6.3
+\f2\fs22\fsmilli11040  
+\f1\fs24 Dialog-Maschinen ...................................................................................................... 26\
+6.3.1
+\f2\fs22\fsmilli11040  
+\f1\fs24 Pain Dialog Machine ......................................................................................... 27\
+6.3.2
+\f2\fs22\fsmilli11040  
+\f1\fs24 Umgebung Dialog Machine .................................................................................. 29\
+6.3.3
+\f2\fs22\fsmilli11040  
+\f1\fs24 Ich Dialog Machine .............................................................................................. 31\
+6.3.4
+\f2\fs22\fsmilli11040  
+\f1\fs24 Settings Dialog Machine .................................................................................... 33\
+6.4
+\f2\fs22\fsmilli11040  
+\f1\fs24 AutoMode System ...................................................................................................... 35\
+6.5
+\f2\fs22\fsmilli11040  
+\f1\fs24 Text-to-Speech Integration ................................................................................. 37\
+6.6
+\f2\fs22\fsmilli11040  
+\f1\fs24 TTS Composable ....................................................................................................... 38\
+6.7
+\f2\fs22\fsmilli11040  
+\f1\fs24 Grammatik-System ................................................................................................... 40\
+6.8
+\f2\fs22\fsmilli11040  
+\f1\fs24 Dictionary-System .................................................................................................. 41\
+6.9
+\f2\fs22\fsmilli11040  
+\f1\fs24 Face Recognition mit MediaPipe ................................................................................. 42\
+6.10
+\f2\fs22\fsmilli11040  
+\f1\fs24 Augenerkennung mit Landmarks ................................................................................. 44\
+6.11
+\f2\fs22\fsmilli11040  
+\f1\fs24 Vergleich Version 1.0 und Version 2.0 ......................................................................... 46\
+6.12
+\f2\fs22\fsmilli11040  
+\f1\fs24 Fehlerbehebung und Debugging .................................................................................... 48\
+7
+\f2\fs22\fsmilli11040  
+\f1\fs24 Design ............................................................................................................................... 50\
+7.1
+\f2\fs22\fsmilli11040  
+\f1\fs24 DialogBase CSS ........................................................................................................ 42\
+7.2
+\f2\fs22\fsmilli11040  
+\f1\fs24 Dark Mode ................................................................................................................. 43\
+7.3
+\f2\fs22\fsmilli11040  
+\f1\fs24 Responsive Design .................................................................................................. 44\
+8
+\f2\fs22\fsmilli11040  
+\f1\fs24 Ausblick ............................................................................................................................ 45\
+8.1
+\f2\fs22\fsmilli11040  
+\f1\fs24 Deployment ................................................................................................................ 45\
+8.2
+\f2\fs22\fsmilli11040  
+\f1\fs24 Weitere Entwicklung ............................................................................................... 46\
+9
+\f2\fs22\fsmilli11040  
+\f1\fs24 Abbildungsverzeichnis ..................................................................................................... 47\
+10
+\f2\fs22\fsmilli11040  
+\f1\fs24 Tabellenverzeichnis .......................................................................................................... 48\
+11
+\f2\fs22\fsmilli11040  
+\f1\fs24 Literaturverzeichnis .......................................................................................................... 48\
+
+\f0\b\fs36\fsmilli18001 1 Abk\'fcrzungsverzeichnis\
+
+\f1\b0\fs24 API ............................................................................................ 
+\f3\i Application Programming Interface\
+
+\f1\i0 CSS ................................................................................................ 
+\f3\i Cascading Style Sheets\
+
+\f1\i0 HTML ............................................................................................ 
+\f3\i Hypertext Markup Language\
+
+\f1\i0 ID .............................................................................................................. 
+\f3\i Identifikationsnummer\
+
+\f1\i0 KI ............................................................................................................... 
+\f3\i K\'fcnstliche Intelligenz\
+
+\f1\i0 TTS .................................................................................................. 
+\f3\i Text-to-Speech\
+
+\f1\i0 TS .............................................................................................................. 
+\f3\i TypeScript\
+
+\f1\i0 UI .............................................................................................................. 
+\f3\i User Interface\
+
+\f1\i0 UX .............................................................................................................. 
+\f3\i User Experience\
+
+\f1\i0 Vue ............................................................................................................. 
+\f3\i Progressive JavaScript Framework\
+
+\f1\i0 Seite 5\
+
+\f0\b\fs36\fsmilli18001 2 Einleitung\
+
+\fs31\fsmilli15961 2.1 Motivation\
+
+\f1\b0\fs24 Die Ratatosk Webapplikation wurde in einer vorangegangenen Bachelorarbeit entwickelt und\
+erstellt. Diese erste Version implementierte erfolgreich die grundlegende Funktionalit\'e4t einer\
+Kommunikationshilfe f\'fcr Personen mit eingeschr\'e4nkter Sprech- oder Bewegungsf\'e4higkeit. Die\
+Anwendung erm\'f6glichte es Benutzern, \'fcber Augenblinzeln mit einer Webapplikation zu\
+interagieren, um ihre Bed\'fcrfnisse und Schmerzen zu kommunizieren.\
+Im Laufe der Zeit und durch umfangreiche Nutzungstests zeigten sich jedoch Schwachstellen\
+in der Architektur der urspr\'fcnglichen Implementierung. Die Codebasis wies Code-Duplikation\
+auf, war schwer wartbar und bot wenig Flexibilit\'e4t f\'fcr zuk\'fcnftige Erweiterungen. Zudem\
+fehlte eine einheitliche Architektur, die die Wiederverwendbarkeit von Komponenten und\
+Funktionen erm\'f6glichte.\
+Aus diesen Gr\'fcnden wurde beschlossen, eine vollst\'e4ndige Neuentwicklung der Ratatosk\
+Webapplikation in Version 2.0 durchzuf\'fchren. Diese Version soll eine modulare, wartbare und\
+erweiterbare Architektur implementieren, die den aktuellen Best Practices der\
+Webentwicklung entspricht und eine solide Grundlage f\'fcr zuk\'fcnftige Entwicklungen bietet.\
+
+\f0\b\fs31\fsmilli15961 2.2 Themenfindung\
+
+\f1\b0\fs24 Die Entscheidung f\'fcr eine vollst\'e4ndige Neuentwicklung basierte auf mehreren\
+Faktoren. Zun\'e4chst war die urspr\'fcngliche Codebasis in einer monolithischen Struktur\
+organisiert, die eine klare Trennung von Verantwortlichkeiten verhinderte. Funktionen wie\
+Text-to-Speech, Augenblinzeln-Erkennung und Dialog-Navigation waren fest miteinander\
+verwoben und konnten nicht unabh\'e4ngig voneinander getestet oder gewartet werden.\
+Des Weiteren wurde festgestellt, dass viele Funktionen in mehreren Komponenten\
+dupliziert waren. Dies f\'fchrte nicht nur zu einem erh\'f6hten Wartungsaufwand, sondern auch\
+zu Inkonsistenzen in der Funktionsweise der Anwendung. So wurden beispielsweise Dialoge\
+unterschiedlich implementiert, obwohl sie im Prinzip die gleiche Funktionalit\'e4t aufweisen.\
+Eine weitere Motivation f\'fcr die Neuentwicklung war die Einf\'fchrung moderner\
+Entwicklungsstandards. Vue.js 3 mit der Composition API, TypeScript f\'fcr Typsicherheit und\
+eine klare Clean Architecture sollten die Grundlage der neuen Version bilden. Diese\
+Technologien bieten nicht nur bessere Entwicklererfahrung, sondern auch eine h\'f6here\
+Codequalit\'e4t und Fehlerpr\'e4vention.\
+Zus\'e4tzlich sollte die neue Architektur die Wiederverwendbarkeit von Komponenten und\
+Funktionen maximieren. Durch die Implementierung von Composables, zentralen State\
+Machines und einem einheitlichen Input Management System sollten Code-Duplikationen\
+verhindert und die Konsistenz der Anwendung gew\'e4hrleistet werden.\
+
+\f0\b\fs31\fsmilli15961 2.3 Ziel\
+
+\f1\b0\fs24 Das prim\'e4re Ziel dieser Bachelorarbeit ist die Entwicklung einer vollst\'e4ndig neuen\
+Architektur f\'fcr die Ratatosk Webapplikation Version 2.0. Diese Architektur soll folgende\
+Anforderungen erf\'fcllen:\
+Zun\'e4chst soll eine modulare Struktur implementiert werden, die klare\
+Verantwortlichkeiten definiert und die Trennung von Concerns erm\'f6glicht. Jedes Modul soll\
+eine spezifische Funktionalit\'e4t bereitstellen und unabh\'e4ngig von anderen Modulen testbar\
+und wartbar sein.\
+Des Weiteren soll ein zentrales Input Management System entwickelt werden, das alle\
+Benutzereingaben vereinheitlicht. Dieses System soll zwischen verschiedenen Eingabetypen\
+wie Augenblinzeln, Mausklicks und Touch-Events unterscheiden k\'f6nnen und diese\
+einheitlich an die Anwendung weiterleiten.\
+Ein weiteres wichtiges Ziel ist die Implementierung eines wiederverwendbaren Dialog-\
+Systems. Alle Dialoge der Anwendung sollen auf einer gemeinsamen Basis aufbauen und\
+die gleiche Funktionalit\'e4t wie AutoMode, Text-to-Speech Integration und Navigation\
+bereitstellen.\
+Zus\'e4tzlich soll ein robustes Text-to-Speech System implementiert werden, das in allen\
+Teilen der Anwendung konsistent funktioniert. Dieses System soll Fehlerbehandlung,\
+Lebenszyklus-Management und Synchronisation mit anderen Systemen wie AutoMode\
+bereitstellen.\
+Ein weiteres Ziel ist die Verbesserung der Codequalit\'e4t durch die Verwendung von\
+TypeScript. Durch Typisierung sollen Fehler fr\'fchzeitig erkannt und die Entwicklererfahrung\
+verbessert werden.\
+Schlie\'dflich soll eine vollst\'e4ndige Dokumentation der neuen Architektur erstellt werden,\
+die anderen Entwicklern das Verst\'e4ndnis und die Erweiterung der Anwendung erm\'f6glicht.\
+Seite 8\
+
+\f0\b\fs31\fsmilli15961 2.4 Nutzungshinweise\
+
+\f1\b0\fs24 Die Ratatosk Webapplikation Version 2.0 dient zur assistierten Kommunikation f\'fcr\
+Personen mit eingeschr\'e4nkter Sprech- oder Bewegungsf\'e4higkeit. Sie sollte nicht in Notf\'e4llen\
+benutzt und nicht f\'fcr oder in lebensnotwendigen Entscheidungen verwendet werden.\
+Um eine reibungslose und optimale Nutzung von Ratatosk zu erm\'f6glichen, muss die Website\
+im Breitbildmodus aufgerufen werden. Eine Nutzung im Hochformat ist ber\'fccksichtigt, wird\
+aber nicht empfohlen, da hier Grafiken und Texte kleiner dargestellt werden m\'fcssen und somit\
+die Lesbarkeit beeintr\'e4chtigt ist. Das Gesicht des Benutzers muss im Kamerabild vollst\'e4ndig\
+zu sehen und beide Augen sollten deutlich zu erkennen sein. Der Hintergrund muss f\'fcr die\
+bestm\'f6gliche Erkennung gut ausgeleuchtet sein. Umgebungen mit geringer Helligkeit,\
+gr\'f6\'dferen Rauschverh\'e4ltnissen oder mit schnellen Bewegungen erschweren die Erkennung des\
+Gesichts.\
+Die besten Ergebnisse werden erreicht, wenn das Gesicht weniger als 80\'b0 horizontal oder\
+weniger als 8\'b0 vertikal geneigt ist, mehr als 50% des Gesichtes erkennbar sind und das Video\
+horizontal aufgenommen wird. Das Gesicht sollte im Frame mit der Stirn in Richtung der\
+oberen oder der linken Bildkante ausgerichtet sein. Es wird ein Mindestabstand von 30\
+Zentimetern zum Bildschirm des Endger\'e4tes empfohlen, um die Augen des Benutzers zu\
+schonen.\
+Die Website Ratatosk Version 2.0 z\'e4hlt nicht als Medizinprodukt, da sie nicht beitr\'e4gt zur\
+\'84Diagnose, Verh\'fctung, \'dcberwachung, Vorhersage, Prognose, Behandlung oder Linderung von\
+Krankheiten, [oder der] Diagnose, \'dcberwachung, Behandlung, Linderung von oder\
+Kompensierung von Verletzungen oder Behinderungen, [oder der] Untersuchung, Ersatz oder\
+Ver\'e4nderung der Anatomie oder eines physiologischen oder pathologischen Vorgangs oder\
+Zustands, [oder der] Gewinnung von Informationen durch die In-vitro-Untersuchung von aus\
+dem menschlichen K\'f6rper - auch aus Organ-, Blut- und Gewebespenden - stammenden\
+Proben\'93 (VO (EU) 2017/745 (MDR) Art.2, Abs.1).\
+Seite 10\
+
+\f0\b\fs36\fsmilli18001 3 Begriffe\
+
+\fs31\fsmilli15961 3.1 Clean Architecture\
+
+\f1\b0\fs24 Clean Architecture ist ein Architekturmuster, das von Robert C. Martin entwickelt wurde\
+und darauf abzielt, eine klare Trennung von Verantwortlichkeiten in Software-Systemen zu\
+erm\'f6glichen. Die Architektur besteht aus mehreren konzentrischen Schichten, wobei die\
+innersten Schichten die Gesch\'e4ftslogik enthalten und die \'e4u\'dferen Schichten f\'fcr die\
+Infrastruktur und externe Abh\'e4ngigkeiten zust\'e4ndig sind.\
+In der Ratatosk Version 2.0 wurde Clean Architecture implementiert, um eine klare\
+Trennung zwischen Domain-Logik, Application Services und Infrastructure zu erreichen. Die\
+Domain-Logik enth\'e4lt die Gesch\'e4ftsregeln und Entit\'e4ten, w\'e4hrend Application Services\
+die Use Cases und Anwendungslogik bereitstellen. Die Infrastructure-Schicht abstrahiert\
+externe Abh\'e4ngigkeiten wie Browser-APIs, MediaPipe und File-System-Zugriffe.\
+Diese Architektur erm\'f6glicht es, die Gesch\'e4ftslogik unabh\'e4ngig von technischen Details\
+zu testen und zu warten. Zudem erleichtert sie das Austauschen von Implementierungen, da\
+die Schnittstellen klar definiert sind.\
+
+\f0\b\fs31\fsmilli15961 3.2 Composition API\
+
+\f1\b0\fs24 Die Composition API ist eine neue API in Vue.js 3, die eine alternative Methode zur\
+Organisation von Komponentenlogik bietet. Im Gegensatz zur Options API, die in Vue.js 2\
+verwendet wurde, gruppiert die Composition API zusammengeh\'f6rige Funktionalit\'e4t in\
+Composables.\
+Composables sind wiederverwendbare Funktionen, die Vue's reaktive API verwenden und\
+Zustand sowie Logik kapseln. Sie erm\'f6glichen es, komplexe Funktionalit\'e4t in kleinere,\
+testbare Einheiten aufzuteilen und diese in verschiedenen Komponenten wiederzuverwenden.\
+In Ratatosk Version 2.0 werden Composables f\'fcr verschiedene Funktionalit\'e4ten wie\
+Input-Management, Text-to-Speech, AutoMode und Dialog-Management verwendet. Diese\
+Struktur erm\'f6glicht es, Code-Duplikationen zu vermeiden und eine konsistente\
+Implementierung \'fcber alle Dialoge hinweg zu gew\'e4hrleisten.\
+
+\f0\b\fs31\fsmilli15961 3.3 TypeScript\
+
+\f1\b0\fs24 TypeScript ist eine Programmiersprache, die von Microsoft entwickelt wurde und eine\
+statische Typisierung zu JavaScript hinzuf\'fcgt. Durch Typisierung k\'f6nnen Fehler fr\'fchzeitig\
+erkannt werden, bevor der Code ausgef\'fchrt wird, und die Entwicklererfahrung wird durch\
+IntelliSense und automatische Vervollst\'e4ndigung verbessert.\
+In Ratatosk Version 2.0 wurde TypeScript vollst\'e4ndig integriert, um Typsicherheit und\
+bessere Codequalit\'e4t zu gew\'e4hrleisten. Alle Komponenten, Composables und\
+Anwendungsservices sind typisiert, was die Wartbarkeit und Erweiterbarkeit der\
+Anwendung erheblich verbessert.\
+
+\f0\b\fs31\fsmilli15961 3.4 State Management\
+
+\f1\b0\fs24 State Management bezieht sich auf die Verwaltung des Anwendungszustands in einer\
+strukturierten und konsistenten Weise. In Vue.js-Anwendungen wird h\'e4ufig Pinia oder Vuex\
+f\'fcr das State Management verwendet.\
+In Ratatosk Version 2.0 wird Pinia als State Management Library verwendet. Pinia bietet\
+eine moderne, typsichere API f\'fcr die Verwaltung von Anwendungszustand und erm\'f6glicht\
+es, Zustand zwischen verschiedenen Komponenten zu teilen, ohne Props oder Events\
+verwenden zu m\'fcssen.\
+Zus\'e4tzlich zu Pinia werden lokale State Machines in den Dialog-Composables verwendet,\
+um den Zustand jedes Dialogs zu verwalten. Diese State Machines erm\'f6glichen es, den\
+Ablauf der Dialoge zu steuern und sicherzustellen, dass nur g\'fcltige Zustands\'fcberg\'e4nge\
+m\'f6glich sind.\
+Seite 13\
+
+\f0\b\fs31\fsmilli15961 3.5 State Machine\
+
+\f1\b0\fs24 Eine State Machine (Zustandsmaschine) ist ein mathematisches Modell, das ein System\
+durch endlich viele Zust\'e4nde und \'dcberg\'e4nge zwischen diesen Zust\'e4nden beschreibt. In\
+der Softwareentwicklung werden State Machines verwendet, um komplexe Verhaltensweisen\
+zu modellieren und sicherzustellen, dass ein System nur in definierten Zust\'e4nden sein kann\
+und nur bestimmte \'dcberg\'e4nge ausf\'fchren kann.\
+In Ratatosk Version 2.0 werden State Machines f\'fcr jeden Dialog implementiert. Jeder\
+Dialog hat definierte Zust\'e4nde wie 'mainView', 'subRegionView' oder 'confirmation', und\
+die \'dcberg\'e4nge zwischen diesen Zust\'e4nden sind klar definiert. Dies verhindert\
+Fehlerzust\'e4nde und erleichtert das Debugging und die Wartung der Anwendung.\
+
+\f0\b\fs36\fsmilli18001 4 Recherche\
+
+\fs31\fsmilli15961 4.1 Bestehende Implementierung\
+
+\f1\b0\fs24 Die urspr\'fcngliche Version von Ratatosk war in einer monolithischen Struktur\
+organisiert, in der alle Funktionalit\'e4ten direkt in Vue-Komponenten implementiert waren.\
+Dialoge wie der Schmerz-Dialog, Umgebungs-Dialog und Ich-Dialog wurden separat\
+implementiert, obwohl sie \'e4hnliche Funktionalit\'e4t aufwiesen.\
+Jeder Dialog hatte seine eigene Implementierung von AutoMode, Text-to-Speech und\
+Navigation. Dies f\'fchrte zu Code-Duplikationen und Inkonsistenzen zwischen den Dialogen.\
+Zudem war die Wartung schwierig, da \'c4nderungen an gemeinsamer Funktionalit\'e4t in\
+mehreren Stellen vorgenommen werden mussten.\
+Die Eingabeerkennung war ebenfalls direkt in den Komponenten implementiert, was eine\
+einheitliche Behandlung verschiedener Eingabetypen erschwerte. Es gab keine zentrale\
+Stelle, an der alle Eingaben behandelt wurden.\
+
+\f0\b\fs31\fsmilli15961 4.2 Architektur-Analyse\
+
+\f1\b0\fs24 Eine detaillierte Analyse der urspr\'fcnglichen Architektur zeigte mehrere\
+Problemfelder auf:\
+Zun\'e4chst fehlte eine klare Trennung von Verantwortlichkeiten. Gesch\'e4ftslogik,\
+Pr\'e4sentationslogik und Infrastrukturlogik waren miteinander vermischt, was das Testen\
+und die Wartung erschwerte.\
+Des Weiteren gab es keine Wiederverwendbarkeit von Code. Funktionalit\'e4ten wie\
+AutoMode oder Text-to-Speech wurden in jedem Dialog neu implementiert, obwohl sie\
+identisch waren.\
+Zus\'e4tzlich fehlte Typsicherheit. Die gesamte Anwendung war in JavaScript geschrieben,\
+was zu Laufzeitfehlern f\'fchren konnte, die erst bei der Ausf\'fchrung des Codes\
+entdeckt wurden.\
+Schlie\'dflich war die Struktur schwer erweiterbar. Neue Dialoge oder Funktionalit\'e4ten\
+einzuf\'fcgen erforderte die Duplikation von Code und konnte zu Inkonsistenzen f\'fchren.\
+
+\f0\b\fs31\fsmilli15961 4.3 Problemfelder\
+
+\f1\b0\fs24 Basierend auf der Architektur-Analyse wurden folgende Hauptproblemfelder\
+identifiziert:\
+1. Code-Duplikation: Funktionalit\'e4ten wurden mehrfach implementiert, was zu\
+Inkonsistenzen und erh\'f6htem Wartungsaufwand f\'fchrte.\
+2. Fehlende Modularit\'e4t: Die Anwendung war monolithisch strukturiert, ohne klare\
+Module oder Komponenten.\
+3. Keine Typsicherheit: JavaScript ohne Typisierung f\'fchrte zu Laufzeitfehlern.\
+4. Schwierige Testbarkeit: Die enge Kopplung von Komponenten erschwerte das\
+Schreiben von Tests.\
+5. Inkonsistente Eingabe-Behandlung: Verschiedene Eingabetypen wurden\
+unterschiedlich behandelt.\
+6. Fehlende Wiederverwendbarkeit: Code konnte nicht zwischen Komponenten\
+geteilt werden.\
+Seite 17\
+
+\f0\b\fs36\fsmilli18001 5 Grundlagen\
+
+\fs31\fsmilli15961 5.1 Vue.js 3 Composition API\
+
+\f1\b0\fs24 Vue.js 3 f\'fchrte die Composition API ein, die eine neue Methode zur Organisation von\
+Komponentenlogik bietet. Im Gegensatz zur Options API gruppiert die Composition API\
+zusammengeh\'f6rige Funktionalit\'e4t in Composables.\
+Composables sind Funktionen, die Vue's reaktive API verwenden und Zustand sowie Logik\
+kapseln. Sie beginnen typischerweise mit "use" und bieten eine wiederverwendbare\
+Schnittstelle f\'fcr Funktionalit\'e4t.\
+In Ratatosk Version 2.0 werden Composables f\'fcr verschiedene Funktionalit\'e4ten wie\
+Input-Management (useInputManager), Text-to-Speech (useTTS), AutoMode (useAutoMode) und\
+Dialog-Management (usePainDialogMachine, useUmgebungDialogMachine) verwendet.\
+
+\f0\b\fs31\fsmilli15961 5.2 TypeScript in Vue.js\
+
+\f1\b0\fs24 TypeScript wird in Vue.js 3 durch das .vue Dateiformat und den TypeScript Compiler\
+unterst\'fctzt. Komponenten k\'f6nnen mit <script setup lang="ts"> definiert werden, was\
+vollst\'e4ndige TypeScript-Unterst\'fctzung erm\'f6glicht.\
+In Ratatosk Version 2.0 sind alle Komponenten, Composables und Services typisiert. Dies\
+erm\'f6glicht es, Fehler fr\'fchzeitig zu erkennen und bietet eine bessere\
+Entwicklererfahrung durch IntelliSense und automatische Vervollst\'e4ndigung.\
+
+\f0\b\fs31\fsmilli15961 5.3 Reactive State\
+
+\f1\b0\fs24 Vue.js verwendet ein reaktives System, das automatisch Updates in der Benutzeroberfl\'e4che\
+ausl\'f6st, wenn sich der zugrunde liegende Zustand \'e4ndert. In der Composition API wird\
+dies durch ref() und reactive() Funktionen erreicht.\
+ref() wird f\'fcr primitive Werte wie Zahlen oder Strings verwendet, w\'e4hrend reactive() f\'fcr\
+Objekte und Arrays verwendet wird. Beide Funktionen erstellen reaktive Proxies, die\
+automatisch Dependency Tracking durchf\'fchren.\
+In Ratatosk Version 2.0 wird reaktiver State f\'fcr alle Anwendungszust\'e4nde verwendet.\
+Dialog-Zust\'e4nde, AutoMode-Indizes und Eingabe-Ereignisse sind alle reaktiv und\
+aktualisieren automatisch die Benutzeroberfl\'e4che.\
+
+\f0\b\fs31\fsmilli15961 5.4 Modularisierung\
+
+\f1\b0\fs24 Modularisierung bezieht sich auf die Aufteilung einer Anwendung in kleinere,\
+unabh\'e4ngige Module. Jedes Modul hat eine spezifische Verantwortlichkeit und kann\
+unabh\'e4ngig entwickelt, getestet und gewartet werden.\
+In Ratatosk Version 2.0 wurde die Anwendung in Features aufgeteilt, wobei jedes Feature\
+seine eigenen Views, Composables, Daten und Styles enth\'e4lt. Diese Struktur erm\'f6glicht\
+es, Features unabh\'e4ngig voneinander zu entwickeln und zu warten.\
+Zus\'e4tzlich wurden gemeinsame Funktionalit\'e4ten in das shared-Verzeichnis verschoben,\
+wo sie von allen Features verwendet werden k\'f6nnen.\
+Seite 21\
+
+\f0\b\fs36\fsmilli18001 6 Umsetzung\
+
+\fs31\fsmilli15961 6.1 Architektur-Refactoring\
+
+\f1\b0\fs24 Das Architektur-Refactoring von Ratatosk Version 2.0 begann mit der Umstrukturierung\
+der Codebasis in eine modulare, feature-basierte Architektur. Die Anwendung wurde in\
+folgende Hauptbereiche aufgeteilt:\
+- features/: Enth\'e4lt alle Features der Anwendung, wobei jedes Feature seine eigenen\
+Views, Composables, Daten und Styles enth\'e4lt.\
+- shared/: Enth\'e4lt wiederverwendbare Komponenten, Composables und Styles, die von\
+mehreren Features verwendet werden.\
+- core/: Enth\'e4lt die Kern-Architektur mit Domain-Entities, Application Services und\
+Repository Interfaces.\
+Diese Struktur erm\'f6glicht es, Features unabh\'e4ngig voneinander zu entwickeln und zu\
+warten, w\'e4hrend gemeinsame Funktionalit\'e4t an einer zentralen Stelle verwaltet wird.\
+Jedes Feature folgt einer konsistenten Struktur:\
+- views/: Enth\'e4lt die Vue-Komponenten f\'fcr das Feature.\
+- composables/: Enth\'e4lt die Logik und State Management f\'fcr das Feature.\
+- data/: Enth\'e4lt die statischen Daten und Konfigurationen f\'fcr das Feature.\
+- stores/: Enth\'e4lt Pinia Stores, falls das Feature einen globalen Zustand\
+ben\'f6tigt.\
+Diese konsistente Struktur erleichtert es, neue Features hinzuzuf\'fcgen und bestehende\
+Features zu erweitern.\
+
+\f0\b\fs31\fsmilli15961 6.2 Input Manager\
+
+\f1\b0\fs24 Eines der wichtigsten neuen Systeme in Ratatosk Version 2.0 ist der Input Manager.\
+Dieses System vereinheitlicht die Behandlung aller Benutzereingaben und abstrahiert\
+verschiedene Eingabetypen wie Augenblinzeln, Mausklicks und Touch-Events.\
+Der Input Manager wird als zentraler Service im core-Verzeichnis implementiert und\
+bietet eine einheitliche Schnittstelle f\'fcr die Behandlung von Eingaben. Er registriert\
+sich automatisch f\'fcr relevante Browser-Events und wandelt diese in standardisierte\
+InputEvents um.\
+Jedes InputEvent enth\'e4lt Informationen \'fcber den Eingabetyp (blink, click, touch), die\
+Quelle (faceRecognition, mouse, touch) und einen Zeitstempel. Diese Informationen\
+k\'f6nnen von Komponenten verwendet werden, um entsprechend zu reagieren.\
+Der Input Manager wird \'fcber das useInputManager Composable in Vue-Komponenten\
+verwendet. Dieses Composable bietet Methoden zum Starten und Stoppen des Input\
+Managers sowie zum Registrieren von Callback-Funktionen f\'fcr Eingabeereignisse.\
+Ein wichtiger Aspekt des Input Managers ist das Cooldown-System. Dieses System\
+verhindert, dass mehrere Eingaben zu schnell hintereinander verarbeitet werden, was zu\
+unerw\'fcnschten Nebeneffekten f\'fchren k\'f6nnte.\
+Seite 24\
+
+\f0\b\fs31\fsmilli15961 6.3 Dialog-Maschinen\
+
+\f1\b0\fs24 Alle Dialoge in Ratatosk Version 2.0 verwenden eine zentrale Dialog-Maschine, die\
+den Zustand und die Navigation des Dialogs verwaltet. Jede Dialog-Maschine implementiert\
+eine State Machine, die definierte Zust\'e4nde und \'dcberg\'e4nge zwischen diesen Zust\'e4nden\
+bietet.\
+Jede Dialog-Maschine bietet folgende Funktionalit\'e4t:\
+- State Management: Verwaltung des aktuellen Dialog-Zustands.\
+- Navigation: Methoden zum Navigieren zwischen verschiedenen Ansichten des Dialogs.\
+- AutoMode Integration: Automatisches Durchlaufen von Optionen.\
+- Text-to-Speech Integration: Automatisches Vorlesen von Optionen.\
+- Confirmation: Generierung von Best\'e4tigungstexten basierend auf Auswahlen.\
+Alle Dialog-Maschinen folgen dem gleichen Muster, was Konsistenz und\
+Wiederverwendbarkeit gew\'e4hrleistet.\
+
+\f0\b\fs28\fsmilli14041 6.3.1 Pain Dialog Machine\
+
+\f1\b0\fs24 Die Pain Dialog Machine verwaltet den Schmerz-Dialog, der es Benutzern erm\'f6glicht,\
+Schmerzen an verschiedenen K\'f6rperteilen zu beschreiben.\
+Der Dialog hat folgende Zust\'e4nde:\
+- mainView: Hauptansicht mit Auswahl der K\'f6rperregionen.\
+- subRegionView: Ansicht mit Auswahl der spezifischen K\'f6rperteile.\
+- painScaleView: Ansicht mit Schmerzskala von 1-10.\
+- confirmation: Best\'e4tigungsansicht mit generiertem Best\'e4tigungstext.\
+Die Navigation zwischen diesen Zust\'e4nden erfolgt durch Methoden wie\
+selectMainRegion(), selectSubRegion() und selectPainLevel(). Jede Methode aktualisiert\
+den Zustand und navigiert zur n\'e4chsten Ansicht.\
+Die Pain Dialog Machine integriert AutoMode und Text-to-Speech, um automatisch durch\
+die Optionen zu navigieren und diese vorzulesen. Zus\'e4tzlich generiert sie\
+Best\'e4tigungstexte basierend auf den Auswahlen des Benutzers.\
+
+\f0\b\fs28\fsmilli14041 6.3.2 Umgebung Dialog Machine\
+
+\f1\b0\fs24 Die Umgebung Dialog Machine verwaltet den Umgebungs-Dialog, der es Benutzern\
+erm\'f6glicht, \'dcnderungen an ihrer Umgebung zu beschreiben.\
+Der Dialog hat folgende Zust\'e4nde:\
+- mainView: Hauptansicht mit Auswahl der Umgebungsregionen.\
+- subRegionView: Ansicht mit Auswahl der spezifischen Umgebungsgegenst\'e4nde.\
+- subSubRegionView: Ansicht mit Auswahl von Verben f\'fcr die Aktionen.\
+- confirmation: Best\'e4tigungsansicht mit generiertem Best\'e4tigungstext.\
+Die Umgebung Dialog Machine verwendet eine dreistufige Hierarchie: Regionen,\
+Gegenst\'e4nde und Verben. Diese Struktur erm\'f6glicht es, komplexe Anweisungen wie\
+"Bitte das Fenster \'f6ffnen" zu generieren.\
+Wie die Pain Dialog Machine integriert auch die Umgebung Dialog Machine AutoMode und\
+Text-to-Speech. Zus\'e4tzlich verwendet sie ein Grammatik-System, um korrekte Artikel und\
+Satzstrukturen zu generieren.\
+
+\f0\b\fs28\fsmilli14041 6.3.3 Ich Dialog Machine\
+
+\f1\b0\fs24 Die Ich Dialog Machine verwaltet den Ich-Dialog, der es Benutzern erm\'f6glicht,\
+pers\'f6nliche Bed\'fcrfnisse und W\'fcnschte zu \'e4u\'dfern.\
+Der Dialog hat folgende Zust\'e4nde:\
+- mainView: Hauptansicht mit Auswahl der Hauptkategorien.\
+- subRegionView: Ansicht mit Auswahl der spezifischen Optionen.\
+- confirmation: Best\'e4tigungsansicht mit generiertem Best\'e4tigungstext.\
+Die Ich Dialog Machine verwendet eine zweistufige Hierarchie mit Hauptkategorien wie\
+Ern\'e4hrung, Gef\'fchle, Kleidung, Hygiene und Bewegung. Jede Kategorie hat\
+unterschiedliche Sub-Optionen, die vom Benutzer ausgew\'e4hlt werden k\'f6nnen.\
+Die Ich Dialog Machine generiert Best\'e4tigungstexte basierend auf den Auswahlen des\
+Benutzers und verwendet ebenfalls AutoMode und Text-to-Speech f\'fcr eine konsistente\
+Benutzererfahrung.\
+
+\f0\b\fs28\fsmilli14041 6.3.4 Settings Dialog Machine\
+
+\f1\b0\fs24 Die Settings Dialog Machine verwaltet den Einstellungs-Dialog, der es Benutzern\
+erm\'f6glicht, verschiedene Aspekte der Anwendung anzupassen.\
+Der Dialog hat folgende Zust\'e4nde:\
+- mainView: Hauptansicht mit Auswahl der Einstellungskategorien.\
+- optionsView: Ansicht mit Auswahl der spezifischen Optionen.\
+- confirmation: Best\'e4tigungsansicht mit Best\'e4tigung der \'c4nderung.\
+Die Settings Dialog Machine unterst\'fctzt verschiedene Einstellungstypen wie\
+Tastatur-Layouts, Blinzeldauer, Leuchtdauer und Kamera-Einstellungen. Zus\'e4tzlich\
+bietet sie eine spezielle Kamera-Ansicht mit Live-Vorschau und Einstellungen f\'fcr\
+Helligkeit und Zoom.\
+Wie die anderen Dialog-Maschinen integriert auch die Settings Dialog Machine AutoMode\
+und Text-to-Speech, wobei AutoMode f\'fcr die Kamera-Kategorie deaktiviert ist, da dort\
+direkte Interaktion mit Slidern erforderlich ist.\
+Seite 33\
+
+\f0\b\fs31\fsmilli15961 6.4 AutoMode System\
+
+\f1\b0\fs24 Das AutoMode System ist ein zentrales System in Ratatosk Version 2.0, das\
+automatisch durch Optionen navigiert und diese dem Benutzer pr\'e4sentiert. Es wird als\
+Composable implementiert und kann von allen Dialogen verwendet werden.\
+Das AutoMode System bietet folgende Funktionalit\'e4t:\
+- Automatisches Durchlaufen: Automatisches Wechseln zwischen Optionen in einem\
+konfigurierbaren Intervall.\
+- Index-Verwaltung: Verwaltung des aktuell aktiven Index.\
+- Synchronisation mit TTS: Koordination mit dem Text-to-Speech System, um\
+sicherzustellen, dass Optionen vor dem Wechsel vorgelesen werden.\
+- Titel-Steuerung: Option zum Überspringen des Titels beim Start, wenn dieser bereits\
+gesprochen wurde.\
+Das AutoMode System wird mit einer Konfiguration initialisiert, die folgende Parameter\
+enth\'e4lt:\
+- items: Ein reaktives Array von Items, die durchlaufen werden sollen.\
+- onItemChange: Callback-Funktion, die aufgerufen wird, wenn sich das aktive Item\
+\'e4ndert.\
+- interval: Das Intervall in Millisekunden zwischen den Wechseln.\
+- enableTTS: Boolean, der angibt, ob Text-to-Speech verwendet werden soll.\
+Das AutoMode System verwendet Vue's Reaktivität, um automatisch auf \'c4nderungen im\
+Items-Array zu reagieren. Wenn sich das Array \'e4ndert, wird das AutoMode System\
+automatisch angepasst.\
+
+\f0\b\fs31\fsmilli15961 6.5 Text-to-Speech Integration\
+
+\f1\b0\fs24 Text-to-Speech (TTS) ist ein wichtiger Aspekt der Ratatosk Anwendung, da es\
+Benutzern mit eingeschr\'e4nkter Sicht oder Lesef\'e4higkeit erm\'f6glicht, die Anwendung zu\
+nutzen. In Version 2.0 wurde ein robustes TTS-System implementiert, das Fehlerbehandlung\
+und Lebenszyklus-Management bietet.\
+Das TTS-System wird als zentraler Service im shared-Verzeichnis implementiert und\
+bietet folgende Funktionalit\'e4t:\
+- speak(): Methode zum Vorlesen von Text mit optionalen Parametern f\'fcr Sprache,\
+Geschwindigkeit und Tonh\'f6he.\
+- cancel(): Methode zum Abbrechen aktueller TTS-Ausgaben.\
+- isSpeaking: Reaktive Variable, die angibt, ob gerade etwas vorgelesen wird.\
+- queue: Warteschlangensystem f\'fcr mehrere TTS-Anfragen.\
+Das TTS-System verwendet die Browser-native SpeechSynthesis API und bietet eine\
+Abstraktionsebene, die es erm\'f6glicht, das TTS-System einfach auszutauschen oder zu\
+erweitern.\
+Zus\'e4tzlich bietet das TTS-System Fehlerbehandlung f\'fcr F\'e4lle, in denen die\
+SpeechSynthesis API nicht verf\'fcgbar ist oder fehlschl\'e4gt.\
+
+\f0\b\fs31\fsmilli15961 6.6 TTS Composable\
+
+\f1\b0\fs24 Das TTS Composable (useTTS) bietet eine einfache Schnittstelle f\'fcr die Verwendung\
+des TTS-Systems in Vue-Komponenten. Es abstrahiert die Komplexit\'e4t des TTS-Systems und\
+bietet reaktive Variablen und Methoden, die von Komponenten verwendet werden k\'f6nnen.\
+Das useTTS Composable bietet folgende Funktionalit\'e4t:\
+- speak(): Methode zum Vorlesen von Text.\
+- cancel(): Methode zum Abbrechen aktueller TTS-Ausgaben.\
+- isSpeaking: Reaktive Variable, die angibt, ob gerade etwas vorgelesen wird.\
+- currentText: Reaktive Variable, die den aktuell vorgelesenen Text enth\'e4lt.\
+Das useTTS Composable wird in allen Dialogen verwendet, um Text vorzulesen. Es\
+synchronisiert sich mit AutoMode, um sicherzustellen, dass Text vollst\'e4ndig vorgelesen\
+wird, bevor zum n\'e4chsten Item gewechselt wird.\
+Seite 38\
+
+\f0\b\fs31\fsmilli15961 6.7 Grammatik-System\
+
+\f1\b0\fs24 Das Grammatik-System in Ratatosk Version 2.0 ist verantwortlich f\'fcr die Generierung\
+korrekter deutscher S\'e4tze basierend auf Benutzerauswahlen. Es wird in jedem Dialog-Feature\
+implementiert und bietet Funktionen zur Artikel-Generierung und Satzstrukturierung.\
+F\'fcr den Umgebungs-Dialog bietet das Grammatik-System folgende Funktionalit\'e4t:\
+- getArticles(): Generiert korrekte Artikel (der, die, das) basierend auf\
+Gegenstandsnamen.\
+- buildConfirmationText(): Erstellt Best\'e4tigungstexte wie "Bitte das Fenster\
+\'f6ffnen".\
+F\'fcr den Ich-Dialog bietet das Grammatik-System folgende Funktionalit\'e4t:\
+- getSubRegionViewTitle(): Generiert spezifische Titel f\'fcr Sub-Region-Ansichten wie\
+"Was wollen Sie zu sich nehmen?".\
+- generateConfirmationText(): Erstellt Best\'e4tigungstexte basierend auf\
+Haupt- und Sub-Region-Auswahlen.\
+Das Grammatik-System wird in separaten Dateien (umgebungGrammar.ts, ichGrammar.ts)\
+implementiert und von den Dialog-Maschinen verwendet. Diese Trennung erm\'f6glicht es,\
+Grammatikregeln unabh\'e4ngig von der Dialog-Logik zu testen und zu warten.\
+Ein Beispiel f\'fcr die Implementierung des Grammatik-Systems zeigt der folgende Code:\
+
+\f5 export function getArticles(itemName: string): string \{\
+  const item = items.find(i => i.name === itemName)\
+  if (item && 'article' in item) \{\
+    return item.article\
+  \}\
+  return 'das' // Default Artikel\
+\}\
+
+\f1 Diese Funktion generiert korrekte Artikel basierend auf den in den Items-Daten\
+gespeicherten Informationen. Durch die zentrale Speicherung der Artikel k\'f6nnen diese\
+konsistent verwendet werden.\
+
+\f0\b\fs31\fsmilli15961 6.8 Dictionary-System\
+
+\f1\b0\fs24 Das Dictionary-System in Ratatosk Version 2.0 ist verantwortlich f\'fcr die Verwaltung aller\
+statischen Daten und Texte eines Dialogs. Es wird als zentrales System in jedem Dialog-\
+Feature implementiert und bietet Funktionen zur Abfrage von Daten und zur Generierung\
+von Texten.\
+Jedes Dictionary-System bietet folgende Funktionalit\'e4t:\
+- mainRegions / mainItems: Gibt die Hauptregionen oder Hauptitems eines Dialogs\
+zur\'fcck.\
+- getSubRegions(): Gibt die Sub-Regionen basierend auf einer Hauptregion zur\'fcck.\
+- getSubRegionViewTitle(): Generiert spezifische Titel f\'fcr Sub-Region-Ansichten.\
+- generateConfirmationText(): Erstellt Best\'e4tigungstexte basierend auf Auswahlen.\
+Das Dictionary-System wird in separaten Dateien (painDictionary.ts,\
+umgebungDictionary.ts, ichDictionary.ts) implementiert und von den Dialog-Maschinen\
+verwendet. Diese Trennung erm\'f6glicht es, Daten und Texte unabh\'e4ngig von der Dialog-\
+Logik zu verwalten und zu \'e4ndern.\
+Ein Beispiel f\'fcr die Implementierung des Dictionary-Systems zeigt der folgende Code:\
+
+\f5 export function usePainDictionary() \{\
+  const mainRegions = [\
+    \{ id: 'kopf', title: 'Kopf' \},\
+    \{ id: 'torso', title: 'Torso' \},\
+    \{ id: 'arme', title: 'Arme' \},\
+    \{ id: 'beine', title: 'Beine' \}\
+  ]\
+\
+  function getSubRegions(mainRegionId: string | null) \{\
+    if (!mainRegionId) return []\
+    switch (mainRegionId) \{\
+      case 'kopf': return kopfSubRegions\
+      case 'torso': return torsoSubRegions\
+      case 'arme': return armeSubRegions\
+      case 'beine': return beineSubRegions\
+      default: return []\
+    \}\
+  \}\
+\
+  return \{\
+    mainRegions,\
+    getSubRegions\
+  \}\
+\}\
+
+\f1 Diese Implementierung zeigt, wie das Dictionary-System die Daten strukturiert und\
+bereitstellt. Die Daten werden zentral verwaltet und k\'f6nnen einfach ge\'e4ndert werden,\
+ohne die Dialog-Logik zu beeinflussen.\
+Seite 41\
+
+\f0\b\fs31\fsmilli15961 6.9 Face Recognition mit MediaPipe\
+
+\f1\b0\fs24 Die Gesichtserkennung in Ratatosk Version 2.0 verwendet MediaPipe FaceMesh, ein\
+neuronales Netz von Google, das Gesichter in Videos und Bildern erkennt und analysiert.\
+MediaPipe FaceMesh wurde f\'fcr die Verwendung in Webanwendungen entwickelt und bietet\
+eine JavaScript API f\'fcr die Integration in Vue.js-Anwendungen.\
+FaceMesh gibt nach erfolgreicher Analyse eines Bildes ein Array mit den gefundenen\
+Merkmalen (sogenannte Landmarks) des Gesichtes zur\'fcck. Diese Landmarks haben jeweils\
+eine x-, y- und z-Koordinate. F\'fcr dieses Projekt interessieren uns allerdings nur die x-\
+und y-Koordinaten, die die Position entlang der horizontalen und vertikalen Achse des\
+Bildes beschreiben.\
+Die Werte dieser Koordinaten sind prozentual zur Bildgr\'f6\'dfe angegeben, wobei der\
+Ursprung dieser Koordinaten in der linken, oberen Ecke des Bildes sitzt. Dies erm\'f6glicht\
+es, unabh\'e4ngig von der Bildaufl\'f6sung zu arbeiten.\
+MediaPipe FaceMesh erkennt \'fcber 468 Landmarks pro Gesicht, von denen die meisten f\'fcr\
+diese Anwendung nicht relevant sind. F\'fcr die Augenerkennung werden spezifische\
+Landmarks verwendet, die die Positionen der Augenlider markieren.\
+Die Integration von MediaPipe FaceMesh erfolgt \'fcber das useFaceRecognition Composable.\
+Dieses Composable bietet eine einfache Schnittstelle f\'fcr die Verwendung der FaceMesh-\
+Funktionalit\'e4t in Vue-Komponenten und abstrahiert die Komplexit\'e4t der MediaPipe API.\
+Seite 42\
+
+\f0\b\fs31\fsmilli15961 6.10 Augenerkennung mit Landmarks\
+
+\f1\b0\fs24 Die Augenerkennung in Ratatosk Version 2.0 verwendet spezifische Landmarks von\
+MediaPipe FaceMesh, um zu erkennen, ob die Augen des Benutzers ge\'f6ffnet oder geschlossen\
+sind. F\'fcr jedes Auge werden vier Landmarks verwendet, die die Positionen der Augenlider\
+markieren.\
+F\'fcr das linke Auge werden folgende Landmarks verwendet:\
+- TOP: Landmark 386 (oberes Augenlid)\
+- BOTTOM: Landmark 374 (unteres Augenlid)\
+- LEFT: Landmark 263 (linkes Augenlid)\
+- RIGHT: Landmark 362 (rechtes Augenlid)\
+F\'fcr das rechte Auge werden folgende Landmarks verwendet:\
+- TOP: Landmark 159 (oberes Augenlid)\
+- BOTTOM: Landmark 145 (unteres Augenlid)\
+- LEFT: Landmark 33 (linkes Augenlid)\
+- RIGHT: Landmark 133 (rechtes Augenlid)\
+Die Erkennung, ob ein Auge ge\'f6ffnet oder geschlossen ist, erfolgt durch die Berechnung\
+des Abstands zwischen den gegen\'fcberliegenden Augenlidern. Es werden pro Auge zwei\
+Abst\'e4nde berechnet: der vertikale Abstand (TOP zu BOTTOM) und der horizontale Abstand\
+(LEFT zu RIGHT). Dies verhindert Fehler aufgrund verschiedener Augenformen.\
+Zus\'e4tzlich wird die H\'f6he des Gesichtes im Bild mit zwei weiteren Landmarks berechnet.\
+Es wird eine Abh\'e4ngigkeit zwischen Gesichtsh\'f6he und Abstand der Augenlider verwendet,\
+um zu berechnen, ob die Augenlider als geschlossen oder offen erkannt werden.\
+Ohne diese Abh\'e4ngigkeit m\'fcsste sich der Benutzer in einem festen Abstand zum Endger\'e4t\
+halten, um eine fehlerfreie Erkennung zu gew\'e4hrleisten. Durch die Abh\'e4ngigkeit von der\
+Gesichtsh\'f6he wird die Erkennung robuster und funktioniert bei verschiedenen\
+Entfernungen.\
+Ein berechneter Faktor wird mit beiden berechneten Abst\'e4nden eines Augenlides\
+multipliziert. Ist das Resultat gr\'f6\'dfer als die H\'f6he des Gesichtes, wird das Auge als\
+offen gekennzeichnet, ist es kleiner als die H\'f6he des Gesichtes wird das Auge als\
+geschlossen betrachtet.\
+Der verwendete Faktor wurde aus eigenen Experimenten entwickelt. Die Abst\'e4nde der\
+Augenlider und die Gesichtsh\'f6he wurden von unterschiedlichen Entfernungen zu einem\
+Endger\'e4t gemessen und der aus der Division beider entstehende Quotient wurde als\
+Faktor weiterverwendet. F\'fcr niedrige Entfernungen von bis zu 30 Zentimeter wurde ein\
+Quotient von 35 als Grenze ermittelt. F\'fcr eine Entfernung von bis zu drei Metern wurde\
+ein Quotient von 60 als Grenze ermittelt. Der Wert des idealen Faktors liegt somit zwischen\
+35 und 60. Es wurde f\'fcr erste Versuche der Mittelwert 47 verwendet, welcher sich als gut\
+geeignet bewiesen hat.\
+Sind beide Augen geschlossen, wird f\'fcr jedes bearbeitete Frame innerhalb des Integer\
+closed_frames hochgez\'e4hlt. Sobald diese Variable einen benutzerdefinierten Wert\
+\'fcberschreitet, wird die gew\'e4hlte Aktion ausgef\'fchrt. Dies verhindert, dass ein kurzes\
+Blinzeln als eine vom Nutzer gewollte Interaktion gewertet wird.\
+Der Schwellwert f\'fcr closed_frames kann vom Benutzer in den Einstellungen angepasst\
+werden. Dies erm\'f6glicht es, die Empfindlichkeit der Blinzeln-Erkennung an die\
+individuellen Bed\'fcrfnisse des Benutzers anzupassen.\
+Seite 44\
+
+\f0\b\fs31\fsmilli15961 6.11 Vergleich Version 1.0 und Version 2.0\
+
+\f1\b0\fs24 Die Neuentwicklung von Ratatosk Version 2.0 brachte erhebliche Verbesserungen im\
+Vergleich zur urspr\'fcnglichen Version 1.0. Die wichtigsten Unterschiede werden im\
+Folgenden dargestellt:\
+Architektur: Version 1.0 verwendete eine monolithische Struktur, in der alle\
+Funktionalit\'e4ten direkt in Vue-Komponenten implementiert waren. Version 2.0 verwendet\
+eine modulare, feature-basierte Architektur mit klarer Trennung von Verantwortlichkeiten.\
+Code-Duplikation: In Version 1.0 wurde Funktionalit\'e4t wie AutoMode, Text-to-Speech\
+und Navigation in jedem Dialog neu implementiert. Version 2.0 verwendet wiederverwendbare\
+Composables und zentrale Services, die von allen Dialogen verwendet werden.\
+Typsicherheit: Version 1.0 war vollst\'e4ndig in JavaScript geschrieben, was zu\
+Laufzeitfehlern f\'fchren konnte. Version 2.0 verwendet TypeScript f\'fcr vollst\'e4ndige\
+Typsicherheit.\
+Input Management: Version 1.0 hatte keine zentrale Stelle f\'fcr die Behandlung von\
+Eingaben. Version 2.0 implementiert einen zentralen Input Manager, der alle Eingaben\
+vereinheitlicht.\
+Dialog-System: Version 1.0 implementierte jeden Dialog separat, obwohl sie \'e4hnliche\
+Funktionalit\'e4t aufwiesen. Version 2.0 verwendet ein einheitliches Dialog-System mit\
+State Machines.\
+Codequalit\'e4t: Version 1.0 hatte Code-Duplikationen und Inkonsistenzen. Version 2.0\
+bietet eine konsistente Implementierung durch wiederverwendbare Module.\
+Wartbarkeit: Version 1.0 war schwer zu warten, da \'c4nderungen an gemeinsamer\
+Funktionalit\'e4t in mehreren Stellen vorgenommen werden mussten. Version 2.0 macht\
+Wartung einfacher durch zentrale Module.\
+Erweiterbarkeit: Version 1.0 war schwer zu erweitern, da neue Funktionalit\'e4t\
+oft Code-Duplikation erforderte. Version 2.0 macht Erweiterungen einfach durch die\
+modulare Architektur.\
+Seite 46\
+
+\f0\b\fs31\fsmilli15961 6.12 Fehlerbehebung und Debugging\
+
+\f1\b0\fs24 W\'e4hrend der Entwicklung von Ratatosk Version 2.0 traten mehrere Probleme auf, die\
+sorgf\'e4ltig analysiert und behoben werden mussten. Einige der wichtigsten Probleme und\
+deren L\'f6sungen werden im Folgenden beschrieben:\
+Ein häufiges Problem war, dass AutoMode vor dem vollst\'e4ndigen Update der Items-Array\
+gestartet wurde. Dies f\'fchrte dazu, dass AutoMode mit einem leeren Array startete und\
+keine Items gefunden wurden. Die L\'f6sung bestand darin, nextTick() zu verwenden, um\
+sicherzustellen, dass Vue's Reaktivit\'e4tssystem das Items-Array aktualisiert hat, bevor\
+AutoMode gestartet wird.\
+Ein weiteres Problem war, dass der Titel mehrfach vorgelesen wurde. Dies trat auf, weil\
+der Titel sowohl vom AutoMode-System als auch manuell vorgelesen wurde. Die L\'f6sung\
+bestand darin, einen skipTitle-Parameter zu implementieren, der angibt, ob der Titel\
+bereits gesprochen wurde und daher vom AutoMode-System \'fcbersprungen werden soll.\
+Ein weiteres Problem war, dass Dialoge nach dem Verlassen weiter im Hintergrund\
+liefen. Dies trat auf, weil Timer und Event-Listener nicht ordnungsgem\'e4\'df\
+aufger\'e4umt wurden. Die L\'f6sung bestand darin, alle Timer und Event-Listener in\
+onUnmounted-Hooks zu bereinigen.\
+Ein weiteres Problem war, dass die Kamera beim Wechsel zwischen Views\
+deaktiviert wurde. Dies trat auf, weil Face Recognition beim onUnmounted() eines Views\
+gestoppt wurde. Die L\'f6sung bestand darin, Face Recognition seiten\'fcbergreifend aktiv\
+zu halten und nur beim vollst\'e4ndigen Verlassen der Anwendung zu stoppen.\
+Ein weiteres Problem war, dass Text-to-Speech nur durch bestimmte User-Interaktionen\
+aktiviert wurde. Die L\'f6sung bestand darin, TTS bereits bei der Kamera-Aktivierung\
+zu aktivieren, da dies als User-Interaktion gewertet werden kann.\
+Diese Probleme wurden durch sorgf\'e4ltige Analyse des Codes und systematisches\
+Debugging identifiziert und behoben. Die modulare Architektur von Version 2.0 macht\
+solches Debugging einfacher, da Probleme isoliert werden k\'f6nnen.\
+Seite 48\
+
+\f0\b\fs36\fsmilli18001 7 Design\
+
+\fs31\fsmilli15961 7.1 Projektstruktur und Dateiorganisation\
+
+\f1\b0\fs24 Die Projektstruktur von Ratatosk Version 2.0 folgt einer klaren, feature-basierten\
+Architektur. Die Anwendung wurde in folgende Hauptbereiche aufgeteilt:\
+Das src-Verzeichnis enth\'e4lt den gesamten Quellcode der Anwendung. Es ist in mehrere\
+Unterverzeichnisse unterteilt:\
+- features/: Enth\'e4lt alle Features der Anwendung. Jedes Feature hat seine eigene\
+Struktur mit views/, composables/, data/ und optional stores/.\
+- shared/: Enth\'e4lt wiederverwendbare Komponenten, Composables und Styles, die von\
+mehreren Features verwendet werden.\
+- core/: Enth\'e4lt die Kern-Architektur mit Domain-Entities, Application Services und\
+Repository Interfaces.\
+- config/: Enth\'e4lt Konfigurationsdateien f\'fcr verschiedene Aspekte der Anwendung.\
+- router/: Enth\'e4lt die Router-Konfiguration f\'fcr die Navigation.\
+Jedes Feature folgt einer konsistenten Struktur. Zum Beispiel hat das pain-assessment\
+Feature folgende Struktur:\
+- views/PainDialogView.vue: Die Hauptkomponente des Features.\
+- composables/usePainDialogMachine.ts: Die Dialog-Maschine f\'fcr das Feature.\
+- composables/usePainDictionary.ts: Das Dictionary-System f\'fcr das Feature.\
+- composables/useAutoMode.ts: Das AutoMode-System (wird von allen Dialogen\
+verwendet).\
+- composables/useTTS.ts: Das Text-to-Speech-System (wird von allen Dialogen\
+verwendet).\
+- data/painDialogData.ts: Die statischen Daten des Features.\
+- data/painGrammar.ts: Die Grammatikregeln des Features.\
+Diese konsistente Struktur erleichtert es, neue Features hinzuzuf\'fcgen und bestehende\
+Features zu erweitern.\
+
+\f0\b\fs31\fsmilli15961 7.2 DialogBase CSS\
+
+\f1\b0\fs24 DialogBase.css ist eine zentrale CSS-Datei, die gemeinsame Styles f\'fcr alle Dialoge\
+bereitstellt. Diese Datei wurde entwickelt, um Konsistenz zwischen allen Dialogen zu\
+gew\'e4hrleisten und Code-Duplikation zu vermeiden.\
+DialogBase.css bietet Styles f\'fcr:\
+- Grid-Container und Menu-Tiles: Gemeinsame Styles f\'fcr Hauptansichten.\
+- Carousel-System: 3D-Karussell-Implementation f\'fcr Sub-Region-Ansichten.\
+- Active/Inactive States: Farben und Animationen f\'fcr aktive und inaktive Elemente.\
+- Dark Mode: Unterst\'fctzung f\'fcr dunkles Design.\
+- Responsive Design: Anpassungen f\'fcr verschiedene Bildschirmgr\'f6\'dfen.\
+Alle Dialoge verwenden DialogBase.css als Basis und k\'f6nnen zus\'e4tzliche spezifische\
+Styles hinzuf\'fcgen. Diese Struktur gew\'e4hrleistet Konsistenz, w\'e4hrend Flexibilit\'e4t\
+f\'fcr spezifische Anforderungen erhalten bleibt.\
+
+\f0\b\fs31\fsmilli15961 7.3 Dark Mode\
+
+\f1\b0\fs24 Dark Mode wurde vollst\'e4ndig in Ratatosk Version 2.0 integriert. Das System verwendet\
+CSS-Variablen und eine zentrale Dark-Mode-Verwaltung, um zwischen hellem und dunklem\
+Design umzuschalten.\
+Das Dark-Mode-System wird durch Pinia Store verwaltet und bietet:\
+- Automatische Persistierung: Dark-Mode-Einstellung wird im LocalStorage\
+gespeichert.\
+- Konsistente Anwendung: Alle Komponenten reagieren automatisch auf Dark-Mode-\
+\'c4nderungen.\
+- CSS-Variablen: Farben werden durch CSS-Variablen definiert, die automatisch\
+angepasst werden.\
+Das Dark-Mode-System wird in allen Dialogen unterst\'fctzt und bietet eine konsistente\
+Benutzererfahrung \'fcber die gesamte Anwendung hinweg.\
+
+\f0\b\fs31\fsmilli15961 7.4 Responsive Design\
+
+\f1\b0\fs24 Ratatosk Version 2.0 wurde mit einem vollst\'e4ndig responsiven Design entwickelt, das\
+sich an verschiedene Bildschirmgr\'f6\'dfen anpasst. Das System verwendet CSS Media Queries\
+und flexible Layouts, um eine optimale Darstellung auf allen Ger\'e4ten zu gew\'e4hrleisten.\
+Das responsive Design bietet:\
+- Mobile Optimierung: Anpassungen f\'fcr Bildschirme unter 480px.\
+- Tablet Optimierung: Anpassungen f\'fcr Bildschirme zwischen 480px und 768px.\
+- Desktop Optimierung: Optimale Darstellung auf gr\'f6\'dferen Bildschirmen.\
+- Landscape Mode: Spezielle Anpassungen f\'fcr Querformat-Orientierung.\
+Alle Dialoge und Komponenten wurden mit responsiven Design-Prinzipien entwickelt, um\
+eine konsistente Benutzererfahrung auf allen Ger\'e4ten zu gew\'e4hrleisten.\
+
+\f0\b\fs31\fsmilli15961 7.5 Karussell-System\
+
+\f1\b0\fs24 Das Karussell-System in Ratatosk Version 2.0 wird f\'fcr die Darstellung von Sub-\
+Region-Ansichten verwendet. Es bietet eine 3D-Animation, die dem Benutzer eine\
+ansprechende visuelle Erfahrung bietet.\
+Das Karussell-System verwendet CSS 3D-Transforms, um eine perspektivische Ansicht zu\
+erstellen. Jedes Karussell-Item wird mit einer Transformation versehen, die es basierend\
+auf seiner Position relativ zum aktiven Item rotiert und skaliert.\
+Das aktive Item wird in der Mitte des Karussells angezeigt und hat eine Skalierung von 1\
+und keine Rotation. Die benachbarten Items werden mit einer Skalierung von 0.8 und einer\
+Rotation von 20 Grad angezeigt. Items, die weiter entfernt sind, werden mit einer\
+Skalierung von 0.6 und einer gr\'f6\'dferen Rotation angezeigt.\
+Das Karussell-System verwendet CSS-Variablen f\'fcr die Berechnung der Transformationen.\
+Jedes Item erh\'e4lt eine --offset Variable, die die Position relativ zum aktiven Item\
+beschreibt. Basierend auf dieser Variable wird die Transformation berechnet.\
+Das Karussell-System bietet auch Indicators, die die aktuelle Position im Karussell\
+anzeigen. Diese Indicators sind nur zur Anzeige gedacht und haben keine Click-Handler,\
+da die Navigation ausschlie\'dflich \'fcber den Input Manager erfolgt.\
+
+\f0\b\fs31\fsmilli15961 7.6 Store-Management mit Pinia\
+
+\f1\b0\fs24 Ratatosk Version 2.0 verwendet Pinia f\'fcr das globale State Management. Pinia\
+bietet eine moderne, typsichere API f\'fcr die Verwaltung von Anwendungszustand.\
+Der Settings Store verwaltet alle Einstellungen der Anwendung. Er bietet:\
+- Settings-State: Speichert alle Einstellungen wie Blinzeldauer, Leuchtdauer,\
+Tastatur-Layout und Dark Mode.\
+- updateSettings(): Methode zum Aktualisieren einzelner oder mehrerer\
+Einstellungen.\
+- resetSettings(): Methode zum Zur\'fccksetzen aller Einstellungen auf ihre\
+Standardwerte.\
+- Persistierung: Automatisches Speichern der Einstellungen im LocalStorage.\
+Der Settings Store wird von allen Teilen der Anwendung verwendet, um Einstellungen\
+zu lesen und zu aktualisieren. Die Persistierung stellt sicher, dass Einstellungen\
+zwischen Browser-Sitzungen erhalten bleiben.\
+Ein Beispiel f\'fcr die Verwendung des Settings Stores zeigt der folgende Code:\
+
+\f5 const settingsStore = useSettingsStore()\
+\
+// Einstellung lesen\
+const blinzeldauer = settingsStore.settings.blinzeldauer\
+\
+// Einstellung aktualisieren\
+settingsStore.updateSettings(\{ blinzeldauer: 0.5 \})\
+
+\f1 Diese einfache API macht es einfach, Einstellungen in der gesamten Anwendung zu\
+verwenden.\
+Seite 50\
+
+\f0\b\fs36\fsmilli18001 8 Implementierungsdetails\
+
+\fs31\fsmilli15961 8.1 Vue-Projekt-Setup\
+
+\f1\b0\fs24 Die Entwicklung von Ratatosk Version 2.0 fand auf einem macOS-Betriebssystem statt. Es\
+ist mit gewissen Modifikationen m\'f6glich, die Entwicklung auf einem Windows oder Linux\
+Betriebssystem zu reproduzieren. Die Tests der Website wurden in verschiedenen\
+modernen Webbrowsern durchgef\'fchrt.\
+Zur Installation von Vue ist node.js notwendig. In der aktuellen Projektumgebung\
+wird mit dem Befehl 
+\f5 >npm create vue@latest
+\f1  in der Kommandozeile Vue installiert\
+und die f\'fcr Vue ben\'f6tigte Verzeichnisstruktur erstellt. Nach Angabe eines\
+Projektnamens und weiteren Parametern (TypeScript, Router, Pinia) wird die\
+vorgefertigte Verzeichnisstruktur f\'fcr Vue im aktuellen Verzeichnis angefertigt.\
+Wird nun in dieses Verzeichnis in der Konsole gewechselt und man gibt den Befehl\
+\f5 >npm install
+\f1  ein, so werden alle Module in der package.json Datei und dessen\
+Abh\'e4ngigkeiten installiert. Damit ist das Projekt erfolgreich erstellt und es kann die\
+index.html Datei bearbeitet werden.\
+F\'fcr die Installation von MediaPipe FaceMesh wird der Befehl\
+\f5 >npm install @mediapipe/tasks-vision
+\f1  verwendet. Danach wird das gew\'fcnschte\
+Model FaceMesh heruntergeladen und in der Projektumgebung in dem Verzeichnis\
+public/models/ installiert.\
+Wird nun den Befehl 
+\f5 >npm run dev 
+\f1  eingegeben, so wird der lokale Server\
+gestartet und es kann die index.html Datei auf der in der Konsole angegebenen\
+Adresse im Webbrowser aufgerufen und angesehen werden.\
+
+\f0\b\fs31\fsmilli15961 8.2 Code-Beispiele\
+
+\f1\b0\fs24 Im Folgenden werden einige Code-Beispiele gezeigt, die die Implementierung der\
+verschiedenen Systeme in Ratatosk Version 2.0 veranschaulichen.\
+Ein Beispiel f\'fcr die Verwendung einer Dialog-Maschine zeigt der folgende Code:\
+
+\f5 const machine = usePainDialogMachine()\
+const \{ state, items, title, autoMode, selectMainRegion \} = machine\
+\
+// In Template\
+<div v-if="state === 'mainView'">\
+  <div v-for="(region, index) in items">\
+    <button @click="selectMainRegion(region.id)">\
+      \{\{ region.title \}\}\
+    </button>\
+  </div>\
+</div>\
+
+\f1 Dieses Beispiel zeigt, wie einfach eine Dialog-Maschine verwendet werden kann. Der\
+Zustand wird automatisch verwaltet und die Items werden basierend auf dem aktuellen\
+Zustand berechnet.\
+Ein Beispiel f\'fcr die Verwendung des Input Managers zeigt der folgende Code:\
+
+\f5 const inputManager = useInputManager(\{\
+  onSelect: (event) => \{\
+    if (event.type === 'blink') \{\
+      handleBlink()\
+    \}\
+  \},\
+  enabledInputs: ['blink', 'click'],\
+  cooldown: 300\
+\})\
+\
+onMounted(() => \{\
+  inputManager.start()\
+\})\
+\
+onUnmounted(() => \{\
+  inputManager.stop()\
+\})\
+
+\f1 Dieses Beispiel zeigt, wie der Input Manager konfiguriert und verwendet wird. Der\
+Input Manager behandelt automatisch alle Eingaben und ruft den Callback auf, wenn\
+eine Eingabe erkannt wird.\
+Ein Beispiel f\'fcr die Verwendung des AutoMode Systems zeigt der folgende Code:\
+
+\f5 const autoMode = useAutoMode(\{\
+  speak: tts.speak,\
+  getItems: () => items.value,\
+  getTitle: () => title.value\
+\})\
+\
+onMounted(() => \{\
+  autoMode.start()\
+\})\
+\
+onUnmounted(() => \{\
+  autoMode.stop()\
+\})\
+
+\f1 Dieses Beispiel zeigt, wie das AutoMode System konfiguriert und verwendet wird.\
+Das AutoMode System durchl\'e4uft automatisch die Items und liest sie vor.\
+
+\f0\b\fs31\fsmilli15961 8.3 Aktivitätsdiagramm-Beschreibungen\
+
+\f1\b0\fs24 Um die Funktionsweise verschiedener Abschnitte der Website anschaulicher zu gestalten,\
+k\'f6nnten Diagramme eingef\'fcgt werden. Statt dem sonst bei der Programmierung \'fcblichen\
+Flussdiagramm zur Darstellung komplexer Vorg\'e4nge wurden hier mehrere\
+Aktivitätsdiagramme verwendet. Dies war notwendig, da die Funktionen der Website auf\
+Events und Aktionen des Benutzers und anderer Elemente der Website reagieren.\
+Ein Aktivitätsdiagramm f\'fcr die Auswahl eines aufleuchtenden Elementes zeigt den\
+folgenden Prozess:\
+Zun\'e4chst wird von der Kamera ein Frame aufgenommen und von FaceMesh analysiert,\
+ob sich darin ein Gesicht befindet. Sollte sich darin ein Gesicht befinden wird\
+anschlie\'dfend \'fcberpr\'fcft, ob im Gesicht beide Augen geschlossen sind. Ist kein Gesicht\
+erkannt worden, wird das aktuelle Frame verworfen.\
+Sollten die Augen ge\'f6ffnet sein, wird die boolesche Variable aktion_ausgef\'fchrt auf falsch\
+gesetzt und das aktuelle Frame wird verworfen. Mit dieser Variable wird\
+sichergestellt, dass aus dem einmaligen Schlie\'dfen der Augen auch nur eine Aktion\
+resultieren kann.\
+Sind die Augen im aktuellen Frame geschlossen, wird ein Z\'e4hler hochgez\'e4hlt,\
+wodurch insgesamt die Frames gez\'e4hlt werden, in welchen die Augen des Nutzers\
+nacheinander geschlossen waren.\
+Anschlie\'dfend wird \'fcberpr\'fcft, ob der Z\'e4hler gr\'f6\'dfer oder gleich der vordefinierten\
+Anzahl entspricht, und gleichzeitig wird sichergestellt, dass aktion_ausgef\'fchrt falsch\
+ist. Ist beides nicht der Fall, wird das aktuelle Frame verworfen. Erst wenn die\
+Bedingungen erf\'fcllt sind, wird die Aktion des aktuell ausgew\'e4hlten Elementes\
+ausgef\'fchrt.\
+Nach jeder Aktion wird aktion_ausgef\'fchrt auf wahr gesetzt, um zu verhindern, dass\
+weitere Aktionen ausgef\'fchrt werden, bevor der Nutzer seine Augen wieder \'f6ffnet.\
+Ein Aktivitätsdiagramm f\'fcr das Aufleuchten eines Elementes zeigt den folgenden\
+Prozess:\
+Es wird ein Element markiert, welches somit anf\'e4ngt zu leuchten. Die Auswahl h\'e4ngt\
+von dem angezeigten Men\'fc und dem zuvor leuchtenden Element ab und ist vorgegeben.\
+Das Element wird eingef\'e4rbt und gleichzeitig wird \'fcberpr\'fcft, ob das Element vom\
+Benutzer ausgew\'e4hlt wird. Wird darin erkannt, dass dieses Element ausgew\'e4hlt und\
+die Aktion vollendet wurde, dann kann das n\'e4chste Element eingef\'e4rbt werden, sobald\
+der Benutzer seine Augen wieder \'f6ffnet. Sollte keine Aktion des Nutzers folgen,\
+wird nach einer gewissen Wartezeit das aktuelle Element entf\'e4rbt und das n\'e4chste\
+Element wird eingef\'e4rbt.\
+Seite 52\
+
+\f0\b\fs31\fsmilli15961 8.4 Performance-Optimierungen\
+
+\f1\b0\fs24 W\'e4hrend der Entwicklung von Ratatosk Version 2.0 wurden mehrere\
+Performance-Optimierungen implementiert:\
+Die Verwendung von Vue's Reaktivit\'e4tssystem erm\'f6glicht es, nur die notwendigen\
+Teile der Benutzeroberfl\'e4che zu aktualisieren, wenn sich der Zustand \'e4ndert. Dies\
+reduziert die Anzahl der DOM-Manipulationen und verbessert die Performance.\
+Die Verwendung von Computed Properties erm\'f6glicht es, teure Berechnungen nur dann\
+durchzuf\'fchren, wenn sich die Abh\'e4ngigkeiten ge\'e4ndert haben. Dies reduziert\
+unn\'f6tige Berechnungen und verbessert die Performance.\
+Die Verwendung von nextTick() stellt sicher, dass DOM-Updates vollst\'e4ndig\
+abgeschlossen sind, bevor weitere Operationen ausgef\'fchrt werden. Dies verhindert\
+Race Conditions und verbessert die Zuverl\'e4ssigkeit.\
+Die Verwendung von Timern mit ordnungsgem\'e4\'dfem Cleanup verhindert Memory Leaks\
+und verbessert die Performance. Alle Timer werden in onUnmounted-Hooks bereinigt.\
+Die Verwendung von Event-Listenern mit ordnungsgem\'e4\'dfem Cleanup verhindert Memory\
+Leaks und verbessert die Performance. Alle Event-Listener werden in\
+onUnmounted-Hooks entfernt.\
+Diese Optimierungen stellen sicher, dass die Anwendung auch bei l\'e4ngerer\
+Verwendung stabil und performant bleibt.\
+Seite 53\
+
+\f0\b\fs36\fsmilli18001 9 Ausblick\
+
+\fs31\fsmilli15961 8.1 Deployment\
+
+\f1\b0\fs24 Ratatosk Version 2.0 ist bereit f\'fcr Deployment auf einem Produktionsserver. Die\
+Anwendung wurde entwickelt, um auf allen modernen Browsern und Ger\'e4ten zu funktionieren\
+und bietet eine stabile, wartbare Architektur f\'fcr zuk\'fcnftige Entwicklungen.\
+F\'fcr das Deployment wird empfohlen:\
+- Verwendung eines modernen Webservers wie Nginx.\
+- Konfiguration von HTTPS f\'fcr sichere Kommunikation.\
+- Implementierung von Caching-Strategien f\'fcr optimale Performance.\
+- Monitoring und Logging f\'fcr Fehlerbehebung.\
+
+\f0\b\fs31\fsmilli15961 8.2 Weitere Entwicklung\
+
+\f1\b0\fs24 Die modulare Architektur von Ratatosk Version 2.0 erm\'f6glicht es, die Anwendung\
+einfach zu erweitern und neue Features hinzuzuf\'fcgen. Zuk\'fcnftige Entwicklungen k\'f6nnen\
+umfassen:\
+- Zus\'e4tzliche Sprachen: Internationalisierung der Anwendung.\
+- Erweiterte Eingabemethoden: Unterst\'fctzung f\'fcr zus\'e4tzliche Eingabeger\'e4te.\
+- Verbesserte KI-Integration: Nutzung neuerer MediaPipe-Modelle.\
+- Offline-Funktionalit\'e4t: Verbesserte Offline-Unterst\'fctzung.\
+- Analytics: Integration von Analytics f\'fcr Nutzungsstatistiken.\
+Die modulare Architektur macht es einfach, diese Erweiterungen zu implementieren, ohne\
+die bestehende Funktionalit\'e4t zu beeintr\'e4chtigen.\
+
+\f0\b\fs31\fsmilli15961 8.5 Testing-Ansätze\
+
+\f1\b0\fs24 Die modulare Architektur von Ratatosk Version 2.0 macht es einfacher, die Anwendung\
+zu testen. Jedes Modul kann unabh\'e4ngig von anderen Modulen getestet werden.\
+Composables k\'f6nnen isoliert getestet werden, indem sie mit Mock-Daten initialisiert\
+werden. Dies erm\'f6glicht es, die Logik unabh\'e4ngig von der Benutzeroberfl\'e4che zu\
+testen.\
+Dialog-Maschinen k\'f6nnen isoliert getestet werden, indem sie mit Mock-Daten\
+initialisiert werden. Dies erm\'f6glicht es, die State Machine-Logik unabh\'e4ngig von der\
+Benutzeroberfl\'e4che zu testen.\
+Grammatik-Systeme k\'f6nnen isoliert getestet werden, indem sie mit verschiedenen\
+Eingaben aufgerufen werden. Dies erm\'f6glicht es, die Grammatikregeln unabh\'e4ngig\
+von der Dialog-Logik zu testen.\
+Dictionary-Systeme k\'f6nnen isoliert getestet werden, indem sie mit verschiedenen\
+Abfragen aufgerufen werden. Dies erm\'f6glicht es, die Datenstrukturen\
+unabh\'e4ngig von der Dialog-Logik zu testen.\
+Zus\'e4tzlich zu Unit-Tests k\'f6nnen Integration-Tests durchgef\'fchrt werden, um\
+sicherzustellen, dass die verschiedenen Module korrekt zusammenarbeiten.\
+Seite 54\
+
+\f0\b\fs36\fsmilli18001 9 Entwicklungsdokumentation\
+
+\fs31\fsmilli15961 9.1 Entwicklungsprozess und Logbuch\
+
+\f1\b0\fs24 W\'e4hrend der Entwicklung von Ratatosk Version 2.0 wurde ein umfassendes Entwicklungslogbuch\
+gef\'fchrt, das alle wichtigen Entscheidungen, Probleme und L\'f6sungen dokumentiert. Dieses\
+Logbuch dient als zentrale Dokumentationsquelle f\'fcr die gesamte Projektentwicklung.\
+Das Entwicklungslogbuch enth\'e4lt detaillierte Informationen \'fcber:\
+- Chronologische Entwicklung: Alle wichtigen Meilensteine und \'c4nderungen werden\
+tagesgenau dokumentiert.\
+- Technische Probleme: Jedes aufgetretene Problem wird beschrieben, analysiert und\
+mit einer L\'f6sung versehen.\
+- Architektur-Entscheidungen: Alle wichtigen Architektur-Entscheidungen werden\
+dokumentiert und begr\'fcndet.\
+- Feature-Entwicklung: Die Entwicklung aller Features wird detailliert\
+beschrieben.\
+- Fehlerbehebung: Alle behobenen Fehler werden dokumentiert mit Problemanalyse\
+und L\'f6sungsansatz.\
+- Performance-Optimierungen: Alle durchgef\'fchrten Optimierungen werden\
+dokumentiert.\
+Das Logbuch wurde in Markdown-Format gef\'fchrt und enth\'e4lt \'fcber 3000 Zeilen\
+Dokumentation. Es dient als Referenz f\'fcr zuk\'fcnftige Entwicklungen und erm\'f6glicht\
+es, nachzuvollziehen, warum bestimmte Entscheidungen getroffen wurden.\
+
+\f0\b\fs31\fsmilli15961 9.2 Wichtige Entwicklungsmeilensteine\
+
+\f1\b0\fs24 Aus dem Entwicklungslogbuch lassen sich folgende wichtige Meilensteine der Entwicklung\
+extrahierten:\
+2024-12-19: Grundlegende Kamera-Problembehebung - Implementierung der\
+getUserMedia API mit robustem Error Handling.\
+2025-01-10: UmgebungView Layout und TTS-Funktionalit\'e4t komplett \'fcberarbeitet -\
+Korrektur des Layouts, Reparatur des TTS-Systems und Verbesserung des Auto-\
+Mode Systems.\
+2025-01-11: Kamera-Persistenz und TTS-Aktivierung seiten\'fcbergreifend\
+implementiert - Kamera bleibt aktiv zwischen Views, TTS wird bei Kamera-\
+Aktivierung aktiviert.\
+2025-01-14: Tastatur-\'dcberarbeitung und Code-Bereinigung - Entfernung komplexer\
+TTS-Logik, Vereinfachung der Tastatur-Implementierung.\
+Oktober 2024: Major Architecture Refactor - Vollst\'e4ndige Neuentwicklung der\
+Architektur mit modularem, feature-basierten Ansatz.\
+Diese Meilensteine zeigen die kontinuierliche Verbesserung der Anwendung und die\
+systematische L\'f6sung von Problemen.\
+Seite 56\
+
+\f0\b\fs36\fsmilli18001 10 Ausblick\
+
+\fs31\fsmilli15961 10.1 Deployment\
+
+\f1\b0\fs24 Ratatosk Version 2.0 ist bereit f\'fcr Deployment auf einem Produktionsserver. Die\
+Anwendung wurde entwickelt, um auf allen modernen Browsern und Ger\'e4ten zu funktionieren\
+und bietet eine stabile, wartbare Architektur f\'fcr zuk\'fcnftige Entwicklungen.\
+F\'fcr das Deployment wird empfohlen:\
+- Verwendung eines modernen Webservers wie Nginx.\
+- Konfiguration von HTTPS f\'fcr sichere Kommunikation.\
+- Implementierung von Caching-Strategien f\'fcr optimale Performance.\
+- Monitoring und Logging f\'fcr Fehlerbehebung.\
+
+\f0\b\fs31\fsmilli15961 10.2 Weitere Entwicklung\
+
+\f1\b0\fs24 Die modulare Architektur von Ratatosk Version 2.0 erm\'f6glicht es, die Anwendung\
+einfach zu erweitern und neue Features hinzuzuf\'fcgen. Zuk\'fcnftige Entwicklungen k\'f6nnen\
+umfassen:\
+- Zus\'e4tzliche Sprachen: Internationalisierung der Anwendung.\
+- Erweiterte Eingabemethoden: Unterst\'fctzung f\'fcr zus\'e4tzliche Eingabeger\'e4te.\
+- Verbesserte KI-Integration: Nutzung neuerer MediaPipe-Modelle.\
+- Offline-Funktionalit\'e4t: Verbesserte Offline-Unterst\'fctzung.\
+- Analytics: Integration von Analytics f\'fcr Nutzungsstatistiken.\
+Die modulare Architektur macht es einfach, diese Erweiterungen zu implementieren, ohne\
+die bestehende Funktionalit\'e4t zu beeintr\'e4chtigen.\
+Seite 57\
+
+\f0\b\fs36\fsmilli18001 11 Zusammenfassung\
+
+\fs31\fsmilli15961 11.1 Erreichte Ziele\
+
+\f1\b0\fs24 Die Entwicklung von Ratatosk Version 2.0 hat alle gesteckten Ziele erfolgreich\
+erreicht:\
+Eine modulare Struktur wurde implementiert, die klare Verantwortlichkeiten definiert\
+und die Trennung von Concerns erm\'f6glicht. Jedes Modul kann unabh\'e4ngig von anderen\
+Modulen entwickelt, getestet und gewartet werden.\
+Ein zentrales Input Management System wurde entwickelt, das alle Benutzereingaben\
+vereinheitlicht. Dieses System kann zwischen verschiedenen Eingabetypen\
+unterscheiden und diese einheitlich an die Anwendung weiterleiten.\
+Ein wiederverwendbares Dialog-System wurde implementiert. Alle Dialoge der\
+Anwendung bauen auf einer gemeinsamen Basis auf und bieten die gleiche\
+Funktionalit\'e4t wie AutoMode, Text-to-Speech Integration und Navigation.\
+Ein robustes Text-to-Speech System wurde implementiert, das in allen Teilen der\
+Anwendung konsistent funktioniert. Dieses System bietet Fehlerbehandlung,\
+Lebenszyklus-Management und Synchronisation mit anderen Systemen wie AutoMode.\
+Die Codequalit\'e4t wurde durch die Verwendung von TypeScript erheblich verbessert.\
+Durch Typisierung k\'f6nnen Fehler fr\'fchzeitig erkannt werden und die\
+Entwicklererfahrung wurde verbessert.\
+Eine vollst\'e4ndige Dokumentation der neuen Architektur wurde erstellt, die anderen\
+Entwicklern das Verst\'e4ndnis und die Erweiterung der Anwendung erm\'f6glicht.\
+
+\f0\b\fs36\fsmilli18001 11 Abbildungsverzeichnis\
+
+\f1\b0\fs24 (Dieser Abschnitt w\'fcrde Abbildungen enthalten, falls welche vorhanden sind.)\
+
+\f0\b\fs36\fsmilli18001 12 Tabellenverzeichnis\
+
+\f1\b0\fs24 (Dieser Abschnitt w\'fcrde Tabellen enthalten, falls welche vorhanden sind.)\
+
+\f0\b\fs36\fsmilli18001 13 Literaturverzeichnis\
+
+\f1\b0\fs24 (05. 04 2017). 
+\f3\i Verordnung (EU) 2017/745 (Medical Device Regulation)
+\f1\i0 . Abgerufen am 04. 11\
+2023 von http://data.europa.eu/eli/reg/2017/745/oj\
+
+\f3\i Vue.js 3 Documentation
+\f1\i0 . (2024). Abgerufen am 15. 01 2025 von https://vuejs.org/\
+
+\f3\i TypeScript Documentation
+\f1\i0 . (2024). Abgerufen am 15. 01 2025 von https://www.typescriptlang.org/\
+
+\f3\i Pinia Documentation
+\f1\i0 . (2024). Abgerufen am 15. 01 2025 von https://pinia.vuejs.org/\
+
+\f3\i Clean Architecture
+\f1\i0 . (2024). Abgerufen am 15. 01 2025 von https://blog.cleancoder.com/\
+
+\f3\i MediaPipe FaceMesh
+\f1\i0 . (2024). Abgerufen am 15. 01 2025 von\
+https://developers.google.com/mediapipe/solutions/vision/face_landmarker\
+
+\f3\i Vite Documentation
+\f1\i0 . (2024). Abgerufen am 15. 01 2025 von https://vitejs.dev/\
+
+Martin, R. C. (2017). 
+\f3\i Clean Architecture: A Craftsman's Guide to Software Structure and Design
+\f1\i0 .\
+Prentice Hall.\
+
+Flanagan, D. (2020). 
+\f3\i JavaScript: The Definitive Guide
+\f1\i0  (7th Edition). O'Reilly Media.\
+
+Vue.js Team (2024). 
+\f3\i Vue.js Composition API Guide
+\f1\i0 . Abgerufen am 15. 01 2025 von\
+https://vuejs.org/guide/extras/composition-api-faq.html\
+
+\f1\b0\fs24 Seite 58}

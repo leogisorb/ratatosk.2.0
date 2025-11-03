@@ -109,7 +109,6 @@
               :key="`indicator-${subRegion.id}`"
               class="carousel-indicator"
               :class="autoMode.index.value === index ? 'carousel-indicator-active' : 'carousel-indicator-inactive'"
-              @click="goToIndex(index)"
             >
             </button>
           </div>
@@ -177,7 +176,6 @@
               :key="`indicator-${subSubRegion.id}`"
               class="carousel-indicator"
               :class="autoMode.index.value === index ? 'carousel-indicator-active' : 'carousel-indicator-inactive'"
-              @click="goToIndex(index)"
             >
             </button>
           </div>
@@ -223,8 +221,7 @@ const {
   selectSubSubRegion,
   resetToMainView,
   goBack,
-  handleBlink,
-  goToIndex
+  handleBlink
 } = machine
 
 // Input Manager

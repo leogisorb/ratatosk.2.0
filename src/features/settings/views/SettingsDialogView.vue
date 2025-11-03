@@ -164,7 +164,6 @@
                 :key="`indicator-${option.id}`"
                 class="carousel-indicator"
                 :class="autoMode.index.value === index ? 'carousel-indicator-active' : 'carousel-indicator-inactive'"
-                @click="goToIndex(index)"
               >
               </button>
             </div>
@@ -218,8 +217,7 @@ const {
   selectOption,
   resetToMainView,
   goBack,
-  handleBlink,
-  goToIndex
+  handleBlink
 } = machine
 
 // Input Manager

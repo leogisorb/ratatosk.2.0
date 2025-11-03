@@ -104,7 +104,6 @@
               :key="`indicator-${subRegion.id}`"
               class="carousel-indicator"
               :class="autoMode.index.value === index ? 'carousel-indicator-active' : 'carousel-indicator-inactive'"
-              @click="goToSubRegion(index)"
             >
             </button>
           </div>
@@ -211,12 +210,6 @@ const goBack = () => {
   }
 }
 
-const goToSubRegion = (index: number) => {
-  const item = items.value[index]
-  if (item && state.value === 'subRegionView' && 'id' in item) {
-    selectSubRegion(String(item.id))
-  }
-}
 
 // ✅ Pain Scale Touch/Click Handler (spezifisch für Pain Scale Bar)
 const handlePainScaleTouch = (event: TouchEvent) => {
