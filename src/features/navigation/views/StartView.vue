@@ -226,6 +226,9 @@ function startBlinkDetection() {
     if (faceRecognition.isBlinking()) {
       if (blinkStartTime === null) {
         blinkStartTime = Date.now()
+        // ✅ TTS aktivieren, sobald das Blinzeln beginnt (Interaktion erkannt!)
+        console.log('StartView: Blinzeln erkannt - aktiviere TTS als Interaktion')
+        simpleFlowController.setUserInteracted(true)
       }
       
       const elapsed = (Date.now() - blinkStartTime) / 1000
@@ -250,9 +253,14 @@ function startApp() {
     blinkInterval = null
   }
   
-  // Aktiviere TTS beim Start durch Blinzeln
-  console.log('StartView: Start durch Blinzeln - aktiviere TTS seitenübergreifend')
-  simpleFlowController.setUserInteracted(true)
+  // TTS wurde bereits beim Beginn des Blinzelns aktiviert (in startBlinkDetection)
+  // Hier stellen wir nur sicher, dass es aktiviert ist (falls noch nicht geschehen)
+  if (!simpleFlowController.getState().userInteracted) {
+    console.log('StartView: Start durch Blinzeln - stelle sicher, dass TTS aktiviert ist')
+    simpleFlowController.setUserInteracted(true)
+  } else {
+    console.log('StartView: Start durch Blinzeln - TTS bereits aktiviert beim Blinzeln')
+  }
   
   // Navigate to main app
   router.push('/app')
