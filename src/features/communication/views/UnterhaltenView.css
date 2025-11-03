@@ -476,6 +476,15 @@
   color: #ffffff !important; /* Weiße Schrift */
 }
 
+/* Dark Mode Styles für letter-active (aktive Buchstaben-Taste) */
+.dark .keyboard-key.letter-active {
+  background-color: #00B098 !important; /* Türkise Farbe #00B098 */
+  border-color: #00B098 !important; /* Türkiser Border */
+  color: #ffffff !important; /* Weiße Schrift für besseren Kontrast */
+  box-shadow: 0 4px 12px rgba(0, 176, 152, 0.5); /* Stärkerer Glow-Effekt für Dark Mode */
+  transition: all 0.3s ease;
+}
+
 /* Responsive Dark Mode Styles */
 @media (max-width: 768px) {
   .dark .sentence-item {
