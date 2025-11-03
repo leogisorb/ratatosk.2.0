@@ -41,7 +41,7 @@
         </div>
 
         <!-- Safari Kamera-Hinweis -->
-        <div v-if="cameraStatus === 'error' && faceRecognition.error && faceRecognition.error.includes('Safari')" class="safari-camera-hint">
+        <div v-if="cameraStatus === 'error' && hasSafariError" class="safari-camera-hint">
           <div class="safari-hint-content">
             <h3>🔒 Safari Kamera-Berechtigung erforderlich</h3>
             <p>Um die Kamera zu aktivieren:</p>
@@ -173,6 +173,12 @@ const cameraStatusText = computed(() => {
     case 'error': return 'Kamera-Fehler'
     default: return 'Unbekannt'
   }
+})
+
+// Computed for error check
+const hasSafariError = computed(() => {
+  const errorValue = faceRecognition.error
+  return errorValue && typeof errorValue === 'string' && errorValue.includes('Safari')
 })
 
 // Blink detection variables
