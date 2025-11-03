@@ -4,7 +4,7 @@
  */
 
 export interface GrammarRule {
-  preposition: 'am' | 'an der' | 'im' | 'in der' | 'an den' | 'auf der'
+  preposition: 'am' | 'an der' | 'im' | 'in der' | 'an den' | 'auf der' | 'in den'
   article: 'der' | 'die' | 'das'
   form: 'singular' | 'plural'
   useForm: 'form1' | 'form2' // form1 = "Schmerzen am X", form2 = "Xschmerzen"

@@ -35,10 +35,10 @@ export function usePainDialogMachine() {
 
   // ✅ Computed: Aktuelle Items basierend auf State
   const items = computed(() => {
-    if (state.value === 'mainView') return dict.mainRegions
-    if (state.value === 'subRegionView') return dict.getSubRegions(mainRegionId.value)
-    if (state.value === 'painScaleView') return dict.painLevels
-    return []
+    if (state.value === 'mainView') return dict.mainRegions as unknown as any[]
+    if (state.value === 'subRegionView') return dict.getSubRegions(mainRegionId.value) as unknown as any[]
+    if (state.value === 'painScaleView') return dict.painLevels as unknown as any[]
+    return [] as any[]
   })
 
   // ✅ Computed: Aktueller Titel basierend auf State
@@ -191,11 +191,12 @@ export function usePainDialogMachine() {
       }
     } else if (state.value === 'painScaleView') {
       // Pain levels haben level property
-      if ('level' in currentItem && typeof currentItem.level === 'number') {
-        selectPainLevel(currentItem.level)
-      } else if ('id' in currentItem && typeof currentItem.id === 'number') {
+      const item = currentItem as any
+      if ('level' in item && typeof item.level === 'number') {
+        selectPainLevel(item.level)
+      } else if ('id' in item && typeof item.id === 'number') {
         // Fallback: falls id als number verwendet wird
-        selectPainLevel(currentItem.id)
+        selectPainLevel(item.id)
       }
     }
   }

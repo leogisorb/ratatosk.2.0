@@ -198,10 +198,19 @@ export function useFaceRecognition() {
         }
 
         // Connect video to stream
+        if (!videoElement) {
+          throw new Error('Video element not available')
+        }
+        
         videoElement.srcObject = stream
         
         // Warte auf Video-Load
         await new Promise((resolve, reject) => {
+          if (!videoElement) {
+            reject(new Error('Video element not available'))
+            return
+          }
+          
           videoElement.onloadedmetadata = () => {
             console.log('Video-Metadaten geladen')
             resolve(true)

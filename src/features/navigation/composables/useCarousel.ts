@@ -50,8 +50,10 @@ export function useCarousel(items: CarouselItem[]) {
   const checkIsMobile = () => {
     isMobile.value = window.innerWidth <= CAROUSEL_CONFIG.MOBILE_BREAKPOINT
     console.log(`🔍 Mobile check: ${isMobile.value} (width: ${window.innerWidth}px)`)
-    console.log(`🔍 Desktop grid display:`, document.querySelector('.desktop-grid')?.style.display)
-    console.log(`🔍 Mobile carousel display:`, document.querySelector('.mobile-carousel')?.style.display)
+    const desktopGrid = document.querySelector('.desktop-grid') as HTMLElement | null
+    const mobileCarousel = document.querySelector('.mobile-carousel') as HTMLElement | null
+    console.log(`🔍 Desktop grid display:`, desktopGrid?.style.display)
+    console.log(`🔍 Mobile carousel display:`, mobileCarousel?.style.display)
     // Position bei Resize neu berechnen
     if (isMobile.value) {
       updatePosition(position.currentIndex, items.length)
