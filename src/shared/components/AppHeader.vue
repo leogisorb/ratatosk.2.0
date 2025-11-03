@@ -133,14 +133,20 @@ const toggleDarkMode = () => {
 }
 
 const goBack = () => {
-  // Stoppe TTS von allen Seiten beim Zurücknavigieren zu /app
-  console.log(`Header: Navigating back from ${route.path} to /app, stopping all TTS...`)
+  // Stoppe TTS und Auto-Mode von allen Seiten beim Zurücknavigieren zu /app
+  console.log(`Header: Navigating back from ${route.path} to /app, stopping all TTS and Auto-Mode...`)
   
   // Stoppe alle laufenden TTS komplett (nicht nur Volume)
   simpleFlowController.stopTTS()  // SimpleFlowController TTS komplett beenden
   
+  // Stoppe Auto-Mode komplett
+  simpleFlowController.stopAutoMode()
+  
+  // Setze aktiven View zurück für saubere Neuinitialisierung
+  simpleFlowController.setActiveView('/app')
+  
   // Immer zurück zu /app
-  console.log('Header: Navigating back to app')
+  console.log('Header: Navigating back to app - all services stopped and view reset')
   router.push('/app')
 }
 </script>

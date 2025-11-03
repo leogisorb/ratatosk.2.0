@@ -360,7 +360,15 @@ export function useHomeViewLogic() {
 
   // Lifecycle
   onMounted(() => {
-    // Setze HomeView als aktiven View
+    console.log(`[${instanceId}] HomeView mounting - cleaning up any existing services`)
+    
+    // Stoppe alle laufenden Services für saubere Neuinitialisierung
+    stopAutoMode()
+    stopAutoScrollCompletely()
+    simpleFlowController.stopTTS()
+    simpleFlowController.stopAutoMode()
+    
+    // Setze HomeView als aktiven View (stoppt auch alle Services)
     simpleFlowController.setActiveView('/home')
     
     // Mobile Detection und Karussell-Initialisierung
@@ -387,14 +395,14 @@ export function useHomeViewLogic() {
     // Add volume toggle listener
     window.addEventListener('volumeToggle', handleVolumeToggle)
     
-    // Start HomeView TTS nach 1 Sekunde
+    // Start HomeView TTS nach 1 Sekunde (saubere Neuinitialisierung)
     startHomeViewTTS()
     
     // Event Listener für Face Blinzel-Erkennung
     window.addEventListener('faceBlinkDetected', handleFaceBlink)
     console.log('HomeView: Face Recognition Event Listener registriert')
     
-    console.log(`[${instanceId}] HomeViewSimple mounted - using simple controller`)
+    console.log(`[${instanceId}] HomeViewSimple mounted - all services initialized cleanly`)
   })
 
   onUnmounted(() => {
