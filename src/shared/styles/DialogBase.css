@@ -1276,6 +1276,274 @@
 }
 
 /* Responsive Ich-Dialog Styles */
+@media (max-width: 480px) {
+  .ich-dialog .main-content {
+    padding-top: 0;
+    margin-top: 0;
+    align-items: flex-start;
+    min-height: 100vh;
+    overflow-y: auto;
+    justify-content: flex-start;
+  }
+  
+  .ich-dialog .main-title {
+    font-size: 2.25rem;
+    margin: 0.5rem 0 1.5rem 0;
+    padding-top: 0.2rem;
+    line-height: 1.2;
+    font-weight: 900;
+  }
+  
+  .ich-dialog .grid-container {
+    grid-template-columns: repeat(2, 1fr);
+    grid-template-rows: repeat(2, 1fr) auto;
+    gap: 0.3rem;
+    padding: 0 0.3rem 2rem 0.3rem;
+    margin-top: 1rem;
+    max-width: 100vw;
+    overflow: visible;
+  }
+  
+  .ich-dialog .menu-tile {
+    padding: 0.5rem;
+    aspect-ratio: 1 / 1;
+    min-width: 0;
+  }
+  
+  .ich-dialog .tile-icon-container {
+    width: 120px;
+    height: 120px;
+    margin-bottom: 0.2rem;
+  }
+  
+  .ich-dialog .tile-icon {
+    width: 104px;
+    height: 104px;
+  }
+  
+  .ich-dialog .tile-text {
+    font-size: 1.6rem;
+  }
+  
+  .ich-dialog .tile-emoji {
+    font-size: 4.5rem;
+  }
+  
+  .ich-dialog .confirmation-text {
+    font-size: 1.96875rem;
+    margin: 0.5rem 0 1.5rem 0;
+    padding-top: 0.2rem;
+    line-height: 1.2;
+    font-weight: 900;
+    color: #FF6B35;
+  }
+  
+  .ich-dialog .confirmation-title {
+    font-size: 1.96875rem;
+    margin: 0.5rem 0 1.5rem 0;
+    padding-top: 0.2rem;
+    line-height: 1.2;
+    font-weight: 900;
+    color: black;
+  }
+  
+  .dark .ich-dialog .confirmation-title {
+    color: white;
+  }
+  
+  .ich-dialog .carousel-container {
+    width: 95vw;
+    max-width: 350px;
+    padding: 1rem 0;
+    perspective: 1500px;
+    margin-top: 2rem;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+  }
+  
+  .ich-dialog .carousel-item {
+    width: 280px;
+    height: 350px;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%) translateX(calc(var(--offset, 0) * 300px)) rotateY(var(--rotation, 20deg)) scale(0.6);
+  }
+  
+  .ich-dialog .carousel-item-active {
+    transform: translate(-50%, -50%) translateX(0) rotateY(0deg) scale(0.9);
+  }
+  
+  .ich-dialog .carousel-item-content {
+    max-width: 280px;
+    height: 320px;
+    padding: 1.5rem;
+    border-radius: 1rem;
+  }
+  
+  .ich-dialog .carousel-item-content .tile-icon-container {
+    width: 180px;
+    height: 180px;
+    margin-bottom: 1rem;
+  }
+  
+  .ich-dialog .carousel-item-content .tile-icon {
+    width: 138px;
+    height: 138px;
+  }
+  
+  .ich-dialog .carousel-item-content .tile-text {
+    font-size: 1.2rem;
+    font-weight: 600;
+    line-height: 1.3;
+  }
+  
+  .ich-dialog .carousel-indicators {
+    margin-top: 0.5rem;
+    margin-bottom: 1rem;
+    gap: 0.5rem;
+    position: absolute;
+    bottom: 1rem;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 100%;
+  }
+  
+  .ich-dialog .carousel-indicator {
+    width: 16px;
+    height: 16px;
+    margin: 0 0.2rem;
+    min-width: 16px;
+    min-height: 16px;
+  }
+  
+  .ich-dialog .carousel-indicator-active {
+    transform: scale(1.3);
+    box-shadow: 0 0 15px rgba(0, 176, 152, 0.6);
+  }
+}
+
+@media (max-width: 320px) {
+  .ich-dialog .main-title {
+    font-size: 1.875rem;
+    margin: 0.3rem 0 1rem 0;
+    padding-top: 0.1rem;
+    line-height: 1.1;
+    font-weight: 900;
+  }
+  
+  .ich-dialog .grid-container {
+    gap: 0.2rem;
+    padding: 0 0.2rem 1.5rem 0.2rem;
+    max-width: 100vw;
+    overflow: visible;
+  }
+  
+  .ich-dialog .menu-tile {
+    padding: 0.3rem;
+    aspect-ratio: 1 / 1;
+    min-width: 0;
+  }
+  
+  .ich-dialog .tile-icon-container {
+    width: 90px;
+    height: 90px;
+    margin-bottom: 0.1rem;
+  }
+  
+  .ich-dialog .tile-icon {
+    width: 75px;
+    height: 75px;
+  }
+  
+  .ich-dialog .tile-text {
+    font-size: 1.2rem;
+  }
+  
+  .ich-dialog .tile-emoji {
+    font-size: 3.5rem;
+  }
+  
+  .ich-dialog .confirmation-text {
+    font-size: 1.640625rem;
+    margin: 0.3rem 0 1rem 0;
+    padding-top: 0.1rem;
+    line-height: 1.1;
+    font-weight: 900;
+    color: #FF6B35;
+  }
+  
+  .ich-dialog .confirmation-title {
+    font-size: 1.640625rem;
+    margin: 0.3rem 0 1rem 0;
+    padding-top: 0.1rem;
+    line-height: 1.1;
+    font-weight: 900;
+    color: black;
+  }
+  
+  .dark .ich-dialog .confirmation-title {
+    color: white;
+  }
+
+  .ich-dialog .carousel-container {
+    width: 98vw;
+    max-width: 300px;
+    margin-top: 1.5rem;
+    padding: 1rem 0;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+  }
+  
+  .ich-dialog .carousel-indicators {
+    margin-top: 0.3rem;
+    margin-bottom: 0.5rem;
+    gap: 0.2rem;
+    position: absolute;
+    bottom: 0.5rem;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 100%;
+  }
+  
+  .ich-dialog .carousel-indicator {
+    width: 12px;
+    height: 12px;
+    margin: 0 0.1rem;
+    min-width: 12px;
+    min-height: 12px;
+  }
+  
+  .ich-dialog .carousel-item {
+    width: 250px;
+    height: 320px;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%) translateX(calc(var(--offset, 0) * 280px)) rotateY(var(--rotation, 20deg)) scale(0.5);
+  }
+  
+  .ich-dialog .carousel-item-content {
+    max-width: 250px;
+    height: 290px;
+    padding: 1.2rem;
+  }
+  
+  .ich-dialog .carousel-item-content .tile-icon-container {
+    width: 100px;
+    height: 100px;
+  }
+
+  .ich-dialog .carousel-item-content .tile-icon {
+    width: 70px;
+    height: 70px;
+  }
+  
+  .ich-dialog .carousel-item-content .tile-text {
+    font-size: 1.1rem;
+  }
+}
+
 @media (max-width: 768px) {
   .ich-dialog .grid-container {
     grid-template-columns: repeat(2, 1fr);
@@ -1305,5 +1573,80 @@
   .ich-dialog .confirmation-title {
     font-size: 1.96875rem;
     margin: 0.5rem 0 1.5rem 0;
+  }
+}
+
+@media (max-width: 768px) and (orientation: landscape) {
+  .ich-dialog .main-content {
+    padding-top: 0;
+    margin-top: 0;
+    align-items: flex-start;
+  }
+  
+  .ich-dialog .main-title {
+    font-size: 1.6rem;
+    margin: 0.3rem 0 1rem 0;
+    padding-top: 0.1rem;
+    line-height: 1.1;
+    font-weight: 450;
+  }
+  
+  .ich-dialog .carousel-container {
+    width: 90vw;
+    max-width: 600px;
+    height: 60vh;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+  }
+  
+  .ich-dialog .carousel-item {
+    width: 300px;
+    height: 250px;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%) translateX(calc(var(--offset, 0) * 350px)) rotateY(var(--rotation, 0deg)) scale(0.8);
+  }
+  
+  .ich-dialog .carousel-item-content {
+    max-width: 300px;
+    height: 220px;
+    padding: 1.5rem;
+  }
+  
+  .ich-dialog .carousel-item-content .tile-icon-container {
+    width: 150px;
+    height: 150px;
+  }
+  
+  .ich-dialog .carousel-item-content .tile-icon {
+    width: 121px;
+    height: 121px;
+  }
+  
+  .ich-dialog .carousel-item-content .tile-text {
+    font-size: 1.1rem;
+  }
+  
+  .ich-dialog .confirmation-text {
+    font-size: 1.4rem;
+    margin: 0.3rem 0 1rem 0;
+    padding-top: 0.1rem;
+    line-height: 1.1;
+    font-weight: 450;
+    color: #FF6B35;
+  }
+  
+  .ich-dialog .confirmation-title {
+    font-size: 1.4rem;
+    margin: 0.3rem 0 1rem 0;
+    padding-top: 0.1rem;
+    line-height: 1.1;
+    font-weight: 450;
+    color: black;
+  }
+  
+  .dark .ich-dialog .confirmation-title {
+    color: white;
   }
 }
