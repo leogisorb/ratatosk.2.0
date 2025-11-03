@@ -44,7 +44,7 @@ export class KeyboardDesignService {
       fontSize: 24,
       borderRadius: 8,
       // Standard-Farben
-      activeKeyBackground: '#00796B', // dark green
+      activeKeyBackground: 'white', // dark green
       activeKeyBorder: '#004D40',     // darker green
       activeKeyText: '#ffffff',       // white
       spaceKeyBackground: '#ef4444',  // red-500
