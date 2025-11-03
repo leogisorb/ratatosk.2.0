@@ -179,6 +179,7 @@ const {
   selectMainRegion,
   selectSubRegion,
   selectPainLevel,
+  goBack,
   handleBlink,
   findSubRegion,
   findPainLevel,
@@ -203,12 +204,7 @@ const getCurrentPainLevelCombined = computed(() => {
   return `${level}, ${description}`
 })
 
-// ✅ Navigation Helper
-const goBack = () => {
-  if (state.value === 'subRegionView') {
-    selectSubRegion('zurueck')
-  }
-}
+// ✅ goBack wird jetzt von der Machine bereitgestellt
 
 
 // ✅ Pain Scale Touch/Click Handler (spezifisch für Pain Scale Bar)

@@ -15,6 +15,7 @@
  */
 
 import { ref, computed } from 'vue'
+import { useRouter } from 'vue-router'
 import { useTTS } from './useTTS'
 import { useAutoMode } from './useAutoMode'
 import { usePainDictionary } from './usePainDictionary'
@@ -23,6 +24,7 @@ import { useFaceRecognition } from '../../face-recognition/composables/useFaceRe
 export type PainDialogState = 'mainView' | 'subRegionView' | 'painScaleView' | 'confirmation'
 
 export function usePainDialogMachine() {
+  const router = useRouter()
   const tts = useTTS()
   const dict = usePainDictionary()
   const faceRecognition = useFaceRecognition()
@@ -161,6 +163,15 @@ export function usePainDialogMachine() {
     }, 5000)
   }
 
+  /**
+   * Zurück zur Haupt-App navigieren
+   */
+  function goBack() {
+    autoMode.stop()
+    tts.cancel()
+    router.push('/app')
+  }
+
   // ✅ Blink-Handler
   function handleBlink() {
     const currentItems = items.value
@@ -173,9 +184,13 @@ export function usePainDialogMachine() {
     
     // ✅ Robustes zurueck-Handling
     if (currentItem.id === 'zurueck') {
-      // Zurück ist nur erlaubt in subRegionView
-      if (state.value === 'subRegionView') {
-        selectSubRegion('zurueck')
+      switch (state.value) {
+        case 'subRegionView':
+          selectSubRegion('zurueck')
+          break
+        default:
+          goBack()
+          break
       }
       return
     }
@@ -220,6 +235,7 @@ export function usePainDialogMachine() {
     selectMainRegion,
     selectSubRegion,
     selectPainLevel,
+    goBack,
     handleBlink,
     
     // TTS
