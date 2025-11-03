@@ -196,9 +196,11 @@ export function useHomeViewLogic() {
         console.log(`[${instanceId}] Mobile device - testing TTS after user interaction`)
         setTimeout(() => {
           if (typeof speechSynthesis !== 'undefined' && speechSynthesis) {
+            // ✅ Prüfe ob TTS stumm geschaltet ist → Volume 0 setzen
+            const isMuted = simpleFlowController.getTTSMuted()
             // Teste TTS mit einem kurzen Text
             const testUtterance = new SpeechSynthesisUtterance('Test')
-            testUtterance.volume = 0.1 // Sehr leise
+            testUtterance.volume = isMuted ? 0 : 0.1  // ✅ Volume basierend auf Mute-Status (sehr leise wenn nicht stumm)
             testUtterance.onend = () => {
               console.log(`[${instanceId}] Mobile TTS test successful`)
             }

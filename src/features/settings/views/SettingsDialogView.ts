@@ -52,9 +52,10 @@ export function useSettingsDialogLogic() {
     console.log('SettingsDialogView: Requesting TTS for:', text)
     
     // Prüfe ob TTS gemutet ist
-    if (simpleFlowController.getTTSMuted()) {
-      console.log('SettingsDialogView: TTS is muted, skipping:', text)
-      return
+    // ✅ Prüfe ob TTS stumm geschaltet ist → Volume 0 setzen
+    const isMuted = simpleFlowController.getTTSMuted()
+    if (isMuted) {
+      console.log('SettingsDialogView: TTS is muted - setting volume to 0')
     }
     
     // Direkt über Browser TTS API sprechen
@@ -63,7 +64,7 @@ export function useSettingsDialogLogic() {
       utterance.lang = 'de-DE'
       utterance.rate = 0.8
       utterance.pitch = 1.0
-      utterance.volume = 1.0
+      utterance.volume = isMuted ? 0 : 1.0  // ✅ Volume basierend auf Mute-Status
       
       // Stoppe vorherige TTS
       window.speechSynthesis.cancel()

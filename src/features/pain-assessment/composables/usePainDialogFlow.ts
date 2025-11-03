@@ -1,6 +1,7 @@
 import { ref, computed, onMounted, onUnmounted } from 'vue'
 import { useSettingsStore } from '../../settings/stores/settings'
 import { useFaceRecognition } from '../../face-recognition/composables/useFaceRecognition'
+import { simpleFlowController } from '../../../core/application/SimpleFlowController'
 import { 
   mainRegions,
   kopfSubRegions, 
@@ -170,10 +171,16 @@ export function usePainDialogFlow() {
       speechSynthesis.cancel()
       isSpeaking.value = true
 
+      // ✅ Prüfe ob TTS stumm geschaltet ist → Volume 0 setzen
+      const isMuted = simpleFlowController.getTTSMuted()
+      if (isMuted) {
+        console.log('usePainDialogFlow: TTS is muted - setting volume to 0')
+      }
+
       const utterance = new SpeechSynthesisUtterance(text)
       utterance.lang = 'de-DE'
       utterance.rate = 1.0
-      utterance.volume = 1.0
+      utterance.volume = isMuted ? 0 : 1.0  // ✅ Volume basierend auf Mute-Status
 
       // ✅ BUG B: Timeout-Fallback für hängende TTS
       const timeoutId = setTimeout(() => {

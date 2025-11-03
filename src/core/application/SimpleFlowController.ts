@@ -473,7 +473,19 @@ export class SimpleFlowController {
     this.isTTSMuted = muted
     console.log('SimpleFlowController: TTS muted set to:', muted)
     
-    // Sanftes Ausfaden der aktuellen TTS
+    // ✅ Wenn stumm geschaltet wird: Stoppe alle laufenden TTS (auch außerhalb SimpleFlowController)
+    if (muted) {
+      // Stoppe SimpleFlowController TTS
+      this.stopTTSOnly()
+      
+      // ✅ Stoppe auch alle anderen TTS (von useTTS Composables und direkten Aufrufen)
+      if (window.speechSynthesis) {
+        window.speechSynthesis.cancel()
+        console.log('SimpleFlowController: All TTS cancelled (muted)')
+      }
+    }
+    
+    // Sanftes Ausfaden der aktuellen TTS (falls noch aktiv)
     if (this.currentUtterance) {
       this.fadeVolume(muted ? 0 : 0.8)
     }

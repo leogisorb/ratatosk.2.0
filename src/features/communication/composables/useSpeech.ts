@@ -1,4 +1,5 @@
 import { ref } from 'vue'
+import { simpleFlowController } from '../../../core/application/SimpleFlowController'
 
 /**
  * Composable für Text-to-Speech (TTS) Funktionalität
@@ -18,11 +19,17 @@ export function useSpeech() {
     return new Promise((resolve, reject) => {
       console.log('TTS: Speaking:', text)
       
+      // ✅ Prüfe ob TTS stumm geschaltet ist → Volume 0 setzen
+      const isMuted = simpleFlowController.getTTSMuted()
+      if (isMuted) {
+        console.log('useSpeech: TTS is muted - setting volume to 0')
+      }
+      
       const utterance = new SpeechSynthesisUtterance(text)
       utterance.lang = 'de-DE'
       utterance.rate = 0.8
       utterance.pitch = 1.0
-      utterance.volume = 0.8
+      utterance.volume = isMuted ? 0 : 0.8  // ✅ Volume basierend auf Mute-Status
 
       utterance.onstart = () => {
         console.log('TTS: Started speaking')

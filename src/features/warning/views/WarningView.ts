@@ -2,6 +2,7 @@ import { ref, onMounted, onUnmounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { useSettingsStore } from '../../settings/stores/settings'
 import { useBlinkInput } from '../../communication/composables/useBlinkInput'
+import { simpleFlowController } from '../../../core/application/SimpleFlowController'
 
 /**
  * Warnsystem für intubierte Patienten
@@ -45,11 +46,17 @@ export function useWarningViewLogic() {
     return new Promise((resolve) => {
       console.log('TTS: Speaking:', text)
       
+      // ✅ Prüfe ob TTS stumm geschaltet ist → Volume 0 setzen
+      const isMuted = simpleFlowController.getTTSMuted()
+      if (isMuted) {
+        console.log('WarningView: TTS is muted - setting volume to 0')
+      }
+      
       const utterance = new SpeechSynthesisUtterance(text)
       utterance.lang = 'de-DE'
       utterance.rate = 0.8
       utterance.pitch = 1.0
-      utterance.volume = 0.8
+      utterance.volume = isMuted ? 0 : 0.8  // ✅ Volume basierend auf Mute-Status
 
       let resolved = false
       const finish = () => {

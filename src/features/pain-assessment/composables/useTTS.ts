@@ -11,6 +11,7 @@
 
 import { ref, computed } from 'vue'
 import { useSettingsStore } from '../../settings/stores/settings'
+import { simpleFlowController } from '../../../core/application/SimpleFlowController'
 
 export function useTTS() {
   const settingsStore = useSettingsStore()
@@ -30,6 +31,12 @@ export function useTTS() {
       if (!enabled.value || !text.trim()) {
         setTimeout(() => resolve(), 500) // Kurze Wartezeit für Timing-Konsistenz
         return
+      }
+
+      // ✅ Prüfe ob TTS stumm geschaltet ist → Volume 0 setzen
+      const isMuted = simpleFlowController.getTTSMuted()
+      if (isMuted) {
+        console.log('useTTS: TTS is muted - setting volume to 0')
       }
 
       // ✅ Kein SpeechSynthesis verfügbar → sofort auflösen
@@ -53,7 +60,7 @@ export function useTTS() {
       const utterance = new SpeechSynthesisUtterance(text.trim())
       utterance.lang = 'de-DE'
       utterance.rate = 1.0
-      utterance.volume = 1.0
+      utterance.volume = isMuted ? 0 : 1.0  // ✅ Volume basierend auf Mute-Status
 
       isSpeaking.value = true
 
