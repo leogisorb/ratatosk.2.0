@@ -485,6 +485,15 @@
   transition: all 0.3s ease;
 }
 
+/* Dark Mode Styles für row-active (aktive Zeile im Zeilenauswahl-Modus) */
+.dark .keyboard-row.row-active {
+  border: 3px solid #00B098 !important; /* Türkiser Rahmen #00B098 */
+  border-radius: 8px;
+  background-color: rgba(0, 176, 152, 0.2) !important; /* Türkise Hintergrundfarbe mit Transparenz */
+  box-shadow: 0 4px 12px rgba(0, 176, 152, 0.4); /* Türkiser Glow-Effekt */
+  transition: all 0.3s ease;
+}
+
 /* Responsive Dark Mode Styles */
 @media (max-width: 768px) {
   .dark .sentence-item {
