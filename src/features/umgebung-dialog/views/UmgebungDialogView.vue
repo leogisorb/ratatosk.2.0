@@ -1,5 +1,5 @@
 <template>
-  <div id="app" class="pain-dialog">
+  <div id="app" class="umgebung-dialog">
     <!-- App Header -->
     <AppHeader />
 
@@ -24,6 +24,7 @@
                 region.id === dict.ID_BACK ? 'back-tile' : ''
               ]"
               @click="autoMode.index.value === index ? (region.id === dict.ID_BACK ? goBack() : selectMainRegion(String(region.id))) : null"
+              @contextmenu.prevent="autoMode.index.value === index ? null : null"
             >
               <div 
                 class="tile-icon-container"
@@ -69,6 +70,7 @@
                     '--rotation': (index < autoMode.index.value ? -20 : index > autoMode.index.value ? 20 : 0) + 'deg'
                   }"
                   @click="autoMode.index.value === index ? selectSubRegion(String(subRegion.id)) : null"
+                  @contextmenu.prevent="autoMode.index.value === index ? null : null"
                 >
                   <div class="carousel-item-content">
                     <div 
@@ -136,6 +138,7 @@
                     '--rotation': (index < autoMode.index.value ? -20 : index > autoMode.index.value ? 20 : 0) + 'deg'
                   }"
                   @click="autoMode.index.value === index ? selectSubSubRegion(String(subSubRegion.id)) : null"
+                  @contextmenu.prevent="autoMode.index.value === index ? null : null"
                 >
                   <div class="carousel-item-content">
                     <div 
@@ -194,17 +197,19 @@
 </template>
 
 <script setup lang="ts">
-import { onMounted, onUnmounted, ref } from 'vue'
+import { onMounted, onUnmounted } from 'vue'
 import { useUmgebungDialogMachine } from '../composables/useUmgebungDialogMachine'
 import { useUmgebungDictionary } from '../composables/useUmgebungDictionary'
 import { useTTS } from '../composables/useTTS'
 import { useInputManager } from '../../../shared/composables/useInputManager'
+import { useFaceRecognition } from '../../face-recognition/composables/useFaceRecognition'
 import AppHeader from '../../../shared/components/AppHeader.vue'
 
 // Dialog Machine
 const machine = useUmgebungDialogMachine()
 const dict = useUmgebungDictionary()
 const tts = useTTS()
+const faceRecognition = useFaceRecognition()
 
 // State & Computed
 const {
@@ -234,43 +239,35 @@ const inputManager = useInputManager({
   cooldown: 300
 })
 
-  // Lifecycle - Timer für Cleanup
-const mountedTimers = ref<number[]>([])
-
+// Lifecycle
 onMounted(() => {
   console.log('UmgebungDialogView mounted')
   
-  // Input Manager starten
-  inputManager.start()
+  // Start Face Recognition (wichtig für Blink-Erkennung!)
+  if (!faceRecognition.isActive.value) {
+    faceRecognition.start()
+  }
   
-  // Initial greeting - Titel sprechen, dann AutoMode starten (skipTitle = true, da Titel bereits gesprochen)
-  const timer1 = window.setTimeout(async () => {
-    await tts.speak(title.value)
-    const timer2 = window.setTimeout(() => {
-      if (autoMode) {
-        autoMode.start(true) // skipTitle = true, da Titel bereits gesprochen
-      }
-    }, 3000)
-    mountedTimers.value.push(timer2)
-  }, 1000)
-  mountedTimers.value.push(timer1)
+  // Start AutoMode (wie im pain-dialog)
+  autoMode.start()
+  
+  // Start Input Manager (wie im pain-dialog)
+  inputManager.start()
 })
 
 onUnmounted(() => {
   console.log('UmgebungDialogView unmounted')
   
-  // Alle Timer löschen
-  mountedTimers.value.forEach(timer => clearTimeout(timer))
-  mountedTimers.value = []
-  
-  // AutoMode stoppen (stoppt auch alle Timer)
+  // Stop AutoMode (stoppt auch alle Timer)
   autoMode.stop()
   
-  // TTS stoppen
-  tts.cancel()
-  
-  // Input Manager stoppen (entfernt alle Event-Listener)
+  // Stop Input Manager (entfernt alle Event-Listener)
   inputManager.stop()
+  
+  // Stop Face Recognition (wie im pain-dialog)
+  if (faceRecognition.isActive.value) {
+    faceRecognition.stop()
+  }
 })
 </script>
 
