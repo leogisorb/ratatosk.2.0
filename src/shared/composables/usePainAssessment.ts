@@ -23,6 +23,7 @@ export function usePainAssessment() {
   const closedFrames = ref(0)
   const eyesClosed = ref(false)
   const userInteracted = ref(false)
+  const isSpeaking = ref(false)
 
   // Blink detection parameters - centralized
   const blinkThreshold = computed(() => Math.ceil(settingsStore.settings.blinkSensitivity * 10))

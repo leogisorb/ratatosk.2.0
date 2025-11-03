@@ -8,6 +8,7 @@ import {
   getSubRegionsByMainRegion,
   getSubSubRegionsBySubRegion,
   buildConfirmationText,
+  getArticles,
   type UmgebungRegion,
   type UmgebungSubRegion,
   type UmgebungSubSubRegion,

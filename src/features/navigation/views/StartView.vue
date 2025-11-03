@@ -60,7 +60,7 @@
           <div v-if="cameraStatus === 'inactive' || cameraStatus === 'error'">
             <button
               @click="startCamera"
-              :disabled="cameraStatus === 'loading' || false"
+              :disabled="false"
               class="btn-primary"
             >
               <svg v-if="false" class="animate-spin h-6 w-6" fill="none" viewBox="0 0 24 24">

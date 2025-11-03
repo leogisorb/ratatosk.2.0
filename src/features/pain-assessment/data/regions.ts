@@ -79,9 +79,9 @@ export const torsoSubRegions = [
 // ✅ Mapping: Main Region ID → Sub Regions Array
 export const subRegionMap: Record<string, typeof kopfSubRegions> = {
   'kopf': kopfSubRegions,
-  'beine': beineSubRegions,
-  'arme': armeSubRegions,
-  'torso': torsoSubRegions,
+  'beine': beineSubRegions as unknown as typeof kopfSubRegions,
+  'arme': armeSubRegions as unknown as typeof kopfSubRegions,
+  'torso': torsoSubRegions as unknown as typeof kopfSubRegions,
 }
 
 // Helper function to get all sub-regions
