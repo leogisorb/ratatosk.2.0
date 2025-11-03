@@ -177,7 +177,7 @@ const cameraStatusText = computed(() => {
 
 // Computed for error check
 const hasSafariError = computed(() => {
-  const errorValue = faceRecognition.error
+  const errorValue = faceRecognition.error.value
   return errorValue && typeof errorValue === 'string' && errorValue.includes('Safari')
 })
 
