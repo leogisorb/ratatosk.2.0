@@ -52,7 +52,11 @@ export interface InputManagerConfig {
 }
 
 export class InputManager {
-  private config: Required<Omit<InputManagerConfig, 'onSelect'>> & { onSelect: (event: InputEvent) => void }
+  private config: Omit<InputManagerConfig, 'onSelect'> & { 
+    enabledInputs: InputType[]
+    cooldown: number
+    onSelect: (event: InputEvent) => void
+  }
   private faceRecognition = useFaceRecognition()
   
   private isActive = false
@@ -62,7 +66,7 @@ export class InputManager {
   // Event Listeners
   private clickHandler: ((event: MouseEvent) => void) | null = null
   private touchHandler: ((event: TouchEvent) => void) | null = null
-  private blinkEventListener: ((event: CustomEvent) => void) | null = null
+  private blinkEventListener: EventListener | null = null
   
   constructor(config: InputManagerConfig) {
     this.config = {
@@ -225,16 +229,17 @@ export class InputManager {
    */
   private setupBlinkDetection() {
     // ✅ Methode 1: Event-basiert (faceBlinkDetected Event)
-    this.blinkEventListener = ((event: CustomEvent) => {
+    this.blinkEventListener = (event: Event) => {
       if (!this.isActive) return
       
+      const customEvent = event as CustomEvent
       // Ignoriere Events von bestimmten Quellen (z.B. Header-Buttons)
-      if (event.detail?.source === 'fallback-interaction') {
+      if (customEvent.detail?.source === 'fallback-interaction') {
         return
       }
       
-      this.triggerInput('blink', 'face-recognition', event.detail)
-    }) as EventListener
+      this.triggerInput('blink', 'face-recognition', customEvent.detail)
+    }
 
     window.addEventListener('faceBlinkDetected', this.blinkEventListener)
 
