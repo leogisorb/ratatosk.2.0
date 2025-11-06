@@ -364,6 +364,13 @@ export function useHomeViewLogic() {
   onMounted(() => {
     console.log(`[${instanceId}] HomeView mounting - cleaning up any existing services`)
     
+    // ✅ Prüfe ob TTS bereits im StartView aktiviert wurde
+    const globalUserInteracted = simpleFlowController.getState().userInteracted
+    if (globalUserInteracted) {
+      console.log(`[${instanceId}] TTS bereits im StartView aktiviert - synchronisiere lokalen Status`)
+      userInteracted.value = true
+    }
+    
     // Stoppe alle laufenden Services für saubere Neuinitialisierung
     stopAutoMode()
     stopAutoScrollCompletely()

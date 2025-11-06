@@ -388,6 +388,13 @@ export function useSettingsDialogLogic() {
 
   // Lifecycle
   onMounted(() => {
+    // ✅ Prüfe ob TTS bereits im StartView aktiviert wurde
+    const globalUserInteracted = simpleFlowController.getState().userInteracted
+    if (globalUserInteracted) {
+      console.log(`[${instanceId}] TTS bereits im StartView aktiviert - synchronisiere lokalen Status`)
+      userInteracted.value = true
+    }
+    
     // Setze SettingsDialogView als aktiven View
     simpleFlowController.setActiveView('/einstellungen')
     

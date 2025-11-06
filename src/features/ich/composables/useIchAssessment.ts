@@ -55,9 +55,16 @@ export function useIchAssessment() {
     }
   }
 
-  // TTS sofort aktivieren für IchDialogView
-  userInteracted.value = true
-  simpleFlowController.setUserInteracted(true)
+  // ✅ Prüfe ob TTS bereits im StartView aktiviert wurde, sonst aktivieren
+  const globalUserInteracted = simpleFlowController.getState().userInteracted
+  if (globalUserInteracted) {
+    console.log('IchAssessment: TTS bereits im StartView aktiviert - synchronisiere lokalen Status')
+    userInteracted.value = true
+  } else {
+    // TTS sofort aktivieren für IchDialogView (Fallback)
+    userInteracted.value = true
+    simpleFlowController.setUserInteracted(true)
+  }
   console.log('IchAssessment: TTS activated immediately')
 
   // Auto-Mode Funktionen über SimpleFlowController

@@ -45,9 +45,16 @@ export function usePainAssessment() {
     }
   }
 
-  // TTS sofort aktivieren für PainDialogView
-  userInteracted.value = true
-  simpleFlowController.setUserInteracted(true)
+  // ✅ Prüfe ob TTS bereits im StartView aktiviert wurde, sonst aktivieren
+  const globalUserInteracted = simpleFlowController.getState().userInteracted
+  if (globalUserInteracted) {
+    console.log('PainAssessment: TTS bereits im StartView aktiviert - synchronisiere lokalen Status')
+    userInteracted.value = true
+  } else {
+    // TTS sofort aktivieren für PainDialogView (Fallback)
+    userInteracted.value = true
+    simpleFlowController.setUserInteracted(true)
+  }
 
   // Auto-Mode Funktionen über SimpleFlowController
   const startAutoMode = async (items: any[], initialDelay: number = 3000, cycleDelay: number = 3000) => {
