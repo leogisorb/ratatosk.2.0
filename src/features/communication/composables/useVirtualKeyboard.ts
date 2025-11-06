@@ -4,6 +4,7 @@ import { keyboardLayout, getOriginalLetter } from '../data/keyboardLayout'
 import { useSpeech } from './useSpeech'
 import { useTimers } from './useTimers'
 import { useBlinkInput } from './useBlinkInput'
+import { simpleFlowController } from '../../../core/application/SimpleFlowController'
 
 /**
  * Composable für die virtuelle Tastatur mit TTS und Blinzelsteuerung
@@ -302,9 +303,26 @@ export function useVirtualKeyboard() {
         currentText.value = "Noch kein Text…"
       }
     } else if (letter === 'ZURÜCK') {
-      // Navigation zurück zur HomeView
-      console.log('Navigation: Going back to home')
-      router.push('/')
+      // Navigation zurück zur HomeView (/app) mit sauberem Reset
+      console.log('UnterhaltenView: ZURÜCK Button - Stoppe alle Services und navigiere zu /app')
+      
+      // Stoppe alle Services
+      simpleFlowController.stopTTS()
+      if (window.speechSynthesis) {
+        window.speechSynthesis.cancel()
+      }
+      simpleFlowController.stopAutoMode()
+      simpleFlowController.setActiveView('')
+      
+      // Stoppe alle Timer
+      clearAllTimers()
+      
+      // Navigiere zu /app (Home-View)
+      router.push('/app').then(() => {
+        console.log('UnterhaltenView: Navigation zu /app erfolgreich - alle Services gestoppt')
+      }).catch((error) => {
+        console.error('UnterhaltenView: Navigation zu /app fehlgeschlagen:', error)
+      })
     } else {
       // Für normale Buchstaben: Original-Buchstabe verwenden
       const originalLetter = getOriginalLetter(letter)

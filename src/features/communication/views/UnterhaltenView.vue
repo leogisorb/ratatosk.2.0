@@ -41,6 +41,15 @@ onMounted(() => {
   
   // Cleanup-Funktion für onUnmounted speichern
   ;(window as any).__cleanupEventListeners = cleanupEventListeners
+  
+  // Cleanup-Funktion global verfügbar machen für Router-Guard
+  ;(window as any).__unterhaltenViewCleanup = () => {
+    console.log('UnterhaltenView: Global cleanup aufgerufen (Router-Guard)')
+    if (cleanupEventListeners) {
+      cleanupEventListeners()
+    }
+    cleanup()
+  }
 })
 
 onUnmounted(() => {
@@ -57,6 +66,9 @@ onUnmounted(() => {
   
   // Face Recognition nicht stoppen (läuft seitenübergreifend)
   console.log('Face Recognition continues running for other views')
+  
+  // Global cleanup-Funktion entfernen
+  delete (window as any).__unterhaltenViewCleanup
 })
 </script>
 

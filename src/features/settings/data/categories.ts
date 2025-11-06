@@ -18,13 +18,13 @@ export interface SettingsCategory {
 export const settingsCategories: SettingsCategory[] = [
   {
     id: 'leuchtdauer',
-    title: 'LEUCHTDAUER',
+    title: 'ANZEIGEINTERVALL',
     icon: leuchtdauerIcon,
     category: 'settings'
   },
   {
     id: 'blinzeldauer',
-    title: 'BLINZELDAUER',
+    title: 'EMPFINDLICHKEIT',
     icon: blinzeldauerIcon,
     category: 'settings'
   },

@@ -66,15 +66,13 @@
           </svg>
         </button>
 
-        <!-- Zurück Button -->
+        <!-- Zurück Button (Hard Reset) -->
         <button
           @click="goBack"
-          class="header-button"
-          title="Zurück zur Hauptseite"
+          class="header-button header-button-home"
+          title="Zurück zum Hauptmenü (Hard Reset)"
         >
-          <svg class="header-button-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
-          </svg>
+          <img src="/GoHome.svg" alt="Home" class="header-button-icon" />
         </button>
       </div>
     </div>
@@ -82,49 +80,64 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted } from 'vue'
-import { useRouter, useRoute } from 'vue-router'
+import { ref, computed, onMounted, onUnmounted } from 'vue'
+import { useRouter } from 'vue-router'
 import { useSettingsStore } from '../../features/settings/stores/settings'
 import { simpleFlowController } from '../../core/application/SimpleFlowController'
 
 // Router
 const router = useRouter()
-const route = useRoute()
 
 // Stores
 const settingsStore = useSettingsStore()
 
-// State - TTS enabled by default
-const isVolumeEnabled = ref(true)
+// ✅ Reaktiver State - synchronisiert mit globalem SimpleFlowController State
+const isVolumeEnabled = ref(!simpleFlowController.getTTSMuted())
+
+// ✅ Aktualisiere State wenn sich der globale Mute-State ändert
+const updateVolumeState = () => {
+  isVolumeEnabled.value = !simpleFlowController.getTTSMuted()
+  console.log('Header: Volume state updated from global state:', isVolumeEnabled.value)
+}
 
 // Computed
 const isDarkMode = computed(() => settingsStore.isDarkMode)
 
 // Methods
+// ✅ NUR der Header-Button darf den Mute-State ändern!
 const toggleVolume = () => {
-  isVolumeEnabled.value = !isVolumeEnabled.value
-  console.log('Volume button clicked:', isVolumeEnabled.value)
+  const currentMuted = simpleFlowController.getTTSMuted()
+  const newMuted = !currentMuted
   
-  // Steuere globalen TTS über SimpleFlowController
-  simpleFlowController.setTTSMuted(!isVolumeEnabled.value)
+  console.log('Header: Volume button clicked - changing mute state from', currentMuted, 'to', newMuted)
+  
+  // ✅ Ändere globalen TTS-State über SimpleFlowController (einzige Quelle der Wahrheit)
+  simpleFlowController.setTTSMuted(newMuted)
+  
+  // ✅ Aktualisiere lokalen State sofort
+  isVolumeEnabled.value = !newMuted
   
   // Sende Event an alle Views (für Kompatibilität)
   const event = new CustomEvent('volumeToggle', {
-    detail: { enabled: isVolumeEnabled.value }
+    detail: { enabled: !newMuted }
   })
   window.dispatchEvent(event)
+  
+  console.log('Header: Mute state changed to', newMuted, '- isVolumeEnabled:', !newMuted)
 }
 
-// Sende initialen Volume-Status beim Mount
+// ✅ Lifecycle - Lade initialen State und höre auf Events
 onMounted(() => {
-  // Setze initialen TTS-Status im SimpleFlowController
-  simpleFlowController.setTTSMuted(!isVolumeEnabled.value)
+  // Lade initialen State aus SimpleFlowController
+  updateVolumeState()
   
-  const event = new CustomEvent('volumeToggle', {
-    detail: { enabled: isVolumeEnabled.value }
-  })
-  window.dispatchEvent(event)
-  console.log('Initial volume status sent:', isVolumeEnabled.value)
+  // Höre auf volumeToggle Events (falls von außen geändert)
+  window.addEventListener('volumeToggle', updateVolumeState)
+})
+
+onUnmounted(() => {
+  // Entferne Event Listener
+  window.removeEventListener('volumeToggle', updateVolumeState)
 })
 
 const toggleDarkMode = () => {
@@ -132,22 +145,30 @@ const toggleDarkMode = () => {
   console.log('Dark mode toggled:', isDarkMode.value)
 }
 
+// Zurück Button (Hard Reset) - Stoppt alle Services und navigiert zu /app
 const goBack = () => {
-  // Stoppe TTS und Auto-Mode von allen Seiten beim Zurücknavigieren zu /app
-  console.log(`Header: Navigating back from ${route.path} to /app, stopping all TTS and Auto-Mode...`)
+  console.log('Header: Zurück Button geklickt - Hard Reset zu /app')
   
-  // Stoppe alle laufenden TTS komplett (nicht nur Volume)
-  simpleFlowController.stopTTS()  // SimpleFlowController TTS komplett beenden
+  // Stoppe alle laufenden TTS komplett
+  simpleFlowController.stopTTS()
+  
+  // Stoppe alle TTS (auch außerhalb SimpleFlowController)
+  if (window.speechSynthesis) {
+    window.speechSynthesis.cancel()
+  }
   
   // Stoppe Auto-Mode komplett
   simpleFlowController.stopAutoMode()
   
-  // Setze aktiven View zurück für saubere Neuinitialisierung
-  simpleFlowController.setActiveView('/app')
+  // Setze aktiven View zurück
+  simpleFlowController.setActiveView('')
   
-  // Immer zurück zu /app
-  console.log('Header: Navigating back to app - all services stopped and view reset')
-  router.push('/app')
+  // Navigiere zu /app (Home-View)
+  router.push('/app').then(() => {
+    console.log('Header: Zurück Button - Navigation zu /app erfolgreich, alle Services gestoppt')
+  }).catch((error) => {
+    console.error('Header: Zurück Button - Navigation fehlgeschlagen:', error)
+  })
 }
 </script>
 

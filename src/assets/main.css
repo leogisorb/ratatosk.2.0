@@ -304,9 +304,27 @@ body {
   color: white;
 }
 
+/* Home Button (Zurück) - Im Dark Mode dauerhaft türkis */
+.dark .header-button-home {
+  background-color: #00B098 !important; /* Türkise Farbe #00B098 */
+  color: white !important;
+}
+
+.dark .header-button-home:hover {
+  background-color: #00d4aa !important; /* Helleres Türkis beim Hover */
+  transform: translateY(-1px);
+}
+
+/* Home Button Icon - Im Dark Mode weiß */
+.dark .header-button-home .header-button-icon {
+  filter: brightness(0) invert(1) !important; /* Macht das Icon weiß */
+}
+
 .header-button-icon {
   width: 1.25rem;
   height: 1.25rem;
+  object-fit: contain; /* Für img Tags */
+  display: block; /* Für img Tags */
 }
 
 .header-title {

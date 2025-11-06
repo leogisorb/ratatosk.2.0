@@ -20,6 +20,8 @@ import { useTTS } from './useTTS'
 import { useAutoMode } from './useAutoMode'
 import { usePainDictionary } from './usePainDictionary'
 import { useFaceRecognition } from '../../face-recognition/composables/useFaceRecognition'
+import { simpleFlowController } from '../../../core/application/SimpleFlowController'
+import { useDialogTimerTracking } from '../../../shared/composables/useDialogTimerTracking'
 
 export type PainDialogState = 'mainView' | 'subRegionView' | 'painScaleView' | 'confirmation'
 
@@ -70,6 +72,14 @@ export function usePainDialogMachine() {
     getItems: () => items.value,
     getTitle: () => title.value,
   })
+  
+  // Timer-Tracking mit Cleanup-Logik
+  const { isActive, scheduleTimer, cleanup: cleanupTimers } = useDialogTimerTracking({
+    onCleanup: () => {
+      autoMode.stop()
+    },
+    dialogName: 'PainDialog'
+  })
 
   // ✅ Hauptregion auswählen
   async function selectMainRegion(id: string) {
@@ -83,12 +93,17 @@ export function usePainDialogMachine() {
     mainRegionId.value = id
     state.value = 'subRegionView'
     
+    // ✅ Index explizit auf 0 setzen, damit immer bei 0 beginnt (nicht aus Cache)
+    autoMode.index.value = 0
+    
     // ✅ Spreche neuen Titel (skipTitle = true, da Titel hier schon gesprochen wird)
     await tts.speak(title.value)
     
     // Starte AutoMode nach 3 Sekunden (skipTitle = true, Titel wurde bereits gesprochen)
-    setTimeout(() => {
+    scheduleTimer(() => {
       if (state.value === 'subRegionView') {
+        // ✅ Stelle sicher, dass Index noch bei 0 ist (falls State zwischenzeitlich geändert wurde)
+        autoMode.index.value = 0
         autoMode.start(true) // ✅ skipTitle = true, da Titel bereits gesprochen
       }
     }, 3000)
@@ -104,11 +119,16 @@ export function usePainDialogMachine() {
       mainRegionId.value = null
       state.value = 'mainView'
       
+      // ✅ Index explizit auf 0 setzen, damit immer bei 0 beginnt (nicht aus Cache)
+      autoMode.index.value = 0
+      
       await tts.speak(title.value)
       
       // Starte AutoMode nach 3 Sekunden (skipTitle = true, Titel wurde bereits gesprochen)
-      setTimeout(() => {
+      scheduleTimer(() => {
         if (state.value === 'mainView') {
+          // ✅ Stelle sicher, dass Index noch bei 0 ist (falls State zwischenzeitlich geändert wurde)
+          autoMode.index.value = 0
           autoMode.start(true) // ✅ skipTitle = true
         }
       }, 3000)
@@ -119,12 +139,17 @@ export function usePainDialogMachine() {
     subRegionId.value = id
     state.value = 'painScaleView'
     
+    // ✅ Index explizit auf 0 setzen, damit Schmerzskala immer bei 0 beginnt (nicht aus Cache)
+    autoMode.index.value = 0
+    
     // ✅ Spreche neuen Titel (skipTitle = true, da Titel hier schon gesprochen wird)
     await tts.speak(title.value)
     
     // Starte AutoMode nach 3 Sekunden (skipTitle = true, Titel wurde bereits gesprochen)
-    setTimeout(() => {
+    scheduleTimer(() => {
       if (state.value === 'painScaleView') {
+        // ✅ Stelle sicher, dass Index noch bei 0 ist (falls State zwischenzeitlich geändert wurde)
+        autoMode.index.value = 0
         autoMode.start(true) // ✅ skipTitle = true, da Titel bereits gesprochen
       }
     }, 3000)
@@ -144,19 +169,24 @@ export function usePainDialogMachine() {
     await tts.speak(textToSpeak)
     
     // Nach 5 Sekunden zurück zum Start
-    setTimeout(() => {
+    scheduleTimer(() => {
       // Reset State
       state.value = 'mainView'
       mainRegionId.value = null
       subRegionId.value = null
       painLevel.value = null
       
+      // ✅ Index explizit auf 0 setzen, damit immer bei 0 beginnt (nicht aus Cache)
+      autoMode.index.value = 0
+      
       // Spreche Titel
       tts.speak(title.value)
       
       // Starte AutoMode nach 3 Sekunden (skipTitle = true, Titel wurde bereits gesprochen)
-      setTimeout(() => {
+      scheduleTimer(() => {
         if (state.value === 'mainView') {
+          // ✅ Stelle sicher, dass Index noch bei 0 ist (falls State zwischenzeitlich geändert wurde)
+          autoMode.index.value = 0
           autoMode.start(true) // ✅ skipTitle = true, da Titel bereits gesprochen
         }
       }, 3000)
@@ -164,12 +194,44 @@ export function usePainDialogMachine() {
   }
 
   /**
+   * Stoppt alle Timer und verhindert weitere AutoMode-Starts
+   */
+  function cleanup() {
+    cleanupTimers()
+  }
+
+  /**
    * Zurück zur Haupt-App navigieren
    */
   function goBack() {
-    autoMode.stop()
+    console.log('PainDialog: goBack() - Stoppe alle Services und navigiere zu /app')
+    
+    // Cleanup: Stoppe alle Timer und verhindere weitere AutoMode-Starts
+    cleanup()
+    
+    // Stoppe TTS (lokal)
     tts.cancel()
-    router.push('/app')
+    
+    // Stoppe alle TTS (SimpleFlowController)
+    simpleFlowController.stopTTS()
+    
+    // Stoppe alle TTS (auch außerhalb SimpleFlowController)
+    if (window.speechSynthesis) {
+      window.speechSynthesis.cancel()
+    }
+    
+    // Stoppe Auto-Mode komplett (SimpleFlowController)
+    simpleFlowController.stopAutoMode()
+    
+    // Setze aktiven View zurück
+    simpleFlowController.setActiveView('')
+    
+    // Navigiere zu /app (Home-View)
+    router.push('/app').then(() => {
+      console.log('PainDialog: Navigation zu /app erfolgreich - alle Services gestoppt')
+    }).catch((error) => {
+      console.error('PainDialog: Navigation zu /app fehlgeschlagen:', error)
+    })
   }
 
   // ✅ Blink-Handler
@@ -237,6 +299,7 @@ export function usePainDialogMachine() {
     selectPainLevel,
     goBack,
     handleBlink,
+    cleanup,
     
     // TTS
     speak: tts.speak,

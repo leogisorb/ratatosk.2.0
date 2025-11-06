@@ -21,6 +21,13 @@ onMounted(async () => {
   
   // Cleanup-Funktion für onUnmounted speichern
   ;(window as any).__cleanupEventListeners = cleanupEventListeners
+  
+  // Cleanup-Funktion global verfügbar machen für Router-Guard
+  ;(window as any).__warningCleanup = () => {
+    console.log('WarningView: Global cleanup aufgerufen (Router-Guard)')
+    cleanupEventListeners()
+    cleanup()
+  }
 })
 
 onUnmounted(() => {
@@ -34,6 +41,9 @@ onUnmounted(() => {
   
   // System aufräumen
   cleanup()
+  
+  // Global cleanup-Funktion entfernen
+  delete (window as any).__warningCleanup
 })
 </script>
 

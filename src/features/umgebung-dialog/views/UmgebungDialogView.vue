@@ -248,15 +248,34 @@ onMounted(() => {
     faceRecognition.start()
   }
   
+  // ✅ Index explizit auf 0 setzen, bevor AutoMode startet (verhindert Springen)
+  autoMode.index.value = 0
+  
   // Start AutoMode (wie im pain-dialog)
   autoMode.start()
   
   // Start Input Manager (wie im pain-dialog)
   inputManager.start()
+  
+  // Cleanup-Funktion global verfügbar machen für Router-Guard
+  ;(window as any).__umgebungDialogCleanup = () => {
+    console.log('UmgebungDialogView: Global cleanup aufgerufen (Router-Guard)')
+    
+    // Cleanup: Stoppe alle Timer und verhindere weitere AutoMode-Starts
+    machine.cleanup()
+    
+    // Stoppe Input Manager
+    inputManager.stop()
+    
+    // Face Recognition nicht stoppen (läuft seitenübergreifend)
+    // if (faceRecognition.isActive.value) {
+    //   faceRecognition.stop()
+    // }
+  }
 })
 
 onUnmounted(() => {
-  console.log('UmgebungDialogView unmounted')
+  console.log('UmgebungDialogView unmounted - cleaning up')
   
   // Stop AutoMode (stoppt auch alle Timer)
   autoMode.stop()
@@ -268,6 +287,9 @@ onUnmounted(() => {
   if (faceRecognition.isActive.value) {
     faceRecognition.stop()
   }
+  
+  // Global cleanup-Funktion entfernen
+  delete (window as any).__umgebungDialogCleanup
 })
 </script>
 

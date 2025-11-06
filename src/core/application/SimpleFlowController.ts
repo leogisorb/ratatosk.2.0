@@ -25,6 +25,8 @@ export class SimpleFlowController {
   private constructor() {
     this.speechSynthesis = window.speechSynthesis
     this.setupVoiceHandling()
+    // ✅ Lade Mute-State aus localStorage beim Initialisieren
+    this.loadMuteState()
   }
 
   public static getInstance(): SimpleFlowController {
@@ -467,11 +469,47 @@ export class SimpleFlowController {
   }
 
   /**
+   * Lädt Mute-State aus localStorage
+   */
+  private loadMuteState(): void {
+    try {
+      const savedMuted = localStorage.getItem('ratatosk-tts-muted')
+      if (savedMuted !== null) {
+        this.isTTSMuted = savedMuted === 'true'
+        console.log('SimpleFlowController: Mute state loaded from localStorage:', this.isTTSMuted)
+      } else {
+        // Default: nicht stumm
+        this.isTTSMuted = false
+        console.log('SimpleFlowController: No saved mute state, using default (not muted)')
+      }
+    } catch (error) {
+      console.error('SimpleFlowController: Failed to load mute state from localStorage:', error)
+      this.isTTSMuted = false
+    }
+  }
+
+  /**
+   * Speichert Mute-State in localStorage
+   */
+  private saveMuteState(): void {
+    try {
+      localStorage.setItem('ratatosk-tts-muted', String(this.isTTSMuted))
+      console.log('SimpleFlowController: Mute state saved to localStorage:', this.isTTSMuted)
+    } catch (error) {
+      console.error('SimpleFlowController: Failed to save mute state to localStorage:', error)
+    }
+  }
+
+  /**
    * Schaltet TTS global stumm/an (durch sanftes Ausfaden)
+   * ✅ NUR vom Header-Button aufrufbar - Views dürfen dies NICHT tun!
    */
   public setTTSMuted(muted: boolean): void {
     this.isTTSMuted = muted
     console.log('SimpleFlowController: TTS muted set to:', muted)
+    
+    // ✅ Speichere Mute-State persistent
+    this.saveMuteState()
     
     // ✅ Wenn stumm geschaltet wird: Stoppe alle laufenden TTS (auch außerhalb SimpleFlowController)
     if (muted) {

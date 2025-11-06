@@ -288,6 +288,9 @@ onMounted(() => {
     faceRecognition.start()
   }
   
+  // ✅ Index explizit auf 0 setzen, bevor AutoMode startet (verhindert Springen)
+  autoMode.index.value = 0
+  
   // Start AutoMode (wie im pain-dialog)
   autoMode.start()
   
@@ -300,10 +303,23 @@ onMounted(() => {
       initializeCamera()
     })
   }
+  
+  // Cleanup-Funktion global verfügbar machen für Router-Guard
+  ;(window as any).__settingsDialogCleanup = () => {
+    console.log('SettingsDialogView: Global cleanup aufgerufen (Router-Guard)')
+    
+    // Cleanup: Stoppe alle Timer und verhindere weitere AutoMode-Starts
+    machine.cleanup()
+    
+    // Stoppe Input Manager
+    inputManager.stop()
+    
+    // Kamera-Settings sollten Face Recognition nicht stoppen, da es global genutzt wird
+  }
 })
 
 onUnmounted(() => {
-  console.log('SettingsDialogView unmounted')
+  console.log('SettingsDialogView unmounted - cleaning up')
   
   // Stop AutoMode (stoppt auch alle Timer)
   autoMode.stop()
@@ -316,6 +332,9 @@ onUnmounted(() => {
   // if (faceRecognition.isActive.value && categoryId.value !== 'kamera') {
   //   faceRecognition.stop()
   // }
+  
+  // Global cleanup-Funktion entfernen
+  delete (window as any).__settingsDialogCleanup
 })
 </script>
 

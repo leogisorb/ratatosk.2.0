@@ -6,6 +6,8 @@ import { useTTS } from './useTTS'
 import { useAutoMode, type AutoModeConfig } from './useAutoMode'
 import { useUmgebungDictionary } from './useUmgebungDictionary'
 import type { UmgebungRegion, UmgebungSubRegion, UmgebungSubSubRegion } from '../data/umgebungDialogData'
+import { simpleFlowController } from '../../../core/application/SimpleFlowController'
+import { useDialogTimerTracking } from '../../../shared/composables/useDialogTimerTracking'
 
 export type UmgebungDialogState = 'mainView' | 'subRegionView' | 'subSubRegionView' | 'confirmation'
 
@@ -70,6 +72,14 @@ export function useUmgebungDialogMachine() {
   }
 
   const autoMode = useAutoMode(autoModeConfig)
+  
+  // Timer-Tracking mit Cleanup-Logik
+  const { isActive, scheduleTimer, cleanup: cleanupTimers } = useDialogTimerTracking({
+    onCleanup: () => {
+      autoMode.stop()
+    },
+    dialogName: 'UmgebungDialog'
+  })
 
   // Actions
 
@@ -93,7 +103,7 @@ export function useUmgebungDialogMachine() {
     
     // Nach 3 Sekunden AutoMode starten (skipTitle = true, da Titel bereits gesprochen)
     // Warte auf Vue Reactivity Update mit nextTick, dann prüfe ob Items vorhanden sind
-    setTimeout(async () => {
+    scheduleTimer(async () => {
       await nextTick() // Warte auf Vue Reactivity Update
       if (items.value.length > 0) {
         autoMode.start(true)
@@ -120,7 +130,7 @@ export function useUmgebungDialogMachine() {
       
       // Nach 3 Sekunden AutoMode starten (skipTitle = true, da Titel bereits gesprochen)
       // Warte auf Vue Reactivity Update mit nextTick, dann prüfe ob Items vorhanden sind
-      setTimeout(async () => {
+      scheduleTimer(async () => {
         await nextTick() // Warte auf Vue Reactivity Update
         if (items.value.length > 0) {
           autoMode.start(true)
@@ -141,7 +151,7 @@ export function useUmgebungDialogMachine() {
     
     // Nach 3 Sekunden AutoMode starten (skipTitle = true, da Titel bereits gesprochen)
     // Warte auf Vue Reactivity Update mit nextTick, dann prüfe ob Items vorhanden sind
-    setTimeout(async () => {
+    scheduleTimer(async () => {
       await nextTick() // Warte auf Vue Reactivity Update
       if (items.value.length > 0) {
         autoMode.start(true)
@@ -167,7 +177,7 @@ export function useUmgebungDialogMachine() {
       
       // Nach 3 Sekunden AutoMode starten (skipTitle = true, da Titel bereits gesprochen)
       // Warte auf Vue Reactivity Update mit nextTick, dann prüfe ob Items vorhanden sind
-      setTimeout(async () => {
+      scheduleTimer(async () => {
         await nextTick() // Warte auf Vue Reactivity Update
         if (items.value.length > 0) {
           autoMode.start(true)
@@ -186,7 +196,7 @@ export function useUmgebungDialogMachine() {
     await tts.speak(confirmationText.value)
 
     // Nach 3 Sekunden zurück zu Haupt-View
-    setTimeout(() => {
+    scheduleTimer(() => {
       resetToMainView()
     }, 3000)
   }
@@ -207,7 +217,7 @@ export function useUmgebungDialogMachine() {
     
     // Nach 3 Sekunden AutoMode starten (skipTitle = true, da Titel bereits gesprochen)
     // Warte auf Vue Reactivity Update mit nextTick, dann prüfe ob Items vorhanden sind
-    setTimeout(async () => {
+    scheduleTimer(async () => {
       await nextTick() // Warte auf Vue Reactivity Update
       if (items.value.length > 0) {
         autoMode.start(true)
@@ -218,15 +228,44 @@ export function useUmgebungDialogMachine() {
   }
 
   /**
+   * Stoppt alle Timer und verhindert weitere AutoMode-Starts
+   */
+  function cleanup() {
+    cleanupTimers()
+  }
+
+  /**
    * Zurück zur Haupt-App navigieren
    */
   function goBack() {
-    // Stoppe AutoMode
-    autoMode.stop()
-    // Stoppe TTS
+    console.log('UmgebungDialog: goBack() - Stoppe alle Services und navigiere zu /app')
+    
+    // Cleanup: Stoppe alle Timer und verhindere weitere AutoMode-Starts
+    cleanup()
+    
+    // Stoppe TTS (lokal)
     tts.cancel()
-    // Navigiere zurück
-    router.push('/app')
+    
+    // Stoppe alle TTS (SimpleFlowController)
+    simpleFlowController.stopTTS()
+    
+    // Stoppe alle TTS (auch außerhalb SimpleFlowController)
+    if (window.speechSynthesis) {
+      window.speechSynthesis.cancel()
+    }
+    
+    // Stoppe Auto-Mode komplett (SimpleFlowController)
+    simpleFlowController.stopAutoMode()
+    
+    // Setze aktiven View zurück
+    simpleFlowController.setActiveView('')
+    
+    // Navigiere zu /app (Home-View)
+    router.push('/app').then(() => {
+      console.log('UmgebungDialog: Navigation zu /app erfolgreich - alle Services gestoppt')
+    }).catch((error) => {
+      console.error('UmgebungDialog: Navigation zu /app fehlgeschlagen:', error)
+    })
   }
 
   /**
@@ -287,7 +326,7 @@ export function useUmgebungDialogMachine() {
       // Index direkt setzen
       autoMode.index.value = index
       // AutoMode neu starten mit skipTitle
-      setTimeout(() => {
+      scheduleTimer(() => {
         autoMode.start(true)
       }, 100)
     }
@@ -313,7 +352,8 @@ export function useUmgebungDialogMachine() {
     resetToMainView,
     goBack,
     handleBlink,
-    goToIndex
+    goToIndex,
+    cleanup
   }
 }
 

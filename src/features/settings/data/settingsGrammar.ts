@@ -10,9 +10,9 @@ export function getOptionsViewTitle(categoryId: string | null): string {
   
   switch (categoryId) {
     case 'leuchtdauer':
-      return 'LEUCHTDAUER'
+      return 'ANZEIGEINTERVALL'
     case 'blinzeldauer':
-      return 'BLINZELDAUER'
+      return 'EMPFINDLICHKEIT'
     case 'farbmodus':
       return 'FARBMODUS'
     case 'kamera':

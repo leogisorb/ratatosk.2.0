@@ -6,6 +6,8 @@ import { useTTS } from './useTTS'
 import { useAutoMode, type AutoModeConfig } from './useAutoMode'
 import { useIchDictionary } from './useIchDictionary'
 import type { IchRegion, IchSubRegion } from '../data/ichDialogData'
+import { simpleFlowController } from '../../../core/application/SimpleFlowController'
+import { useDialogTimerTracking } from '../../../shared/composables/useDialogTimerTracking'
 
 export type IchDialogState = 'mainView' | 'subRegionView' | 'confirmation'
 
@@ -61,6 +63,14 @@ export function useIchDialogMachine() {
   }
 
   const autoMode = useAutoMode(autoModeConfig)
+  
+  // Timer-Tracking mit Cleanup-Logik
+  const { isActive, scheduleTimer, cleanup: cleanupTimers } = useDialogTimerTracking({
+    onCleanup: () => {
+      autoMode.stop()
+    },
+    dialogName: 'IchDialog'
+  })
 
   // Actions
 
@@ -83,7 +93,7 @@ export function useIchDialogMachine() {
     
     // Nach 3 Sekunden AutoMode starten (skipTitle = true, da Titel bereits gesprochen)
     // Warte auf Vue Reactivity Update mit nextTick, dann prüfe ob Items vorhanden sind
-    setTimeout(async () => {
+    scheduleTimer(async () => {
       await nextTick() // Warte auf Vue Reactivity Update
       if (items.value.length > 0) {
         autoMode.start(true)
@@ -109,7 +119,7 @@ export function useIchDialogMachine() {
       
       // Nach 3 Sekunden AutoMode starten (skipTitle = true, da Titel bereits gesprochen)
       // Warte auf Vue Reactivity Update mit nextTick, dann prüfe ob Items vorhanden sind
-      setTimeout(async () => {
+      scheduleTimer(async () => {
         await nextTick() // Warte auf Vue Reactivity Update
         if (items.value.length > 0) {
           autoMode.start(true)
@@ -128,7 +138,7 @@ export function useIchDialogMachine() {
     await tts.speak(confirmationText.value)
 
     // Nach 3 Sekunden zurück zu Haupt-View
-    setTimeout(() => {
+    scheduleTimer(() => {
       resetToMainView()
     }, 3000)
   }
@@ -148,7 +158,7 @@ export function useIchDialogMachine() {
     
     // Nach 3 Sekunden AutoMode starten (skipTitle = true, da Titel bereits gesprochen)
     // Warte auf Vue Reactivity Update mit nextTick, dann prüfe ob Items vorhanden sind
-    setTimeout(async () => {
+    scheduleTimer(async () => {
       await nextTick() // Warte auf Vue Reactivity Update
       if (items.value.length > 0 && state.value === 'mainView') {
         autoMode.start(true)
@@ -159,12 +169,44 @@ export function useIchDialogMachine() {
   }
 
   /**
+   * Stoppt alle Timer und verhindert weitere AutoMode-Starts
+   */
+  function cleanup() {
+    cleanupTimers()
+  }
+
+  /**
    * Zurück zur Haupt-App navigieren
    */
   function goBack() {
-    autoMode.stop()
+    console.log('IchDialog: goBack() - Stoppe alle Services und navigiere zu /app')
+    
+    // Cleanup: Stoppe alle Timer und verhindere weitere AutoMode-Starts
+    cleanup()
+    
+    // Stoppe TTS (lokal)
     tts.cancel()
-    router.push('/app')
+    
+    // Stoppe alle TTS (SimpleFlowController)
+    simpleFlowController.stopTTS()
+    
+    // Stoppe alle TTS (auch außerhalb SimpleFlowController)
+    if (window.speechSynthesis) {
+      window.speechSynthesis.cancel()
+    }
+    
+    // Stoppe Auto-Mode komplett (SimpleFlowController)
+    simpleFlowController.stopAutoMode()
+    
+    // Setze aktiven View zurück
+    simpleFlowController.setActiveView('')
+    
+    // Navigiere zu /app (Home-View)
+    router.push('/app').then(() => {
+      console.log('IchDialog: Navigation zu /app erfolgreich - alle Services gestoppt')
+    }).catch((error) => {
+      console.error('IchDialog: Navigation zu /app fehlgeschlagen:', error)
+    })
   }
 
   /**
@@ -219,7 +261,7 @@ export function useIchDialogMachine() {
       // Index direkt setzen
       autoMode.index.value = index
       // AutoMode neu starten mit skipTitle
-      setTimeout(() => {
+      scheduleTimer(() => {
         autoMode.start(true)
       }, 100)
     }
@@ -243,7 +285,8 @@ export function useIchDialogMachine() {
     resetToMainView,
     goBack,
     handleBlink,
-    goToIndex
+    goToIndex,
+    cleanup
   }
 }
 

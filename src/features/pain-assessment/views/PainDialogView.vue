@@ -239,19 +239,42 @@ const inputManager = useInputManager({
 
 // ✅ Lifecycle
 onMounted(() => {
+  console.log('PainDialogView mounted')
+  
   // Start Face Recognition
   if (!faceRecognition.isActive.value) {
     faceRecognition.start()
   }
+  
+  // ✅ Index explizit auf 0 setzen, bevor AutoMode startet (verhindert Springen)
+  autoMode.index.value = 0
   
   // Start AutoMode
   autoMode.start()
   
   // ✅ Start Input Manager - alle Handler werden automatisch registriert!
   inputManager.start()
+  
+  // Cleanup-Funktion global verfügbar machen für Router-Guard
+  ;(window as any).__painDialogCleanup = () => {
+    console.log('PainDialogView: Global cleanup aufgerufen (Router-Guard)')
+    
+    // Cleanup: Stoppe alle Timer und verhindere weitere AutoMode-Starts
+    machine.cleanup()
+    
+    // Stoppe Input Manager
+    inputManager.stop()
+    
+    // Face Recognition nicht stoppen (läuft seitenübergreifend)
+    // if (faceRecognition.isActive.value) {
+    //   faceRecognition.stop()
+    // }
+  }
 })
 
 onUnmounted(() => {
+  console.log('PainDialogView unmounted - cleaning up')
+  
   // Stop AutoMode
   autoMode.stop()
   
@@ -262,6 +285,9 @@ onUnmounted(() => {
   if (faceRecognition.isActive.value) {
     faceRecognition.stop()
   }
+  
+  // Global cleanup-Funktion entfernen
+  delete (window as any).__painDialogCleanup
 })
 </script>
 

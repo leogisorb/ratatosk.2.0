@@ -82,13 +82,13 @@ export function useSettingsDialogLogic() {
   const settingsCategories = [
     {
       id: 'leuchtdauer',
-      title: 'LEUCHTDAUER',
+      title: 'ANZEIGEINTERVALL',
       icon: leuchtdauerIcon,
       category: 'settings' as const
     },
     {
       id: 'blinzeldauer',
-      title: 'BLINZELDAUER',
+      title: 'EMPFINDLICHKEIT',
       icon: blinzeldauerIcon,
       category: 'settings' as const
     },

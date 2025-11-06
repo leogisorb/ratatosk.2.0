@@ -37,6 +37,12 @@ export function useFaceRecognition() {
   // Alte Version Parameter (mutable)
   let closed_frames = 0
   let eyes_closed = false
+  
+  // Einseitiges Blinzeln: Tracking für linkes und rechtes Auge
+  let left_eye_closed_frames = 0
+  let right_eye_closed_frames = 0
+  let left_eye_closed = false
+  let right_eye_closed = false
 
   // Eye detection landmarks (MediaPipe Face Mesh)
   const EYE_LANDMARKS = {
@@ -449,6 +455,26 @@ export function useFaceRecognition() {
       eyes_closed = false
     }
 
+    // Einseitiges Blinzeln: Tracking für linkes und rechtes Auge
+    // Wichtig: Nur wenn genau EIN Auge geschlossen ist (nicht beide!)
+    if (left_eye == "1" && right_eye == "0") {
+      // Nur linkes Auge geschlossen, rechtes offen
+      left_eye_closed_frames = left_eye_closed_frames + 1
+      right_eye_closed_frames = 0 // Rechtes Auge ist offen, reset
+      right_eye_closed = false
+    } else if (right_eye == "1" && left_eye == "0") {
+      // Nur rechtes Auge geschlossen, linkes offen
+      right_eye_closed_frames = right_eye_closed_frames + 1
+      left_eye_closed_frames = 0 // Linkes Auge ist offen, reset
+      left_eye_closed = false
+    } else {
+      // Beide Augen offen ODER beide geschlossen - reset einseitiges Blinzeln
+      left_eye_closed_frames = 0
+      right_eye_closed_frames = 0
+      left_eye_closed = false
+      right_eye_closed = false
+    }
+
     // Wenn beide Augen entsprechend lange zu waren, führe die Klick-aktion aus
     const currentTimeClosed = config.time_closed()
     const requiredFrames = Math.ceil(currentTimeClosed * 30) // 30 FPS = 30 Frames pro Sekunde
@@ -467,6 +493,48 @@ export function useFaceRecognition() {
         }
       })
       window.dispatchEvent(blinkEvent)
+    }
+    
+    // Einseitiges Blinzeln: Separate Dauer von 1,5 Sekunden (statt normaler blinzeldauer)
+    const singleEyeBlinkDuration = 1.5 // 1,5 Sekunden für einseitiges Blinzeln
+    const requiredFramesSingleEye = Math.ceil(singleEyeBlinkDuration * 30) // 30 FPS = 30 Frames pro Sekunde
+    
+    // Einseitiges Blinzeln: Linkes Auge geschlossen
+    if ((left_eye_closed_frames >= requiredFramesSingleEye) && (!left_eye_closed) && (right_eye == "0")) {
+      console.log(`Face Recognition: Linkes Auge Blinzel erkannt - Shortcut ausgelöst (${left_eye_closed_frames} Frames, benötigt: ${requiredFramesSingleEye} Frames für ${singleEyeBlinkDuration}s)`)
+      left_eye_closed = true // Verhindert mehrfache Auslösung
+      
+      // Dispatch einseitiges Blinzel-Event (links)
+      const singleEyeBlinkEvent = new CustomEvent('faceSingleEyeBlinkDetected', {
+        detail: {
+          timestamp: Date.now(),
+          source: 'face-recognition',
+          eye: 'left',
+          closed_frames: left_eye_closed_frames,
+          time_closed: singleEyeBlinkDuration,
+          required_frames: requiredFramesSingleEye
+        }
+      })
+      window.dispatchEvent(singleEyeBlinkEvent)
+    }
+    
+    // Einseitiges Blinzeln: Rechtes Auge geschlossen
+    if ((right_eye_closed_frames >= requiredFramesSingleEye) && (!right_eye_closed) && (left_eye == "0")) {
+      console.log(`Face Recognition: Rechtes Auge Blinzel erkannt - Shortcut ausgelöst (${right_eye_closed_frames} Frames, benötigt: ${requiredFramesSingleEye} Frames für ${singleEyeBlinkDuration}s)`)
+      right_eye_closed = true // Verhindert mehrfache Auslösung
+      
+      // Dispatch einseitiges Blinzel-Event (rechts)
+      const singleEyeBlinkEvent = new CustomEvent('faceSingleEyeBlinkDetected', {
+        detail: {
+          timestamp: Date.now(),
+          source: 'face-recognition',
+          eye: 'right',
+          closed_frames: right_eye_closed_frames,
+          time_closed: singleEyeBlinkDuration,
+          required_frames: requiredFramesSingleEye
+        }
+      })
+      window.dispatchEvent(singleEyeBlinkEvent)
     }
   }
 
