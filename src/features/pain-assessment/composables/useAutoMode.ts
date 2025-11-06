@@ -139,10 +139,12 @@ export function useAutoMode(config: AutoModeConfig) {
       itemTitle = item.title || item.name || String(item)
     }
     console.log(`✅ useAutoMode.loop() - Index: ${index.value}, Item:`, itemTitle, item)
+    console.log(`✅ useAutoMode.loop() - Rufe speak() auf mit Text: "${itemTitle}"`)
     
     // ✅ WICHTIG: Index wird NUR aktualisiert NACH TTS ist komplett fertig
     // Während TTS spricht, bleibt der visuelle Index beim aktuellen Item
     speak(itemTitle).then(() => {
+      console.log(`✅ useAutoMode.loop() - speak() abgeschlossen für: "${itemTitle}"`)
       // ✅ Prüfe ob noch laufend (wurde möglicherweise gestoppt während TTS)
       if (!running.value) {
         console.warn('❌ useAutoMode.loop() - Gestoppt während TTS')
