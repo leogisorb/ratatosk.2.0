@@ -1,35 +1,19 @@
 <script setup lang="ts">
-import { computed, onMounted, watch } from 'vue'
-import { useSettingsStore } from './features/settings/stores/settings'
-
 // App.vue serves as the main router container
-// TTSActivator removed
+// All logic is now in composables for better organization
 
-// Settings Store
-const settingsStore = useSettingsStore()
+import { useAppTheme } from './shared/composables/useAppTheme'
+import { useAppLifecycle } from './shared/composables/useAppLifecycle'
+import { useGlobalBlinkGestures } from './shared/composables/useGlobalBlinkGestures'
 
-// Computed
-const appClasses = computed(() => ({
-  'dark': settingsStore.isDarkMode
-}))
+// Theme management
+const { appClasses } = useAppTheme()
 
-// Watch for theme changes and apply to document
-watch(() => settingsStore.isDarkMode, (isDark) => {
-  if (isDark) {
-    document.documentElement.classList.add('dark')
-  } else {
-    document.documentElement.classList.remove('dark')
-  }
-}, { immediate: true })
+// App lifecycle (mobile pause/resume, visibility changes)
+useAppLifecycle()
 
-// Initialize theme on mount
-onMounted(() => {
-  if (settingsStore.isDarkMode) {
-    document.documentElement.classList.add('dark')
-  } else {
-    document.documentElement.classList.remove('dark')
-  }
-})
+// Global blink gestures (5-second blink, SOS detection)
+useGlobalBlinkGestures()
 </script>
 
 <template>

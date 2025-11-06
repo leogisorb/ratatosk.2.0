@@ -147,10 +147,12 @@ export function useCarousel(items: CarouselItem[]) {
   }
 
   /**
-   * Initialisiert das Karussell
+   * Initialisiert das Karussell - immer bei Index 0 starten
    */
   const initializeCarousel = () => {
     checkIsMobile()
+    // Explizit auf Index 0 setzen (Hard Reset)
+    position.currentIndex = 0
     updatePosition(0, itemCount.value)
     
     // Starte Auto-Scroll nach kurzer Verzögerung

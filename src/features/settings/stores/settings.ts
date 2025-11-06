@@ -14,8 +14,10 @@ export const useSettingsStore = defineStore('settings', () => {
     soundEnabled: true,
     voiceEnabled: true, // TTS aktiviert
     // Neue Einstellungen
-    leuchtdauer: 3, // 3 Sekunden
-    blinzeldauer: 0.7, // 0.7 Sekunden - wie lange man blinzeln muss
+    leuchtdauer: 3, // 3 Sekunden - wird zu "Zeigezeit" umbenannt
+    blinzeldauer: 0.7, // 0.7 Sekunden - wird zu "Empfindlichkeit" umbenannt
+    zeigezeit: 3, // 3 Sekunden - neue Bezeichnung für "Leuchtdauer"
+    empfindlichkeit: 0.7, // 0.7 Sekunden - neue Bezeichnung für "Blinzeldauer"
     farbmodus: 'neutral', // neutral color mode
     kamera: 'back', // back camera
     cameraBrightness: 50, // camera brightness 0-100 (default: 50)
@@ -74,8 +76,10 @@ export const useSettingsStore = defineStore('settings', () => {
       soundEnabled: true,
       voiceEnabled: true, // TTS aktiviert
       // Neue Einstellungen
-      leuchtdauer: 3, // 3 Sekunden
-      blinzeldauer: 0.7, // 0.7 Sekunden - wie lange man blinzeln muss
+      leuchtdauer: 3, // 3 Sekunden - wird zu "Zeigezeit" umbenannt
+      blinzeldauer: 0.7, // 0.7 Sekunden - wird zu "Empfindlichkeit" umbenannt
+      zeigezeit: 3, // 3 Sekunden - neue Bezeichnung für "Leuchtdauer"
+      empfindlichkeit: 0.7, // 0.7 Sekunden - neue Bezeichnung für "Blinzeldauer"
       farbmodus: 'neutral', // neutral color mode
       kamera: 'back', // back camera
       cameraBrightness: 50, // camera brightness 0-100 (default: 50)

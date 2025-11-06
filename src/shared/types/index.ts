@@ -41,8 +41,10 @@ export interface UserSettings {
   soundEnabled: boolean
   voiceEnabled: boolean // TTS aktiviert
   // Neue Einstellungen
-  leuchtdauer: number // in seconds (default: 3)
-  blinzeldauer: number // in seconds (default: 0.7) - wie lange man blinzeln muss
+  leuchtdauer?: number // in seconds (default: 3) - deprecated, use zeigezeit
+  blinzeldauer?: number // in seconds (default: 0.7) - deprecated, use empfindlichkeit
+  zeigezeit?: number // in seconds (default: 3) - neue Bezeichnung für "Leuchtdauer"
+  empfindlichkeit?: number // in seconds (default: 0.7) - neue Bezeichnung für "Blinzeldauer"
   farbmodus: string // color mode (default: 'neutral')
   kamera: string // camera setting (default: 'back')
   cameraBrightness: number // camera brightness 0-100 (default: 50)

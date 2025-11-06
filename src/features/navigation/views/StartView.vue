@@ -262,8 +262,8 @@ function startApp() {
     console.log('StartView: Start durch Blinzeln - TTS bereits aktiviert beim Blinzeln')
   }
   
-  // Navigate to main app
-  router.push('/app')
+  // Navigate to main app using replace() to remove StartView from history
+  router.replace('/app')
 }
 
 function startWithoutBlink() {
@@ -271,8 +271,8 @@ function startWithoutBlink() {
   console.log('StartView: Start ohne Blinzeln - aktiviere TTS seitenübergreifend')
   simpleFlowController.setUserInteracted(true)
   
-  // Navigate to main app without blink detection
-  router.push('/app')
+  // Navigate to main app using replace() to remove StartView from history
+  router.replace('/app')
 }
 
 // Lifecycle

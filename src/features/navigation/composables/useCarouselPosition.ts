@@ -5,10 +5,10 @@ import { CAROUSEL_CONFIG, type CarouselPosition } from '../config/carouselConfig
  * Composable für Karussell-Position und Animation
  */
 export function useCarouselPosition() {
-  // Position State
+  // Position State - always start at index 0
   const position = reactive<CarouselPosition>({
     offset: 0,
-    currentIndex: 0,
+    currentIndex: 0, // Always start at 0
     isAnimating: false
   })
 

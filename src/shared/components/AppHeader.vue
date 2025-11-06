@@ -66,14 +66,14 @@
           </svg>
         </button>
 
-        <!-- Zurück Button -->
+        <!-- Home Button -->
         <button
-          @click="goBack"
+          @click="goHome"
           class="header-button"
-          title="Zurück zur Hauptseite"
+          title="Zurück zum Hauptmenü"
         >
           <svg class="header-button-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
           </svg>
         </button>
       </div>
@@ -82,7 +82,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted } from 'vue'
+import { ref, computed, onMounted, watch } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import { useSettingsStore } from '../../features/settings/stores/settings'
 import { simpleFlowController } from '../../core/application/SimpleFlowController'
@@ -94,11 +94,17 @@ const route = useRoute()
 // Stores
 const settingsStore = useSettingsStore()
 
-// State - TTS enabled by default
+// State - TTS enabled by default (synchronized with global state)
 const isVolumeEnabled = ref(true)
 
 // Computed
 const isDarkMode = computed(() => settingsStore.isDarkMode)
+
+// Sync with global mute state
+watch(() => simpleFlowController.getTTSMuted(), (isMuted) => {
+  isVolumeEnabled.value = !isMuted
+  console.log('AppHeader: Volume state synced with global state:', isVolumeEnabled.value)
+}, { immediate: true })
 
 // Methods
 const toggleVolume = () => {
@@ -132,22 +138,35 @@ const toggleDarkMode = () => {
   console.log('Dark mode toggled:', isDarkMode.value)
 }
 
-const goBack = () => {
-  // Stoppe TTS und Auto-Mode von allen Seiten beim Zurücknavigieren zu /app
-  console.log(`Header: Navigating back from ${route.path} to /app, stopping all TTS and Auto-Mode...`)
+const goHome = () => {
+  // Hard Reset: Reload page to /app (wie ein "Hard Reset")
+  console.log(`Header: Home button clicked - reloading page to /app`)
   
-  // Stoppe alle laufenden TTS komplett (nicht nur Volume)
-  simpleFlowController.stopTTS()  // SimpleFlowController TTS komplett beenden
+  // Stoppe alle laufenden TTS komplett
+  simpleFlowController.stopTTS()
   
   // Stoppe Auto-Mode komplett
   simpleFlowController.stopAutoMode()
   
-  // Setze aktiven View zurück für saubere Neuinitialisierung
-  simpleFlowController.setActiveView('/app')
+  // Navigate to /app and reload page for clean reset
+  router.push('/app').then(() => {
+    // Reload page for complete reset
+    window.location.reload()
+  })
+}
+
+const goBack = () => {
+  // Normal back navigation: only go one level back
+  console.log(`Header: Back button clicked - navigating one level back`)
   
-  // Immer zurück zu /app
-  console.log('Header: Navigating back to app - all services stopped and view reset')
-  router.push('/app')
+  // Check if we can go back in history
+  if (window.history.length > 1) {
+    // Use router.back() to go one level back
+    router.back()
+  } else {
+    // If no history, go to /app
+    router.push('/app')
+  }
 }
 </script>
 
