@@ -21,6 +21,14 @@ export function useGlobalBlinkGestures() {
     globalBlinkGestureService.initialize(router)
     console.log('App: GlobalBlinkGestureService initialized - SOS and 5-second blink work in ALL views')
     
+    // Try to start face recognition if not already active (for 5-second blink detection)
+    if (!faceRecognition.isActive.value) {
+      console.log('App: Face recognition not active - attempting to start for 5-second blink detection')
+      faceRecognition.start().catch(err => {
+        console.warn('App: Failed to start face recognition for 5-second blink:', err)
+      })
+    }
+    
     // Start checking for 5-second blink (polling every 100ms)
     // This polling runs continuously and works in ALL views since it's in App.vue (root component)
     longBlinkCheckInterval = window.setInterval(() => {
