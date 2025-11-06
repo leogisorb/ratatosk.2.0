@@ -24,8 +24,45 @@ export function useGlobalBlinkGestures() {
     // Start checking for 5-second blink (polling every 100ms)
     // This polling runs continuously and works in ALL views since it's in App.vue (root component)
     longBlinkCheckInterval = window.setInterval(() => {
-      if (faceRecognition.isActive.value && faceRecognition.eyeState.value) {
-        globalBlinkGestureService.checkLongBlinkForHome(faceRecognition.eyeState.value)
+      // Try to get eye state from face recognition
+      let eyeState: { left: boolean; right: boolean } | null = null
+      
+      if (faceRecognition.isActive.value) {
+        const state = faceRecognition.eyeState.value
+        if (state) {
+          eyeState = {
+            left: state.left,
+            right: state.right
+          }
+        }
+      }
+      
+      // Fallback: Use isBlinking() method if eye state is not available
+      if (!eyeState && faceRecognition.isActive.value) {
+        // Create a synthetic eye state from isBlinking()
+        const isBlinking = faceRecognition.isBlinking()
+        eyeState = {
+          left: !isBlinking,
+          right: !isBlinking
+        }
+      }
+      
+      // Check for 5-second blink if we have eye state
+      if (eyeState) {
+        // Debug: Log eye state occasionally (every 2 seconds)
+        const now = Date.now()
+        if (!(window as any).lastEyeStateLog || now - (window as any).lastEyeStateLog > 2000) {
+          console.log('5-sec blink check: Eye state:', eyeState, 'isActive:', faceRecognition.isActive.value, 'isBlinking:', faceRecognition.isBlinking())
+          ;(window as any).lastEyeStateLog = now
+        }
+        
+        globalBlinkGestureService.checkLongBlinkForHome(eyeState)
+      } else {
+        // Debug: Log when face recognition is not active or no eye state
+        if (!(window as any).lastInactiveLog || Date.now() - (window as any).lastInactiveLog > 10000) {
+          console.warn('5-sec blink check: Face recognition not active or no eye state - cannot detect 5-second blink. isActive:', faceRecognition.isActive.value)
+          ;(window as any).lastInactiveLog = Date.now()
+        }
       }
     }, 100)
     console.log('App: 5-second blink polling started - works globally in all views')

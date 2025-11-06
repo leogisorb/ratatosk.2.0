@@ -263,18 +263,30 @@ export class GlobalBlinkGestureService {
     if (bothEyesClosed) {
       if (this.longBlinkStartTime === null) {
         this.longBlinkStartTime = Date.now()
+        console.log('GlobalBlinkGestureService: 5-second blink started - both eyes closed')
       } else {
         const elapsed = Date.now() - this.longBlinkStartTime
+        const remaining = this.longBlinkDuration - elapsed
+        
+        // Log progress every second
+        if (Math.floor(elapsed / 1000) !== Math.floor((elapsed - 100) / 1000)) {
+          console.log(`GlobalBlinkGestureService: 5-second blink in progress - ${Math.floor(elapsed / 1000)}s / 5s (${Math.floor(remaining / 1000)}s remaining)`)
+        }
+        
         if (elapsed >= this.longBlinkDuration) {
           // 5 seconds of continuous blinking detected
-          console.log('GlobalBlinkGestureService: 5-second blink detected - navigating to home')
+          console.log('GlobalBlinkGestureService: ✅ 5-second blink detected - navigating to home')
           this.navigateToHome()
           this.longBlinkStartTime = null
         }
       }
     } else {
       // Eyes opened - reset
-      this.longBlinkStartTime = null
+      if (this.longBlinkStartTime !== null) {
+        const elapsed = Date.now() - this.longBlinkStartTime
+        console.log(`GlobalBlinkGestureService: 5-second blink cancelled - eyes opened after ${Math.floor(elapsed / 1000)}s`)
+        this.longBlinkStartTime = null
+      }
     }
   }
   
