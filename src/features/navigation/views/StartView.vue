@@ -294,26 +294,9 @@ function startWithoutBlink() {
 }
 
 // Lifecycle
-onMounted(async () => {
-  console.log('StartView: Mounted')
-  
-  // Auto-start camera if possible
-  if (typeof navigator !== 'undefined' && navigator.mediaDevices && typeof navigator.mediaDevices.getUserMedia === 'function') {
-    console.log('Kamera verfügbar - starte automatisch')
-    // Auto-start camera after a short delay
-    setTimeout(async () => {
-      try {
-        await startCamera()
-      } catch (error) {
-        console.log('Auto-start failed, user can still click button')
-        // Setze Status auf error, damit User den Button verwenden kann
-        cameraStatus.value = 'error'
-      }
-    }, 1000) // 1 Sekunde Verzögerung
-  } else {
-    console.log('Kamera nicht verfügbar - User kann trotzdem den Button verwenden')
-    cameraStatus.value = 'error'
-  }
+onMounted(() => {
+  console.log('StartView: Mounted - Kamera wird NICHT automatisch gestartet, User muss Button klicken')
+  // ✅ Kamera wird NICHT automatisch gestartet - User muss explizit den Button klicken
 })
 
 onUnmounted(() => {
