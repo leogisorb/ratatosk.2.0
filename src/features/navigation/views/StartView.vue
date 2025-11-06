@@ -221,6 +221,9 @@ async function startCamera() {
 }
 
 function startBlinkDetection() {
+  let hasSpokenStart = false
+  let hasSpokenProgress = false
+  
   // Check for blinks every 100ms
   blinkInterval = window.setInterval(() => {
     if (faceRecognition.isBlinking()) {
@@ -229,19 +232,34 @@ function startBlinkDetection() {
         // ✅ TTS aktivieren, sobald das Blinzeln beginnt (Interaktion erkannt!)
         console.log('StartView: Blinzeln erkannt - aktiviere TTS als Interaktion')
         simpleFlowController.setUserInteracted(true)
+        
+        // ✅ TTS-Feedback: "Blinzeln erkannt"
+        if (!hasSpokenStart) {
+          hasSpokenStart = true
+          simpleFlowController.speak('Blinzeln erkannt. Halten Sie die Augen geschlossen.')
+        }
       }
       
       const elapsed = (Date.now() - blinkStartTime) / 1000
       blinkProgress.value = Math.min((elapsed / blinkDuration.value) * 100, 100)
       
+      // ✅ TTS-Feedback bei 50% Fortschritt
+      if (elapsed >= blinkDuration.value * 0.5 && !hasSpokenProgress) {
+        hasSpokenProgress = true
+        simpleFlowController.speak('Weiter so.')
+      }
+      
       if (elapsed >= blinkDuration.value) {
         // Blink duration reached - start the app
+        simpleFlowController.speak('Starte Programm.')
         startApp()
       }
     } else {
       // Eyes opened - reset blink detection
       blinkStartTime = null
       blinkProgress.value = 0
+      hasSpokenStart = false
+      hasSpokenProgress = false
     }
   }, 100)
 }
