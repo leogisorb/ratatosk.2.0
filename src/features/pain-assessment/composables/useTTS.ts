@@ -27,21 +27,11 @@ export function useTTS() {
    */
   function speak(text: string): Promise<void> {
     return new Promise((resolve) => {
-      // ✅ Prüfe ob TTS global aktiviert ist (userInteracted)
-      const globalUserInteracted = simpleFlowController.getState().userInteracted
-      if (!globalUserInteracted) {
-        console.log('useTTS: TTS nicht aktiviert (userInteracted = false) - aktiviere jetzt')
-        simpleFlowController.setUserInteracted(true)
-      }
-      
       // ✅ Kein Text oder TTS deaktiviert → sofort auflösen
       if (!enabled.value || !text.trim()) {
-        console.log('useTTS: TTS deaktiviert oder leerer Text - enabled:', enabled.value, 'text:', text.trim())
         setTimeout(() => resolve(), 500) // Kurze Wartezeit für Timing-Konsistenz
         return
       }
-      
-      console.log('useTTS: Spreche Text:', text.trim(), 'enabled:', enabled.value, 'userInteracted:', globalUserInteracted)
 
       // ✅ Prüfe ob TTS stumm geschaltet ist → Volume 0 setzen
       const isMuted = simpleFlowController.getTTSMuted()

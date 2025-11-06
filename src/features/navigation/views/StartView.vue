@@ -221,9 +221,6 @@ async function startCamera() {
 }
 
 function startBlinkDetection() {
-  let hasSpokenStart = false
-  let hasSpokenProgress = false
-  
   // Check for blinks every 100ms
   blinkInterval = window.setInterval(() => {
     if (faceRecognition.isBlinking()) {
@@ -232,34 +229,19 @@ function startBlinkDetection() {
         // ✅ TTS aktivieren, sobald das Blinzeln beginnt (Interaktion erkannt!)
         console.log('StartView: Blinzeln erkannt - aktiviere TTS als Interaktion')
         simpleFlowController.setUserInteracted(true)
-        
-        // ✅ TTS-Feedback: "Blinzeln erkannt"
-        if (!hasSpokenStart) {
-          hasSpokenStart = true
-          simpleFlowController.speak('Blinzeln erkannt. Halten Sie die Augen geschlossen.')
-        }
       }
       
       const elapsed = (Date.now() - blinkStartTime) / 1000
       blinkProgress.value = Math.min((elapsed / blinkDuration.value) * 100, 100)
       
-      // ✅ TTS-Feedback bei 50% Fortschritt
-      if (elapsed >= blinkDuration.value * 0.5 && !hasSpokenProgress) {
-        hasSpokenProgress = true
-        simpleFlowController.speak('Weiter so.')
-      }
-      
       if (elapsed >= blinkDuration.value) {
         // Blink duration reached - start the app
-        simpleFlowController.speak('Starte Programm.')
         startApp()
       }
     } else {
       // Eyes opened - reset blink detection
       blinkStartTime = null
       blinkProgress.value = 0
-      hasSpokenStart = false
-      hasSpokenProgress = false
     }
   }, 100)
 }
@@ -294,9 +276,26 @@ function startWithoutBlink() {
 }
 
 // Lifecycle
-onMounted(() => {
-  console.log('StartView: Mounted - Kamera wird NICHT automatisch gestartet, User muss Button klicken')
-  // ✅ Kamera wird NICHT automatisch gestartet - User muss explizit den Button klicken
+onMounted(async () => {
+  console.log('StartView: Mounted')
+  
+  // Auto-start camera if possible
+  if (typeof navigator !== 'undefined' && navigator.mediaDevices && typeof navigator.mediaDevices.getUserMedia === 'function') {
+    console.log('Kamera verfügbar - starte automatisch')
+    // Auto-start camera after a short delay
+    setTimeout(async () => {
+      try {
+        await startCamera()
+      } catch (error) {
+        console.log('Auto-start failed, user can still click button')
+        // Setze Status auf error, damit User den Button verwenden kann
+        cameraStatus.value = 'error'
+      }
+    }, 1000) // 1 Sekunde Verzögerung
+  } else {
+    console.log('Kamera nicht verfügbar - User kann trotzdem den Button verwenden')
+    cameraStatus.value = 'error'
+  }
 })
 
 onUnmounted(() => {

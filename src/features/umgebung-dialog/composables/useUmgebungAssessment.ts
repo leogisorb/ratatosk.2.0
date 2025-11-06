@@ -55,16 +55,9 @@ export function useUmgebungAssessment() {
     }
   }
 
-  // ✅ Prüfe ob TTS bereits im StartView aktiviert wurde, sonst aktivieren
-  const globalUserInteracted = simpleFlowController.getState().userInteracted
-  if (globalUserInteracted) {
-    console.log('UmgebungAssessment: TTS bereits im StartView aktiviert - synchronisiere lokalen Status')
-    userInteracted.value = true
-  } else {
-    // TTS sofort aktivieren für UmgebungDialogView (Fallback)
-    userInteracted.value = true
-    simpleFlowController.setUserInteracted(true)
-  }
+  // TTS sofort aktivieren für UmgebungDialogView
+  userInteracted.value = true
+  simpleFlowController.setUserInteracted(true)
   console.log('UmgebungAssessment: TTS activated immediately')
 
   // Auto-Mode Funktionen über SimpleFlowController
