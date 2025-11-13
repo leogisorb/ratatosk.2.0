@@ -1,5 +1,6 @@
 import { ref, reactive } from 'vue'
 import { CAROUSEL_CONFIG, type AutoScrollState } from '../config/carouselConfig'
+import { simpleFlowController } from '../../../core/application/SimpleFlowController'
 
 /**
  * Composable für Auto-Scroll-Funktionalität
@@ -17,12 +18,24 @@ export function useAutoScroll() {
    */
   const startAutoScroll = (onScroll: (index: number) => void, itemCount: number) => {
     if (autoScrollState.isActive || autoScrollState.intervalId) return
-
-    console.log('Starting auto-scroll')
+    
+    // Prüfe, ob Auto-Mode aktiv ist - wenn ja, starte Auto-Scroll nicht
+    const autoModeState = simpleFlowController.getState()
+    if (autoModeState.isAutoModeActive) {
+      return
+    }
     autoScrollState.isActive = true
     autoScrollState.isPaused = false
 
     autoScrollState.intervalId = setInterval(() => {
+      // Prüfe bei jedem Intervall, ob Auto-Mode aktiv ist
+      const currentAutoModeState = simpleFlowController.getState()
+      if (currentAutoModeState.isAutoModeActive) {
+        // Auto-Mode wurde aktiviert, stoppe Auto-Scroll
+        stopAutoScroll()
+        return
+      }
+      
       if (!autoScrollState.isPaused) {
         // Simuliere nächsten Index (wird von außen verwaltet)
         onScroll(0) // Placeholder - wird von außen überschrieben
@@ -40,7 +53,6 @@ export function useAutoScroll() {
     }
     autoScrollState.isActive = false
     autoScrollState.isPaused = false
-    console.log('Auto-scroll stopped')
   }
 
   /**
@@ -48,7 +60,6 @@ export function useAutoScroll() {
    */
   const pauseAutoScroll = () => {
     autoScrollState.isPaused = true
-    console.log('Auto-scroll paused')
   }
 
   /**
@@ -56,7 +67,6 @@ export function useAutoScroll() {
    */
   const resumeAutoScroll = () => {
     autoScrollState.isPaused = false
-    console.log('Auto-scroll resumed')
   }
 
   /**

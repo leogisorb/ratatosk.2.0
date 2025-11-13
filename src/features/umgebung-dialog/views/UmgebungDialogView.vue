@@ -23,7 +23,7 @@
                 autoMode.index.value === index ? 'tile-active' : 'tile-inactive',
                 region.id === dict.ID_BACK ? 'back-tile' : ''
               ]"
-              @click="autoMode.index.value === index ? (region.id === dict.ID_BACK ? goBack() : selectMainRegion(String(region.id))) : null"
+              @click="region.id === dict.ID_BACK ? goBack() : (autoMode.index.value === index ? selectMainRegion(String(region.id)) : null)"
               @contextmenu.prevent="autoMode.index.value === index ? null : null"
             >
               <div 
@@ -69,7 +69,7 @@
                     '--offset': index - autoMode.index.value,
                     '--rotation': (index < autoMode.index.value ? -20 : index > autoMode.index.value ? 20 : 0) + 'deg'
                   }"
-                  @click="autoMode.index.value === index ? selectSubRegion(String(subRegion.id)) : null"
+                  @click="subRegion.id === dict.ID_BACK ? goBack() : (autoMode.index.value === index ? selectSubRegion(String(subRegion.id)) : null)"
                   @contextmenu.prevent="autoMode.index.value === index ? null : null"
                 >
                   <div class="carousel-item-content">

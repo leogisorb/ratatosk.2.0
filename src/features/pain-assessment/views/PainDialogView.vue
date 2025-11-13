@@ -23,7 +23,7 @@
                 autoMode.index.value === index ? 'tile-active' : 'tile-inactive',
                 region.id === 'zurueck' ? 'back-tile' : ''
               ]"
-              @click="autoMode.index.value === index ? (region.id === 'zurueck' ? goBack() : selectMainRegion(String(region.id))) : null"
+              @click="region.id === 'zurueck' ? goBack() : (autoMode.index.value === index ? selectMainRegion(String(region.id)) : null)"
               @contextmenu.prevent="autoMode.index.value === index ? null : null"
             >
               <div 
@@ -69,7 +69,7 @@
                   '--offset': index - autoMode.index.value,
                   '--rotation': (index < autoMode.index.value ? -20 : index > autoMode.index.value ? 20 : 0) + 'deg'
                 }"
-                @click="autoMode.index.value === index ? selectSubRegion(String(subRegion.id)) : null"
+                @click="subRegion.id === 'zurueck' ? goBack() : (autoMode.index.value === index ? selectSubRegion(String(subRegion.id)) : null)"
                 @contextmenu.prevent="autoMode.index.value === index ? null : null"
               >
                 <div class="carousel-item-content">
@@ -163,6 +163,7 @@ import { usePainDialogMachine } from '../composables/usePainDialogMachine'
 import { useFaceRecognition } from '../../face-recognition/composables/useFaceRecognition'
 import { useInputManager } from '../../../shared/composables/useInputManager'
 import type { InputEvent } from '../../../core/application/InputManager'
+import { simpleFlowController } from '../../../core/application/SimpleFlowController'
 import AppHeader from '../../../shared/components/AppHeader.vue'
 
 // ✅ Neue modulare Architektur
@@ -226,14 +227,22 @@ const handlePainScaleClick = (event: MouseEvent) => {
 }
 
 // ✅ Input Manager - Zentrale Abstraktion für alle Eingabemedien
-// ✅ Nur Blinzeln und linke Maustaste
+// ✅ Nur Blinzeln und Rechtsklick (contextmenu)
 const inputManager = useInputManager({
   onSelect: (event: InputEvent) => {
-    console.log('InputManager: Input detected', event.type, event.source)
-    // ✅ Einheitlicher Callback für Blink und linke Maustaste
-    handleBlink()
+    console.log('PainDialogView: InputManager - Input detected', event.type, event.source, {
+      currentState: state.value,
+      currentIndex: autoMode.index.value,
+      currentItem: items.value[autoMode.index.value]
+    })
+    // ✅ Einheitlicher Callback für Blink und Rechtsklick
+    try {
+      handleBlink()
+    } catch (error) {
+      console.error('PainDialogView: Fehler in handleBlink()', error)
+    }
   },
-  enabledInputs: ['blink', 'click'], // ✅ Nur Blinzeln und linke Maustaste
+  enabledInputs: ['blink', 'click'], // ✅ Blinzeln und Rechtsklick (contextmenu)
   cooldown: 300 // ✅ Verhindert zu häufige Inputs
 })
 
@@ -259,35 +268,59 @@ onMounted(() => {
   ;(window as any).__painDialogCleanup = () => {
     console.log('PainDialogView: Global cleanup aufgerufen (Router-Guard)')
     
+    // Stoppe Input Manager zuerst (verhindert weitere Blinzel-Events)
+    inputManager.stop()
+    
     // Cleanup: Stoppe alle Timer und verhindere weitere AutoMode-Starts
     machine.cleanup()
     
-    // Stoppe Input Manager
-    inputManager.stop()
+    // Stoppe TTS komplett (SimpleFlowController)
+    simpleFlowController.stopTTS()
     
-    // Face Recognition nicht stoppen (läuft seitenübergreifend)
+    // Stoppe alle TTS (auch außerhalb SimpleFlowController)
+    if (window.speechSynthesis) {
+      window.speechSynthesis.cancel()
+    }
+    
+    // Stoppe Auto-Mode komplett (SimpleFlowController)
+    simpleFlowController.stopAutoMode()
+    
+    // Face Recognition NICHT stoppen (läuft seitenübergreifend)
     // if (faceRecognition.isActive.value) {
     //   faceRecognition.stop()
     // }
+    
+    console.log('PainDialogView: Global cleanup abgeschlossen')
   }
 })
 
 onUnmounted(() => {
   console.log('PainDialogView unmounted - cleaning up')
   
-  // Stop AutoMode
-  autoMode.stop()
-  
-  // ✅ Stop Input Manager - alle Handler werden automatisch entfernt!
+  // Stoppe Input Manager zuerst (verhindert weitere Blinzel-Events)
   inputManager.stop()
   
-  // Stop Face Recognition
-  if (faceRecognition.isActive.value) {
-    faceRecognition.stop()
+  // Cleanup: Stoppe alle Timer und verhindere weitere AutoMode-Starts
+  machine.cleanup()
+  
+  // Stoppe TTS komplett (SimpleFlowController)
+  simpleFlowController.stopTTS()
+  
+  // Stoppe alle TTS (auch außerhalb SimpleFlowController)
+  if (window.speechSynthesis) {
+    window.speechSynthesis.cancel()
   }
+  
+  // Stoppe Auto-Mode komplett (SimpleFlowController)
+  simpleFlowController.stopAutoMode()
+  
+  // Face Recognition NICHT stoppen (läuft seitenübergreifend)
+  // Die Face Recognition läuft global und sollte nicht gestoppt werden
   
   // Global cleanup-Funktion entfernen
   delete (window as any).__painDialogCleanup
+  
+  console.log('PainDialogView: Cleanup abgeschlossen')
 })
 </script>
 

@@ -1,4 +1,4 @@
-import { ref, computed, onMounted, onUnmounted } from 'vue'
+import { ref, computed, watch, onMounted, onUnmounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { useSettingsStore } from '../../settings/stores/settings'
 import { useCommunicationStore } from '../../communication/stores/communication'
@@ -20,34 +20,30 @@ export function useHomeViewLogic() {
   
   // Blinzel-Erkennung - nur für aktive Kachel
   const handleFaceBlink = (event: any) => {
-    console.log('HomeView: Face blink received:', event.detail)
-    
     // Ignoriere Blink-Events wenn sie von Header-Buttons kommen
     if (event.detail && event.detail.source === 'fallback-interaction') {
-      console.log('HomeView: Ignoring blink event from header button')
       return
     }
     
     // Nur für aktive Kachel reagieren
     const currentItem = menuItems[position.currentIndex]
     if (currentItem) {
-      console.log('HomeView: Blinzel für aktive Item:', currentItem.title)
-      
       // TTS + Navigation - Auto-Mode stoppt bei Interaktion
       speakText(currentItem.title)
       selectMenu(currentItem.id)
-    } else {
-      console.log('HomeView: Keine aktive Kachel für Blinzel-Interaktion')
     }
   }
 
   // State
   const isAutoMode = ref(true)
   const userInteracted = ref(false)
+  const isAutoModeNavigating = ref(false) // Flag um zu verhindern, dass Watcher bei Auto-Mode ausgelöst wird
   
   // Instanz-ID für bessere Kontrolle
   const instanceId = Math.random().toString(36).substr(2, 9)
-  console.log('HomeViewSimple instance created:', instanceId)
+  
+  // Timeout-IDs für Cleanup (verhindert Memory Leaks)
+  const timeoutIds: number[] = []
   
   // Computed
   const currentMenu = computed(() => {
@@ -64,7 +60,6 @@ export function useHomeViewLogic() {
 
   // TTS über SimpleFlowController
   const speakText = async (text: string) => {
-    console.log('HomeViewSimple: Requesting TTS for:', text)
     await simpleFlowController.speak(text)
   }
 
@@ -135,41 +130,116 @@ export function useHomeViewLogic() {
     handleCarouselTouchEnd,
     startAutoScrollWithCallback,
     stopAutoScrollCompletely,
+    setAutoModeStarting,
     checkIsMobile
   } = useCarousel(menuItems)
 
   // Computed für aktuellen Tile-Index
   const currentTileIndex = computed(() => position.currentIndex)
 
+  // Watch für Tile-Index-Änderungen - TTS aussprechen
+  watch(currentTileIndex, (newIndex, oldIndex) => {
+    // Überspringe initiale Setzung (oldIndex ist undefined beim ersten Mal)
+    if (oldIndex === undefined) return
+    
+    // Überspringe, wenn Auto-Mode aktiv ist oder gerade navigiert (TTS wird bereits im Auto-Mode-Callback aufgerufen)
+    const autoModeState = simpleFlowController.getState()
+    if (isAutoModeNavigating.value || autoModeState.isAutoModeActive) {
+      return
+    }
+    
+    // Nur TTS aussprechen, wenn Benutzer bereits interagiert hat
+    if (userInteracted.value) {
+      // Verwende den tatsächlichen Index aus position, um sicherzustellen, dass er korrekt ist
+      const actualIndex = position.currentIndex
+      const currentItem = menuItems[actualIndex]
+      
+      if (currentItem) {
+        speakText(currentItem.title)
+      } else {
+        console.warn(`[${instanceId}] No item found at index ${actualIndex} (watcher index: ${newIndex})`)
+      }
+    }
+  })
+
   // Auto-Mode Funktionen - einfach und direkt
   const startAutoMode = () => {
     if (!isAutoMode.value) return
 
-    console.log(`[${instanceId}] Starting auto-mode with`, menuItems.length, 'main categories')
+    // Setze Flag, dass Auto-Mode gerade startet (verhindert Auto-Scroll-Start)
+    setAutoModeStarting(true)
     
-    const success = simpleFlowController.startAutoMode(
-      menuItems,
-      (currentIndex, currentItem) => {
-        navigateToIndex(currentIndex)
-        console.log(`[${instanceId}] Auto-mode cycle:`, currentItem.title, 'at index:', currentIndex)
-        speakText(currentItem.title)
-      },
-      settingsStore.settings.autoModeSpeed,
-      settingsStore.settings.autoModeSpeed
-    )
+    // Stoppe Auto-Scroll, damit es die Position nicht ändert
+    stopAutoScrollCompletely()
+    
+    // Stelle sicher, dass Position auf 0 initialisiert ist (für ersten Zyklus)
+    // WICHTIG: Position muss SOFORT gesetzt werden, bevor Auto-Mode startet
+    navigateToIndex(0)
+    
+    // Warte kurz, damit die Navigation zu Index 0 abgeschlossen ist
+    // Dies ist besonders wichtig beim ersten Zyklus
+    const timeoutId1 = window.setTimeout(() => {
+      const success = simpleFlowController.startAutoMode(
+        menuItems,
+        (currentIndex, currentItem) => {
+          // Setze Flag VOR Navigation, um Watcher zu überspringen
+          isAutoModeNavigating.value = true
+          
+          // Navigiere ZUERST zu Index, damit die aktive Kachel korrekt ist
+          navigateToIndex(currentIndex)
+          
+          // Beim ersten Zyklus (Index 0) sicherstellen, dass Position wirklich auf 0 ist
+          if (currentIndex === 0) {
+            // Warte einen Frame, damit die Navigation zu Index 0 abgeschlossen ist
+            requestAnimationFrame(() => {
+              const actualIndex = position.currentIndex
+              if (actualIndex === 0) {
+                speakText(currentItem.title)
+              } else {
+                // Position noch nicht korrekt, warte noch einen Frame
+                requestAnimationFrame(() => {
+                  speakText(currentItem.title)
+                })
+              }
+              
+              // Reset Flag nach kurzer Verzögerung
+              const timeoutId2 = window.setTimeout(() => {
+                isAutoModeNavigating.value = false
+              }, 100)
+              timeoutIds.push(timeoutId2)
+            })
+          } else {
+            // Für alle anderen Zyklen: TTS SOFORT aufrufen
+            speakText(currentItem.title)
+            
+            // Reset Flag nach kurzer Verzögerung
+            const timeoutId3 = window.setTimeout(() => {
+              isAutoModeNavigating.value = false
+            }, 100)
+            timeoutIds.push(timeoutId3)
+          }
+        },
+        settingsStore.settings.autoModeSpeed,
+        settingsStore.settings.autoModeSpeed
+      )
 
-    if (!success) {
-      console.log(`[${instanceId}] Auto-mode start failed`)
-    }
+      if (!success) {
+        // Reset Flag, wenn Auto-Mode nicht gestartet werden konnte
+        setAutoModeStarting(false)
+      } else {
+        // Reset Flag nach kurzer Verzögerung, damit Auto-Mode Zeit hat, aktiv zu werden
+        const timeoutId4 = window.setTimeout(() => {
+          setAutoModeStarting(false)
+        }, 200)
+        timeoutIds.push(timeoutId4)
+      }
+    }, 100) // Kurze Verzögerung, damit Navigation zu Index 0 abgeschlossen ist
+    timeoutIds.push(timeoutId1)
   }
 
   // HomeView TTS Start nach 1 Sekunde
   const startHomeViewTTS = () => {
-    console.log(`[${instanceId}] Starting HomeView TTS after 1 second delay`)
-    
-    setTimeout(() => {
-      console.log(`[${instanceId}] HomeView: Starting TTS and rhythms`)
-      
+    const timeoutId = window.setTimeout(() => {
       // Starte Auto-Mode mit TTS
       startAutoMode()
       
@@ -177,39 +247,35 @@ export function useHomeViewLogic() {
       simpleFlowController.setUserInteracted(true)
       
     }, 1000) // 1 Sekunde Verzögerung
+    timeoutIds.push(timeoutId)
   }
 
   const stopAutoMode = () => {
-    console.log(`[${instanceId}] Stopping auto-mode`)
     simpleFlowController.stopAutoMode()
   }
 
   // User interaction detection - aktiviert TTS
   const enableTTSOnInteraction = () => {
     if (!userInteracted.value) {
-      console.log(`[${instanceId}] User interaction detected - TTS now enabled`)
       userInteracted.value = true
       simpleFlowController.setUserInteracted(true)
       
       // Für mobile Geräte: Teste TTS sofort nach Interaktion
       if (isMobile.value) {
-        console.log(`[${instanceId}] Mobile device - testing TTS after user interaction`)
-        setTimeout(() => {
+        const timeoutId = window.setTimeout(() => {
           if (typeof speechSynthesis !== 'undefined' && speechSynthesis) {
             // ✅ Prüfe ob TTS stumm geschaltet ist → Volume 0 setzen
             const isMuted = simpleFlowController.getTTSMuted()
             // Teste TTS mit einem kurzen Text
             const testUtterance = new SpeechSynthesisUtterance('Test')
             testUtterance.volume = isMuted ? 0 : 0.1  // ✅ Volume basierend auf Mute-Status (sehr leise wenn nicht stumm)
-            testUtterance.onend = () => {
-              console.log(`[${instanceId}] Mobile TTS test successful`)
-            }
             testUtterance.onerror = (e) => {
               console.warn(`[${instanceId}] Mobile TTS test failed:`, e)
             }
             speechSynthesis.speak(testUtterance)
           }
         }, 100)
+        timeoutIds.push(timeoutId)
       }
     }
   }
@@ -217,7 +283,6 @@ export function useHomeViewLogic() {
   // Menu selection - verhindert Navigation ohne Interaktion
   const selectMenu = (menuIdOrItem: string | CarouselItem) => {
     const menuId = typeof menuIdOrItem === 'string' ? menuIdOrItem : menuIdOrItem.id
-    console.log(`[${instanceId}] selectMenu called with menuId:`, menuId)
     
     // Enable TTS on user interaction
     enableTTSOnInteraction()
@@ -236,9 +301,6 @@ export function useHomeViewLogic() {
 
     // Navigate to the selected route
     const selectedItem = menuItems.find(item => item.id === menuId)
-    if (selectedItem) {
-      console.log(`[${instanceId}] Selected item:`, selectedItem.title, '- Navigation erlaubt')
-    }
     
     router.push(selectedItem?.route || '/app')
   }
@@ -250,40 +312,30 @@ export function useHomeViewLogic() {
     event.stopPropagation()
     event.stopImmediatePropagation()
     
-    console.log('HomeView: Right click detected! Current tile index:', position.currentIndex, 'Items length:', menuItems.length)
-    
     // Nur für aktive Kachel reagieren
     const currentItem = menuItems[position.currentIndex]
     if (currentItem) {
-      console.log('HomeView: Right click activation for aktive item:', currentItem.title)
-      
       // TTS + Navigation - Auto-Mode stoppt bei Interaktion
       speakText(currentItem.title)
       selectMenu(currentItem.id)
-    } else {
-      console.log('HomeView: No aktive item found for right click')
     }
     return false
   }
 
   // Volume toggle handler - synchronisiert mit Header
   const handleVolumeToggle = (event: Event) => {
-    const customEvent = event as CustomEvent
-    console.log(`[${instanceId}] Volume toggle received:`, customEvent.detail.enabled)
-    
     // TTS wird automatisch über SimpleFlowController gesteuert
     // Keine manuelle TTS-Stoppung mehr nötig
-    console.log(`[${instanceId}] Volume toggle handled by SimpleFlowController`)
   }
 
   // Funktion um Leuchtdauer dynamisch zu aktualisieren
   const updateLeuchtdauer = () => {
     if (isAutoMode.value) {
-      console.log('Leuchtdauer geändert, Auto-Mode wird mit neuer Geschwindigkeit neu gestartet')
       stopAutoMode()
-      setTimeout(() => {
+      const timeoutId = window.setTimeout(() => {
         startAutoMode()
       }, 100)
+      timeoutIds.push(timeoutId)
     }
   }
 
@@ -294,10 +346,8 @@ export function useHomeViewLogic() {
     const menuTile = target.closest('.menu-tile')
     
     if (menuTile && menuTile.classList.contains('tile-active')) {
-      console.log('HomeView: Touch start on aktive tile')
       handleCarouselTouchStart(event)
     } else {
-      console.log('HomeView: Touch start on inactive tile - ignoring')
       event.preventDefault()
       event.stopPropagation()
     }
@@ -322,10 +372,8 @@ export function useHomeViewLogic() {
     const menuTile = target.closest('.menu-tile')
     
     if (menuTile && menuTile.classList.contains('tile-active')) {
-      console.log('HomeView: Touch end on aktive tile')
       handleCarouselTouchEnd(event)
     } else {
-      console.log('HomeView: Touch end on inactive tile - ignoring')
       event.preventDefault()
       event.stopPropagation()
     }
@@ -362,8 +410,6 @@ export function useHomeViewLogic() {
 
   // Lifecycle
   onMounted(() => {
-    console.log(`[${instanceId}] HomeView mounting - cleaning up any existing services`)
-    
     // Stoppe alle laufenden Services für saubere Neuinitialisierung
     stopAutoMode()
     stopAutoScrollCompletely()
@@ -379,10 +425,7 @@ export function useHomeViewLogic() {
     
     // Prüfe ob Face Recognition bereits aktiv ist (von StartView)
     if (!faceRecognition.isActive.value) {
-      console.log('HomeView: Face Recognition nicht aktiv - starte sie')
       faceRecognition.start()
-    } else {
-      console.log('HomeView: Face Recognition bereits aktiv - verwende bestehende Instanz')
     }
     
     // Add global event listeners to detect user interaction
@@ -391,7 +434,6 @@ export function useHomeViewLogic() {
     document.addEventListener('touchstart', enableTTSOnInteraction)
     
     // Add right-click handler
-    console.log('HomeView: Registering right-click handler')
     document.addEventListener('contextmenu', handleRightClick, { capture: true, passive: false })
     
     // Add volume toggle listener
@@ -402,13 +444,12 @@ export function useHomeViewLogic() {
     
     // Event Listener für Face Blinzel-Erkennung
     window.addEventListener('faceBlinkDetected', handleFaceBlink)
-    console.log('HomeView: Face Recognition Event Listener registriert')
-    
-    console.log(`[${instanceId}] HomeViewSimple mounted - all services initialized cleanly`)
   })
 
   onUnmounted(() => {
-    console.log(`[${instanceId}] HomeView unmounting - starting cleanup`)
+    // Clear alle Timeouts (verhindert Memory Leaks)
+    timeoutIds.forEach(id => clearTimeout(id))
+    timeoutIds.length = 0
     
     // Stoppe Auto-Mode und TTS
     stopAutoMode()
@@ -431,8 +472,6 @@ export function useHomeViewLogic() {
     document.removeEventListener('contextmenu', handleRightClick, { capture: true })
     window.removeEventListener('volumeToggle', handleVolumeToggle)
     window.removeEventListener('resize', checkIsMobile)
-    
-    console.log(`[${instanceId}] HomeView unmounted - cleanup completed`)
   })
 
   return {

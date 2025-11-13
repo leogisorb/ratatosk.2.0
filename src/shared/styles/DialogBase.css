@@ -24,7 +24,7 @@
 /* === GRID CONTAINER STYLES === */
 .pain-dialog .grid-container {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(clamp(180px, 25vw, 400px), 1fr));
+  grid-template-columns: repeat(3, 1fr);
   gap: clamp(0.5rem, 2vw, 1.5rem);
   max-width: 1440px;
   width: 100%;
@@ -954,6 +954,583 @@
   }
 }
 
+/* === iPad RESPONSIVE DESIGN === */
+
+/* iPad Mini/Air (768px - 1024px) */
+@media (min-width: 768px) and (max-width: 1024px) {
+  .pain-dialog .main-content {
+    padding: 1.5rem;
+    box-sizing: border-box;
+  }
+  
+  .pain-dialog .main-title {
+    font-size: 2.5rem;
+    margin: 0 0 3rem 0;
+  }
+  
+  .pain-dialog .grid-container {
+    grid-template-columns: repeat(3, 1fr);
+    gap: 1rem;
+    width: 100%;
+    max-width: 100%;
+    padding: 0 1rem;
+    box-sizing: border-box;
+    margin: 0 auto;
+  }
+  
+  .pain-dialog .menu-tile {
+    width: 100%;
+    max-width: 100%;
+    height: clamp(180px, 30vw, 320px);
+    padding: clamp(1.5rem, 2.5vw, 2.5rem);
+    box-sizing: border-box;
+  }
+  
+  .pain-dialog .tile-icon-container {
+    width: clamp(100px, 12vw, 140px);
+    height: clamp(100px, 12vw, 140px);
+  }
+  
+  .pain-dialog .tile-icon {
+    width: clamp(100px, 12vw, 140px);
+    height: clamp(100px, 12vw, 140px);
+  }
+  
+  .pain-dialog .tile-text {
+    font-size: clamp(1.2rem, 2vw, 1.6rem);
+  }
+  
+  .pain-dialog .pain-scale-title {
+    font-size: 3rem;
+  }
+  
+  .pain-dialog .pain-scale-level-combined {
+    font-size: 3.75rem; /* 1.25x größer als Titel */
+  }
+  
+  .pain-dialog .pain-scale-number {
+    font-size: 2rem;
+  }
+  
+  .pain-dialog .pain-scale-number.active {
+    font-size: 2.76rem;
+  }
+  
+  .pain-dialog .confirmation-text,
+  .pain-dialog .confirmation-title {
+    font-size: 3.5rem;
+  }
+  
+  .pain-dialog .carousel-container {
+    width: 85vw;
+    max-width: 800px;
+  }
+  
+  .pain-dialog .carousel-item {
+    width: 350px;
+    height: 450px;
+  }
+  
+  .pain-dialog .carousel-item-content {
+    max-width: 400px;
+    height: 400px;
+    padding: 2rem;
+  }
+  
+  .pain-dialog .carousel-item-content .tile-icon-container {
+    width: 200px;
+    height: 200px;
+  }
+  
+  .pain-dialog .carousel-item-content .tile-icon {
+    width: 150px;
+    height: 150px;
+  }
+  
+  .pain-dialog .carousel-item-content .tile-text {
+    font-size: 1.3rem;
+  }
+  
+  .pain-dialog .carousel-item-active .carousel-item-content .tile-text {
+    font-size: 1.69rem;
+  }
+}
+
+/* iPad Pro (1024px+) */
+@media (min-width: 1024px) and (max-width: 1366px) {
+  .pain-dialog .main-content {
+    padding: 2rem;
+    box-sizing: border-box;
+  }
+  
+  .pain-dialog .main-title {
+    font-size: 3rem;
+    margin: 0 0 4rem 0;
+  }
+  
+  .pain-dialog .grid-container {
+    grid-template-columns: repeat(auto-fit, minmax(clamp(200px, 22vw, 380px), 1fr));
+    gap: clamp(1rem, 2vw, 1.5rem);
+    width: 100%;
+    max-width: 100%;
+    padding: 0 clamp(1rem, 3vw, 2rem);
+    box-sizing: border-box;
+    margin: 0 auto;
+  }
+  
+  .pain-dialog .menu-tile {
+    width: 100%;
+    max-width: 100%;
+    height: clamp(180px, 20vw, 340px);
+    padding: clamp(1.5rem, 2.5vw, 2.5rem);
+    box-sizing: border-box;
+  }
+  
+  .pain-dialog .tile-icon-container {
+    width: clamp(100px, 11vw, 150px);
+    height: clamp(100px, 11vw, 150px);
+  }
+  
+  .pain-dialog .tile-icon {
+    width: clamp(100px, 11vw, 150px);
+    height: clamp(100px, 11vw, 150px);
+  }
+  
+  .pain-dialog .tile-text {
+    font-size: clamp(1.2rem, 1.8vw, 1.7rem);
+  }
+  
+  .pain-dialog .pain-scale-title {
+    font-size: 3.5rem;
+  }
+  
+  .pain-dialog .pain-scale-level-combined {
+    font-size: 4.375rem; /* 1.25x größer als Titel */
+  }
+  
+  .pain-dialog .pain-scale-number {
+    font-size: 2.2rem;
+  }
+  
+  .pain-dialog .pain-scale-number.active {
+    font-size: 3.04rem;
+  }
+  
+  .pain-dialog .confirmation-text,
+  .pain-dialog .confirmation-title {
+    font-size: 4rem;
+  }
+  
+  .pain-dialog .carousel-container {
+    width: 80vw;
+    max-width: 1000px;
+  }
+  
+  .pain-dialog .carousel-item {
+    width: 380px;
+    height: 480px;
+  }
+  
+  .pain-dialog .carousel-item-content {
+    max-width: 450px;
+    height: 420px;
+    padding: 2.5rem;
+  }
+  
+  .pain-dialog .carousel-item-content .tile-icon-container {
+    width: 220px;
+    height: 220px;
+  }
+  
+  .pain-dialog .carousel-item-content .tile-icon {
+    width: 160px;
+    height: 160px;
+  }
+  
+  .pain-dialog .carousel-item-content .tile-text {
+    font-size: 1.4rem;
+  }
+  
+  .pain-dialog .carousel-item-active .carousel-item-content .tile-text {
+    font-size: 1.82rem;
+  }
+}
+
+/* iPad Pro 12.9" und größer (1366px+) */
+@media (min-width: 1366px) {
+  .pain-dialog .main-content {
+    padding: 2.5rem;
+    box-sizing: border-box;
+  }
+  
+  .pain-dialog .main-title {
+    font-size: 3.5rem;
+    margin: 0 0 4.5rem 0;
+  }
+  
+  .pain-dialog .grid-container {
+    grid-template-columns: repeat(auto-fit, minmax(clamp(220px, 20vw, 400px), 1fr));
+    gap: clamp(1rem, 2vw, 1.5rem);
+    width: 100%;
+    max-width: 100%;
+    padding: 0 clamp(1rem, 3vw, 2rem);
+    box-sizing: border-box;
+    margin: 0 auto;
+  }
+  
+  .pain-dialog .menu-tile {
+    width: 100%;
+    max-width: 100%;
+    height: clamp(200px, 18vw, 360px);
+    padding: clamp(2rem, 3vw, 3rem);
+    box-sizing: border-box;
+  }
+  
+  .pain-dialog .tile-icon-container {
+    width: clamp(110px, 10vw, 160px);
+    height: clamp(110px, 10vw, 160px);
+  }
+  
+  .pain-dialog .tile-icon {
+    width: clamp(110px, 10vw, 160px);
+    height: clamp(110px, 10vw, 160px);
+  }
+  
+  .pain-dialog .tile-text {
+    font-size: clamp(1.3rem, 1.5vw, 1.8rem);
+  }
+  
+  .pain-dialog .pain-scale-title {
+    font-size: 4rem;
+  }
+  
+  .pain-dialog .pain-scale-level-combined {
+    font-size: 5rem; /* 1.25x größer als Titel */
+  }
+  
+  .pain-dialog .pain-scale-number {
+    font-size: 2.3rem;
+  }
+  
+  .pain-dialog .pain-scale-number.active {
+    font-size: 3.17rem;
+  }
+  
+  .pain-dialog .confirmation-text,
+  .pain-dialog .confirmation-title {
+    font-size: 4.5rem;
+  }
+  
+  .pain-dialog .carousel-container {
+    width: 75vw;
+    max-width: 1200px;
+  }
+  
+  .pain-dialog .carousel-item {
+    width: 400px;
+    height: 500px;
+  }
+  
+  .pain-dialog .carousel-item-content {
+    max-width: 480px;
+    height: 450px;
+    padding: 2.5rem;
+  }
+  
+  .pain-dialog .carousel-item-content .tile-icon-container {
+    width: 240px;
+    height: 240px;
+  }
+  
+  .pain-dialog .carousel-item-content .tile-icon {
+    width: 173px;
+    height: 173px;
+  }
+  
+  .pain-dialog .carousel-item-content .tile-text {
+    font-size: 1.44rem;
+  }
+  
+  .pain-dialog .carousel-item-active .carousel-item-content .tile-text {
+    font-size: 1.872rem;
+  }
+}
+
+/* iPad Mini/Air im Querformat (Landscape) - Dialoge */
+/* iPad Mini/Air Landscape: 1024px x 768px */
+@media (min-width: 768px) and (max-width: 1024px) and (orientation: landscape) {
+  html, body {
+    overflow: hidden !important;
+    height: 100vh !important;
+    max-height: 100vh !important;
+  }
+  
+  .pain-dialog,
+  .ich-dialog,
+  .umgebung-dialog,
+  .settings-dialog {
+    height: 100vh !important;
+    max-height: 100vh !important;
+    overflow: hidden !important;
+  }
+  
+  .pain-dialog .main-content,
+  .ich-dialog .main-content,
+  .umgebung-dialog .main-content,
+  .settings-dialog .main-content {
+    padding: 1rem 0 !important;
+    height: calc(100vh - 80px) !important; /* Viewport-Höhe minus Header */
+    max-height: calc(100vh - 80px) !important;
+    overflow: hidden !important;
+    display: flex !important;
+    flex-direction: column !important;
+    justify-content: center !important;
+    align-items: center !important;
+    box-sizing: border-box !important;
+  }
+  
+  .pain-dialog .main-title,
+  .ich-dialog .main-title,
+  .umgebung-dialog .main-title,
+  .settings-dialog .main-title {
+    font-size: 2rem;
+    margin: 0 0 2rem 0;
+  }
+  
+  /* Grid-Container: 95% Breite, kein Padding - 3x2 Grid */
+  .pain-dialog .grid-container,
+  .ich-dialog .grid-container,
+  .umgebung-dialog .grid-container,
+  .settings-dialog .grid-container {
+    grid-template-columns: repeat(3, 1fr);
+    gap: 0.75rem;
+    width: 95% !important;
+    max-width: 95% !important;
+    padding: 0 !important;
+    box-sizing: border-box !important;
+    margin: 0 auto !important;
+    max-height: 100% !important;
+    overflow: visible !important;
+  }
+  
+  .pain-dialog .menu-tile,
+  .ich-dialog .menu-tile,
+  .umgebung-dialog .menu-tile,
+  .settings-dialog .menu-tile {
+    width: 100%;
+    max-width: 100%;
+    height: clamp(140px, 25vh, 200px);
+    padding: 1rem;
+    box-sizing: border-box !important;
+  }
+  
+  .pain-dialog .tile-icon-container,
+  .ich-dialog .tile-icon-container,
+  .umgebung-dialog .tile-icon-container,
+  .settings-dialog .tile-icon-container {
+    width: clamp(70px, 8vw, 100px);
+    height: clamp(70px, 8vw, 100px);
+    margin-bottom: 0.5rem;
+  }
+  
+  .pain-dialog .tile-icon,
+  .ich-dialog .tile-icon,
+  .umgebung-dialog .tile-icon,
+  .settings-dialog .tile-icon {
+    width: clamp(70px, 8vw, 100px);
+    height: clamp(70px, 8vw, 100px);
+  }
+  
+  .pain-dialog .tile-text,
+  .ich-dialog .tile-text,
+  .umgebung-dialog .tile-text,
+  .settings-dialog .tile-text {
+    font-size: clamp(1rem, 1.5vw, 1.3rem);
+  }
+  
+  .pain-dialog .carousel-container {
+    width: 90vw;
+    max-width: 1000px;
+    height: 70vh;
+  }
+  
+  .pain-dialog .carousel-item {
+    width: 300px;
+    height: 300px;
+  }
+  
+  .pain-dialog .carousel-item-content {
+    max-width: 300px;
+    height: 280px;
+    padding: 1.5rem;
+  }
+  
+  .pain-dialog .carousel-item-content .tile-icon-container {
+    width: 150px;
+    height: 150px;
+  }
+  
+  .pain-dialog .carousel-item-content .tile-icon {
+    width: 120px;
+    height: 120px;
+  }
+  
+  .pain-dialog .carousel-item-content .tile-text {
+    font-size: 1.1rem;
+  }
+  
+  .pain-dialog .pain-scale-title {
+    font-size: 2rem;
+  }
+  
+  .pain-dialog .pain-scale-level-combined {
+    font-size: 2.5rem;
+  }
+  
+  .pain-dialog .confirmation-text,
+  .pain-dialog .confirmation-title {
+    font-size: 2.5rem;
+  }
+}
+
+/* iPad Pro im Querformat (Landscape) - Dialoge */
+/* iPad Pro 11" Landscape: 1194px x 834px */
+/* iPad Pro 12.9" Landscape: 1366px x 1024px */
+@media (min-width: 1024px) and (max-width: 1366px) and (orientation: landscape) {
+  html, body {
+    overflow: hidden !important;
+    height: 100vh !important;
+    max-height: 100vh !important;
+  }
+  
+  .pain-dialog,
+  .ich-dialog,
+  .umgebung-dialog,
+  .settings-dialog {
+    height: 100vh !important;
+    max-height: 100vh !important;
+    overflow: hidden !important;
+  }
+  
+  .pain-dialog .main-content,
+  .ich-dialog .main-content,
+  .umgebung-dialog .main-content,
+  .settings-dialog .main-content {
+    padding: 1rem 0 !important;
+    height: calc(100vh - 80px) !important; /* Viewport-Höhe minus Header */
+    max-height: calc(100vh - 80px) !important;
+    overflow: hidden !important;
+    display: flex !important;
+    flex-direction: column !important;
+    justify-content: center !important;
+    align-items: center !important;
+    box-sizing: border-box !important;
+  }
+  
+  .pain-dialog .main-title,
+  .ich-dialog .main-title,
+  .umgebung-dialog .main-title,
+  .settings-dialog .main-title {
+    font-size: 2rem;
+    margin: 0 0 2rem 0;
+  }
+  
+  /* Grid-Container: 85% Breite, kein Padding - 3x2 Grid */
+  .pain-dialog .grid-container,
+  .ich-dialog .grid-container,
+  .umgebung-dialog .grid-container,
+  .settings-dialog .grid-container {
+    grid-template-columns: repeat(3, 1fr);
+    gap: 0.75rem;
+    width: 85% !important;
+    max-width: 85% !important;
+    padding: 0 !important;
+    box-sizing: border-box !important;
+    margin: 0 auto !important;
+    max-height: 100% !important;
+    overflow: visible !important;
+  }
+  
+  .pain-dialog .menu-tile,
+  .ich-dialog .menu-tile,
+  .umgebung-dialog .menu-tile,
+  .settings-dialog .menu-tile {
+    width: 100%;
+    max-width: 100%;
+    height: clamp(140px, 25vh, 200px);
+    padding: 1rem;
+    box-sizing: border-box !important;
+  }
+  
+  .pain-dialog .tile-icon-container,
+  .ich-dialog .tile-icon-container,
+  .umgebung-dialog .tile-icon-container,
+  .settings-dialog .tile-icon-container {
+    width: clamp(70px, 8vw, 100px);
+    height: clamp(70px, 8vw, 100px);
+    margin-bottom: 0.5rem;
+  }
+  
+  .pain-dialog .tile-icon,
+  .ich-dialog .tile-icon,
+  .umgebung-dialog .tile-icon,
+  .settings-dialog .tile-icon {
+    width: clamp(70px, 8vw, 100px);
+    height: clamp(70px, 8vw, 100px);
+  }
+  
+  .pain-dialog .tile-text,
+  .ich-dialog .tile-text,
+  .umgebung-dialog .tile-text,
+  .settings-dialog .tile-text {
+    font-size: clamp(1rem, 1.5vw, 1.3rem);
+  }
+  
+  .pain-dialog .carousel-container {
+    width: 90vw;
+    max-width: 1000px;
+    height: 70vh;
+  }
+  
+  .pain-dialog .carousel-item {
+    width: 300px;
+    height: 300px;
+  }
+  
+  .pain-dialog .carousel-item-content {
+    max-width: 300px;
+    height: 280px;
+    padding: 1.5rem;
+  }
+  
+  .pain-dialog .carousel-item-content .tile-icon-container {
+    width: 150px;
+    height: 150px;
+  }
+  
+  .pain-dialog .carousel-item-content .tile-icon {
+    width: 120px;
+    height: 120px;
+  }
+  
+  .pain-dialog .carousel-item-content .tile-text {
+    font-size: 1.1rem;
+  }
+  
+  .pain-dialog .pain-scale-title {
+    font-size: 2rem;
+  }
+  
+  .pain-dialog .pain-scale-level-combined {
+    font-size: 2.5rem;
+  }
+  
+  .pain-dialog .confirmation-text,
+  .pain-dialog .confirmation-title {
+    font-size: 2.5rem;
+  }
+}
+
 /* === ICH-DIALOG STYLES (basierend auf pain-dialog) === */
 .ich-dialog .main-content {
   flex: 1;
@@ -977,7 +1554,7 @@
 
 .ich-dialog .grid-container {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(clamp(180px, 25vw, 400px), 1fr));
+  grid-template-columns: repeat(3, 1fr);
   gap: clamp(0.5rem, 2vw, 1.5rem);
   max-width: 1440px;
   width: 100%;
@@ -1651,6 +2228,262 @@
   }
 }
 
+/* === iPad RESPONSIVE DESIGN für ICH-DIALOG === */
+
+/* iPad Mini/Air Portrait (768px - 1024px) */
+@media (min-width: 768px) and (max-width: 1024px) and (orientation: portrait) {
+  .ich-dialog .main-content {
+    padding: 1.5rem;
+    box-sizing: border-box;
+  }
+  
+  .ich-dialog .main-title {
+    font-size: 2.5rem;
+    margin: 0 0 3rem 0;
+  }
+  
+  .ich-dialog .grid-container {
+    grid-template-columns: repeat(3, 1fr);
+    gap: 1rem;
+    width: 100%;
+    max-width: 100%;
+    padding: 0 1rem;
+    box-sizing: border-box;
+    margin: 0 auto;
+  }
+  
+  .ich-dialog .menu-tile {
+    width: 100%;
+    max-width: 100%;
+    height: clamp(180px, 30vw, 320px);
+    padding: clamp(1.5rem, 2.5vw, 2.5rem);
+    box-sizing: border-box;
+  }
+  
+  .ich-dialog .tile-icon-container {
+    width: clamp(100px, 12vw, 140px);
+    height: clamp(100px, 12vw, 140px);
+  }
+  
+  .ich-dialog .tile-icon {
+    width: clamp(100px, 12vw, 140px);
+    height: clamp(100px, 12vw, 140px);
+  }
+  
+  .ich-dialog .tile-text {
+    font-size: clamp(1.2rem, 2vw, 1.6rem);
+  }
+  
+  .ich-dialog .confirmation-text,
+  .ich-dialog .confirmation-title {
+    font-size: 3.5rem;
+  }
+  
+  .ich-dialog .carousel-container {
+    width: 85vw;
+    max-width: 800px;
+  }
+  
+  .ich-dialog .carousel-item {
+    width: 350px;
+    height: 450px;
+  }
+  
+  .ich-dialog .carousel-item-content {
+    max-width: 400px;
+    height: 400px;
+    padding: 2rem;
+  }
+  
+  .ich-dialog .carousel-item-content .tile-icon-container {
+    width: 200px;
+    height: 200px;
+  }
+  
+  .ich-dialog .carousel-item-content .tile-icon {
+    width: 150px;
+    height: 150px;
+  }
+  
+  .ich-dialog .carousel-item-content .tile-text {
+    font-size: 1.3rem;
+  }
+  
+  .ich-dialog .carousel-item-active .carousel-item-content .tile-text {
+    font-size: 1.69rem;
+  }
+}
+
+/* iPad Pro Portrait (1024px - 1366px) */
+@media (min-width: 1024px) and (max-width: 1366px) and (orientation: portrait) {
+  .ich-dialog .main-content {
+    padding: 2rem;
+    box-sizing: border-box;
+  }
+  
+  .ich-dialog .main-title {
+    font-size: 3rem;
+    margin: 0 0 4rem 0;
+  }
+  
+  .ich-dialog .grid-container {
+    grid-template-columns: repeat(3, 1fr);
+    gap: clamp(1rem, 2vw, 1.5rem);
+    width: 100%;
+    max-width: 100%;
+    padding: 0 clamp(1rem, 3vw, 2rem);
+    box-sizing: border-box;
+    margin: 0 auto;
+  }
+  
+  .ich-dialog .menu-tile {
+    width: 100%;
+    max-width: 100%;
+    height: clamp(180px, 20vw, 340px);
+    padding: clamp(1.5rem, 2.5vw, 2.5rem);
+    box-sizing: border-box;
+  }
+  
+  .ich-dialog .tile-icon-container {
+    width: clamp(100px, 11vw, 150px);
+    height: clamp(100px, 11vw, 150px);
+  }
+  
+  .ich-dialog .tile-icon {
+    width: clamp(100px, 11vw, 150px);
+    height: clamp(100px, 11vw, 150px);
+  }
+  
+  .ich-dialog .tile-text {
+    font-size: clamp(1.2rem, 1.8vw, 1.7rem);
+  }
+  
+  .ich-dialog .confirmation-text,
+  .ich-dialog .confirmation-title {
+    font-size: 4rem;
+  }
+  
+  .ich-dialog .carousel-container {
+    width: 80vw;
+    max-width: 1000px;
+  }
+  
+  .ich-dialog .carousel-item {
+    width: 380px;
+    height: 480px;
+  }
+  
+  .ich-dialog .carousel-item-content {
+    max-width: 450px;
+    height: 420px;
+    padding: 2.5rem;
+  }
+  
+  .ich-dialog .carousel-item-content .tile-icon-container {
+    width: 220px;
+    height: 220px;
+  }
+  
+  .ich-dialog .carousel-item-content .tile-icon {
+    width: 160px;
+    height: 160px;
+  }
+  
+  .ich-dialog .carousel-item-content .tile-text {
+    font-size: 1.4rem;
+  }
+  
+  .ich-dialog .carousel-item-active .carousel-item-content .tile-text {
+    font-size: 1.82rem;
+  }
+}
+
+/* iPad Pro 12.9" Portrait (1366px+) */
+@media (min-width: 1366px) and (orientation: portrait) {
+  .ich-dialog .main-content {
+    padding: 2.5rem;
+    box-sizing: border-box;
+  }
+  
+  .ich-dialog .main-title {
+    font-size: 3.5rem;
+    margin: 0 0 4.5rem 0;
+  }
+  
+  .ich-dialog .grid-container {
+    grid-template-columns: repeat(3, 1fr);
+    gap: clamp(1rem, 2vw, 1.5rem);
+    width: 100%;
+    max-width: 100%;
+    padding: 0 clamp(1rem, 3vw, 2rem);
+    box-sizing: border-box;
+    margin: 0 auto;
+  }
+  
+  .ich-dialog .menu-tile {
+    width: 100%;
+    max-width: 100%;
+    height: clamp(200px, 18vw, 360px);
+    padding: clamp(2rem, 3vw, 3rem);
+    box-sizing: border-box;
+  }
+  
+  .ich-dialog .tile-icon-container {
+    width: clamp(110px, 10vw, 160px);
+    height: clamp(110px, 10vw, 160px);
+  }
+  
+  .ich-dialog .tile-icon {
+    width: clamp(110px, 10vw, 160px);
+    height: clamp(110px, 10vw, 160px);
+  }
+  
+  .ich-dialog .tile-text {
+    font-size: clamp(1.3rem, 1.5vw, 1.8rem);
+  }
+  
+  .ich-dialog .confirmation-text,
+  .ich-dialog .confirmation-title {
+    font-size: 4.5rem;
+  }
+  
+  .ich-dialog .carousel-container {
+    width: 75vw;
+    max-width: 1200px;
+  }
+  
+  .ich-dialog .carousel-item {
+    width: 400px;
+    height: 500px;
+  }
+  
+  .ich-dialog .carousel-item-content {
+    max-width: 480px;
+    height: 450px;
+    padding: 2.5rem;
+  }
+  
+  .ich-dialog .carousel-item-content .tile-icon-container {
+    width: 240px;
+    height: 240px;
+  }
+  
+  .ich-dialog .carousel-item-content .tile-icon {
+    width: 173px;
+    height: 173px;
+  }
+  
+  .ich-dialog .carousel-item-content .tile-text {
+    font-size: 1.44rem;
+  }
+  
+  .ich-dialog .carousel-item-active .carousel-item-content .tile-text {
+    font-size: 1.872rem;
+  }
+}
+
+/* Alte iPad Landscape Media Query entfernt - wird jetzt durch die neuen Media Queries oben ersetzt */
+
 /* === UMGEBUNG-DIALOG STYLES (basierend auf pain-dialog und ich-dialog) === */
 .umgebung-dialog .main-content {
   flex: 1;
@@ -1674,7 +2507,7 @@
 
 .umgebung-dialog .grid-container {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(clamp(180px, 25vw, 400px), 1fr));
+  grid-template-columns: repeat(3, 1fr);
   gap: clamp(0.5rem, 2vw, 1.5rem);
   max-width: 1440px;
   width: 100%;
@@ -2348,6 +3181,79 @@
   }
 }
 
+/* === iPad RESPONSIVE DESIGN für UMGEBUNG-DIALOG === */
+/* Verwendet die gleichen Breakpoints wie Pain-Dialog und Ich-Dialog */
+@media (min-width: 768px) and (max-width: 1024px) {
+  .umgebung-dialog .main-content { padding: 1.5rem; box-sizing: border-box; }
+  .umgebung-dialog .main-title { font-size: 2.5rem; margin: 0 0 3rem 0; }
+  .umgebung-dialog .grid-container { grid-template-columns: repeat(3, 1fr); gap: 1rem; width: 100%; max-width: 100%; padding: 0 1rem; box-sizing: border-box; margin: 0 auto; }
+  .umgebung-dialog .menu-tile { width: 100%; max-width: 100%; height: clamp(180px, 30vw, 320px); padding: clamp(1.5rem, 2.5vw, 2.5rem); box-sizing: border-box; }
+  .umgebung-dialog .tile-icon-container { width: clamp(100px, 12vw, 140px); height: clamp(100px, 12vw, 140px); }
+  .umgebung-dialog .tile-icon { width: clamp(100px, 12vw, 140px); height: clamp(100px, 12vw, 140px); }
+  .umgebung-dialog .tile-text { font-size: clamp(1.2rem, 2vw, 1.6rem); }
+  .umgebung-dialog .confirmation-text, .umgebung-dialog .confirmation-title { font-size: 3.5rem; }
+  .umgebung-dialog .carousel-container { width: 85vw; max-width: 800px; }
+  .umgebung-dialog .carousel-item { width: 350px; height: 450px; }
+  .umgebung-dialog .carousel-item-content { max-width: 400px; height: 400px; padding: 2rem; }
+  .umgebung-dialog .carousel-item-content .tile-icon-container { width: 200px; height: 200px; }
+  .umgebung-dialog .carousel-item-content .tile-icon { width: 150px; height: 150px; }
+  .umgebung-dialog .carousel-item-content .tile-text { font-size: 1.3rem; }
+  .umgebung-dialog .carousel-item-active .carousel-item-content .tile-text { font-size: 1.69rem; }
+}
+
+@media (min-width: 1024px) and (max-width: 1366px) {
+  .umgebung-dialog .main-content { padding: 2rem; box-sizing: border-box; }
+  .umgebung-dialog .main-title { font-size: 3rem; margin: 0 0 4rem 0; }
+  .umgebung-dialog .grid-container { grid-template-columns: repeat(auto-fit, minmax(clamp(200px, 22vw, 380px), 1fr)); gap: clamp(1rem, 2vw, 1.5rem); width: 100%; max-width: 100%; padding: 0 clamp(1rem, 3vw, 2rem); box-sizing: border-box; margin: 0 auto; }
+  .umgebung-dialog .menu-tile { width: 100%; max-width: 100%; height: clamp(180px, 20vw, 340px); padding: clamp(1.5rem, 2.5vw, 2.5rem); box-sizing: border-box; }
+  .umgebung-dialog .tile-icon-container { width: clamp(100px, 11vw, 150px); height: clamp(100px, 11vw, 150px); }
+  .umgebung-dialog .tile-icon { width: clamp(100px, 11vw, 150px); height: clamp(100px, 11vw, 150px); }
+  .umgebung-dialog .tile-text { font-size: clamp(1.2rem, 1.8vw, 1.7rem); }
+  .umgebung-dialog .confirmation-text, .umgebung-dialog .confirmation-title { font-size: 4rem; }
+  .umgebung-dialog .carousel-container { width: 80vw; max-width: 1000px; }
+  .umgebung-dialog .carousel-item { width: 380px; height: 480px; }
+  .umgebung-dialog .carousel-item-content { max-width: 450px; height: 420px; padding: 2.5rem; }
+  .umgebung-dialog .carousel-item-content .tile-icon-container { width: 220px; height: 220px; }
+  .umgebung-dialog .carousel-item-content .tile-icon { width: 160px; height: 160px; }
+  .umgebung-dialog .carousel-item-content .tile-text { font-size: 1.4rem; }
+  .umgebung-dialog .carousel-item-active .carousel-item-content .tile-text { font-size: 1.82rem; }
+}
+
+@media (min-width: 1366px) {
+  .umgebung-dialog .main-content { padding: 2.5rem; box-sizing: border-box; }
+  .umgebung-dialog .main-title { font-size: 3.5rem; margin: 0 0 4.5rem 0; }
+  .umgebung-dialog .grid-container { grid-template-columns: repeat(auto-fit, minmax(clamp(220px, 20vw, 400px), 1fr)); gap: clamp(1rem, 2vw, 1.5rem); width: 100%; max-width: 100%; padding: 0 clamp(1rem, 3vw, 2rem); box-sizing: border-box; margin: 0 auto; }
+  .umgebung-dialog .menu-tile { width: 100%; max-width: 100%; height: clamp(200px, 18vw, 360px); padding: clamp(2rem, 3vw, 3rem); box-sizing: border-box; }
+  .umgebung-dialog .tile-icon-container { width: clamp(110px, 10vw, 160px); height: clamp(110px, 10vw, 160px); }
+  .umgebung-dialog .tile-icon { width: clamp(110px, 10vw, 160px); height: clamp(110px, 10vw, 160px); }
+  .umgebung-dialog .tile-text { font-size: clamp(1.3rem, 1.5vw, 1.8rem); }
+  .umgebung-dialog .confirmation-text, .umgebung-dialog .confirmation-title { font-size: 4.5rem; }
+  .umgebung-dialog .carousel-container { width: 75vw; max-width: 1200px; }
+  .umgebung-dialog .carousel-item { width: 400px; height: 500px; }
+  .umgebung-dialog .carousel-item-content { max-width: 480px; height: 450px; padding: 2.5rem; }
+  .umgebung-dialog .carousel-item-content .tile-icon-container { width: 240px; height: 240px; }
+  .umgebung-dialog .carousel-item-content .tile-icon { width: 173px; height: 173px; }
+  .umgebung-dialog .carousel-item-content .tile-text { font-size: 1.44rem; }
+  .umgebung-dialog .carousel-item-active .carousel-item-content .tile-text { font-size: 1.872rem; }
+}
+
+@media (min-width: 768px) and (max-width: 1366px) and (orientation: landscape) {
+  .umgebung-dialog .main-content { padding: 1rem 2rem; }
+  .umgebung-dialog .main-title { font-size: 2rem; margin: 0 0 2rem 0; }
+  .umgebung-dialog .grid-container { grid-template-columns: repeat(3, 1fr); gap: 0.75rem; max-width: 100%; padding: 0 1rem; }
+  .umgebung-dialog .menu-tile { width: 100%; height: clamp(140px, 25vh, 200px); padding: 1rem; }
+  .umgebung-dialog .tile-icon-container { width: clamp(70px, 8vw, 100px); height: clamp(70px, 8vw, 100px); margin-bottom: 0.5rem; }
+  .umgebung-dialog .tile-icon { width: clamp(70px, 8vw, 100px); height: clamp(70px, 8vw, 100px); }
+  .umgebung-dialog .tile-text { font-size: clamp(1rem, 1.5vw, 1.3rem); }
+  .umgebung-dialog .carousel-container { width: 90vw; max-width: 1000px; height: 70vh; }
+  .umgebung-dialog .carousel-item { width: 300px; height: 300px; }
+  .umgebung-dialog .carousel-item-content { max-width: 300px; height: 280px; padding: 1.5rem; }
+  .umgebung-dialog .carousel-item-content .tile-icon-container { width: 150px; height: 150px; }
+  .umgebung-dialog .carousel-item-content .tile-icon { width: 120px; height: 120px; }
+  .umgebung-dialog .carousel-item-content .tile-text { font-size: 1.1rem; }
+  .umgebung-dialog .confirmation-text, .umgebung-dialog .confirmation-title { font-size: 2.5rem; }
+}
+
 /* === SETTINGS-DIALOG STYLES (basierend auf pain-dialog und ich-dialog) === */
 .settings-dialog .main-content {
   flex: 1;
@@ -2371,7 +3277,7 @@
 
 .settings-dialog .grid-container {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(clamp(180px, 25vw, 400px), 1fr));
+  grid-template-columns: repeat(3, 1fr);
   gap: clamp(0.5rem, 2vw, 1.5rem);
   max-width: 1440px;
   width: 100%;
@@ -3043,4 +3949,77 @@
   .dark .settings-dialog .confirmation-title {
     color: white;
   }
+}
+
+/* === iPad RESPONSIVE DESIGN für SETTINGS-DIALOG === */
+/* Verwendet die gleichen Breakpoints wie Pain-Dialog und Ich-Dialog */
+@media (min-width: 768px) and (max-width: 1024px) {
+  .settings-dialog .main-content { padding: 1.5rem; box-sizing: border-box; }
+  .settings-dialog .main-title { font-size: 2.5rem; margin: 0 0 3rem 0; }
+  .settings-dialog .grid-container { grid-template-columns: repeat(3, 1fr); gap: 1rem; width: 100%; max-width: 100%; padding: 0 1rem; box-sizing: border-box; margin: 0 auto; }
+  .settings-dialog .menu-tile { width: 100%; max-width: 100%; height: clamp(180px, 30vw, 320px); padding: clamp(1.5rem, 2.5vw, 2.5rem); box-sizing: border-box; }
+  .settings-dialog .tile-icon-container { width: clamp(100px, 12vw, 140px); height: clamp(100px, 12vw, 140px); }
+  .settings-dialog .tile-icon { width: clamp(100px, 12vw, 140px); height: clamp(100px, 12vw, 140px); }
+  .settings-dialog .tile-text { font-size: clamp(1.2rem, 2vw, 1.6rem); }
+  .settings-dialog .confirmation-text, .settings-dialog .confirmation-title { font-size: 3.5rem; }
+  .settings-dialog .carousel-container { width: 85vw; max-width: 800px; }
+  .settings-dialog .carousel-item { width: 350px; height: 450px; }
+  .settings-dialog .carousel-item-content { max-width: 400px; height: 400px; padding: 2rem; }
+  .settings-dialog .carousel-item-content .tile-icon-container { width: 200px; height: 200px; }
+  .settings-dialog .carousel-item-content .tile-icon { width: 150px; height: 150px; }
+  .settings-dialog .carousel-item-content .tile-text { font-size: 1.3rem; }
+  .settings-dialog .carousel-item-active .carousel-item-content .tile-text { font-size: 1.69rem; }
+}
+
+@media (min-width: 1024px) and (max-width: 1366px) {
+  .settings-dialog .main-content { padding: 2rem; box-sizing: border-box; }
+  .settings-dialog .main-title { font-size: 3rem; margin: 0 0 4rem 0; }
+  .settings-dialog .grid-container { grid-template-columns: repeat(auto-fit, minmax(clamp(200px, 22vw, 380px), 1fr)); gap: clamp(1rem, 2vw, 1.5rem); width: 100%; max-width: 100%; padding: 0 clamp(1rem, 3vw, 2rem); box-sizing: border-box; margin: 0 auto; }
+  .settings-dialog .menu-tile { width: 100%; max-width: 100%; height: clamp(180px, 20vw, 340px); padding: clamp(1.5rem, 2.5vw, 2.5rem); box-sizing: border-box; }
+  .settings-dialog .tile-icon-container { width: clamp(100px, 11vw, 150px); height: clamp(100px, 11vw, 150px); }
+  .settings-dialog .tile-icon { width: clamp(100px, 11vw, 150px); height: clamp(100px, 11vw, 150px); }
+  .settings-dialog .tile-text { font-size: clamp(1.2rem, 1.8vw, 1.7rem); }
+  .settings-dialog .confirmation-text, .settings-dialog .confirmation-title { font-size: 4rem; }
+  .settings-dialog .carousel-container { width: 80vw; max-width: 1000px; }
+  .settings-dialog .carousel-item { width: 380px; height: 480px; }
+  .settings-dialog .carousel-item-content { max-width: 450px; height: 420px; padding: 2.5rem; }
+  .settings-dialog .carousel-item-content .tile-icon-container { width: 220px; height: 220px; }
+  .settings-dialog .carousel-item-content .tile-icon { width: 160px; height: 160px; }
+  .settings-dialog .carousel-item-content .tile-text { font-size: 1.4rem; }
+  .settings-dialog .carousel-item-active .carousel-item-content .tile-text { font-size: 1.82rem; }
+}
+
+@media (min-width: 1366px) {
+  .settings-dialog .main-content { padding: 2.5rem; box-sizing: border-box; }
+  .settings-dialog .main-title { font-size: 3.5rem; margin: 0 0 4.5rem 0; }
+  .settings-dialog .grid-container { grid-template-columns: repeat(auto-fit, minmax(clamp(220px, 20vw, 400px), 1fr)); gap: clamp(1rem, 2vw, 1.5rem); width: 100%; max-width: 100%; padding: 0 clamp(1rem, 3vw, 2rem); box-sizing: border-box; margin: 0 auto; }
+  .settings-dialog .menu-tile { width: 100%; max-width: 100%; height: clamp(200px, 18vw, 360px); padding: clamp(2rem, 3vw, 3rem); box-sizing: border-box; }
+  .settings-dialog .tile-icon-container { width: clamp(110px, 10vw, 160px); height: clamp(110px, 10vw, 160px); }
+  .settings-dialog .tile-icon { width: clamp(110px, 10vw, 160px); height: clamp(110px, 10vw, 160px); }
+  .settings-dialog .tile-text { font-size: clamp(1.3rem, 1.5vw, 1.8rem); }
+  .settings-dialog .confirmation-text, .settings-dialog .confirmation-title { font-size: 4.5rem; }
+  .settings-dialog .carousel-container { width: 75vw; max-width: 1200px; }
+  .settings-dialog .carousel-item { width: 400px; height: 500px; }
+  .settings-dialog .carousel-item-content { max-width: 480px; height: 450px; padding: 2.5rem; }
+  .settings-dialog .carousel-item-content .tile-icon-container { width: 240px; height: 240px; }
+  .settings-dialog .carousel-item-content .tile-icon { width: 173px; height: 173px; }
+  .settings-dialog .carousel-item-content .tile-text { font-size: 1.44rem; }
+  .settings-dialog .carousel-item-active .carousel-item-content .tile-text { font-size: 1.872rem; }
+}
+
+@media (min-width: 768px) and (max-width: 1366px) and (orientation: landscape) {
+  .settings-dialog .main-content { padding: 1rem 2rem; }
+  .settings-dialog .main-title { font-size: 2rem; margin: 0 0 2rem 0; }
+  .settings-dialog .grid-container { grid-template-columns: repeat(3, 1fr); gap: 0.75rem; max-width: 100%; padding: 0 1rem; }
+  .settings-dialog .menu-tile { width: 100%; height: clamp(140px, 25vh, 200px); padding: 1rem; }
+  .settings-dialog .tile-icon-container { width: clamp(70px, 8vw, 100px); height: clamp(70px, 8vw, 100px); margin-bottom: 0.5rem; }
+  .settings-dialog .tile-icon { width: clamp(70px, 8vw, 100px); height: clamp(70px, 8vw, 100px); }
+  .settings-dialog .tile-text { font-size: clamp(1rem, 1.5vw, 1.3rem); }
+  .settings-dialog .carousel-container { width: 90vw; max-width: 1000px; height: 70vh; }
+  .settings-dialog .carousel-item { width: 300px; height: 300px; }
+  .settings-dialog .carousel-item-content { max-width: 300px; height: 280px; padding: 1.5rem; }
+  .settings-dialog .carousel-item-content .tile-icon-container { width: 150px; height: 150px; }
+  .settings-dialog .carousel-item-content .tile-icon { width: 120px; height: 120px; }
+  .settings-dialog .carousel-item-content .tile-text { font-size: 1.1rem; }
+  .settings-dialog .confirmation-text, .settings-dialog .confirmation-title { font-size: 2.5rem; }
 }

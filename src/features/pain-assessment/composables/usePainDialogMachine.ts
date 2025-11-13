@@ -197,7 +197,18 @@ export function usePainDialogMachine() {
    * Stoppt alle Timer und verhindert weitere AutoMode-Starts
    */
   function cleanup() {
+    console.log('PainDialog: cleanup() - Stoppe alle Timer und AutoMode')
+    
+    // Stoppe AutoMode explizit (wichtig: vor cleanupTimers, damit onCleanup nicht nochmal stoppt)
+    autoMode.stop()
+    
+    // Stoppe alle Timer (dies ruft auch onCleanup auf, aber AutoMode ist bereits gestoppt)
     cleanupTimers()
+    
+    // Stoppe TTS (lokal)
+    tts.cancel()
+    
+    console.log('PainDialog: cleanup() abgeschlossen')
   }
 
   /**
@@ -236,16 +247,31 @@ export function usePainDialogMachine() {
 
   // ✅ Blink-Handler
   function handleBlink() {
+    console.log('PainDialog: handleBlink() aufgerufen', {
+      state: state.value,
+      itemsCount: items.value.length,
+      currentIndex: autoMode.index.value
+    })
+    
     const currentItems = items.value
-    if (!currentItems || !currentItems.length) return
+    if (!currentItems || !currentItems.length) {
+      console.warn('PainDialog: handleBlink() - Keine Items verfügbar')
+      return
+    }
     
     const currentIndex = autoMode.index.value
     const currentItem = currentItems[currentIndex]
     
-    if (!currentItem) return
+    if (!currentItem) {
+      console.warn('PainDialog: handleBlink() - Kein Item für Index', currentIndex)
+      return
+    }
+    
+    console.log('PainDialog: handleBlink() - Aktuelles Item:', currentItem)
     
     // ✅ Robustes zurueck-Handling
     if (currentItem.id === 'zurueck') {
+      console.log('PainDialog: handleBlink() - Zurück-Button erkannt, State:', state.value)
       switch (state.value) {
         case 'subRegionView':
           selectSubRegion('zurueck')
@@ -260,21 +286,29 @@ export function usePainDialogMachine() {
     // State-spezifische Auswahl
     if (state.value === 'mainView') {
       if (typeof currentItem.id === 'string') {
+        console.log('PainDialog: handleBlink() - Wähle Hauptregion:', currentItem.id)
         selectMainRegion(currentItem.id)
       }
     } else if (state.value === 'subRegionView') {
       if (typeof currentItem.id === 'string') {
+        console.log('PainDialog: handleBlink() - Wähle Unterregion:', currentItem.id)
         selectSubRegion(currentItem.id)
       }
     } else if (state.value === 'painScaleView') {
       // Pain levels haben level property
       const item = currentItem as any
       if ('level' in item && typeof item.level === 'number') {
+        console.log('PainDialog: handleBlink() - Wähle Schmerzlevel:', item.level)
         selectPainLevel(item.level)
       } else if ('id' in item && typeof item.id === 'number') {
         // Fallback: falls id als number verwendet wird
+        console.log('PainDialog: handleBlink() - Wähle Schmerzlevel (Fallback):', item.id)
         selectPainLevel(item.id)
+      } else {
+        console.warn('PainDialog: handleBlink() - Kein gültiges Level gefunden für Item:', item)
       }
+    } else {
+      console.warn('PainDialog: handleBlink() - Unbekannter State:', state.value)
     }
   }
 

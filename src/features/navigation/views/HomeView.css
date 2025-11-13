@@ -57,18 +57,27 @@
 
 /* Tablet (1024px und kleiner) */
 @media (max-width: 1024px) {
+  .home-view .main-content {
+    box-sizing: border-box;
+  }
+  
   .home-view .grid-container {
     grid-template-columns: repeat(3, 1fr);
     gap: 2rem; /* Gleicher Abstand wie Kacheln zu Rändern */
+    width: 100%;
     max-width: 100%;
     padding: 0 2rem; /* Abstand zu Rändern = Gap */
+    box-sizing: border-box;
+    margin: 0 auto;
   }
   
   .home-view .menu-tile {
     padding: 1.5rem;
     height: 180px;
-    max-width: 320px;
+    width: 100%;
+    max-width: 100%;
     aspect-ratio: 1.2;
+    box-sizing: border-box;
   }
   
   .home-view .tile-icon-container {
@@ -86,6 +95,81 @@
   }
 }
 
+/* iPad Mini/Air (768px - 1024px) */
+@media (min-width: 768px) and (max-width: 1024px) {
+  .home-view .main-content {
+    box-sizing: border-box;
+  }
+  
+  .home-view .grid-container {
+    grid-template-columns: repeat(3, 1fr);
+    gap: 1.5rem;
+    width: 100%;
+    max-width: 100%;
+    padding: 0 1.5rem;
+    box-sizing: border-box;
+    margin: 0 auto;
+  }
+  
+  .home-view .menu-tile {
+    width: 100%;
+    max-width: 100%;
+    height: 200px;
+    padding: 1.5rem;
+    box-sizing: border-box;
+  }
+}
+
+/* iPad Pro (1024px - 1366px) */
+@media (min-width: 1024px) and (max-width: 1366px) {
+  .home-view .main-content {
+    box-sizing: border-box;
+  }
+  
+  .home-view .grid-container {
+    grid-template-columns: repeat(3, 1fr);
+    gap: 2rem;
+    width: 100%;
+    max-width: 100%;
+    padding: 0 2rem;
+    box-sizing: border-box;
+    margin: 0 auto;
+  }
+  
+  .home-view .menu-tile {
+    width: 100%;
+    max-width: 100%;
+    height: 220px;
+    padding: 2rem;
+    box-sizing: border-box;
+  }
+}
+
+/* iPad Pro 12.9" und größer (1366px+) */
+@media (min-width: 1366px) {
+  .home-view .main-content {
+    box-sizing: border-box;
+  }
+  
+  .home-view .grid-container {
+    grid-template-columns: repeat(3, 1fr);
+    gap: 2.5rem;
+    width: 100%;
+    max-width: 100%;
+    padding: 0 2.5rem;
+    box-sizing: border-box;
+    margin: 0 auto;
+  }
+  
+  .home-view .menu-tile {
+    width: 100%;
+    max-width: 100%;
+    height: 240px;
+    padding: 2.5rem;
+    box-sizing: border-box;
+  }
+}
+
 /* Desktop Grid standardmäßig sichtbar */
 .home-view .desktop-grid {
   display: grid;
@@ -98,7 +182,9 @@
   gap: 2rem; /* Gleicher Abstand wie Kacheln zu Rändern */
   padding: 0 2rem; /* Abstand zu Rändern = Gap */
   max-width: 1200px;
+  width: 100%;
   margin: 0 auto;
+  box-sizing: border-box;
 }
 
 /* Mobile (768px und kleiner) - Desktop Grid verstecken, Mobile Karussell zeigen */
@@ -109,6 +195,218 @@
   
   .home-view .mobile-carousel {
     display: block;
+  }
+  
+  .home-view .carousel-container {
+    margin-top: 0 !important;
+  }
+}
+
+/* iPad Pro im Hochformat (Portrait) - auch Karussell verwenden */
+/* iPad Pro 11": 834px x 1194px (Portrait) */
+/* iPad Pro 12.9": 1024px x 1366px (Portrait) */
+@media (min-width: 768px) and (max-width: 1366px) and (orientation: portrait),
+       (min-width: 768px) and (max-width: 1366px) and (min-height: 1000px) {
+  .home-view .desktop-grid {
+    display: none !important;
+  }
+  
+  .home-view .mobile-carousel {
+    display: block !important;
+  }
+  
+  .home-view .main-content {
+    padding: 0 !important;
+    padding-top: 0 !important;
+    height: 100vh !important;
+    margin-top: 0 !important;
+    width: 100% !important;
+    overflow: hidden !important;
+    display: flex !important;
+    flex-direction: column !important;
+    justify-content: flex-start !important;
+    align-items: center !important;
+    box-sizing: border-box !important;
+  }
+  
+  /* Grid-Container Styles überschreiben */
+  .home-view .grid-container {
+    display: none !important;
+  }
+  
+  .home-view .carousel-container {
+    margin-top: 0 !important;
+  }
+  
+  /* Mobile Karussell optimieren für iPad Pro */
+  .home-view .mobile-carousel .menu-tile {
+    width: 70% !important;
+    max-width: 500px !important;
+    height: 450px !important;
+    padding: 2rem !important;
+  }
+  
+  .home-view .mobile-carousel .tile-icon-container {
+    width: 140px !important;
+    height: 140px !important;
+    margin-bottom: 1.5rem !important;
+  }
+  
+  .home-view .mobile-carousel .tile-icon {
+    width: 120px !important;
+    height: 120px !important;
+  }
+  
+  .home-view .mobile-carousel .tile-text {
+    font-size: 2rem !important;
+  }
+}
+
+/* iPad Mini/Air im Querformat (Landscape) - normales 3x2 Grid verwenden */
+/* iPad Mini/Air Landscape: 1024px x 768px */
+@media (min-width: 768px) and (max-width: 1024px) and (orientation: landscape) {
+  html, body {
+    overflow: hidden !important;
+    height: 100vh !important;
+    max-height: 100vh !important;
+  }
+  
+  .home-view {
+    height: 100vh !important;
+    max-height: 100vh !important;
+    overflow: hidden !important;
+  }
+  
+  .home-view .desktop-grid {
+    display: grid !important;
+  }
+  
+  .home-view .mobile-carousel {
+    display: none !important;
+  }
+  
+  .home-view .main-content {
+    padding: 1rem 0 !important;
+    height: calc(100vh - 80px) !important; /* Viewport-Höhe minus Header */
+    max-height: calc(100vh - 80px) !important;
+    overflow: hidden !important;
+    display: flex !important;
+    flex-direction: column !important;
+    justify-content: center !important;
+    align-items: center !important;
+    box-sizing: border-box !important;
+  }
+  
+  /* Grid-Container: 10% breiter (95% statt 85%) */
+  .home-view .grid-container {
+    display: grid !important;
+    grid-template-columns: repeat(3, 1fr) !important;
+    gap: 1.5rem !important;
+    width: 95% !important;
+    max-width: 95% !important;
+    padding: 0 !important;
+    box-sizing: border-box !important;
+    margin: 0 auto !important;
+    max-height: 100% !important;
+    overflow: visible !important;
+  }
+  
+  .home-view .menu-tile {
+    width: 100% !important;
+    max-width: 100% !important;
+    height: 200px !important;
+    padding: 2rem !important;
+    box-sizing: border-box !important;
+  }
+  
+  .home-view .tile-icon-container {
+    width: 80px !important;
+    height: 80px !important;
+    margin-bottom: 1rem !important;
+  }
+  
+  .home-view .tile-icon {
+    width: 60px !important;
+    height: 60px !important;
+  }
+  
+  .home-view .tile-text {
+    font-size: 1.4rem !important;
+  }
+}
+
+/* iPad Pro im Querformat (Landscape) - normales 3x2 Grid verwenden */
+/* iPad Pro 11" Landscape: 1194px x 834px */
+/* iPad Pro 12.9" Landscape: 1366px x 1024px */
+@media (min-width: 1024px) and (max-width: 1366px) and (orientation: landscape) {
+  html, body {
+    overflow: hidden !important;
+    height: 100vh !important;
+    max-height: 100vh !important;
+  }
+  
+  .home-view {
+    height: 100vh !important;
+    max-height: 100vh !important;
+    overflow: hidden !important;
+  }
+  
+  .home-view .desktop-grid {
+    display: grid !important;
+  }
+  
+  .home-view .mobile-carousel {
+    display: none !important;
+  }
+  
+  .home-view .main-content {
+    padding: 1rem 0 !important;
+    height: calc(100vh - 80px) !important; /* Viewport-Höhe minus Header */
+    max-height: calc(100vh - 80px) !important;
+    overflow: hidden !important;
+    display: flex !important;
+    flex-direction: column !important;
+    justify-content: center !important;
+    align-items: center !important;
+    box-sizing: border-box !important;
+  }
+  
+  /* Grid-Container: 85% Breite */
+  .home-view .grid-container {
+    display: grid !important;
+    grid-template-columns: repeat(3, 1fr) !important;
+    gap: 1.5rem !important;
+    width: 85% !important;
+    max-width: 85% !important;
+    padding: 0 !important;
+    box-sizing: border-box !important;
+    margin: 0 auto !important;
+    max-height: 100% !important;
+    overflow: visible !important;
+  }
+  
+  /* Tiles 25% höher (von 200px auf 250px) */
+  .home-view .menu-tile {
+    width: 100% !important;
+    max-width: 100% !important;
+    height: 250px !important;
+    padding: 1.5rem !important;
+    box-sizing: border-box !important;
+  }
+  
+  .home-view .tile-icon-container {
+    width: 80px !important;
+    height: 80px !important;
+    margin-bottom: 1rem !important;
+  }
+  
+  .home-view .tile-icon {
+    width: 60px !important;
+    height: 60px !important;
+  }
+  
+  .home-view .tile-text {
+    font-size: 1.4rem !important;
   }
 }
 
@@ -126,64 +424,90 @@
 .home-view .carousel-container {
   position: relative;
   width: 100%;
+  height: 100%;
   display: flex;
   flex-direction: column;
   align-items: center;
-  will-change: transform;
+  justify-content: center;
+  padding-top: 0;
+  margin-top: 0;
+  /* Karussell 10% höher */
+  transform: translateY(-10%);
 }
 
-.home-view .menu-tile {
+/* Mobile Karussell Tiles - Positionierung wie im Pain Dialog */
+.home-view .mobile-carousel .menu-tile {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform-origin: center center;
+  /* Abstand zwischen Kacheln: 500px (360px Höhe + 140px Abstand oben/unten) */
+  transform: translate(-50%, -50%) translateY(calc(var(--offset, 0) * 500px));
+  opacity: 0;
+  pointer-events: none;
+  transition: transform 0.8s ease-in-out, opacity 0.8s ease-in-out;
+  will-change: transform;
+  z-index: 0;
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
   cursor: pointer;
-  transition: all 0.3s ease;
   border-radius: 1rem;
   box-sizing: border-box;
-  position: relative;
-  z-index: 1;
   user-select: none;
-  margin: 0 auto;
   width: 85%;
   max-width: 450px;
   height: 360px;
   padding: 1.5rem;
   border: 3px solid transparent;
   background-color: var(--bg-secondary);
-  margin-bottom: 2rem;
+  margin: 0;
 }
 
-/* Alle Kacheln anzeigen für echtes Karussell */
-.home-view .menu-tile {
-  display: flex; /* Alle Kacheln anzeigen */
+/* Zeige nur aktive Kachel und Nachbarn */
+.home-view .mobile-carousel .menu-tile[style*="--offset: -1"],
+.home-view .mobile-carousel .menu-tile[style*="--offset: 0"],
+.home-view .mobile-carousel .menu-tile[style*="--offset: 1"] {
+  opacity: 1;
+  pointer-events: auto;
+  z-index: 1;
 }
 
-.menu-tile:hover {
+/* Aktive Kachel - immer in der Mitte */
+.home-view .mobile-carousel .menu-tile.tile-active {
+  transform: translate(-50%, -50%) translateY(0);
+  opacity: 1;
+  z-index: 10;
+}
+
+/* Alte Regel entfernt - wird durch .mobile-carousel .menu-tile überschrieben */
+
+/* Hover-Effekte nur für Desktop Grid, nicht für Mobile Karussell */
+.home-view .desktop-grid .menu-tile:hover {
   transform: scale(1.02);
   box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1);
 }
 
-.menu-tile:active {
+.home-view .desktop-grid .menu-tile:active {
   transform: scale(0.98);
 }
 
 /* Mobile Tile Active/Inactive States */
-.menu-tile.tile-active {
+.home-view .mobile-carousel .menu-tile.tile-active {
   background-color: #00B098;
   border: 3px solid #00B098;
   box-shadow: 0 15px 35px rgba(0, 176, 152, 0.3);
-  transform: scale(1.05);
-  pointer-events: auto; /* Aktive Kachel ist interaktiv */
+  /* transform wird durch .tile-active Regel oben gesetzt */
+  pointer-events: auto;
   cursor: pointer;
 }
 
-.menu-tile.tile-inactive {
+.home-view .mobile-carousel .menu-tile.tile-inactive {
   background-color: var(--bg-secondary);
   border: 3px solid var(--border-primary);
-  opacity: 1; /* Nicht blass - volle Opazität */
-  transform: scale(1); /* Normale Größe */
-  pointer-events: none; /* Inaktive Kacheln sind nicht klickbar */
+  /* opacity wird durch [style*="--offset"] Regel gesetzt */
+  pointer-events: none;
   cursor: default;
 }
 
@@ -302,6 +626,10 @@
     display: block;
   }
   
+  .home-view .carousel-container {
+    margin-top: 0 !important;
+  }
+  
   .menu-tile {
     width: 90%;
     height: 320px;
@@ -338,6 +666,10 @@
     justify-content: flex-start; /* Startet oben, nicht zentriert */
     align-items: center; /* Horizontal zentriert */
   }
+  
+  .home-view .carousel-container {
+    margin-top: 0 !important;
+  }
 }
 
 /* Sehr kleine Bildschirme (480px und kleiner) */
@@ -355,6 +687,9 @@
     align-items: center;
   }
   
+  .home-view .carousel-container {
+    margin-top: 0 !important;
+  }
 }
 
 /* Große Bildschirme (1200px und größer) */

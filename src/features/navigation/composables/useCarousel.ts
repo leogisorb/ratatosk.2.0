@@ -3,6 +3,7 @@ import { useTouchCarousel } from './useTouchCarousel'
 import { useAutoScroll } from './useAutoScroll'
 import { useCarouselPosition } from './useCarouselPosition'
 import { CAROUSEL_CONFIG, type CarouselItem } from '../config/carouselConfig'
+import { simpleFlowController } from '../../../core/application/SimpleFlowController'
 
 /**
  * Haupt-Composable für das mobile Karussell
@@ -10,6 +11,9 @@ import { CAROUSEL_CONFIG, type CarouselItem } from '../config/carouselConfig'
 export function useCarousel(items: CarouselItem[]) {
   // Mobile Detection
   const isMobile = ref(false)
+  
+  // Flag um zu verhindern, dass Auto-Scroll startet, wenn Auto-Mode gerade startet
+  const isAutoModeStarting = ref(false)
   
   // Touch-Handling
   const { 
@@ -46,14 +50,21 @@ export function useCarousel(items: CarouselItem[]) {
 
   /**
    * Mobile Detection
+   * iPad Pro im Hochformat (Portrait) wird auch als Mobile behandelt
+   * iPad im Querformat (Landscape) verwendet das normale Grid
    */
   const checkIsMobile = () => {
-    isMobile.value = window.innerWidth <= CAROUSEL_CONFIG.MOBILE_BREAKPOINT
-    console.log(`🔍 Mobile check: ${isMobile.value} (width: ${window.innerWidth}px)`)
-    const desktopGrid = document.querySelector('.desktop-grid') as HTMLElement | null
-    const mobileCarousel = document.querySelector('.mobile-carousel') as HTMLElement | null
-    console.log(`🔍 Desktop grid display:`, desktopGrid?.style.display)
-    console.log(`🔍 Mobile carousel display:`, mobileCarousel?.style.display)
+    const width = window.innerWidth
+    const height = window.innerHeight
+    const isPortrait = height > width
+    const isLandscape = width > height
+    
+    // Mobile: <= 768px ODER iPad Pro im Hochformat (Portrait) - NICHT im Querformat!
+    // iPad Pro 11": 834px x 1194px (Portrait) / 1194px x 834px (Landscape)
+    // iPad Pro 12.9": 1024px x 1366px (Portrait) / 1366px x 1024px (Landscape)
+    isMobile.value = width <= CAROUSEL_CONFIG.MOBILE_BREAKPOINT || 
+                     (isPortrait && !isLandscape && width <= 1366 && width >= 768)
+    
     // Position bei Resize neu berechnen
     if (isMobile.value) {
       updatePosition(position.currentIndex, items.length)
@@ -65,6 +76,16 @@ export function useCarousel(items: CarouselItem[]) {
    */
   const startAutoScrollWithCallback = () => {
     if (!isMobile.value) return
+    
+    // Prüfe, ob Auto-Mode aktiv ist oder gerade startet - wenn ja, starte Auto-Scroll nicht
+    if (isAutoModeStarting.value) {
+      return
+    }
+    
+    const autoModeState = simpleFlowController.getState()
+    if (autoModeState.isAutoModeActive) {
+      return
+    }
 
     startAutoScroll((index) => {
       const nextIndex = getNextIndex(itemCount.value)
@@ -153,12 +174,28 @@ export function useCarousel(items: CarouselItem[]) {
     checkIsMobile()
     updatePosition(0, itemCount.value)
     
-    // Starte Auto-Scroll nach kurzer Verzögerung
+    // Starte Auto-Scroll nach kurzer Verzögerung, NUR wenn Auto-Mode nicht aktiv ist
+    // Auto-Mode steuert die Navigation selbst, daher sollte Auto-Scroll nicht laufen
     setTimeout(() => {
-      if (isMobile.value) {
-        startAutoScrollWithCallback()
+      if (isMobile.value && !autoScrollState.isActive) {
+        // Prüfe, ob Auto-Mode aktiv ist oder gerade startet
+        if (isAutoModeStarting.value) {
+          return
+        }
+        
+        const autoModeState = simpleFlowController.getState()
+        if (!autoModeState.isAutoModeActive) {
+          startAutoScrollWithCallback()
+        }
       }
     }, 1000)
+  }
+  
+  /**
+   * Setzt Flag, dass Auto-Mode gerade startet
+   */
+  const setAutoModeStarting = (starting: boolean) => {
+    isAutoModeStarting.value = starting
   }
 
   /**
@@ -207,6 +244,9 @@ export function useCarousel(items: CarouselItem[]) {
     // Auto-Scroll
     startAutoScrollWithCallback,
     stopAutoScrollCompletely,
+    
+    // Auto-Mode Flag
+    setAutoModeStarting,
     
     // Mobile Detection
     checkIsMobile

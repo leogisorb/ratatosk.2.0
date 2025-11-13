@@ -239,6 +239,7 @@ const {
                 <div 
                   class="menu-tile"
                   :class="currentTileIndex === 0 ? 'tile-active' : 'tile-inactive'"
+                  :style="{ '--offset': 0 - currentTileIndex }"
                   @click="currentTileIndex === 0 ? selectMenu('warning') : null"
                   @contextmenu="currentTileIndex === 0 ? handleRightClick : null"
                 >
@@ -266,6 +267,7 @@ const {
                 <div 
                   class="menu-tile"
                   :class="currentTileIndex === 1 ? 'tile-active' : 'tile-inactive'"
+                  :style="{ '--offset': 1 - currentTileIndex }"
                   @click="currentTileIndex === 1 ? selectMenu('communication') : null"
                   @contextmenu="currentTileIndex === 1 ? handleRightClick : null"
                 >
@@ -293,6 +295,7 @@ const {
                 <div 
                   class="menu-tile"
                   :class="currentTileIndex === 2 ? 'tile-active' : 'tile-inactive'"
+                  :style="{ '--offset': 2 - currentTileIndex }"
                   @click="currentTileIndex === 2 ? selectMenu('ich') : null"
                   @contextmenu="currentTileIndex === 2 ? handleRightClick : null"
                 >
@@ -320,6 +323,7 @@ const {
                 <div 
                   class="menu-tile"
                   :class="currentTileIndex === 3 ? 'tile-active' : 'tile-inactive'"
+                  :style="{ '--offset': 3 - currentTileIndex }"
                   @click="currentTileIndex === 3 ? selectMenu('pain') : null"
                   @contextmenu="currentTileIndex === 3 ? handleRightClick : null"
                 >
@@ -347,6 +351,7 @@ const {
                 <div 
                   class="menu-tile"
                   :class="currentTileIndex === 4 ? 'tile-active' : 'tile-inactive'"
+                  :style="{ '--offset': 4 - currentTileIndex }"
                   @click="currentTileIndex === 4 ? selectMenu('environment') : null"
                   @contextmenu="currentTileIndex === 4 ? handleRightClick : null"
                 >
@@ -374,6 +379,7 @@ const {
                 <div 
                   class="menu-tile"
                   :class="currentTileIndex === 5 ? 'tile-active' : 'tile-inactive'"
+                  :style="{ '--offset': 5 - currentTileIndex }"
                   @click="currentTileIndex === 5 ? selectMenu('settings') : null"
                   @contextmenu="currentTileIndex === 5 ? handleRightClick : null"
                 >
