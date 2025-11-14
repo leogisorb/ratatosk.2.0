@@ -347,9 +347,6 @@ watch(() => cameraStatus.value, (status) => {
 onMounted(async () => {
   console.log('StartView: Mounted')
   
-  // Lade initialen TTS-Mute-Status
-  isTTSMuted.value = simpleFlowController.getTTSMuted()
-  
   // Auto-start camera if possible
   if (typeof navigator !== 'undefined' && navigator.mediaDevices && typeof navigator.mediaDevices.getUserMedia === 'function') {
     console.log('Kamera verfügbar - starte automatisch')
