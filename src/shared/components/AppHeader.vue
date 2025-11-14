@@ -145,9 +145,9 @@ const toggleDarkMode = () => {
   console.log('Dark mode toggled:', isDarkMode.value)
 }
 
-// Zurück Button (Hard Reset) - Stoppt alle Services und navigiert zu /app
+// Zurück Button (Hard Reset) - Stoppt alle Services und navigiert zu /
 const goBack = () => {
-  console.log('Header: Zurück Button geklickt - Hard Reset zu /app')
+  console.log('Header: Zurück Button geklickt - Hard Reset zu /')
   
   // Stoppe alle laufenden TTS komplett
   simpleFlowController.stopTTS()
@@ -163,9 +163,9 @@ const goBack = () => {
   // Setze aktiven View zurück
   simpleFlowController.setActiveView('')
   
-  // Navigiere zu /app (Home-View)
-  router.push('/app').then(() => {
-    console.log('Header: Zurück Button - Navigation zu /app erfolgreich, alle Services gestoppt')
+  // Navigiere zu / (Home-View)
+  router.push('/').then(() => {
+    console.log('Header: Zurück Button - Navigation zu / erfolgreich, alle Services gestoppt')
   }).catch((error) => {
     console.error('Header: Zurück Button - Navigation fehlgeschlagen:', error)
   })
