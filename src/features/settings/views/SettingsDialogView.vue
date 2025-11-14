@@ -14,86 +14,44 @@
           </div>
 
           <!-- Desktop Grid -->
-          <div class="grid-container desktop-grid" v-if="!isMobile">
-            <!-- Dynamic Menu Tiles -->
-            <div 
-              v-for="(category, index) in items"
-              :key="category.id"
-              class="menu-tile"
-              :class="[
-                autoMode.index.value === index ? 'tile-active' : 'tile-inactive',
-                category.id === dict.ID_BACK ? 'back-tile' : ''
-              ]"
-              @click="category.id === dict.ID_BACK ? goBack() : (autoMode.index.value === index ? selectCategory(String(category.id)) : null)"
-              @contextmenu.prevent="autoMode.index.value === index ? null : null"
-            >
-              <div 
-                class="tile-icon-container"
-                :class="autoMode.index.value === index ? 'icon-active' : 'icon-inactive'"
-              >
-                <img 
-                  v-if="'icon' in category && category.icon" 
-                  :src="String(category.icon)" 
-                  :alt="category.title" 
-                  class="tile-icon"
-                  :class="autoMode.index.value === index ? 'icon-inverted' : ''"
-                />
-              </div>
-              <div 
-                class="tile-text"
-                :class="autoMode.index.value === index ? 'text-active' : 'text-inactive'"
-              >
-                {{ category.title }}
-              </div>
-            </div>
-          </div>
+          <GridView
+            v-if="!isMobile"
+            :items="items"
+            :current-index="autoMode.index.value"
+            :back-id="dict.ID_BACK"
+            :on-item-click="(item, index) => {
+              if (item.id === dict.ID_BACK) {
+                goBack()
+              } else if (autoMode.index.value === index) {
+                selectCategory(String(item.id))
+              }
+            }"
+            :on-context-menu="(item, index) => {
+              // Context menu handling if needed
+            }"
+          />
 
           <!-- Mobile Vertical Carousel -->
-          <div class="mobile-carousel" v-if="isMobile">
-            <div 
-              class="carousel-container" 
-              :style="carouselStyle"
-              @touchstart="handleTouchStart"
-              @touchmove="handleTouchMove"
-              @touchend="handleTouchEnd"
-              role="listbox"
-              aria-label="Hauptmenü"
-              tabindex="0"
-            >
-              <div 
-                v-for="(category, index) in items"
-                :key="category.id"
-                class="menu-tile"
-                :class="[
-                  autoMode.index.value === index ? 'tile-active' : 'tile-inactive',
-                  category.id === dict.ID_BACK ? 'back-tile' : ''
-                ]"
-                :style="{ '--offset': index - autoMode.index.value }"
-                @click="category.id === dict.ID_BACK ? goBack() : (autoMode.index.value === index ? selectCategory(String(category.id)) : null)"
-                @contextmenu.prevent="autoMode.index.value === index ? null : null"
-              >
-                <div 
-                  class="tile-icon-container"
-                  :class="autoMode.index.value === index ? 'icon-active' : 'icon-inactive'"
-                >
-                  <img 
-                    v-if="'icon' in category && category.icon" 
-                    :src="String(category.icon)" 
-                    :alt="category.title" 
-                    class="tile-icon"
-                    :class="autoMode.index.value === index ? 'icon-inverted' : ''"
-                  />
-                </div>
-                <div 
-                  class="tile-text"
-                  :class="autoMode.index.value === index ? 'text-active' : 'text-inactive'"
-                  :style="autoMode.index.value === index ? 'color: white !important;' : ''"
-                >
-                  {{ category.title }}
-                </div>
-              </div>
-            </div>
-          </div>
+          <MobileCarouselView
+            v-if="isMobile"
+            :items="items"
+            :current-index="autoMode.index.value"
+            :carousel-style="carouselStyle"
+            :back-id="dict.ID_BACK"
+            :on-item-click="(item, index) => {
+              if (item.id === dict.ID_BACK) {
+                goBack()
+              } else if (autoMode.index.value === index) {
+                selectCategory(String(item.id))
+              }
+            }"
+            :on-touch-start="handleTouchStart"
+            :on-touch-move="handleTouchMove"
+            :on-touch-end="handleTouchEnd"
+            :on-context-menu="(item, index) => {
+              // Context menu handling if needed
+            }"
+          />
         </div>
 
         <!-- Settings Options View -->
@@ -153,72 +111,20 @@
 
           <!-- Normales Karussell für andere Einstellungen -->
           <template v-else>
-            <!-- Karussell Wrapper für vertikale Zentrierung -->
-            <div class="carousel-wrapper">
-              <!-- Karussell Container -->
-              <div class="carousel-container">
-                <!-- Karussell Content -->
-                <div class="carousel-content">
-                  <div 
-                    v-for="(option, index) in items"
-                    :key="option.id"
-                    class="carousel-item"
-                    :class="autoMode.index.value === index ? 'carousel-item-active' : 'carousel-item-inactive'"
-                    :style="{
-                      '--offset': index - autoMode.index.value,
-                      '--rotation': (index < autoMode.index.value ? -20 : index > autoMode.index.value ? 20 : 0) + 'deg'
-                    }"
-                    @click="option.id === dict.ID_BACK ? goBack() : (autoMode.index.value === index ? selectOption(String(option.id)) : null)"
-                    @contextmenu.prevent="autoMode.index.value === index ? null : null"
-                  >
-                    <div class="carousel-item-content">
-                      <div 
-                        class="tile-icon-container"
-                        :class="autoMode.index.value === index ? 'icon-active' : 'icon-inactive'"
-                      >
-                        <div 
-                          v-if="'emoji' in option && option.emoji" 
-                          class="tile-emoji"
-                        >
-                          {{ option.emoji }}
-                        </div>
-                        <img 
-                          v-else-if="'icon' in option && option.icon" 
-                          :src="String(option.icon)" 
-                          :alt="option.title" 
-                          class="tile-icon"
-                          :class="autoMode.index.value === index ? 'icon-inverted' : ''"
-                        />
-                      </div>
-                      <div 
-                        class="tile-text"
-                        :class="autoMode.index.value === index ? 'text-active' : 'text-inactive'"
-                      >
-                        {{ option.title }}
-                      </div>
-                      <div 
-                        v-if="'description' in option && option.description"
-                        class="tile-description"
-                        :class="autoMode.index.value === index ? 'text-active' : 'text-inactive'"
-                      >
-                        {{ option.description }}
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            <!-- Karussell Indicators -->
-            <div class="carousel-indicators">
-              <button 
-                v-for="(option, index) in items"
-                :key="`indicator-${option.id}`"
-                class="carousel-indicator"
-                :class="autoMode.index.value === index ? 'carousel-indicator-active' : 'carousel-indicator-inactive'"
-              >
-              </button>
-            </div>
+            <CarouselView
+              :items="items"
+              :current-index="autoMode.index.value"
+              :on-item-click="(item, index) => {
+                if (item.id === dict.ID_BACK) {
+                  goBack()
+                } else if (autoMode.index.value === index) {
+                  selectOption(String(item.id))
+                }
+              }"
+              :on-context-menu="(item, index) => {
+                // Context menu handling if needed
+              }"
+            />
           </template>
         </div>
 
@@ -243,6 +149,9 @@ import { useInputManager } from '../../../shared/composables/useInputManager'
 import { useSettingsStore } from '../stores/settings'
 import { useFaceRecognition } from '../../../features/face-recognition/composables/useFaceRecognition'
 import AppHeader from '../../../shared/components/AppHeader.vue'
+import CarouselView from '../../../shared/components/CarouselView.vue'
+import GridView from '../../../shared/components/GridView.vue'
+import MobileCarouselView from '../../../shared/components/MobileCarouselView.vue'
 import { useMobileDetection } from '../../../shared/composables/useMobileDetection'
 import { useCarousel } from '../../navigation/composables/useCarousel'
 import type { CarouselItem } from '../../navigation/config/carouselConfig'

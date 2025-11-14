@@ -14,86 +14,44 @@
           </div>
 
           <!-- Desktop Grid -->
-          <div class="grid-container desktop-grid" v-if="!isMobile">
-            <!-- Dynamic Menu Tiles -->
-            <div 
-              v-for="(region, index) in items"
-              :key="region.id"
-              class="menu-tile"
-              :class="[
-                autoMode.index.value === index ? 'tile-active' : 'tile-inactive',
-                region.id === 'zurueck' ? 'back-tile' : ''
-              ]"
-              @click="region.id === 'zurueck' ? goBack() : (autoMode.index.value === index ? selectMainRegion(String(region.id)) : null)"
-              @contextmenu.prevent="autoMode.index.value === index ? null : null"
-            >
-              <div 
-                class="tile-icon-container"
-                :class="autoMode.index.value === index ? 'icon-active' : 'icon-inactive'"
-              >
-                <img 
-                  v-if="'icon' in region && region.icon" 
-                  :src="String(region.icon)" 
-                  :alt="region.title" 
-                  class="tile-icon"
-                  :class="autoMode.index.value === index ? 'icon-inverted' : ''"
-                />
-              </div>
-              <div 
-                class="tile-text"
-                :class="autoMode.index.value === index ? 'text-active' : 'text-inactive'"
-              >
-                {{ region.title }}
-              </div>
-            </div>
-          </div>
+          <GridView
+            v-if="!isMobile"
+            :items="items"
+            :current-index="autoMode.index.value"
+            :back-id="'zurueck'"
+            :on-item-click="(item, index) => {
+              if (item.id === 'zurueck') {
+                goBack()
+              } else if (autoMode.index.value === index) {
+                selectMainRegion(String(item.id))
+              }
+            }"
+            :on-context-menu="(item, index) => {
+              // Context menu handling if needed
+            }"
+          />
 
           <!-- Mobile Vertical Carousel -->
-          <div class="mobile-carousel" v-if="isMobile">
-            <div 
-              class="carousel-container" 
-              :style="carouselStyle"
-              @touchstart="handleTouchStart"
-              @touchmove="handleTouchMove"
-              @touchend="handleTouchEnd"
-              role="listbox"
-              aria-label="Hauptmenü"
-              tabindex="0"
-            >
-              <div 
-                v-for="(region, index) in items"
-                :key="region.id"
-                class="menu-tile"
-                :class="[
-                  autoMode.index.value === index ? 'tile-active' : 'tile-inactive',
-                  region.id === 'zurueck' ? 'back-tile' : ''
-                ]"
-                :style="{ '--offset': index - autoMode.index.value }"
-                @click="region.id === 'zurueck' ? goBack() : (autoMode.index.value === index ? selectMainRegion(String(region.id)) : null)"
-                @contextmenu.prevent="autoMode.index.value === index ? null : null"
-              >
-                <div 
-                  class="tile-icon-container"
-                  :class="autoMode.index.value === index ? 'icon-active' : 'icon-inactive'"
-                >
-                  <img 
-                    v-if="'icon' in region && region.icon" 
-                    :src="String(region.icon)" 
-                    :alt="region.title" 
-                    class="tile-icon"
-                    :class="autoMode.index.value === index ? 'icon-inverted' : ''"
-                  />
-                </div>
-                <div 
-                  class="tile-text"
-                  :class="autoMode.index.value === index ? 'text-active' : 'text-inactive'"
-                  :style="autoMode.index.value === index ? 'color: white !important;' : ''"
-                >
-                  {{ region.title }}
-                </div>
-              </div>
-            </div>
-          </div>
+          <MobileCarouselView
+            v-if="isMobile"
+            :items="items"
+            :current-index="autoMode.index.value"
+            :carousel-style="carouselStyle"
+            :back-id="'zurueck'"
+            :on-item-click="(item, index) => {
+              if (item.id === 'zurueck') {
+                goBack()
+              } else if (autoMode.index.value === index) {
+                selectMainRegion(String(item.id))
+              }
+            }"
+            :on-touch-start="handleTouchStart"
+            :on-touch-move="handleTouchMove"
+            :on-touch-end="handleTouchEnd"
+            :on-context-menu="(item, index) => {
+              // Context menu handling if needed
+            }"
+          />
         </div>
 
         <!-- Sub Region View -->
@@ -102,59 +60,20 @@
             {{ title }}
           </div>
 
-          <!-- Karussell Wrapper für vertikale Zentrierung -->
-          <div class="carousel-wrapper">
-            <!-- Karussell Container -->
-            <div class="carousel-container">
-            <!-- Karussell Content -->
-            <div class="carousel-content">
-              <div 
-                v-for="(subRegion, index) in items"
-                :key="subRegion.id"
-                class="carousel-item"
-                :class="autoMode.index.value === index ? 'carousel-item-active' : 'carousel-item-inactive'"
-                :style="{
-                  '--offset': index - autoMode.index.value,
-                  '--rotation': (index < autoMode.index.value ? -20 : index > autoMode.index.value ? 20 : 0) + 'deg'
-                }"
-                @click="subRegion.id === 'zurueck' ? goBack() : (autoMode.index.value === index ? selectSubRegion(String(subRegion.id)) : null)"
-                @contextmenu.prevent="autoMode.index.value === index ? null : null"
-              >
-                <div class="carousel-item-content">
-                  <div 
-                    class="tile-icon-container"
-                    :class="autoMode.index.value === index ? 'icon-active' : 'icon-inactive'"
-                  >
-                    <img 
-                      v-if="'icon' in subRegion && subRegion.icon" 
-                      :src="String(subRegion.icon)" 
-                      :alt="subRegion.title" 
-                      class="tile-icon"
-                      :class="autoMode.index.value === index ? 'icon-inverted' : ''"
-                    />
-                  </div>
-                  <div 
-                    class="tile-text"
-                    :class="autoMode.index.value === index ? 'text-active' : 'text-inactive'"
-                  >
-                    {{ subRegion.title }}
-                  </div>
-                </div>
-              </div>
-            </div>
-            </div>
-          </div>
-
-          <!-- Karussell Indicators -->
-          <div class="carousel-indicators">
-            <button 
-              v-for="(subRegion, index) in items"
-              :key="`indicator-${subRegion.id}`"
-              class="carousel-indicator"
-              :class="autoMode.index.value === index ? 'carousel-indicator-active' : 'carousel-indicator-inactive'"
-            >
-            </button>
-          </div>
+          <CarouselView
+            :items="items"
+            :current-index="autoMode.index.value"
+            :on-item-click="(item, index) => {
+              if (item.id === 'zurueck') {
+                goBack()
+              } else if (autoMode.index.value === index) {
+                selectSubRegion(String(item.id))
+              }
+            }"
+            :on-context-menu="(item, index) => {
+              // Context menu handling if needed
+            }"
+          />
         </div>
 
         <!-- Pain Scale View -->
@@ -213,6 +132,9 @@ import { useInputManager } from '../../../shared/composables/useInputManager'
 import type { InputEvent } from '../../../core/application/InputManager'
 import { simpleFlowController } from '../../../core/application/SimpleFlowController'
 import AppHeader from '../../../shared/components/AppHeader.vue'
+import CarouselView from '../../../shared/components/CarouselView.vue'
+import GridView from '../../../shared/components/GridView.vue'
+import MobileCarouselView from '../../../shared/components/MobileCarouselView.vue'
 import { useMobileDetection } from '../../../shared/composables/useMobileDetection'
 import { useCarousel } from '../../navigation/composables/useCarousel'
 import type { CarouselItem } from '../../navigation/config/carouselConfig'

@@ -84,7 +84,9 @@ export function useAutoMode(config: AutoModeConfig) {
     globalAutoModeActive = true
 
     running.value = true
+    // ✅ WICHTIG: Index immer bei 0 starten für sequenziellen Durchlauf (0-1-2-3-4-5...)
     index.value = 0
+    console.log(`✅ useAutoMode.start() - Starte sequenziellen Durchlauf bei Index 0 (${items.length} Items)`)
 
     // ✅ Titel wird NUR gesprochen wenn skipTitle = false
     if (!skipTitle) {
@@ -99,12 +101,13 @@ export function useAutoMode(config: AutoModeConfig) {
         return
       }
 
-      // ✅ Warte initialDelay Sekunden, dann starte Loop
-      console.log(`✅ useAutoMode.start() - Starte Loop in ${initialDelay}ms...`)
+      // ✅ Warte initialDelay Sekunden, dann starte Loop bei Index 0
+      console.log(`✅ useAutoMode.start() - Starte sequenziellen Loop in ${initialDelay}ms bei Index 0...`)
       initialTimer = window.setTimeout(() => {
         if (running.value) {
+          // ✅ Sicherstellen, dass Index bei 0 startet
           index.value = 0
-          console.log('✅ useAutoMode.start() - Starte Loop mit Index:', index.value)
+          console.log(`✅ useAutoMode.start() - Starte sequenziellen Loop: Index ${index.value} → ${index.value + 1} → ...`)
           loop()
         } else {
           console.warn('❌ useAutoMode.start() - Nicht mehr laufend beim Start des Loops')
@@ -112,12 +115,13 @@ export function useAutoMode(config: AutoModeConfig) {
         }
       }, initialDelay)
     } else {
-      // ✅ Titel wurde bereits gesprochen, warte nur initialDelay Sekunden, dann starte Loop
-      console.log(`✅ useAutoMode.start() - Titel bereits gesprochen, starte Loop in ${initialDelay}ms...`)
+      // ✅ Titel wurde bereits gesprochen, warte nur initialDelay Sekunden, dann starte Loop bei Index 0
+      console.log(`✅ useAutoMode.start() - Titel bereits gesprochen, starte sequenziellen Loop in ${initialDelay}ms bei Index 0...`)
       initialTimer = window.setTimeout(() => {
         if (running.value) {
+          // ✅ Sicherstellen, dass Index bei 0 startet
           index.value = 0
-          console.log('✅ useAutoMode.start() - Starte Loop mit Index:', index.value)
+          console.log(`✅ useAutoMode.start() - Starte sequenziellen Loop: Index ${index.value} → ${index.value + 1} → ...`)
           loop()
         } else {
           console.warn('❌ useAutoMode.start() - Nicht mehr laufend beim Start des Loops')
@@ -145,8 +149,9 @@ export function useAutoMode(config: AutoModeConfig) {
       return
     }
 
-    // ✅ Sicherstellen, dass Index gültig ist
+    // ✅ Sicherstellen, dass Index gültig ist und sequenziell bleibt
     if (index.value >= items.length || index.value < 0) {
+      console.warn(`⚠️ useAutoMode.loop() - Index ${index.value} außerhalb des gültigen Bereichs [0-${items.length - 1}], setze auf 0`)
       index.value = 0
     }
 
@@ -203,9 +208,11 @@ export function useAutoMode(config: AutoModeConfig) {
         }
         
         // ✅ JETZT erst Index aktualisieren (nach TTS + cycleDelay Wartezeit)
+        // ✅ WICHTIG: Sequenzieller Durchlauf 0-1-2-3-4-5...
         const oldIndex = index.value
-        index.value = (index.value + 1) % currentItems.length
-        console.log(`✅ useAutoMode.loop() - Index von ${oldIndex} auf ${index.value} geändert (nach TTS + Wartezeit)`)
+        const nextIndex = (index.value + 1) % currentItems.length
+        index.value = nextIndex
+        console.log(`✅ useAutoMode.loop() - Sequenzieller Durchlauf: Index von ${oldIndex} auf ${index.value} geändert (von ${currentItems.length} Items)`)
 
         // ✅ Starte nächsten Cycle (spricht neues Item)
         if (running.value) {

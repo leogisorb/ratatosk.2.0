@@ -267,21 +267,36 @@
   z-index: 0;
 }
 
-.pain-dialog .carousel-item[style*="--offset: -1"],
+/* Nur die aktive Kachel (--offset: 0) ist sichtbar */
 .pain-dialog .carousel-item[style*="--offset: 0"],
-.pain-dialog .carousel-item[style*="--offset: 1"],
-.ich-dialog .carousel-item[style*="--offset: -1"],
 .ich-dialog .carousel-item[style*="--offset: 0"],
-.ich-dialog .carousel-item[style*="--offset: 1"],
-.umgebung-dialog .carousel-item[style*="--offset: -1"],
 .umgebung-dialog .carousel-item[style*="--offset: 0"],
-.umgebung-dialog .carousel-item[style*="--offset: 1"],
-.settings-dialog .carousel-item[style*="--offset: -1"],
-.settings-dialog .carousel-item[style*="--offset: 0"],
-.settings-dialog .carousel-item[style*="--offset: 1"] {
+.settings-dialog .carousel-item[style*="--offset: 0"] {
   opacity: 1;
   pointer-events: auto;
   z-index: 1;
+}
+
+/* Inaktive Kacheln (links und rechts) sind unsichtbar */
+.pain-dialog .carousel-item[style*="--offset: -1"],
+.pain-dialog .carousel-item[style*="--offset: 1"],
+.ich-dialog .carousel-item[style*="--offset: -1"],
+.ich-dialog .carousel-item[style*="--offset: 1"],
+.umgebung-dialog .carousel-item[style*="--offset: -1"],
+.umgebung-dialog .carousel-item[style*="--offset: 1"],
+.settings-dialog .carousel-item[style*="--offset: -1"],
+.settings-dialog .carousel-item[style*="--offset: 1"] {
+  opacity: 0 !important; /* Unsichtbar */
+  pointer-events: none !important; /* Keine Interaktion */
+  z-index: -1 !important; /* Im Hintergrund */
+}
+
+/* Aktive Kachel hat höchsten z-index - immer ganz oben */
+.pain-dialog .carousel-item-active[style*="--offset: 0"],
+.ich-dialog .carousel-item-active[style*="--offset: 0"],
+.umgebung-dialog .carousel-item-active[style*="--offset: 0"],
+.settings-dialog .carousel-item-active[style*="--offset: 0"] {
+  z-index: 999 !important;
 }
 
 .pain-dialog .carousel-item-active,
@@ -290,7 +305,31 @@
 .settings-dialog .carousel-item-active {
   transform: translate(-50%, -50%) translateX(0) rotateY(0deg) scale(1);
   opacity: 1;
-  z-index: 10;
+  z-index: 999 !important; /* Höchste Ebene - immer ganz oben */
+}
+
+/* Kacheln links und rechts der aktiven Kachel in den Hintergrund - NACH der active-Regel, damit sie überschrieben wird */
+.pain-dialog .carousel-item[style*="--offset: -1"],
+.pain-dialog .carousel-item[style*="--offset: 1"],
+.ich-dialog .carousel-item[style*="--offset: -1"],
+.ich-dialog .carousel-item[style*="--offset: 1"],
+.umgebung-dialog .carousel-item[style*="--offset: -1"],
+.umgebung-dialog .carousel-item[style*="--offset: 1"],
+.settings-dialog .carousel-item[style*="--offset: -1"],
+.settings-dialog .carousel-item[style*="--offset: 1"] {
+  z-index: -1 !important; /* Hintergrund - negativer z-index für sicherere Trennung */
+}
+
+/* Sicherstellen, dass benachbarte Kacheln auch dann im Hintergrund sind, wenn sie irgendwie als "active" markiert sind */
+.pain-dialog .carousel-item-active[style*="--offset: -1"],
+.pain-dialog .carousel-item-active[style*="--offset: 1"],
+.ich-dialog .carousel-item-active[style*="--offset: -1"],
+.ich-dialog .carousel-item-active[style*="--offset: 1"],
+.umgebung-dialog .carousel-item-active[style*="--offset: -1"],
+.umgebung-dialog .carousel-item-active[style*="--offset: 1"],
+.settings-dialog .carousel-item-active[style*="--offset: -1"],
+.settings-dialog .carousel-item-active[style*="--offset: 1"] {
+  z-index: -1 !important; /* Auch benachbarte "active" Kacheln im Hintergrund */
 }
 
 .pain-dialog .carousel-item-content,
@@ -317,8 +356,9 @@
 .umgebung-dialog .carousel-item-active .carousel-item-content,
 .settings-dialog .carousel-item-active .carousel-item-content {
   transform: scale(1);
+  background-color: var(--bg-secondary); /* Ursprüngliche Farbe */
   box-shadow: 0 0 35px rgba(0, 176, 152, 0.4);
-    border: 0.2rem solid rgba(0, 176, 152, 0.6);
+  border: 0.2rem solid rgba(0, 176, 152, 0.6);
 }
 
 .pain-dialog .carousel-item-content .tile-icon-container,
@@ -354,9 +394,11 @@
   color: var(--text-primary);
   text-align: center;
   transition: color 0.3s ease;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
+  white-space: normal; /* Text darf umbrechen */
+  overflow: visible; /* Kein Overflow-Hiding */
+  word-wrap: break-word; /* Wörter umbrechen wenn nötig */
+  overflow-wrap: break-word; /* Moderne Alternative */
+  hyphens: auto; /* Automatische Silbentrennung */
 }
 
 .pain-dialog .carousel-item-active .carousel-item-content .tile-text,
@@ -404,6 +446,8 @@
   left: 50%;
   transform: translateX(-50%);
   width: 100%;
+  /* Verhindert Verzerrung der Indikatoren */
+  flex-wrap: nowrap;
 }
 
 .pain-dialog .carousel-indicator,
@@ -412,12 +456,20 @@
 .settings-dialog .carousel-indicator {
   width: clamp(1vw, 1.2vw, 1.5vw);
   height: clamp(1vw, 1.2vw, 1.5vw);
+  min-width: clamp(1vw, 1.2vw, 1.5vw);
+  min-height: clamp(1vw, 1.2vw, 1.5vw);
+  max-width: clamp(1vw, 1.2vw, 1.5vw);
+  max-height: clamp(1vw, 1.2vw, 1.5vw);
   border-radius: 50%;
+  aspect-ratio: 1 / 1;
   background-color: rgba(0, 176, 152, 0.3);
   border: none;
   cursor: pointer;
   transition: all 0.3s ease;
   margin: 0 0.5rem;
+  padding: 0;
+  box-sizing: border-box;
+  flex-shrink: 0;
 }
 
 .pain-dialog .carousel-indicator-active,
@@ -650,16 +702,214 @@
     word-break: break-word !important;
   }
   
+  /* Main Content für iPhone - volle Höhe nutzen, KEIN Padding oben */
   .pain-dialog .main-content,
   .ich-dialog .main-content,
   .umgebung-dialog .main-content,
   .settings-dialog .main-content {
-    padding-top: 0;
-    margin-top: 0;
-    align-items: flex-start;
-    min-height: 100vh;
-    overflow-y: auto;
-    justify-content: flex-start;
+    padding: 0 !important;
+    padding-top: 0 !important;
+    padding-bottom: 0 !important;
+    padding-left: 0 !important;
+    padding-right: 0 !important;
+    margin: 0 !important;
+    margin-top: 0 !important;
+    height: calc(100vh - 80px) !important; /* 80px für Header */
+    min-height: calc(100vh - 80px) !important;
+    max-height: calc(100vh - 80px) !important;
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: stretch !important;
+    justify-content: flex-start !important;
+    overflow: hidden !important;
+    box-sizing: border-box !important;
+  }
+  
+  /* Content Wrapper für iPhone - volle Höhe nutzen */
+  .pain-dialog .content-wrapper,
+  .ich-dialog .content-wrapper,
+  .umgebung-dialog .content-wrapper,
+  .settings-dialog .content-wrapper {
+    padding: 0 !important;
+    margin: 0 !important;
+    height: 100% !important;
+    min-height: 100% !important;
+    max-height: 100% !important;
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: center !important;
+    justify-content: space-between !important;
+    gap: 0 !important;
+    box-sizing: border-box !important;
+  }
+  
+  /* Main Title für iPhone - minimaler Margin */
+  .pain-dialog .main-title,
+  .ich-dialog .main-title,
+  .umgebung-dialog .main-title,
+  .settings-dialog .main-title {
+    margin: 0.5rem 0 !important;
+    padding: 0 !important;
+    flex-shrink: 0 !important;
+  }
+  
+  /* CarouselView Container für iPhone - 10% weiter nach unten */
+  .pain-dialog .carousel-view-container,
+  .ich-dialog .carousel-view-container,
+  .umgebung-dialog .carousel-view-container,
+  .settings-dialog .carousel-view-container {
+    flex: 1 !important;
+    display: flex !important;
+    flex-direction: column !important;
+    justify-content: center !important;
+    align-items: center !important;
+    min-height: 0 !important;
+    width: 100% !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    margin-top: 10vh !important; /* 10% weiter nach unten - nur für iPhone */
+  }
+  
+  /* Carousel Wrapper für iPhone - volle Höhe */
+  .pain-dialog .carousel-view-container .carousel-wrapper,
+  .ich-dialog .carousel-view-container .carousel-wrapper,
+  .umgebung-dialog .carousel-view-container .carousel-wrapper,
+  .settings-dialog .carousel-view-container .carousel-wrapper {
+    flex: 1 !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    width: 100% !important;
+    min-height: 0 !important;
+    margin: 0 !important;
+    padding: 0 !important;
+  }
+  
+  /* Carousel Indicators für iPhone - minimaler Margin, RUND (gleich breit und hoch) */
+  .pain-dialog .carousel-indicators,
+  .ich-dialog .carousel-indicators,
+  .umgebung-dialog .carousel-indicators,
+  .settings-dialog .carousel-indicators {
+    margin: 0.5rem 0 !important;
+    padding: 0 !important;
+    flex-shrink: 0 !important;
+  }
+  
+  /* Carousel Indicator für iPhone - RUND (width === height), keine Verzerrung */
+  .pain-dialog .carousel-indicator,
+  .ich-dialog .carousel-indicator,
+  .umgebung-dialog .carousel-indicator,
+  .settings-dialog .carousel-indicator {
+    width: 0.5rem !important;
+    height: 0.5rem !important;
+    min-width: 0.5rem !important;
+    min-height: 0.5rem !important;
+    max-width: 0.5rem !important;
+    max-height: 0.5rem !important;
+    border-radius: 50% !important;
+    aspect-ratio: 1 / 1 !important;
+    padding: 0 !important;
+    margin: 0 0.3rem !important;
+    flex-shrink: 0 !important;
+    box-sizing: border-box !important;
+  }
+  
+  /* Carousel Indicator Active für iPhone - RUND, scale behält Form bei */
+  .pain-dialog .carousel-indicator-active,
+  .ich-dialog .carousel-indicator-active,
+  .umgebung-dialog .carousel-indicator-active,
+  .settings-dialog .carousel-indicator-active {
+    width: 0.5rem !important;
+    height: 0.5rem !important;
+    min-width: 0.5rem !important;
+    min-height: 0.5rem !important;
+    max-width: 0.5rem !important;
+    max-height: 0.5rem !important;
+    border-radius: 50% !important;
+    aspect-ratio: 1 / 1 !important;
+    transform: scale(1.3) !important; /* Scale behält runde Form bei */
+    padding: 0 !important;
+    margin: 0 0.3rem !important;
+    flex-shrink: 0 !important;
+    box-sizing: border-box !important;
+  }
+  
+  /* Carousel Indicator Inactive für iPhone - RUND */
+  .pain-dialog .carousel-indicator-inactive,
+  .ich-dialog .carousel-indicator-inactive,
+  .umgebung-dialog .carousel-indicator-inactive,
+  .settings-dialog .carousel-indicator-inactive {
+    width: 0.5rem !important;
+    height: 0.5rem !important;
+    min-width: 0.5rem !important;
+    min-height: 0.5rem !important;
+    max-width: 0.5rem !important;
+    max-height: 0.5rem !important;
+    border-radius: 50% !important;
+    aspect-ratio: 1 / 1 !important;
+    transform: none !important;
+    padding: 0 !important;
+    margin: 0 0.3rem !important;
+    flex-shrink: 0 !important;
+    box-sizing: border-box !important;
+  }
+  
+  /* Carousel Items für iPhone - viel breiter */
+  .pain-dialog .carousel-item,
+  .ich-dialog .carousel-item,
+  .umgebung-dialog .carousel-item,
+  .settings-dialog .carousel-item {
+    width: 70% !important;
+    max-width: 70% !important;
+  }
+  
+  /* Aktive Carousel Item - 85% der Bildschirmbreite */
+  .pain-dialog .carousel-item-active,
+  .ich-dialog .carousel-item-active,
+  .umgebung-dialog .carousel-item-active,
+  .settings-dialog .carousel-item-active {
+    width: 85% !important;
+    max-width: 85% !important;
+  }
+  
+  /* Carousel Item Content für iPhone - Inhalt zentral ausrichten */
+  .pain-dialog .carousel-item-content,
+  .ich-dialog .carousel-item-content,
+  .umgebung-dialog .carousel-item-content,
+  .settings-dialog .carousel-item-content {
+    width: 100% !important;
+    max-width: 100% !important;
+    padding: 1.5rem !important;
+    justify-content: center !important; /* Vertikal zentriert */
+    align-items: center !important; /* Horizontal zentriert */
+    padding-top: 1rem !important;
+  }
+  
+  /* Icon Container für iPhone - minimaler Margin unten für höheren Text */
+  .pain-dialog .carousel-item-content .tile-icon-container,
+  .ich-dialog .carousel-item-content .tile-icon-container,
+  .umgebung-dialog .carousel-item-content .tile-icon-container,
+  .settings-dialog .carousel-item-content .tile-icon-container {
+    margin-bottom: 0.25rem !important;
+  }
+  
+  /* Text für iPhone - höher positioniert, direkt unter Icon */
+  .pain-dialog .carousel-item-content .tile-text,
+  .ich-dialog .carousel-item-content .tile-text,
+  .umgebung-dialog .carousel-item-content .tile-text,
+  .settings-dialog .carousel-item-content .tile-text {
+    margin-top: 0 !important;
+    padding-top: 0 !important;
+    margin-bottom: 0 !important;
+  }
+  
+  /* Carousel Item Content - Icon und Text oben positionieren */
+  .pain-dialog .carousel-item-content,
+  .ich-dialog .carousel-item-content,
+  .umgebung-dialog .carousel-item-content,
+  .settings-dialog .carousel-item-content {
+    padding-top: 0.75rem !important;
+    padding-bottom: 1rem !important;
   }
   
   /* Icon-Container Abstand um 20% reduzieren bei Mobile */
@@ -1016,6 +1266,33 @@
     width: clamp(20vw, 25vw, 30vw);
     height: clamp(28vh, 32vh, 35vh);
     transform: translate(-50%, -50%) translateX(calc(var(--offset, 0) * 28vw)) rotateY(var(--rotation, 20deg)) scale(0.5);
+    /* Konsistentes Verhalten: Nur aktive Kachel sichtbar */
+    opacity: 0 !important;
+    pointer-events: none !important;
+  }
+  
+  /* Nur aktive Kachel sichtbar - konsistent über alle Media Queries */
+  .pain-dialog .carousel-item[style*="--offset: 0"],
+  .ich-dialog .carousel-item[style*="--offset: 0"],
+  .umgebung-dialog .carousel-item[style*="--offset: 0"],
+  .settings-dialog .carousel-item[style*="--offset: 0"] {
+    opacity: 1 !important;
+    pointer-events: auto !important;
+    z-index: 999 !important;
+  }
+  
+  /* Inaktive Kacheln unsichtbar - konsistent über alle Media Queries */
+  .pain-dialog .carousel-item[style*="--offset: -1"],
+  .pain-dialog .carousel-item[style*="--offset: 1"],
+  .ich-dialog .carousel-item[style*="--offset: -1"],
+  .ich-dialog .carousel-item[style*="--offset: 1"],
+  .umgebung-dialog .carousel-item[style*="--offset: -1"],
+  .umgebung-dialog .carousel-item[style*="--offset: 1"],
+  .settings-dialog .carousel-item[style*="--offset: -1"],
+  .settings-dialog .carousel-item[style*="--offset: 1"] {
+    opacity: 0 !important;
+    pointer-events: none !important;
+    z-index: -1 !important;
   }
   
   .pain-dialog .carousel-item-content,
@@ -1112,6 +1389,33 @@
     width: clamp(25vw, 30vw, 35vw);
     height: clamp(20vh, 25vh, 30vh);
     transform: translate(-50%, -50%) translateX(calc(var(--offset, 0) * 35vw)) rotateY(var(--rotation, 0deg)) scale(0.8);
+    /* Konsistentes Verhalten: Nur aktive Kachel sichtbar */
+    opacity: 0 !important;
+    pointer-events: none !important;
+  }
+  
+  /* Nur aktive Kachel sichtbar - konsistent über alle Media Queries */
+  .pain-dialog .carousel-item[style*="--offset: 0"],
+  .ich-dialog .carousel-item[style*="--offset: 0"],
+  .umgebung-dialog .carousel-item[style*="--offset: 0"],
+  .settings-dialog .carousel-item[style*="--offset: 0"] {
+    opacity: 1 !important;
+    pointer-events: auto !important;
+    z-index: 999 !important;
+  }
+  
+  /* Inaktive Kacheln unsichtbar - konsistent über alle Media Queries */
+  .pain-dialog .carousel-item[style*="--offset: -1"],
+  .pain-dialog .carousel-item[style*="--offset: 1"],
+  .ich-dialog .carousel-item[style*="--offset: -1"],
+  .ich-dialog .carousel-item[style*="--offset: 1"],
+  .umgebung-dialog .carousel-item[style*="--offset: -1"],
+  .umgebung-dialog .carousel-item[style*="--offset: 1"],
+  .settings-dialog .carousel-item[style*="--offset: -1"],
+  .settings-dialog .carousel-item[style*="--offset: 1"] {
+    opacity: 0 !important;
+    pointer-events: none !important;
+    z-index: -1 !important;
   }
   
   .pain-dialog .carousel-item-content,
@@ -1247,6 +1551,39 @@
   .umgebung-dialog .mobile-carousel,
   .settings-dialog .mobile-carousel {
     display: none;
+  }
+  
+  /* CarouselView Container für iPad - zentriert, nicht zu weit unten */
+  .pain-dialog .carousel-view-container,
+  .ich-dialog .carousel-view-container,
+  .umgebung-dialog .carousel-view-container,
+  .settings-dialog .carousel-view-container {
+    flex: 1 !important;
+    display: flex !important;
+    flex-direction: column !important;
+    justify-content: center !important;
+    align-items: center !important;
+    min-height: 0 !important;
+    width: 100% !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    margin-top: 0 !important; /* Kein zusätzlicher Margin für iPad */
+  }
+  
+  /* Carousel Wrapper für iPad - normale Höhe, nicht lang gezogen */
+  .pain-dialog .carousel-view-container .carousel-wrapper,
+  .ich-dialog .carousel-view-container .carousel-wrapper,
+  .umgebung-dialog .carousel-view-container .carousel-wrapper,
+  .settings-dialog .carousel-view-container .carousel-wrapper {
+    flex: 1 !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    width: 100% !important;
+    min-height: clamp(300px, 40vh, 500px) !important; /* Normale Höhe, nicht lang gezogen */
+    max-height: clamp(500px, 60vh, 700px) !important;
+    margin: 0 !important;
+    padding: 0 !important;
   }
   
   .pain-dialog .menu-tile,
@@ -1882,18 +2219,23 @@
   justify-content: center;
   padding-top: 0;
   margin-top: 0;
-  /* Karussell 10% höher */
-  transform: translateY(-10%);
+  /* Karussell 20% höher (10% zusätzlich) */
+  transform: translateY(-20%);
   overflow: hidden;
 }
 
-/* Karussell 10% höher für Bildschirme kleiner oder gleich 430px */
+/* Karussell für sehr kleine iPhones (≤430px) - 20% höher mit Transform */
 @media (max-width: 430px) {
+  /* Mobile Carousel Container - 20% höher positioniert */
   .pain-dialog .mobile-carousel .carousel-container,
   .ich-dialog .mobile-carousel .carousel-container,
   .umgebung-dialog .mobile-carousel .carousel-container,
   .settings-dialog .mobile-carousel .carousel-container {
-    transform: translateY(-20%) !important; /* 10% zusätzlich höher (von -10% auf -20%) */
+    transform: translateY(-20%) !important; /* 20% höher */
+    height: 100% !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
   }
 }
 
@@ -2126,11 +2468,12 @@
     display: block;
   }
   
+  /* Padding-top nur für größere Mobile (nicht für iPhone ≤480px) */
   .pain-dialog .main-content,
   .ich-dialog .main-content,
   .umgebung-dialog .main-content,
   .settings-dialog .main-content {
-    padding-top: 8rem !important;
+    padding-top: 0 !important; /* Kein Padding oben für Mobile */
   }
   
   .pain-dialog .main-title,
@@ -2253,7 +2596,7 @@
   .umgebung-dialog .main-content,
   .settings-dialog .main-content {
     padding: 0 !important;
-    padding-top: 8rem !important;
+    padding-top: 0 !important; /* Kein Padding oben für Mobile */
     height: 100vh !important;
     margin-top: 0 !important;
     width: 100% !important;
@@ -2265,11 +2608,44 @@
     box-sizing: border-box !important;
   }
   
+  /* CarouselView Container für 820x1180 - zentriert, nicht zu weit unten */
+  .pain-dialog .carousel-view-container,
+  .ich-dialog .carousel-view-container,
+  .umgebung-dialog .carousel-view-container,
+  .settings-dialog .carousel-view-container {
+    flex: 1 !important;
+    display: flex !important;
+    flex-direction: column !important;
+    justify-content: center !important;
+    align-items: center !important;
+    min-height: 0 !important;
+    width: 100% !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    margin-top: 0 !important; /* Kein zusätzlicher Margin für 820x1180 */
+  }
+  
+  /* Carousel Wrapper für 820x1180 - normale Höhe, nicht lang gezogen */
+  .pain-dialog .carousel-view-container .carousel-wrapper,
+  .ich-dialog .carousel-view-container .carousel-wrapper,
+  .umgebung-dialog .carousel-view-container .carousel-wrapper,
+  .settings-dialog .carousel-view-container .carousel-wrapper {
+    flex: 1 !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    width: 100% !important;
+    min-height: clamp(300px, 40vh, 500px) !important; /* Normale Höhe, nicht lang gezogen */
+    max-height: clamp(500px, 60vh, 700px) !important;
+    margin: 0 !important;
+    padding: 0 !important;
+  }
+  
   .pain-dialog .main-title,
   .ich-dialog .main-title,
   .umgebung-dialog .main-title,
   .settings-dialog .main-title {
-    margin-top: 4rem !important;
+    margin-top: calc(4rem + 5vh) !important; /* 5% weiter nach unten (5vh ≈ 5% der Viewport-Höhe bei 1180px) */
     margin-bottom: 2rem !important;
     padding-top: 0 !important;
     position: relative !important;
