@@ -59,7 +59,7 @@
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 3rem;
+  gap: 2rem;
   width: 100%;
 }
 
@@ -69,8 +69,9 @@
   flex-direction: row;
   align-items: center;
   justify-content: center;
-  gap: 2rem;
+  gap: 1.5rem;
   flex-wrap: wrap;
+  margin-bottom: 0.5rem;
 }
 
 .status-item {
@@ -81,10 +82,11 @@
 }
 
 .status-indicator {
-  width: 1rem;
-  height: 1rem;
+  width: 0.75rem;
+  height: 0.75rem;
   border-radius: 50%;
   transition: all 0.3s ease;
+  flex-shrink: 0;
 }
 
 .status-indicator.active {
@@ -110,9 +112,9 @@
 }
 
 .status-text {
-  font-size: 1.125rem;
+  font-size: 0.875rem;
   font-weight: 500;
-  color: #374151;
+  color: #6b7280;
 }
 
 /* Button Container - Zentriert */
@@ -120,7 +122,7 @@
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 1.5rem;
+  gap: 1rem;
   width: 100%;
   max-width: 28rem;
   margin: 0 auto;
@@ -173,6 +175,138 @@
 .btn-secondary:hover {
   background-color: #00695c;
   transform: translateY(-1px);
+}
+
+/* Options Container */
+.options-container {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  width: 100%;
+  max-width: 28rem;
+}
+
+/* Option Button */
+.btn-option {
+  width: 100%;
+  background-color: white;
+  border: 2px solid #e5e7eb;
+  border-radius: 0.75rem;
+  padding: 1.25rem;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  text-align: left;
+}
+
+.btn-option:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.btn-option-active {
+  background-color: #00B098;
+  border-color: #00B098;
+  box-shadow: 0 4px 12px rgba(0, 176, 152, 0.3);
+  transform: scale(1.02);
+}
+
+.btn-option-active .btn-title,
+.btn-option-active .btn-subtitle {
+  color: white;
+}
+
+.btn-option-inactive {
+  background-color: white;
+  border-color: #e5e7eb;
+}
+
+.btn-option-inactive .btn-title {
+  color: #1f2937;
+}
+
+.btn-option-inactive .btn-subtitle {
+  color: #6b7280;
+}
+
+.btn-icon {
+  font-size: 2rem;
+  flex-shrink: 0;
+}
+
+.btn-text {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.btn-title {
+  font-size: 1rem;
+  font-weight: 600;
+  margin: 0;
+}
+
+.btn-subtitle {
+  font-size: 0.75rem;
+  margin: 0;
+  opacity: 0.7;
+}
+
+/* Option Button Error States (wenn keine Kamera erkannt) */
+.btn-option-error {
+  border-color: #ef4444;
+}
+
+.btn-option-active-error {
+  background-color: #ef4444;
+  border-color: #ef4444;
+  box-shadow: 0 4px 12px rgba(239, 68, 68, 0.3);
+}
+
+.btn-option-active-error .btn-title,
+.btn-option-active-error .btn-subtitle {
+  color: white;
+}
+
+.btn-option-inactive-error {
+  background-color: #fee2e2;
+  border-color: #ef4444;
+}
+
+.btn-option-inactive-error .btn-title {
+  color: #991b1b;
+}
+
+.btn-option-inactive-error .btn-subtitle {
+  color: #b91c1c;
+}
+
+/* Waiting Container */
+.waiting-container {
+  width: 100%;
+  max-width: 28rem;
+  padding: 2rem;
+  text-align: center;
+}
+
+.waiting-content {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1rem;
+}
+
+.waiting-icon {
+  font-size: 3rem;
+}
+
+.waiting-text {
+  font-size: 1.125rem;
+  color: #6b7280;
+  margin: 0;
 }
 
 /* Blink Detection Container */
@@ -234,7 +368,7 @@
 
 /* Spacer */
 .spacer {
-  height: 3rem;
+  height: 1rem;
 }
 
 /* Error Message */
@@ -254,21 +388,16 @@
 
 /* Help Text */
 .help-container {
-  max-width: 32rem;
+  max-width: 28rem;
   margin: 0 auto;
-  text-align: center;
-  font-size: 1.5rem; /* Viel größer: 1.125rem → 1.5rem */
-  color: #000000; /* Schwarz: #6b7280 → #000000 */
-  line-height: 1.6;
+  padding: 0.5rem;
 }
 
 .help-text {
-  margin: 0.75rem 0; /* Mehr Abstand: 0.5rem → 0.75rem */
-}
-
-.help-text strong {
-  color: #000000; /* Auch "Tipp:" schwarz: #374151 → #000000 */
-  font-weight: 600; /* Etwas fetter */
+  font-size: 0.75rem;
+  color: #9ca3af;
+  margin: 0;
+  line-height: 1.4;
 }
 
 /* Hidden Video */

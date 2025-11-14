@@ -18,7 +18,7 @@ export function useAutoScroll() {
    */
   const startAutoScroll = (onScroll: (index: number) => void, itemCount: number) => {
     if (autoScrollState.isActive || autoScrollState.intervalId) return
-    
+
     // Prüfe, ob Auto-Mode aktiv ist - wenn ja, starte Auto-Scroll nicht
     const autoModeState = simpleFlowController.getState()
     if (autoModeState.isAutoModeActive) {

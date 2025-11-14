@@ -3,6 +3,7 @@ import { useRouter } from 'vue-router'
 import { useSettingsStore } from '../../settings/stores/settings'
 import { useFaceRecognition } from '../../face-recognition/composables/useFaceRecognition'
 import { simpleFlowController } from '../../../core/application/SimpleFlowController'
+import { useAutoMode } from '../../../shared/composables/useAutoMode'
 
 // Import icons
 import leuchtdauerIcon from '@/assets/leuchtdauer.svg'
@@ -82,7 +83,7 @@ export function useSettingsDialogLogic() {
   const settingsCategories = [
     {
       id: 'leuchtdauer',
-      title: 'ANZEIGEINTERVALL',
+      title: 'ANZEIGE-INTERVALL',
       icon: leuchtdauerIcon,
       category: 'settings' as const
     },
@@ -106,7 +107,7 @@ export function useSettingsDialogLogic() {
     },
     {
       id: 'kamerapositionen',
-      title: 'KAMERAPOSITIONEN',
+      title: 'KAMERA-POSITIONEN',
       icon: kamerapositionIcon,
       category: 'settings' as const
     },
@@ -271,31 +272,40 @@ export function useSettingsDialogLogic() {
 
     console.log(`[${instanceId}] Starting auto-mode with`, items.length, 'items')
     
-    const success = simpleFlowController.startAutoMode(
-      items,
-      (currentIndex, currentItem) => {
+    // Erstelle neue Auto-Mode Instanz
+    const autoModeInstance = useAutoMode({
+      speak: speakText,
+      getItems: () => items,
+      getTitle: () => 'Einstellungen',
+      onCycle: (currentIndex, currentItem) => {
         currentTileIndex.value = currentIndex
-        console.log(`[${instanceId}] Auto-mode cycle:`, currentItem.title, 'at index:', currentIndex)
-        // TTS direkt über Browser API (umgeht SimpleFlowController-Blockierung)
-        speakText(currentItem.title)
       },
-      speed,
-      delay
-    )
-
-    if (!success) {
-      console.log(`[${instanceId}] Auto-mode start failed`)
-    }
+      initialDelay: speed,
+      cycleDelay: delay
+    })
+    
+    // Starte Auto-Mode (skipTitle = true, da Titel bereits gesprochen wird)
+    autoModeInstance.start(true)
+    
+    // Speichere Instanz für späteres Stoppen
+    ;(window as any)[`__settingsAutoMode_${instanceId}`] = autoModeInstance
   }
 
   const pauseAutoMode = () => {
     console.log(`[${instanceId}] Pausing auto-mode`)
-    simpleFlowController.stopAutoMode()
+    const autoModeInstance = (window as any)[`__settingsAutoMode_${instanceId}`]
+    if (autoModeInstance) {
+      autoModeInstance.stop()
+    }
   }
 
   const stopAutoMode = () => {
     console.log(`[${instanceId}] Stopping auto-mode`)
-    simpleFlowController.stopAutoMode()
+    const autoModeInstance = (window as any)[`__settingsAutoMode_${instanceId}`]
+    if (autoModeInstance) {
+      autoModeInstance.stop()
+      delete (window as any)[`__settingsAutoMode_${instanceId}`]
+    }
   }
 
   // User interaction detection - aktiviert TTS

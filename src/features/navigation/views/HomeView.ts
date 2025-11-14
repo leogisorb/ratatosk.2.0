@@ -6,6 +6,7 @@ import { useFaceRecognition } from '../../face-recognition/composables/useFaceRe
 import { simpleFlowController, SimpleFlowController } from '../../../core/application/SimpleFlowController'
 import { useCarousel } from '../composables/useCarousel'
 import { type CarouselItem } from '../config/carouselConfig'
+import { useAutoMode } from '../../../shared/composables/useAutoMode'
 
 export function useHomeViewLogic() {
   // Router
@@ -134,17 +135,34 @@ export function useHomeViewLogic() {
     checkIsMobile
   } = useCarousel(menuItems)
 
-  // Computed für aktuellen Tile-Index
-  const currentTileIndex = computed(() => position.currentIndex)
+  // Auto-Mode mit useAutoMode
+  const autoMode = useAutoMode({
+    speak: speakText,
+    getItems: () => menuItems,
+    getTitle: () => 'Hauptmenü',
+    onCycle: (currentIndex, currentItem) => {
+      // Navigiere zu Index, damit die aktive Kachel korrekt ist
+      navigateToIndex(currentIndex)
+    },
+    initialDelay: settingsStore.settings.autoModeSpeed,
+    cycleDelay: settingsStore.settings.autoModeSpeed
+  })
 
-  // Watch für Tile-Index-Änderungen - TTS aussprechen
+  // Computed für aktuellen Tile-Index - verwende autoMode.index wenn Auto-Mode läuft
+  const currentTileIndex = computed(() => {
+    if (autoMode.running.value) {
+      return autoMode.index.value
+    }
+    return position.currentIndex
+  })
+
+  // Watch für Tile-Index-Änderungen - TTS aussprechen (nur bei manueller Navigation)
   watch(currentTileIndex, (newIndex, oldIndex) => {
     // Überspringe initiale Setzung (oldIndex ist undefined beim ersten Mal)
     if (oldIndex === undefined) return
     
-    // Überspringe, wenn Auto-Mode aktiv ist oder gerade navigiert (TTS wird bereits im Auto-Mode-Callback aufgerufen)
-    const autoModeState = simpleFlowController.getState()
-    if (isAutoModeNavigating.value || autoModeState.isAutoModeActive) {
+    // Überspringe, wenn Auto-Mode aktiv ist (TTS wird bereits im Auto-Mode aufgerufen)
+    if (autoMode.running.value) {
       return
     }
     
@@ -162,7 +180,7 @@ export function useHomeViewLogic() {
     }
   })
 
-  // Auto-Mode Funktionen - einfach und direkt
+  // Auto-Mode Funktionen - verwende useAutoMode
   const startAutoMode = () => {
     if (!isAutoMode.value) return
 
@@ -173,68 +191,16 @@ export function useHomeViewLogic() {
     stopAutoScrollCompletely()
     
     // Stelle sicher, dass Position auf 0 initialisiert ist (für ersten Zyklus)
-    // WICHTIG: Position muss SOFORT gesetzt werden, bevor Auto-Mode startet
     navigateToIndex(0)
     
-    // Warte kurz, damit die Navigation zu Index 0 abgeschlossen ist
-    // Dies ist besonders wichtig beim ersten Zyklus
-    const timeoutId1 = window.setTimeout(() => {
-      const success = simpleFlowController.startAutoMode(
-        menuItems,
-        (currentIndex, currentItem) => {
-          // Setze Flag VOR Navigation, um Watcher zu überspringen
-          isAutoModeNavigating.value = true
-          
-          // Navigiere ZUERST zu Index, damit die aktive Kachel korrekt ist
-          navigateToIndex(currentIndex)
-          
-          // Beim ersten Zyklus (Index 0) sicherstellen, dass Position wirklich auf 0 ist
-          if (currentIndex === 0) {
-            // Warte einen Frame, damit die Navigation zu Index 0 abgeschlossen ist
-            requestAnimationFrame(() => {
-              const actualIndex = position.currentIndex
-              if (actualIndex === 0) {
-                speakText(currentItem.title)
-              } else {
-                // Position noch nicht korrekt, warte noch einen Frame
-                requestAnimationFrame(() => {
-                  speakText(currentItem.title)
-                })
-              }
-              
-              // Reset Flag nach kurzer Verzögerung
-              const timeoutId2 = window.setTimeout(() => {
-                isAutoModeNavigating.value = false
-              }, 100)
-              timeoutIds.push(timeoutId2)
-            })
-          } else {
-            // Für alle anderen Zyklen: TTS SOFORT aufrufen
-            speakText(currentItem.title)
-            
-            // Reset Flag nach kurzer Verzögerung
-            const timeoutId3 = window.setTimeout(() => {
-              isAutoModeNavigating.value = false
-            }, 100)
-            timeoutIds.push(timeoutId3)
-          }
-        },
-        settingsStore.settings.autoModeSpeed,
-        settingsStore.settings.autoModeSpeed
-      )
-
-      if (!success) {
-        // Reset Flag, wenn Auto-Mode nicht gestartet werden konnte
-        setAutoModeStarting(false)
-      } else {
-        // Reset Flag nach kurzer Verzögerung, damit Auto-Mode Zeit hat, aktiv zu werden
-        const timeoutId4 = window.setTimeout(() => {
-          setAutoModeStarting(false)
-        }, 200)
-        timeoutIds.push(timeoutId4)
-      }
-    }, 100) // Kurze Verzögerung, damit Navigation zu Index 0 abgeschlossen ist
-    timeoutIds.push(timeoutId1)
+    // Starte Auto-Mode (skipTitle = true, da Titel bereits gesprochen wird)
+    autoMode.start(true)
+    
+    // Reset Flag nach kurzer Verzögerung
+    const timeoutId = window.setTimeout(() => {
+      setAutoModeStarting(false)
+    }, 200)
+    timeoutIds.push(timeoutId)
   }
 
   // HomeView TTS Start nach 1 Sekunde
@@ -251,7 +217,7 @@ export function useHomeViewLogic() {
   }
 
   const stopAutoMode = () => {
-    simpleFlowController.stopAutoMode()
+    autoMode.stop()
   }
 
   // User interaction detection - aktiviert TTS
@@ -414,7 +380,6 @@ export function useHomeViewLogic() {
     stopAutoMode()
     stopAutoScrollCompletely()
     simpleFlowController.stopTTS()
-    simpleFlowController.stopAutoMode()
     
     // Setze HomeView als aktiven View (stoppt auch alle Services)
     simpleFlowController.setActiveView('/home')

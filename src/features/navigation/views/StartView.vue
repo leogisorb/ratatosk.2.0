@@ -27,15 +27,19 @@
           </div>
 
           <!-- Face Detection Status -->
-          <div v-if="cameraStatus === 'active'" class="status-item">
+          <div class="status-item">
             <div 
               :class="[
                 'status-indicator',
-                faceRecognition.isDetected ? 'detected' : 'searching'
+                cameraStatus === 'active' && faceRecognition.isDetected ? 'detected' : 
+                cameraStatus === 'active' ? 'searching' : 
+                'inactive'
               ]"
             ></div>
             <span class="status-text">
-              {{ faceRecognition.isDetected ? 'Gesicht erkannt' : 'Gesicht suchen...' }}
+              {{ cameraStatus === 'active' && faceRecognition.isDetected ? 'Gesicht erkannt' : 
+                 cameraStatus === 'active' ? 'Gesicht suchen...' : 
+                 'Keine Kamera' }}
             </span>
           </div>
         </div>
@@ -56,60 +60,94 @@
 
         <!-- Button Container -->
         <div class="button-container">
-          <!-- Start Button -->
+          <!-- Kamera Start Button (wenn Kamera nicht aktiv) -->
           <div v-if="cameraStatus === 'inactive' || cameraStatus === 'error'">
             <button
               @click="startCamera"
               :disabled="false"
               class="btn-primary"
             >
-              <svg v-if="false" class="animate-spin h-6 w-6" fill="none" viewBox="0 0 24 24">
-                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-              </svg>
-              <svg v-else class="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <svg class="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z"></path>
               </svg>
-              <span>{{ cameraStatus === 'error' ? 'Kamera starten' : 'Kamera und Sprachausgabe aktivieren' }}</span>
+              <span>{{ cameraStatus === 'error' ? 'Kamera starten' : 'Kamera aktivieren' }}</span>
             </button>
           </div>
 
-          <!-- Blink to Start -->
-          <div v-if="cameraStatus === 'active' && faceRecognition.isDetected">
-            <div class="blink-container">
-              <div class="blink-content">
-                <div class="blink-icon">👁️</div>
-                <h2 class="blink-title">Blinzeln Sie zum Starten</h2>
-                <p class="blink-description">
-                  Halten Sie beide Augen für {{ blinkDuration }} Sekunden geschlossen
-                </p>
-                
-                <!-- Blink Progress -->
-                <div class="progress-container">
-                  <div 
-                    class="progress-bar"
-                    :style="{ width: `${blinkProgress}%` }"
-                  ></div>
-                </div>
-                
-                <p class="progress-text">
-                  {{ blinkProgress.toFixed(1) }}% / 100%
-                </p>
-              </div>
-            </div>
-          </div>
-
-          <!-- Spacer -->
-          <div class="spacer"></div>
-
-          <!-- Manual Start Option -->
-          <div v-if="cameraStatus === 'active'">
+          <!-- Option Buttons (wenn Kamera aktiv und Gesicht erkannt) -->
+          <div v-if="cameraStatus === 'active' && faceRecognition.isDetected" class="options-container">
+            <!-- Mit Sprachausgabe starten Button -->
             <button
-              @click="startWithoutBlink"
-              class="btn-secondary"
+              @click="handleButtonClick(0)"
+              :class="[
+                'btn-option',
+                autoMode.index.value === 0 ? 'btn-option-active' : 'btn-option-inactive'
+              ]"
             >
-              Ohne Blinzeln starten
+              <div class="btn-icon">🔊</div>
+              <div class="btn-text">
+                <div class="btn-title">Mit Sprachausgabe starten</div>
+                <div class="btn-subtitle">TTS wird aktiviert</div>
+              </div>
             </button>
+
+            <!-- Ohne Sprachausgabe starten Button -->
+            <button
+              @click="handleButtonClick(1)"
+              :class="[
+                'btn-option',
+                autoMode.index.value === 1 ? 'btn-option-active' : 'btn-option-inactive'
+              ]"
+            >
+              <div class="btn-icon">🔇</div>
+              <div class="btn-text">
+                <div class="btn-title">Ohne Sprachausgabe starten</div>
+                <div class="btn-subtitle">TTS bleibt stumm</div>
+              </div>
+            </button>
+          </div>
+
+          <!-- Option Buttons (wenn keine Kamera erkannt - rot) -->
+          <div v-if="cameraStatus === 'inactive' || cameraStatus === 'error'" class="options-container">
+            <!-- Mit Sprachausgabe starten Button -->
+            <button
+              @click="handleButtonClick(0)"
+              :class="[
+                'btn-option',
+                'btn-option-error',
+                autoMode.index.value === 0 ? 'btn-option-active-error' : 'btn-option-inactive-error'
+              ]"
+            >
+              <div class="btn-icon">🔊</div>
+              <div class="btn-text">
+                <div class="btn-title">Mit Sprachausgabe starten</div>
+                <div class="btn-subtitle">TTS wird aktiviert</div>
+              </div>
+            </button>
+
+            <!-- Ohne Sprachausgabe starten Button -->
+            <button
+              @click="handleButtonClick(1)"
+              :class="[
+                'btn-option',
+                'btn-option-error',
+                autoMode.index.value === 1 ? 'btn-option-active-error' : 'btn-option-inactive-error'
+              ]"
+            >
+              <div class="btn-icon">🔇</div>
+              <div class="btn-text">
+                <div class="btn-title">Ohne Sprachausgabe starten</div>
+                <div class="btn-subtitle">TTS bleibt stumm</div>
+              </div>
+            </button>
+          </div>
+
+          <!-- Warte auf Gesichtserkennung -->
+          <div v-if="cameraStatus === 'active' && !faceRecognition.isDetected" class="waiting-container">
+            <div class="waiting-content">
+              <div class="waiting-icon">👤</div>
+              <p class="waiting-text">Bitte stellen Sie sich vor die Kamera</p>
+            </div>
           </div>
         </div>
 
@@ -121,13 +159,10 @@
           <p class="error-text">{{ error }}</p>
         </div>
 
-        <!-- Help Text -->
+        <!-- Help Text (reduziert) -->
         <div class="help-container">
           <p class="help-text">
-            <strong>Tipp:</strong> Stellen Sie sich vor die Kamera und blinzeln Sie langsam
-          </p>
-          <p class="help-text">
-            Falls die Kamera nicht funktioniert, können Sie auch ohne Gesichtserkennung starten
+            Blinzeln Sie langsam, um zwischen den Optionen zu navigieren
           </p>
         </div>
       </div>
@@ -145,10 +180,12 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted, onUnmounted } from 'vue'
+import { ref, computed, onMounted, onUnmounted, watch } from 'vue'
 import { useRouter } from 'vue-router'
 import { useFaceRecognition } from '../../face-recognition/composables/useFaceRecognition'
 import { simpleFlowController } from '../../../core/application/SimpleFlowController'
+import { useAutoMode } from '../../../shared/composables/useAutoMode'
+import { useInputManager } from '../../../shared/composables/useInputManager'
 import './StartView.css'
 
 // Router
@@ -159,10 +196,43 @@ const faceRecognition = useFaceRecognition()
 
 // State
 const cameraStatus = ref<'inactive' | 'loading' | 'active' | 'error'>('inactive')
-const blinkProgress = ref(0)
-const blinkDuration = ref(2) // seconds
 const error = ref<string | null>(null)
 const videoElement = ref<HTMLVideoElement | null>(null)
+
+// Option Buttons (reaktiv)
+const options = computed(() => [
+  { id: 'startWithTTS', title: 'Mit Sprachausgabe starten', subtitle: 'TTS wird aktiviert' },
+  { id: 'startWithoutTTS', title: 'Ohne Sprachausgabe starten', subtitle: 'TTS bleibt stumm' }
+])
+
+// Auto-Mode Configuration
+const autoModeConfig = {
+  speak: async (text: string): Promise<void> => {
+    return new Promise((resolve) => {
+      if (!simpleFlowController.getTTSMuted()) {
+        simpleFlowController.speak(text)
+        // Warte auf TTS-Ende (vereinfacht: 2 Sekunden)
+        setTimeout(() => resolve(), 2000)
+      } else {
+        resolve()
+      }
+    })
+  },
+  getItems: () => options.value,
+  getTitle: () => 'Wählen Sie eine Option'
+}
+
+const autoMode = useAutoMode(autoModeConfig)
+
+// Input Manager für Blink-Erkennung
+const inputManager = useInputManager({
+  onSelect: (event) => {
+    console.log('StartView: Blink detected - selecting option', autoMode.index.value)
+    handleButtonClick(autoMode.index.value)
+  },
+  enabledInputs: ['blink'],
+  cooldown: 500
+})
 
 // Computed
 const cameraStatusText = computed(() => {
@@ -181,9 +251,6 @@ const hasSafariError = computed(() => {
   return errorValue && typeof errorValue === 'string' && errorValue.includes('Safari')
 })
 
-// Blink detection variables
-let blinkStartTime: number | null = null
-let blinkInterval: number | null = null
 
 // Methods
 async function startCamera() {
@@ -194,14 +261,25 @@ async function startCamera() {
     // Start face recognition
     await faceRecognition.start()
     
-    if (faceRecognition.isActive.value) {
+    // Prüfe ob wirklich eine Kamera vorhanden ist (nicht nur Fallback-Modus)
+    // Im Fallback-Modus wird isActive auf true gesetzt, aber error enthält eine Nachricht
+    const isFallbackMode = faceRecognition.error.value && 
+                           faceRecognition.error.value.includes('Fallback-Modus')
+    
+    if (faceRecognition.isActive.value && !isFallbackMode) {
       cameraStatus.value = 'active'
-      startBlinkDetection()
       
-      // WICHTIG: Aktiviere TTS nach erfolgreicher Kamera-Aktivierung
-      console.log('StartView: Kamera erfolgreich aktiviert - aktiviere TTS seitenübergreifend')
+      // Start Auto-Mode für Button-Navigation
+      if (faceRecognition.isDetected.value) {
+        startAutoMode()
+      }
+      
+      // WICHTIG: Aktiviere TTS nach erfolgreicher Kamera-Aktivierung (für TTS-Toggle)
+      console.log('StartView: Kamera erfolgreich aktiviert')
       simpleFlowController.setUserInteracted(true)
     } else {
+      // Keine echte Kamera erkannt - setze Status auf error
+      console.log('StartView: Keine echte Kamera erkannt - Fallback-Modus erkannt')
       throw new Error('Kamera konnte nicht gestartet werden')
     }
   } catch (err) {
@@ -209,75 +287,68 @@ async function startCamera() {
     cameraStatus.value = 'error'
     error.value = err instanceof Error ? err.message : 'Unbekannter Fehler'
     
-    // Fallback: Setze trotzdem als aktiv, damit User weiter kann
-    console.log('Kamera-Fallback: Setze als aktiv für Navigation')
-    cameraStatus.value = 'active'
-    error.value = null
-    
-    // Auch im Fallback-Modus TTS aktivieren
-    console.log('StartView: Kamera-Fallback - aktiviere TTS seitenübergreifend')
+    // KEIN Fallback mehr - Status bleibt auf 'error', damit User sieht, dass keine Kamera erkannt wurde
+    // User kann trotzdem die Buttons verwenden (werden rot angezeigt)
+    console.log('StartView: Kamera-Fehler - Status bleibt auf error')
+  }
+}
+
+function startAutoMode() {
+  // Start Auto-Mode für Button-Navigation
+  autoMode.start(true)
+  
+  // Start Input Manager für Blink-Erkennung
+  inputManager.start()
+  
+  console.log('StartView: Auto-Mode gestartet für Button-Navigation')
+}
+
+function handleButtonClick(index: number) {
+  if (autoMode.index.value !== index) {
+    // Navigiere zu diesem Button
+    autoMode.index.value = index
+    return
+  }
+  
+  // Button wurde ausgewählt
+  const option = options.value[index]
+  
+  if (option.id === 'startWithTTS') {
+    // Starte Anwendung mit TTS aktiviert
+    console.log('StartView: Anwendung starten - mit TTS')
+    simpleFlowController.setTTSMuted(false) // Stelle sicher, dass TTS aktiv ist
     simpleFlowController.setUserInteracted(true)
-  }
-}
-
-function startBlinkDetection() {
-  // Check for blinks every 100ms
-  blinkInterval = window.setInterval(() => {
-    if (faceRecognition.isBlinking()) {
-      if (blinkStartTime === null) {
-        blinkStartTime = Date.now()
-        // ✅ TTS aktivieren, sobald das Blinzeln beginnt (Interaktion erkannt!)
-        console.log('StartView: Blinzeln erkannt - aktiviere TTS als Interaktion')
-        simpleFlowController.setUserInteracted(true)
-      }
-      
-      const elapsed = (Date.now() - blinkStartTime) / 1000
-      blinkProgress.value = Math.min((elapsed / blinkDuration.value) * 100, 100)
-      
-      if (elapsed >= blinkDuration.value) {
-        // Blink duration reached - start the app
-        startApp()
-      }
-    } else {
-      // Eyes opened - reset blink detection
-      blinkStartTime = null
-      blinkProgress.value = 0
-    }
-  }, 100)
-}
-
-function startApp() {
-  // Stop blink detection
-  if (blinkInterval) {
-    clearInterval(blinkInterval)
-    blinkInterval = null
-  }
-  
-  // TTS wurde bereits beim Beginn des Blinzelns aktiviert (in startBlinkDetection)
-  // Hier stellen wir nur sicher, dass es aktiviert ist (falls noch nicht geschehen)
-  if (!simpleFlowController.getState().userInteracted) {
-    console.log('StartView: Start durch Blinzeln - stelle sicher, dass TTS aktiviert ist')
+    router.push('/app')
+  } else if (option.id === 'startWithoutTTS') {
+    // Starte Anwendung ohne TTS (stumm)
+    console.log('StartView: Anwendung starten - ohne TTS')
+    simpleFlowController.setTTSMuted(true) // Stelle sicher, dass TTS stumm ist
     simpleFlowController.setUserInteracted(true)
-  } else {
-    console.log('StartView: Start durch Blinzeln - TTS bereits aktiviert beim Blinzeln')
+    router.push('/app')
   }
-  
-  // Navigate to main app
-  router.push('/app')
 }
 
-function startWithoutBlink() {
-  // Aktiviere TTS auch beim Start ohne Blinzeln
-  console.log('StartView: Start ohne Blinzeln - aktiviere TTS seitenübergreifend')
-  simpleFlowController.setUserInteracted(true)
-  
-  // Navigate to main app without blink detection
-  router.push('/app')
-}
+// Watch für Gesichtserkennung - starte Auto-Mode wenn Gesicht erkannt wird
+watch(() => faceRecognition.isDetected.value, (detected) => {
+  if (detected && cameraStatus.value === 'active' && !autoMode.running.value) {
+    startAutoMode()
+  }
+})
+
+// Watch für Kamera-Status - starte Auto-Mode auch wenn keine Kamera erkannt (für rote Buttons)
+watch(() => cameraStatus.value, (status) => {
+  if ((status === 'inactive' || status === 'error') && !autoMode.running.value) {
+    // Starte Auto-Mode auch ohne Kamera, damit Buttons navigierbar sind
+    startAutoMode()
+  }
+})
 
 // Lifecycle
 onMounted(async () => {
   console.log('StartView: Mounted')
+  
+  // Lade initialen TTS-Mute-Status
+  isTTSMuted.value = simpleFlowController.getTTSMuted()
   
   // Auto-start camera if possible
   if (typeof navigator !== 'undefined' && navigator.mediaDevices && typeof navigator.mediaDevices.getUserMedia === 'function') {
@@ -300,9 +371,8 @@ onMounted(async () => {
 
 onUnmounted(() => {
   // Cleanup
-  if (blinkInterval) {
-    clearInterval(blinkInterval)
-  }
+  autoMode.stop()
+  inputManager.stop()
   // Face Recognition NICHT stoppen - sie soll seitenübergreifend laufen
   // faceRecognition.stop()
 })

@@ -24,7 +24,7 @@ export function useCarouselPosition() {
     if (index < 0 || index >= itemCount) {
       return
     }
-    
+
     // Nur Index setzen - CSS macht die Positionierung
     position.currentIndex = index
     position.offset = 0 // Nicht mehr verwendet

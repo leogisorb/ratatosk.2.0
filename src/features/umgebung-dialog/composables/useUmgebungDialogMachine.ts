@@ -3,7 +3,7 @@
 import { ref, computed, nextTick } from 'vue'
 import { useRouter } from 'vue-router'
 import { useTTS } from './useTTS'
-import { useAutoMode, type AutoModeConfig } from './useAutoMode'
+import { useAutoMode, type AutoModeConfig } from '../../../shared/composables/useAutoMode'
 import { useUmgebungDictionary } from './useUmgebungDictionary'
 import type { UmgebungRegion, UmgebungSubRegion, UmgebungSubSubRegion } from '../data/umgebungDialogData'
 import { simpleFlowController } from '../../../core/application/SimpleFlowController'

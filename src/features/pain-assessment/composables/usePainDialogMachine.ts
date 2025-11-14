@@ -17,7 +17,7 @@
 import { ref, computed } from 'vue'
 import { useRouter } from 'vue-router'
 import { useTTS } from './useTTS'
-import { useAutoMode } from './useAutoMode'
+import { useAutoMode } from '../../../shared/composables/useAutoMode'
 import { usePainDictionary } from './usePainDictionary'
 import { useFaceRecognition } from '../../face-recognition/composables/useFaceRecognition'
 import { simpleFlowController } from '../../../core/application/SimpleFlowController'

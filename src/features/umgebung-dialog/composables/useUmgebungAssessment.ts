@@ -3,6 +3,7 @@ import { useRouter } from 'vue-router'
 import { useSettingsStore } from '../../settings/stores/settings'
 import { useFaceRecognition } from '../../face-recognition/composables/useFaceRecognition'
 import { simpleFlowController } from '../../../core/application/SimpleFlowController'
+import { useAutoMode } from '../../../shared/composables/useAutoMode'
 
 // Centralized umgebung-dialog logic
 // This eliminates duplicate auto-mode, TTS, and blink detection implementations
@@ -60,67 +61,77 @@ export function useUmgebungAssessment() {
   simpleFlowController.setUserInteracted(true)
   console.log('UmgebungAssessment: TTS activated immediately')
 
-  // Auto-Mode Funktionen über SimpleFlowController
+  // Auto-Mode Instanz (wird dynamisch erstellt)
+  let autoModeInstance: ReturnType<typeof useAutoMode> | null = null
+
+  // Auto-Mode Funktionen über useAutoMode
   const startAutoMode = async (items: any[], initialDelay: number = 3000, cycleDelay: number = 3000) => {
     if (!isAutoMode.value) return
 
     console.log('UmgebungAssessment: Starting auto-mode with', items.length, 'items')
+    
+    // Stoppe vorherige Instanz falls vorhanden
+    if (autoModeInstance) {
+      autoModeInstance.stop()
+    }
     
     // Spezielle Behandlung für UmgebungDialogView: Erst Titel vorlesen
     const isMainView = items.some(item => item.id === 'bett' || item.id === 'zimmer' || item.id === 'gegenstaende')
     const isSubRegionView = items.some(item => item.emoji !== undefined)
     const isSubSubRegionView = items.some(item => item.verb !== undefined)
     
+    let titleText = ''
     if (isMainView) {
-      // Erst "Was möchten Sie an ihrer Umgebung verändern?" vorlesen
-      setTimeout(() => {
-        speakText('Was möchten Sie an ihrer Umgebung verändern?')
-      }, 1000)
+      titleText = 'Was möchten Sie an ihrer Umgebung verändern?'
       // Zusätzliche Pause nach dem Titel
       initialDelay = initialDelay + 1000
     } else if (isSubRegionView) {
       // Sub-Region Titel wird bereits in UmgebungDialogView.vue gesprochen
-      // Kein zusätzlicher TTS hier nötig
-      // Zusätzliche Pause nach dem Titel
+      // skipTitle = true wird verwendet
       initialDelay = initialDelay + 1000
     } else if (isSubSubRegionView) {
       // Sub-Sub-Region Titel wird bereits in UmgebungDialogView.vue gesprochen
-      // Kein zusätzlicher TTS hier nötig
-      // Zusätzliche Pause nach dem Titel
+      // skipTitle = true wird verwendet
       initialDelay = initialDelay + 1000
     }
     
-    const success = simpleFlowController.startAutoMode(
-      items,
-      (currentIndex, currentItem) => {
+    // Erstelle neue Auto-Mode Instanz
+    autoModeInstance = useAutoMode({
+      speak: speakText,
+      getItems: () => items,
+      getTitle: () => titleText,
+      onCycle: (currentIndex, currentItem) => {
         currentTileIndex.value = currentIndex
-        console.log('UmgebungAssessment: Auto-mode cycle:', currentItem.title || currentItem.description, 'at index:', currentIndex)
-        // Für Sub-Regions: Spreche den korrekten TTS-Text
-        if (isSubRegionView && currentItem.ttsText) {
-          speakText(currentItem.ttsText)
-        } else if (isSubSubRegionView && currentItem.ttsText) {
-          speakText(currentItem.ttsText)
-        } else {
-          speakText(currentItem.title || currentItem.description)
-        }
       },
       initialDelay,
       cycleDelay
-    )
-
-    if (!success) {
-      console.log('UmgebungAssessment: Auto-mode start failed')
+    })
+    
+    // Starte Auto-Mode (skipTitle = true wenn Titel bereits gesprochen wurde)
+    const skipTitle = isSubRegionView || isSubSubRegionView || isMainView
+    autoModeInstance.start(skipTitle)
+    
+    // Für MainView: Titel separat sprechen
+    if (isMainView && titleText) {
+      setTimeout(() => {
+        speakText(titleText)
+      }, 1000)
     }
   }
 
   const pauseAutoMode = () => {
     console.log('UmgebungAssessment: Pausing auto-mode')
-    simpleFlowController.stopAutoMode()
+    if (autoModeInstance) {
+      autoModeInstance.stop()
+    }
   }
 
   const stopAutoMode = () => {
     console.log('UmgebungAssessment: Stopping auto-mode')
-    simpleFlowController.stopAutoMode()
+    if (autoModeInstance) {
+      autoModeInstance.stop()
+      autoModeInstance = null
+    }
   }
 
   // Centralized blink detection

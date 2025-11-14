@@ -13,7 +13,8 @@
             {{ title }}
           </div>
 
-          <div class="grid-container">
+          <!-- Desktop Grid -->
+          <div class="grid-container desktop-grid" v-if="!isMobile">
             <!-- Dynamic Menu Tiles -->
             <div 
               v-for="(region, index) in items"
@@ -43,6 +44,53 @@
                 :class="autoMode.index.value === index ? 'text-active' : 'text-inactive'"
               >
                 {{ region.title }}
+              </div>
+            </div>
+          </div>
+
+          <!-- Mobile Vertical Carousel -->
+          <div class="mobile-carousel" v-if="isMobile">
+            <div 
+              class="carousel-container" 
+              :style="carouselStyle"
+              @touchstart="handleTouchStart"
+              @touchmove="handleTouchMove"
+              @touchend="handleTouchEnd"
+              role="listbox"
+              aria-label="Hauptmenü"
+              tabindex="0"
+            >
+              <div 
+                v-for="(region, index) in items"
+                :key="region.id"
+                class="menu-tile"
+                :class="[
+                  autoMode.index.value === index ? 'tile-active' : 'tile-inactive',
+                  region.id === dict.ID_BACK ? 'back-tile' : ''
+                ]"
+                :style="{ '--offset': index - autoMode.index.value }"
+                @click="region.id === dict.ID_BACK ? goBack() : (autoMode.index.value === index ? selectMainRegion(String(region.id)) : null)"
+                @contextmenu.prevent="autoMode.index.value === index ? null : null"
+              >
+                <div 
+                  class="tile-icon-container"
+                  :class="autoMode.index.value === index ? 'icon-active' : 'icon-inactive'"
+                >
+                  <img 
+                    v-if="'icon' in region && region.icon" 
+                    :src="String(region.icon)" 
+                    :alt="region.title" 
+                    class="tile-icon"
+                    :class="autoMode.index.value === index ? 'icon-inverted' : ''"
+                  />
+                </div>
+                <div 
+                  class="tile-text"
+                  :class="autoMode.index.value === index ? 'text-active' : 'text-inactive'"
+                  :style="autoMode.index.value === index ? 'color: white !important;' : ''"
+                >
+                  {{ region.title }}
+                </div>
               </div>
             </div>
           </div>
@@ -197,19 +245,83 @@
 </template>
 
 <script setup lang="ts">
-import { onMounted, onUnmounted } from 'vue'
+import { computed, watch, onMounted, onUnmounted } from 'vue'
 import { useUmgebungDialogMachine } from '../composables/useUmgebungDialogMachine'
 import { useUmgebungDictionary } from '../composables/useUmgebungDictionary'
 import { useTTS } from '../composables/useTTS'
 import { useInputManager } from '../../../shared/composables/useInputManager'
 import { useFaceRecognition } from '../../face-recognition/composables/useFaceRecognition'
 import AppHeader from '../../../shared/components/AppHeader.vue'
+import { useMobileDetection } from '../../../shared/composables/useMobileDetection'
+import { useCarousel } from '../../navigation/composables/useCarousel'
+import type { CarouselItem } from '../../navigation/config/carouselConfig'
 
 // Dialog Machine
 const machine = useUmgebungDialogMachine()
 const dict = useUmgebungDictionary()
 const tts = useTTS()
 const faceRecognition = useFaceRecognition()
+
+// Mobile Detection
+const { isMobile } = useMobileDetection()
+
+// Convert items to CarouselItem format for useCarousel
+const carouselItems = computed<CarouselItem[]>(() => {
+  if (machine.state.value !== 'mainView') return []
+  return machine.items.value.map(item => ({
+    id: item.id,
+    title: item.title,
+    icon: ('icon' in item && item.icon) ? String(item.icon) : '',
+    route: '',
+    category: 'main' as const
+  }))
+})
+
+// Carousel Composable (only for mobile)
+const {
+  carouselStyle,
+  position,
+  handleCarouselTouchStart,
+  handleCarouselTouchMove,
+  handleCarouselTouchEnd,
+  navigateToIndex,
+  initializeCarousel,
+  cleanup: cleanupCarousel,
+  stopAutoScrollCompletely
+} = useCarousel(carouselItems.value)
+
+// Touch handlers
+const handleTouchStart = (event: TouchEvent) => {
+  if (isMobile.value && machine.state.value === 'mainView') {
+    handleCarouselTouchStart(event)
+  }
+}
+
+const handleTouchMove = (event: TouchEvent) => {
+  if (isMobile.value && machine.state.value === 'mainView') {
+    handleCarouselTouchMove(event)
+  }
+}
+
+const handleTouchEnd = (event: TouchEvent) => {
+  if (isMobile.value && machine.state.value === 'mainView') {
+    handleCarouselTouchEnd(event)
+  }
+}
+
+// Sync autoMode.index with carousel position
+watch(() => position.currentIndex, (newIndex) => {
+  if (isMobile.value && machine.state.value === 'mainView') {
+    machine.autoMode.index.value = newIndex
+  }
+})
+
+// Sync carousel position with autoMode.index
+watch(() => machine.autoMode.index.value, (newIndex) => {
+  if (isMobile.value && machine.state.value === 'mainView') {
+    navigateToIndex(newIndex)
+  }
+})
 
 // State & Computed
 const {
@@ -248,6 +360,13 @@ onMounted(() => {
     faceRecognition.start()
   }
   
+  // Initialize carousel if mobile
+  if (isMobile.value && machine.state.value === 'mainView') {
+    initializeCarousel()
+    // Stop auto-scroll (we use autoMode instead)
+    stopAutoScrollCompletely()
+  }
+  
   // ✅ Index explizit auf 0 setzen, bevor AutoMode startet (verhindert Springen)
   autoMode.index.value = 0
   
@@ -276,6 +395,11 @@ onMounted(() => {
 
 onUnmounted(() => {
   console.log('UmgebungDialogView unmounted - cleaning up')
+  
+  // Cleanup carousel
+  if (isMobile.value) {
+    cleanupCarousel()
+  }
   
   // Stop AutoMode (stoppt auch alle Timer)
   autoMode.stop()

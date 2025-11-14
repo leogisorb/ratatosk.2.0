@@ -42,7 +42,7 @@ export class SimpleFlowController {
   public setActiveView(viewName: string): void {
     console.log('SimpleFlowController: Setting active view to:', viewName)
     
-    // Stoppe alle laufenden Prozesse
+    // ✅ Stoppe alle laufenden Prozesse
     this.stopAutoMode()
     this.stopTTSOnly() // Nur TTS stoppen, Queue nicht leeren
     
@@ -59,6 +59,8 @@ export class SimpleFlowController {
   }
 
   /**
+   * @deprecated Verwende stattdessen useAutoMode() aus shared/composables/useAutoMode.ts
+   * Diese Methode wird nur noch für Rückwärtskompatibilität bereitgestellt.
    * Startet Auto-Mode für den aktuellen View
    */
   public startAutoMode(
@@ -67,9 +69,12 @@ export class SimpleFlowController {
     initialDelay: number = 3000,
     cycleDelay: number = 3000
   ): boolean {
-    if (this.autoModeInterval) {
-      console.log('SimpleFlowController: Auto-mode already running')
-      return false
+    console.warn('SimpleFlowController.startAutoMode() is deprecated. Use useAutoMode() from shared/composables/useAutoMode.ts instead.')
+    
+    // ✅ Stoppe zuerst alle laufenden Auto-Modes
+    if (this.autoModeInterval || this.isAutoModeActive) {
+      console.warn('SimpleFlowController: Auto-mode already running - stopping previous instance')
+      this.stopAutoMode()
     }
 
     if (!this.currentView) {
@@ -87,7 +92,10 @@ export class SimpleFlowController {
 
     // Starte Auto-Mode nach initialer Verzögerung
     setTimeout(() => {
-      this.executeCycle(cycleDelay)
+      // ✅ Prüfe nochmal, ob Auto-Mode noch aktiv sein soll
+      if (this.isAutoModeActive) {
+        this.executeCycle(cycleDelay)
+      }
     }, initialDelay)
 
     return true
@@ -110,6 +118,7 @@ export class SimpleFlowController {
    * Führt einen Auto-Mode-Zyklus aus
    */
   private executeCycle(cycleDelay: number): void {
+    // ✅ Prüfe ob Auto-Mode noch aktiv sein soll
     if (!this.isAutoModeActive || !this.onCycleCallback || this.currentItems.length === 0) {
       console.log('SimpleFlowController: Auto-mode cycle stopped - conditions not met')
       return

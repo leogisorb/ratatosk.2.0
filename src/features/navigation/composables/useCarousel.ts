@@ -185,7 +185,7 @@ export function useCarousel(items: CarouselItem[]) {
         
         const autoModeState = simpleFlowController.getState()
         if (!autoModeState.isAutoModeActive) {
-          startAutoScrollWithCallback()
+        startAutoScrollWithCallback()
         }
       }
     }, 1000)

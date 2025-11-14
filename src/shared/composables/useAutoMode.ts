@@ -1,11 +1,12 @@
 /**
- * ✅ MODUL 2 — useAutoMode() (perfekt synchronisiert)
+ * ✅ Gemeinsames useAutoMode() Composable
  * 
  * Ziele:
  * ✅ immer nur EIN aktiver Timer
- * ✅ nie wieder „Springende Tiles“
+ * ✅ nie wieder „Springende Tiles"
  * ✅ nur sprechen, wenn TTS fertig
  * ✅ AutoMode einfach ein-/ausschaltbar
+ * ✅ Verhindert Konflikte zwischen mehreren Auto-Mode Instanzen
  */
 
 import { ref, computed } from 'vue'
@@ -14,10 +15,16 @@ export interface AutoModeConfig {
   speak: (text: string) => Promise<void>
   getItems: () => any[]
   getTitle: () => string
+  onCycle?: (index: number, item: any) => void
+  initialDelay?: number
+  cycleDelay?: number
 }
 
+// Globales Flag zur Synchronisation - verhindert gleichzeitige Auto-Mode Instanzen
+let globalAutoModeActive: boolean = false
+
 export function useAutoMode(config: AutoModeConfig) {
-  const { speak, getItems, getTitle } = config
+  const { speak, getItems, getTitle, onCycle, initialDelay = 3000, cycleDelay = 3000 } = config
 
   const running = ref(false)
   const index = ref(0)
@@ -30,6 +37,9 @@ export function useAutoMode(config: AutoModeConfig) {
    */
   function stop() {
     running.value = false
+    
+    // ✅ Entferne globales Flag
+    globalAutoModeActive = false
     
     if (timer) {
       clearTimeout(timer)
@@ -44,10 +54,22 @@ export function useAutoMode(config: AutoModeConfig) {
 
   /**
    * Startet den AutoMode
-   * 1. Wartet 3 Sekunden (Titel wird bereits in select-Funktionen gesprochen)
+   * 1. Wartet initialDelay Sekunden (Titel wird gesprochen wenn skipTitle = false)
    * 2. Beginnt dann mit dem Durchlaufen der Items
    */
   async function start(skipTitle = false) {
+    // ✅ Prüfe ob bereits ein Auto-Mode aktiv ist
+    if (globalAutoModeActive) {
+      console.warn('❌ useAutoMode.start() - Auto-Mode bereits aktiv - warte...')
+      // Warte kurz, damit andere Instanz sich aufräumen kann
+      setTimeout(() => {
+        if (!globalAutoModeActive) {
+          start(skipTitle)
+        }
+      }, 100)
+      return
+    }
+
     stop()
     
     const items = getItems()
@@ -58,11 +80,13 @@ export function useAutoMode(config: AutoModeConfig) {
       return
     }
 
+    // ✅ Setze globales Flag
+    globalAutoModeActive = true
+
     running.value = true
     index.value = 0
 
-    // ✅ Titel wird NUR gesprochen wenn skipTitle = false und es der initiale Start ist
-    // In select-Funktionen wird der Titel bereits gesprochen, daher skipTitle = true
+    // ✅ Titel wird NUR gesprochen wenn skipTitle = false
     if (!skipTitle) {
       const title = getTitle()
       console.log('✅ useAutoMode.start() - Titel:', title)
@@ -71,11 +95,12 @@ export function useAutoMode(config: AutoModeConfig) {
       // ✅ Prüfe ob noch laufend (wurde möglicherweise gestoppt während TTS)
       if (!running.value) {
         console.warn('❌ useAutoMode.start() - Gestoppt während TTS')
+        globalAutoModeActive = false
         return
       }
 
-      // ✅ Warte 3 Sekunden, dann starte Loop
-      console.log('✅ useAutoMode.start() - Starte Loop in 3 Sekunden...')
+      // ✅ Warte initialDelay Sekunden, dann starte Loop
+      console.log(`✅ useAutoMode.start() - Starte Loop in ${initialDelay}ms...`)
       initialTimer = window.setTimeout(() => {
         if (running.value) {
           index.value = 0
@@ -83,11 +108,12 @@ export function useAutoMode(config: AutoModeConfig) {
           loop()
         } else {
           console.warn('❌ useAutoMode.start() - Nicht mehr laufend beim Start des Loops')
+          globalAutoModeActive = false
         }
-      }, 3000)
+      }, initialDelay)
     } else {
-      // ✅ Titel wurde bereits gesprochen, warte nur 3 Sekunden, dann starte Loop
-      console.log('✅ useAutoMode.start() - Titel bereits gesprochen, starte Loop in 3 Sekunden...')
+      // ✅ Titel wurde bereits gesprochen, warte nur initialDelay Sekunden, dann starte Loop
+      console.log(`✅ useAutoMode.start() - Titel bereits gesprochen, starte Loop in ${initialDelay}ms...`)
       initialTimer = window.setTimeout(() => {
         if (running.value) {
           index.value = 0
@@ -95,8 +121,9 @@ export function useAutoMode(config: AutoModeConfig) {
           loop()
         } else {
           console.warn('❌ useAutoMode.start() - Nicht mehr laufend beim Start des Loops')
+          globalAutoModeActive = false
         }
-      }, 3000)
+      }, initialDelay)
     }
   }
 
@@ -106,6 +133,7 @@ export function useAutoMode(config: AutoModeConfig) {
   function loop() {
     if (!running.value) {
       console.warn('❌ useAutoMode.loop() - Nicht mehr laufend')
+      globalAutoModeActive = false
       return
     }
 
@@ -113,6 +141,7 @@ export function useAutoMode(config: AutoModeConfig) {
     if (!items || !items.length) {
       console.warn('❌ useAutoMode.loop() - Keine Items gefunden')
       running.value = false
+      globalAutoModeActive = false
       return
     }
 
@@ -125,31 +154,36 @@ export function useAutoMode(config: AutoModeConfig) {
     if (!item) {
       console.warn('❌ useAutoMode.loop() - Item nicht gefunden für Index:', index.value)
       running.value = false
+      globalAutoModeActive = false
       return
     }
 
-    // ✅ Spreche Titel des aktuellen Items
-    // Für Pain Levels: Format "3, leicht" statt "Drei"
-    // Für Umgebungs-Dialog: ttsText verwenden, falls vorhanden (mit Artikel)
+    // ✅ Bestimme Text zum Sprechen
     let itemTitle: string
     if ('level' in item && typeof item.level === 'number' && 'description' in item && typeof item.description === 'string') {
-      // Pain Level: "3, leicht"
-      itemTitle = `${item.level}, ${item.description}`
-    } else if ('ttsText' in item && item.ttsText) {
-      // Umgebungs-Dialog: ttsText verwenden (mit Artikel)
+      // Pain Level: description verwenden (z.B. "kein Schmerz", "sehr leicht", etc.)
+      itemTitle = item.description
+    } else if ('ttsText' in item && typeof item.ttsText === 'string') {
+      // Sub-Region mit speziellem TTS-Text
       itemTitle = item.ttsText
     } else {
-      // Normales Item: title verwenden
-      itemTitle = item.title || item.name || String(item)
+      // Normales Item: title, name oder description verwenden
+      itemTitle = item.title || item.name || item.description || String(item)
     }
+    
     console.log(`✅ useAutoMode.loop() - Index: ${index.value}, Item:`, itemTitle, item)
     
+    // ✅ Callback aufrufen wenn vorhanden (für Navigation, etc.)
+    if (onCycle) {
+      onCycle(index.value, item)
+    }
+    
     // ✅ WICHTIG: Index wird NUR aktualisiert NACH TTS ist komplett fertig
-    // Während TTS spricht, bleibt der visuelle Index beim aktuellen Item
     speak(itemTitle).then(() => {
       // ✅ Prüfe ob noch laufend (wurde möglicherweise gestoppt während TTS)
       if (!running.value) {
         console.warn('❌ useAutoMode.loop() - Gestoppt während TTS')
+        globalAutoModeActive = false
         return
       }
 
@@ -157,15 +191,18 @@ export function useAutoMode(config: AutoModeConfig) {
       if (!currentItems || !currentItems.length) {
         console.warn('❌ useAutoMode.loop() - Keine Items nach TTS')
         running.value = false
+        globalAutoModeActive = false
         return
       }
 
-      // ✅ Warte 3 Sekunden, DANN erst Index aktualisieren
-      // So bleibt das visuelle Item während des Sprechens korrekt
+      // ✅ Warte cycleDelay Sekunden, DANN erst Index aktualisieren
       timer = window.setTimeout(() => {
-        if (!running.value) return
+        if (!running.value) {
+          globalAutoModeActive = false
+          return
+        }
         
-        // ✅ JETZT erst Index aktualisieren (nach TTS + 3 Sekunden Wartezeit)
+        // ✅ JETZT erst Index aktualisieren (nach TTS + cycleDelay Wartezeit)
         const oldIndex = index.value
         index.value = (index.value + 1) % currentItems.length
         console.log(`✅ useAutoMode.loop() - Index von ${oldIndex} auf ${index.value} geändert (nach TTS + Wartezeit)`)
@@ -173,8 +210,14 @@ export function useAutoMode(config: AutoModeConfig) {
         // ✅ Starte nächsten Cycle (spricht neues Item)
         if (running.value) {
           loop()
+        } else {
+          globalAutoModeActive = false
         }
-      }, 3000)
+      }, cycleDelay)
+    }).catch((error) => {
+      console.error('❌ useAutoMode.loop() - Fehler beim Sprechen:', error)
+      running.value = false
+      globalAutoModeActive = false
     })
   }
 

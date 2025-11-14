@@ -18,7 +18,7 @@ export interface SettingsCategory {
 export const settingsCategories: SettingsCategory[] = [
   {
     id: 'leuchtdauer',
-    title: 'ANZEIGEINTERVALL',
+    title: 'ANZEIGE-INTERVALL',
     icon: leuchtdauerIcon,
     category: 'settings'
   },
@@ -42,7 +42,7 @@ export const settingsCategories: SettingsCategory[] = [
   },
   {
     id: 'kamerapositionen',
-    title: 'KAMERAPOSITIONEN',
+    title: 'KAMERA-POSITIONEN',
     icon: kamerapositionIcon,
     category: 'settings'
   },

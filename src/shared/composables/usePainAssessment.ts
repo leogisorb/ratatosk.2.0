@@ -3,6 +3,7 @@ import { useRouter } from 'vue-router'
 import { useSettingsStore } from '../../features/settings/stores/settings'
 import { useFaceRecognition } from '../../features/face-recognition/composables/useFaceRecognition'
 import { simpleFlowController } from '../../core/application/SimpleFlowController'
+import { useAutoMode } from './useAutoMode'
 
 // Centralized pain assessment logic
 // This eliminates duplicate auto-mode, TTS, and blink detection implementations
@@ -49,63 +50,76 @@ export function usePainAssessment() {
   userInteracted.value = true
   simpleFlowController.setUserInteracted(true)
 
-  // Auto-Mode Funktionen über SimpleFlowController
+  // Auto-Mode Instanz (wird dynamisch erstellt)
+  let autoModeInstance: ReturnType<typeof useAutoMode> | null = null
+
+  // Auto-Mode Funktionen über useAutoMode
   const startAutoMode = async (items: any[], initialDelay: number = 3000, cycleDelay: number = 3000) => {
     if (!isAutoMode.value) return
 
     console.log('PainAssessment: Starting auto-mode with', items.length, 'items')
+    
+    // Stoppe vorherige Instanz falls vorhanden
+    if (autoModeInstance) {
+      autoModeInstance.stop()
+    }
     
     // Spezielle Behandlung für PainDialogView: Erst Titel vorlesen
     const isMainView = items.some(item => item.id === 'kopf' || item.id === 'torso' || item.id === 'arme' || item.id === 'beine')
     const isSubRegionView = items.some(item => item.id === 'stirn' || item.id === 'nacken' || item.id === 'schulter' || item.id === 'oberarm')
     const isPainScaleView = items.some(item => item.level !== undefined)
     
+    let titleText = ''
     if (isMainView) {
-      // Erst "Wo haben Sie Schmerzen?" vorlesen
-      setTimeout(() => {
-        speakText('Wo haben Sie Schmerzen?')
-      }, 1000)
+      titleText = 'Wo haben Sie Schmerzen?'
       // Zusätzliche Pause nach dem Titel
       initialDelay = initialDelay + 1000
     } else if (isSubRegionView) {
       // Sub-Region Titel wird bereits in PainDialogView.vue gesprochen
-      // Kein zusätzlicher TTS hier nötig
-      // Zusätzliche Pause nach dem Titel
+      // skipTitle = true wird verwendet
       initialDelay = initialDelay + 1000
     } else if (isPainScaleView) {
       // Pain Scale Titel wird bereits in PainDialogView.vue gesprochen
-      // Kein zusätzlicher TTS hier nötig
+      // skipTitle = true wird verwendet
     }
     
-    const success = simpleFlowController.startAutoMode(
-      items,
-      (currentIndex, currentItem) => {
+    // Erstelle neue Auto-Mode Instanz
+    autoModeInstance = useAutoMode({
+      speak: speakText,
+      getItems: () => items,
+      getTitle: () => titleText,
+      onCycle: (currentIndex, currentItem) => {
         currentTileIndex.value = currentIndex
-        // Für Pain Scale: immer description vorlesen (z.B. "kein Schmerz", "sehr leicht", etc.)
-        // Für andere Items: title oder description
-        const textToSpeak = isPainScaleView && currentItem.description 
-          ? currentItem.description 
-          : (currentItem.title || currentItem.description || currentItem.level)
-        console.log('PainAssessment: Auto-mode cycle:', textToSpeak, 'at index:', currentIndex)
-        speakText(textToSpeak)
       },
       initialDelay,
       cycleDelay
-    )
-
-    if (!success) {
-      console.log('PainAssessment: Auto-mode start failed')
+    })
+    
+    // Starte Auto-Mode (skipTitle = true wenn Titel bereits gesprochen wurde)
+    const skipTitle = isSubRegionView || isPainScaleView || isMainView
+    autoModeInstance.start(skipTitle)
+    
+    // Für MainView: Titel separat sprechen
+    if (isMainView && titleText) {
+      setTimeout(() => {
+        speakText(titleText)
+      }, 1000)
     }
   }
 
   const pauseAutoMode = () => {
     console.log('PainAssessment: Pausing auto-mode')
-    simpleFlowController.stopAutoMode()
+    if (autoModeInstance) {
+      autoModeInstance.stop()
+    }
   }
 
   const stopAutoMode = () => {
     console.log('PainAssessment: Stopping auto-mode')
-    simpleFlowController.stopAutoMode()
+    if (autoModeInstance) {
+      autoModeInstance.stop()
+      autoModeInstance = null
+    }
   }
 
   // Centralized blink detection

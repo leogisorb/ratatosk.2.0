@@ -10,7 +10,7 @@ export function getOptionsViewTitle(categoryId: string | null): string {
   
   switch (categoryId) {
     case 'leuchtdauer':
-      return 'ANZEIGEINTERVALL'
+      return 'ANZEIGE-INTERVALL'
     case 'blinzeldauer':
       return 'EMPFINDLICHKEIT'
     case 'farbmodus':
@@ -18,7 +18,7 @@ export function getOptionsViewTitle(categoryId: string | null): string {
     case 'kamera':
       return 'KAMERA'
     case 'kamerapositionen':
-      return 'KAMERAPOSITIONEN'
+      return 'KAMERA-POSITIONEN'
     case 'impressum':
       return 'IMPRESSUM'
     default:
