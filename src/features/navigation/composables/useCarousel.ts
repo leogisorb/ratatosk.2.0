@@ -63,7 +63,7 @@ export function useCarousel(items: CarouselItem[]) {
     // iPad Pro 11": 834px x 1194px (Portrait) / 1194px x 834px (Landscape)
     // iPad Pro 12.9": 1024px x 1366px (Portrait) / 1366px x 1024px (Landscape)
     const newIsMobile = width <= CAROUSEL_CONFIG.MOBILE_BREAKPOINT || 
-                        (isPortrait && !isLandscape && width <= 1366 && width >= 768)
+                     (isPortrait && !isLandscape && width <= 1366 && width >= 768)
     
     // Nur aktualisieren, wenn sich der Wert tatsächlich ändert (verhindert unnötige Watcher-Auslösung bei Rotation)
     if (isMobile.value !== newIsMobile) {
@@ -75,7 +75,7 @@ export function useCarousel(items: CarouselItem[]) {
     if (isMobile.value) {
       const autoModeState = simpleFlowController.getState()
       if (!autoModeState.isAutoModeActive) {
-        updatePosition(position.currentIndex, items.length)
+      updatePosition(position.currentIndex, items.length)
       }
     }
   }
@@ -188,7 +188,7 @@ export function useCarousel(items: CarouselItem[]) {
     if (resetPosition) {
       const autoModeState = simpleFlowController.getState()
       if (!autoModeState.isAutoModeActive) {
-        updatePosition(0, itemCount.value)
+    updatePosition(0, itemCount.value)
       }
     } else {
       // Position nur aktualisieren, wenn Auto-Mode nicht aktiv ist

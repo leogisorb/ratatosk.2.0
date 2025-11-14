@@ -117,6 +117,15 @@ const toggleVolume = () => {
   // ✅ Aktualisiere lokalen State sofort
   isVolumeEnabled.value = !newMuted
   
+  // ✅ Wenn TTS aktiviert oder deaktiviert wird, View neu laden
+  // (damit Begrüßungstexte und andere TTS-abhängige Inhalte neu gestartet werden)
+  if (currentMuted !== newMuted) {
+    console.log('Header: TTS wurde geändert (von', currentMuted, 'zu', newMuted, ') - lade aktuellen View neu')
+    // Aktuelle Route neu laden mit router.go(0) für vollständigen Reload
+    // Das stellt sicher, dass alle Views (UnterhaltenView, WarningView, etc.) neu initialisiert werden
+    router.go(0)
+  }
+  
   // Sende Event an alle Views (für Kompatibilität)
   const event = new CustomEvent('volumeToggle', {
     detail: { enabled: !newMuted }

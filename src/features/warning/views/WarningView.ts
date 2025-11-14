@@ -199,6 +199,18 @@ export function useWarningViewLogic() {
   // Schritt 1: Begrüßungstext
   const startGreeting = async () => {
     console.log('State: GREETING - Starting greeting')
+    
+    // Prüfe ob TTS stumm ist - wenn ja, Begrüßungstext komplett überspringen
+    const isMuted = simpleFlowController.getTTSMuted()
+    if (isMuted) {
+      console.log('WarningView: TTS is muted - skipping greeting text and going directly to BELL_IDLE')
+      // Keine Begrüßungstexte anzeigen oder sprechen
+      // Direkt zu BELL_IDLE springen
+      transitionTo(WarningState.BELL_IDLE)
+      return
+    }
+    
+    // TTS ist nicht stumm - normale Begrüßung durchführen
     startIntroduction() // Einführung aktiv - Input ignorieren
     
     // Text basierend auf Gerätetyp anpassen

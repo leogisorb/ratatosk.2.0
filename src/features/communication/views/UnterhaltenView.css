@@ -139,6 +139,10 @@
   width: 100%;
   max-width: 100%;
   overflow-x: auto;
+  /* Rahmen-Abstand immer reservieren, um Zucken zu vermeiden */
+  border: 3px solid transparent;
+  border-radius: 8px;
+  box-sizing: border-box;
 }
 
 .keyboard-key {
@@ -387,23 +391,22 @@
 }
 
 /* Zeilen-Hervorhebung - türkise Farbe #00B098 */
+/* Rahmen-Abstand ist bereits in .keyboard-row reserviert, hier nur Farbe ändern */
 .keyboard-row.row-active {
-  border: 3px solid #00B098; /* Türkiser Rahmen #00B098 */
-  border-radius: 8px;
+  border-color: #00B098; /* Türkiser Rahmen #00B098 - nur Farbe ändern, nicht Dicke */
   background-color: rgba(0, 176, 152, 0.1); /* Türkise Hintergrundfarbe mit Transparenz */
   box-shadow: 0 4px 12px rgba(0, 176, 152, 0.3); /* Türkiser Glow-Effekt */
   transition: all 0.3s ease;
 }
 
 .keyboard-row.row-selected {
-  border: 3px solid #10b981; /* Grün für ausgewählte Zeile */
-  border-radius: 8px;
+  border-color: #10b981; /* Grün für ausgewählte Zeile - nur Farbe ändern */
   background-color: rgba(16, 185, 129, 0.1);
   transition: all 0.3s ease;
 }
 
 .keyboard-row.row-inactive {
-  border: 2px solid transparent;
+  border-color: transparent; /* Transparenter Rahmen - Abstand bleibt erhalten */
   transition: all 0.3s ease;
 }
 
@@ -487,9 +490,9 @@
 }
 
 /* Dark Mode Styles für row-active (aktive Zeile im Zeilenauswahl-Modus) */
+/* Rahmen-Abstand ist bereits in .keyboard-row reserviert, hier nur Farbe ändern */
 .dark .keyboard-row.row-active {
-  border: 3px solid #00B098 !important; /* Türkiser Rahmen #00B098 */
-  border-radius: 8px !important;
+  border-color: #00B098 !important; /* Türkiser Rahmen #00B098 - nur Farbe ändern */
   background-color: rgba(0, 176, 152, 0.3) !important; /* Türkise Hintergrundfarbe mit mehr Transparenz im Dark Mode */
   box-shadow: 0 4px 12px rgba(0, 176, 152, 0.5) !important; /* Stärkerer türkiser Glow-Effekt für Dark Mode */
   transition: all 0.3s ease !important;

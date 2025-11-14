@@ -358,7 +358,7 @@
   transform: scale(1);
   background-color: var(--bg-secondary); /* Ursprüngliche Farbe */
   box-shadow: 0 0 35px rgba(0, 176, 152, 0.4);
-  border: 0.2rem solid rgba(0, 176, 152, 0.6);
+    border: 0.2rem solid rgba(0, 176, 152, 0.6);
 }
 
 .pain-dialog .carousel-item-content .tile-icon-container,

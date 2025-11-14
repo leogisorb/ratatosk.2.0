@@ -46,8 +46,20 @@ export function useVirtualKeyboard() {
   const startPhase1 = async () => {
     console.log('Phase 1: Starting initialization')
     currentPhase.value = VirtualKeyboardPhase.INIT
-    startIntroduction() // Einführung aktiv - Input ignorieren
     clearAllTimers()
+    
+    // Prüfe ob TTS stumm ist - wenn ja, Begrüßungstexte komplett überspringen
+    const isMuted = simpleFlowController.getTTSMuted()
+    if (isMuted) {
+      console.log('Phase 1: TTS is muted - skipping greeting texts and going directly to Phase 2')
+      // Keine Begrüßungstexte anzeigen oder sprechen
+      // Direkt zu Phase 2 springen
+      startPhase2()
+      return
+    }
+    
+    // TTS ist nicht stumm - normale Begrüßung durchführen
+    startIntroduction() // Einführung aktiv - Input ignorieren
     
     // Begrüßungstext anzeigen
     statusText.value = "Ich lese Ihnen jetzt nacheinander die Zeilen vor. Blinzeln oder klicken Sie, um eine Zeile auszuwählen."
@@ -105,22 +117,32 @@ export function useVirtualKeyboard() {
     
     console.log('🎯 Scanning row:', currentRowIndex.value, rowDescriptions[currentRowIndex.value])
     
-    // TTS mit visueller Hervorhebung
-    await speakText(
-      rowDescriptions[currentRowIndex.value],
-      () => { 
-        // onStart: Zeile hervorheben und Status-Text aktualisieren
-        statusText.value = rowDescriptions[currentRowIndex.value]
-        console.log('Row highlighted:', currentRowIndex.value, 'Status-Text:', statusText.value)
-      },
-      () => { 
-        // onEnd: Zeile zurücksetzen
-        console.log('Row unhighlighted:', currentRowIndex.value)
-      }
-    )
+    // Prüfe ob TTS stumm ist
+    const isMuted = simpleFlowController.getTTSMuted()
     
-    // Nach TTS-Ende + 3 Sekunden → nächste Zeile
-    await delay(3000)
+    if (isMuted) {
+      // TTS ist stumm - nur visuelle Hervorhebung, schneller Durchlauf
+      statusText.value = rowDescriptions[currentRowIndex.value]
+      console.log('Row highlighted (muted):', currentRowIndex.value, 'Status-Text:', statusText.value)
+      // Wartezeit für visuelle Wahrnehmung (1500ms statt auf TTS zu warten)
+      await delay(1500)
+    } else {
+      // TTS ist aktiv - normale Logik mit TTS
+      await speakText(
+        rowDescriptions[currentRowIndex.value],
+        () => { 
+          // onStart: Zeile hervorheben und Status-Text aktualisieren
+          statusText.value = rowDescriptions[currentRowIndex.value]
+          console.log('Row highlighted:', currentRowIndex.value, 'Status-Text:', statusText.value)
+        },
+        () => { 
+          // onEnd: Zeile zurücksetzen
+          console.log('Row unhighlighted:', currentRowIndex.value)
+        }
+      )
+      // Nach TTS-Ende + 3 Sekunden → nächste Zeile
+      await delay(3000)
+    }
     
     // Prüfen, ob Session oder Phase sich geändert haben
     if (sessionId !== scanSessionId || currentPhase.value !== VirtualKeyboardPhase.ROW_SCANNING) return
@@ -152,8 +174,17 @@ export function useVirtualKeyboard() {
     const description = rowDescriptions[selectedRow]
     
     statusText.value = description
-    await speakText(description)
-    await delay(3000)
+    
+    // Prüfe ob TTS stumm ist
+    const isMuted = simpleFlowController.getTTSMuted()
+    if (isMuted) {
+      // TTS ist stumm - Wartezeit (1500ms statt 3000ms)
+      await delay(1500)
+    } else {
+      // TTS ist aktiv - normale Logik
+      await speakText(description)
+      await delay(3000)
+    }
     
     // Starte Buchstabendurchlauf
     scanNextLetter(mySession)
@@ -168,22 +199,32 @@ export function useVirtualKeyboard() {
     
     console.log('🎯 Scanning letter:', letter)
     
-    // TTS mit visueller Hervorhebung
-    await speakText(
-      letter,
-      () => { 
-        // onStart: Buchstabe hervorheben und Status-Text aktualisieren
-        statusText.value = letter
-        console.log('Letter highlighted:', letter)
-      },
-      () => { 
-        // onEnd: Buchstabe zurücksetzen
-        console.log('Letter unhighlighted:', letter)
-      }
-    )
+    // Prüfe ob TTS stumm ist
+    const isMuted = simpleFlowController.getTTSMuted()
     
-    // Nach TTS-Ende + 2 Sekunden → nächster Buchstabe
-    await delay(2000)
+    if (isMuted) {
+      // TTS ist stumm - nur visuelle Hervorhebung, schneller Durchlauf
+      statusText.value = letter
+      console.log('Letter highlighted (muted):', letter)
+      // Wartezeit für visuelle Wahrnehmung (1500ms statt auf TTS zu warten)
+      await delay(1500)
+    } else {
+      // TTS ist aktiv - normale Logik mit TTS
+      await speakText(
+        letter,
+        () => { 
+          // onStart: Buchstabe hervorheben und Status-Text aktualisieren
+          statusText.value = letter
+          console.log('Letter highlighted:', letter)
+        },
+        () => { 
+          // onEnd: Buchstabe zurücksetzen
+          console.log('Letter unhighlighted:', letter)
+        }
+      )
+      // Nach TTS-Ende + 2 Sekunden → nächster Buchstabe
+      await delay(2000)
+    }
     
     // Prüfen, ob Session oder Phase sich geändert haben
     if (sessionId !== scanSessionId || currentPhase.value !== VirtualKeyboardPhase.LETTER_SCANNING) return
@@ -241,9 +282,16 @@ export function useVirtualKeyboard() {
     // Status-Text aktualisieren
     statusText.value = `Zeile ${currentRowIndex.value + 1} ausgewählt.`
     
-    // TTS-Bestätigung
-    await speakText(`Zeile ${currentRowIndex.value + 1} ausgewählt.`)
-    await delay(5000)
+    // Prüfe ob TTS stumm ist
+    const isMuted = simpleFlowController.getTTSMuted()
+    if (isMuted) {
+      // TTS ist stumm - Wartezeit (1500ms statt 5000ms)
+      await delay(1500)
+    } else {
+      // TTS ist aktiv - normale Logik
+      await speakText(`Zeile ${currentRowIndex.value + 1} ausgewählt.`)
+      await delay(5000)
+    }
     
     // Wechsel zu Phase 3
     startPhase3()
@@ -263,9 +311,16 @@ export function useVirtualKeyboard() {
     statusText.value = `${letter} gewählt.`
     isLetterDisplay.value = true
     
-    // TTS-Bestätigung
-    await speakText(`${letter} gewählt.`)
-    await delay(3000)
+    // Prüfe ob TTS stumm ist
+    const isMuted = simpleFlowController.getTTSMuted()
+    if (isMuted) {
+      // TTS ist stumm - Wartezeit (1500ms statt 3000ms)
+      await delay(1500)
+    } else {
+      // TTS ist aktiv - normale Logik
+      await speakText(`${letter} gewählt.`)
+      await delay(3000)
+    }
     
     // Letter Display deaktivieren und zurück zu Phase 2
     isLetterDisplay.value = false
@@ -278,9 +333,16 @@ export function useVirtualKeyboard() {
     // Status-Text aktualisieren
     statusText.value = "Keine Eingabe erkannt."
     
-    // TTS-Meldung
-    await speakText("Keine Eingabe erkannt.")
-    await delay(5000)
+    // Prüfe ob TTS stumm ist
+    const isMuted = simpleFlowController.getTTSMuted()
+    if (isMuted) {
+      // TTS ist stumm - Wartezeit (1500ms statt 5000ms)
+      await delay(1500)
+    } else {
+      // TTS ist aktiv - normale Logik
+      await speakText("Keine Eingabe erkannt.")
+      await delay(5000)
+    }
     
     // Zurück zu Phase 2 (Zeile 1)
     startPhase2()
