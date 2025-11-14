@@ -62,12 +62,21 @@ export function useCarousel(items: CarouselItem[]) {
     // Mobile: <= 768px ODER iPad Pro im Hochformat (Portrait) - NICHT im Querformat!
     // iPad Pro 11": 834px x 1194px (Portrait) / 1194px x 834px (Landscape)
     // iPad Pro 12.9": 1024px x 1366px (Portrait) / 1366px x 1024px (Landscape)
-    isMobile.value = width <= CAROUSEL_CONFIG.MOBILE_BREAKPOINT || 
-                     (isPortrait && !isLandscape && width <= 1366 && width >= 768)
+    const newIsMobile = width <= CAROUSEL_CONFIG.MOBILE_BREAKPOINT || 
+                        (isPortrait && !isLandscape && width <= 1366 && width >= 768)
     
-    // Position bei Resize neu berechnen
+    // Nur aktualisieren, wenn sich der Wert tatsächlich ändert (verhindert unnötige Watcher-Auslösung bei Rotation)
+    if (isMobile.value !== newIsMobile) {
+      isMobile.value = newIsMobile
+    }
+    
+    // Position bei Resize neu berechnen, aber NUR wenn Auto-Mode nicht aktiv ist
+    // (verhindert, dass Rotation den Auto-Mode stoppt)
     if (isMobile.value) {
-      updatePosition(position.currentIndex, items.length)
+      const autoModeState = simpleFlowController.getState()
+      if (!autoModeState.isAutoModeActive) {
+        updatePosition(position.currentIndex, items.length)
+      }
     }
   }
 
@@ -169,10 +178,25 @@ export function useCarousel(items: CarouselItem[]) {
 
   /**
    * Initialisiert das Karussell
+   * @param resetPosition - Wenn true, wird die Position auf 0 zurückgesetzt (Standard: false, um Auto-Mode nicht zu stören)
    */
-  const initializeCarousel = () => {
+  const initializeCarousel = (resetPosition = false) => {
     checkIsMobile()
-    updatePosition(0, itemCount.value)
+    
+    // Position nur zurücksetzen, wenn explizit gewünscht UND Auto-Mode nicht aktiv ist
+    // (verhindert, dass Rotation den Auto-Mode stoppt)
+    if (resetPosition) {
+      const autoModeState = simpleFlowController.getState()
+      if (!autoModeState.isAutoModeActive) {
+        updatePosition(0, itemCount.value)
+      }
+    } else {
+      // Position nur aktualisieren, wenn Auto-Mode nicht aktiv ist
+      const autoModeState = simpleFlowController.getState()
+      if (!autoModeState.isAutoModeActive) {
+        updatePosition(position.currentIndex, itemCount.value)
+      }
+    }
     
     // Starte Auto-Scroll nach kurzer Verzögerung, NUR wenn Auto-Mode nicht aktiv ist
     // Auto-Mode steuert die Navigation selbst, daher sollte Auto-Scroll nicht laufen
@@ -207,9 +231,15 @@ export function useCarousel(items: CarouselItem[]) {
   }
 
   // Watch für Mobile-Änderungen
-  watch(isMobile, (newValue) => {
+  // WICHTIG: Nur reagieren, wenn sich isMobile tatsächlich ändert (nicht bei jeder Rotation)
+  // resetPosition = false, um Auto-Mode nicht zu stören
+  watch(isMobile, (newValue, oldValue) => {
+    // Nur reagieren, wenn sich der Wert tatsächlich geändert hat
+    if (newValue === oldValue) return
+    
     if (newValue) {
-      initializeCarousel()
+      // Position NICHT zurücksetzen, um Auto-Mode nicht zu stören
+      initializeCarousel(false)
     } else {
       cleanup()
     }

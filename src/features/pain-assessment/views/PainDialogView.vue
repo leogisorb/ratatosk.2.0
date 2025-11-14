@@ -291,7 +291,7 @@ onMounted(() => {
   
   // Initialize carousel if mobile
   if (isMobile.value && machine.state.value === 'mainView') {
-    initializeCarousel()
+    initializeCarousel(true) // resetPosition = true beim ersten Mount
     // Stop auto-scroll (we use autoMode instead)
     stopAutoScrollCompletely()
   }
