@@ -142,9 +142,9 @@
                 @click="handleItemClick(item, index)"
               >
                 <div class="tile-icon-container">
-                  <div v-if="item.emoji" class="tile-emoji">{{ item.emoji }}</div>
+                  <div v-if="'emoji' in item && item.emoji" class="tile-emoji">{{ item.emoji }}</div>
                   <img
-                    v-else-if="item.icon"
+                    v-else-if="'icon' in item && item.icon"
                     :src="item.icon"
                     :alt="item.title"
                     class="tile-icon"

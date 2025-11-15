@@ -19,7 +19,7 @@ import {
 /**
  * Alle Sub-Regionen in einem Mapping für schnellen Zugriff
  */
-export const subRegionMap: Record<string, IchSubRegion[]> = {
+export const subRegionMap: Record<string, readonly IchSubRegion[]> = {
   'ernaehrung': ernaehrungSubRegions,
   'gefuehle': gefuehleSubRegions,
   'kleidung': kleidungSubRegions,
@@ -35,7 +35,7 @@ export { mainRegions }
 /**
  * Helper: Sub-Regionen für eine Haupt-Region abrufen
  */
-export function getSubRegions(mainRegionId: string | null): IchSubRegion[] {
+export function getSubRegions(mainRegionId: string | null): readonly IchSubRegion[] {
   if (!mainRegionId) return []
   return getSubRegionsByMainRegion(mainRegionId) || []
 }
