@@ -7,195 +7,207 @@
     <main class="main-content">
       <div class="content-wrapper">
         
-        <!-- Main View: Umgebung Region Selection -->
-        <div v-if="state === 'mainView'">
-          <div class="main-title">
-            {{ title }}
+        <!-- Main Title - IMMER sichtbar (wie HomeView) -->
+        <h1 class="main-title">{{ title }}</h1>
+        
+        <!-- ===== MAIN VIEW ===== -->
+        <template v-if="state === 'mainView'">
+          <!-- Desktop Grid - DIREKT im content-wrapper (wie HomeView) -->
+          <div v-if="!isMobile" class="desktop-grid">
+            <div class="grid-container">
+              <div
+                v-for="(item, index) in items"
+                :key="item.id"
+                class="menu-tile"
+                :class="{
+                  'tile-active': index === autoMode.index.value,
+                  'tile-inactive': index !== autoMode.index.value
+                }"
+                @click="handleItemClick(item, index)"
+                @contextmenu.prevent="handleContextMenu(item, index)"
+              >
+                <div class="tile-icon-container">
+                  <img
+                    v-if="item.icon"
+                    :src="item.icon"
+                    :alt="item.title"
+                    class="tile-icon"
+                  />
+                </div>
+                <div class="tile-text">{{ item.title }}</div>
+              </div>
+            </div>
           </div>
 
-          <!-- Desktop Grid -->
-          <GridView
-            v-if="!isMobile"
-            :items="items"
-            :current-index="autoMode.index.value"
-            :back-id="dict.ID_BACK"
-            :on-item-click="(item, index) => {
-              if (item.id === dict.ID_BACK) {
-                goBack()
-              } else if (autoMode.index.value === index) {
-                selectMainRegion(String(item.id))
-              }
-            }"
-            :on-context-menu="(item, index) => {
-              // Context menu handling if needed
-            }"
-          />
-
-          <!-- Mobile Vertical Carousel -->
-          <MobileCarouselView
-            v-if="isMobile"
-            :items="items"
-            :current-index="autoMode.index.value"
-            :carousel-style="carouselStyle"
-            :back-id="dict.ID_BACK"
-            :on-item-click="(item, index) => {
-              if (item.id === dict.ID_BACK) {
-                goBack()
-              } else if (autoMode.index.value === index) {
-                selectMainRegion(String(item.id))
-              }
-            }"
-            :on-touch-start="handleTouchStart"
-            :on-touch-move="handleTouchMove"
-            :on-touch-end="handleTouchEnd"
-            :on-context-menu="(item, index) => {
-              // Context menu handling if needed
-            }"
-          />
-        </div>
-
-        <!-- Sub Region View -->
-        <div v-if="state === 'subRegionView'">
-          <div class="main-title">
-            {{ title }}
+          <!-- Mobile Carousel - DIREKT im content-wrapper (wie HomeView) -->
+          <div v-if="isMobile" class="mobile-carousel">
+            <div 
+              class="carousel-container"
+              @touchstart="handleTouchStart"
+              @touchmove="handleTouchMove"
+              @touchend="handleTouchEnd"
+            >
+              <div
+                v-for="(item, index) in items"
+                :key="item.id"
+                class="menu-tile"
+                :class="{
+                  'tile-active': index === autoMode.index.value,
+                  'tile-inactive': index !== autoMode.index.value
+                }"
+                :style="{
+                  '--offset': index - autoMode.index.value
+                }"
+                @click="handleItemClick(item, index)"
+              >
+                <div class="tile-icon-container">
+                  <img
+                    v-if="item.icon"
+                    :src="item.icon"
+                    :alt="item.title"
+                    class="tile-icon"
+                  />
+                </div>
+                <div class="tile-text">{{ item.title }}</div>
+              </div>
+            </div>
           </div>
+        </template>
 
-          <CarouselView
-            :items="items"
-            :current-index="autoMode.index.value"
-            :on-item-click="(item, index) => {
-              if (item.id === dict.ID_BACK) {
-                goBack()
-              } else if (autoMode.index.value === index) {
-                selectSubRegion(String(item.id))
-              }
-            }"
-            :on-context-menu="(item, index) => {
-              // Context menu handling if needed
-            }"
-          />
-        </div>
-
-        <!-- Sub-Sub Region View (Verben) -->
-        <div v-if="state === 'subSubRegionView'">
-          <div class="main-title">
-            {{ title }}
+        <!-- ===== SUB REGION VIEW ===== -->
+        <template v-if="state === 'subRegionView'">
+          <!-- Horizontales Karussell für Sub-Regions -->
+          <div class="carousel-wrapper">
+            <div class="carousel-container">
+              <div
+                v-for="(item, index) in items"
+                :key="item.id"
+                class="carousel-item menu-tile"
+                :class="{
+                  'tile-active': index === autoMode.index.value,
+                  'tile-inactive': index !== autoMode.index.value
+                }"
+                :style="{
+                  '--offset': index - autoMode.index.value
+                }"
+                @click="handleItemClick(item, index)"
+              >
+                <div class="tile-icon-container">
+                  <div v-if="item.emoji" class="tile-emoji">{{ item.emoji }}</div>
+                  <img
+                    v-else-if="item.icon"
+                    :src="item.icon"
+                    :alt="item.title"
+                    class="tile-icon"
+                  />
+                </div>
+                <div class="tile-text">{{ item.title }}</div>
+              </div>
+            </div>
+            
+            <!-- Karussell Indikatoren -->
+            <div class="carousel-indicators">
+              <button
+                v-for="(item, index) in items"
+                :key="`indicator-${item.id}`"
+                class="carousel-indicator"
+                :class="{
+                  'carousel-indicator-active': index === autoMode.index.value,
+                  'carousel-indicator-inactive': index !== autoMode.index.value
+                }"
+                :aria-label="`Go to item ${index + 1}: ${item.title}`"
+                :aria-current="index === autoMode.index.value ? 'true' : 'false'"
+                @click="handleItemClick(item, index)"
+              >
+              </button>
+            </div>
           </div>
+        </template>
 
-          <CarouselView
-            :items="items"
-            :current-index="autoMode.index.value"
-            :on-item-click="(item, index) => {
-              if (autoMode.index.value === index) {
-                selectSubSubRegion(String(item.id))
-              }
-            }"
-            :on-context-menu="(item, index) => {
-              // Context menu handling if needed
-            }"
-          />
-        </div>
+        <!-- ===== SUB SUB REGION VIEW (Verben) ===== -->
+        <template v-if="state === 'subSubRegionView'">
+          <!-- Horizontales Karussell für Sub-Sub-Regions (Verben) -->
+          <div class="carousel-wrapper">
+            <div class="carousel-container">
+              <div
+                v-for="(item, index) in items"
+                :key="item.id"
+                class="carousel-item menu-tile"
+                :class="{
+                  'tile-active': index === autoMode.index.value,
+                  'tile-inactive': index !== autoMode.index.value
+                }"
+                :style="{
+                  '--offset': index - autoMode.index.value
+                }"
+                @click="handleItemClick(item, index)"
+              >
+                <div class="tile-icon-container">
+                  <div v-if="item.emoji" class="tile-emoji">{{ item.emoji }}</div>
+                  <img
+                    v-else-if="item.icon"
+                    :src="item.icon"
+                    :alt="item.title"
+                    class="tile-icon"
+                  />
+                </div>
+                <div class="tile-text">{{ item.title }}</div>
+              </div>
+            </div>
+            
+            <!-- Karussell Indikatoren -->
+            <div class="carousel-indicators">
+              <button
+                v-for="(item, index) in items"
+                :key="`indicator-${item.id}`"
+                class="carousel-indicator"
+                :class="{
+                  'carousel-indicator-active': index === autoMode.index.value,
+                  'carousel-indicator-inactive': index !== autoMode.index.value
+                }"
+                :aria-label="`Go to item ${index + 1}: ${item.title}`"
+                :aria-current="index === autoMode.index.value ? 'true' : 'false'"
+                @click="handleItemClick(item, index)"
+              >
+              </button>
+            </div>
+          </div>
+        </template>
 
-        <!-- Confirmation View -->
-        <div v-if="state === 'confirmation'">
+        <!-- ===== CONFIRMATION VIEW ===== -->
+        <template v-if="state === 'confirmation'">
           <div class="confirmation-container">
-            <div class="confirmation-title">{{ title }}</div>
-            <div class="confirmation-text">{{ confirmationText }}</div>
+            <div class="confirmation-icon">✓</div>
+            <h2 class="confirmation-title">{{ title }}</h2>
+            <p class="confirmation-text">{{ confirmationText }}</p>
           </div>
-        </div>
+        </template>
       </div>
     </main>
   </div>
 </template>
 
 <script setup lang="ts">
-import { computed, watch, onMounted, onUnmounted } from 'vue'
+import { watch, onMounted, onUnmounted } from 'vue'
 import { useUmgebungDialogMachine } from '../composables/useUmgebungDialogMachine'
 import { useUmgebungDictionary } from '../composables/useUmgebungDictionary'
 import { useTTS } from '../composables/useTTS'
 import { useInputManager } from '../../../shared/composables/useInputManager'
 import { useFaceRecognition } from '../../face-recognition/composables/useFaceRecognition'
-import AppHeader from '../../../shared/components/AppHeader.vue'
-import CarouselView from '../../../shared/components/CarouselView.vue'
-import GridView from '../../../shared/components/GridView.vue'
-import MobileCarouselView from '../../../shared/components/MobileCarouselView.vue'
 import { useMobileDetection } from '../../../shared/composables/useMobileDetection'
-import { useCarousel } from '../../navigation/composables/useCarousel'
-import type { CarouselItem } from '../../navigation/config/carouselConfig'
+import AppHeader from '../../../shared/components/AppHeader.vue'
+import { debug, debugComponent, debugAutoMode } from '../../../shared/utils/debug'
 
-// Dialog Machine
+// ===== COMPOSABLES =====
 const machine = useUmgebungDialogMachine()
 const dict = useUmgebungDictionary()
 const tts = useTTS()
 const faceRecognition = useFaceRecognition()
-
-// Mobile Detection
 const { isMobile } = useMobileDetection()
 
-// Convert items to CarouselItem format for useCarousel
-const carouselItems = computed<CarouselItem[]>(() => {
-  if (machine.state.value !== 'mainView') return []
-  return machine.items.value.map(item => ({
-    id: item.id,
-    title: item.title,
-    icon: ('icon' in item && item.icon) ? String(item.icon) : '',
-    route: '',
-    category: 'main' as const
-  }))
-})
-
-// Carousel Composable (only for mobile)
-const {
-  carouselStyle,
-  position,
-  handleCarouselTouchStart,
-  handleCarouselTouchMove,
-  handleCarouselTouchEnd,
-  navigateToIndex,
-  initializeCarousel,
-  cleanup: cleanupCarousel,
-  stopAutoScrollCompletely
-} = useCarousel(carouselItems.value)
-
-// Touch handlers
-const handleTouchStart = (event: TouchEvent) => {
-  if (isMobile.value && machine.state.value === 'mainView') {
-    handleCarouselTouchStart(event)
-  }
-}
-
-const handleTouchMove = (event: TouchEvent) => {
-  if (isMobile.value && machine.state.value === 'mainView') {
-    handleCarouselTouchMove(event)
-  }
-}
-
-const handleTouchEnd = (event: TouchEvent) => {
-  if (isMobile.value && machine.state.value === 'mainView') {
-    handleCarouselTouchEnd(event)
-  }
-}
-
-// Sync autoMode.index with carousel position
-watch(() => position.currentIndex, (newIndex) => {
-  if (isMobile.value && machine.state.value === 'mainView') {
-    machine.autoMode.index.value = newIndex
-  }
-})
-
-// Sync carousel position with autoMode.index
-watch(() => machine.autoMode.index.value, (newIndex) => {
-  if (isMobile.value && machine.state.value === 'mainView') {
-    navigateToIndex(newIndex)
-  }
-})
-
-// State & Computed
+// ===== STATE & COMPUTED =====
 const {
   state,
-  mainRegionId,
-  subRegionId,
-  subSubRegionId,
   items,
   title,
   confirmationText,
@@ -203,87 +215,218 @@ const {
   selectMainRegion,
   selectSubRegion,
   selectSubSubRegion,
-  resetToMainView,
   goBack,
   handleBlink
 } = machine
 
-// Input Manager
+// ===== TOUCH HANDLING =====
+let touchStartY = 0
+let touchStartTime = 0
+
+const handleTouchStart = (event: TouchEvent) => {
+  if (!isMobile.value || state.value !== 'mainView') return
+  
+  touchStartY = event.touches[0].clientY
+  touchStartTime = Date.now()
+  debug.log('UmgebungDialog', 'Touch start', { y: touchStartY })
+}
+
+const handleTouchMove = (event: TouchEvent) => {
+  if (!isMobile.value || state.value !== 'mainView') return
+  // Verhindere Default-Scroll-Verhalten
+  event.preventDefault()
+}
+
+const handleTouchEnd = (event: TouchEvent) => {
+  if (!isMobile.value || state.value !== 'mainView') return
+  
+  const touchEndY = event.changedTouches[0].clientY
+  const touchDuration = Date.now() - touchStartTime
+  const deltaY = touchEndY - touchStartY
+  
+  // Swipe-Erkennung: mindestens 50px und maximal 500ms
+  if (Math.abs(deltaY) > 50 && touchDuration < 500) {
+    if (deltaY > 0) {
+      // Swipe nach unten = vorherige Karte
+      const newIndex = Math.max(0, autoMode.index.value - 1)
+      autoMode.index.value = newIndex
+      debug.log('UmgebungDialog', 'Swipe down', { newIndex })
+    } else {
+      // Swipe nach oben = nächste Karte
+      const newIndex = Math.min(items.value.length - 1, autoMode.index.value + 1)
+      autoMode.index.value = newIndex
+      debug.log('UmgebungDialog', 'Swipe up', { newIndex })
+    }
+  }
+}
+
+// ===== ITEM INTERACTION =====
+const handleItemClick = (item: any, index: number) => {
+  debug.log('UmgebungDialog', 'Item clicked', { 
+    itemId: item.id, 
+    index,
+    state: state.value 
+  })
+
+  // Aktiviere User-Interaktion für TTS
+  enableTTSOnInteraction()
+
+  if (item.id === dict.ID_BACK) {
+    handleBackButton()
+    return
+  }
+
+  handleItemSelection(item, index)
+}
+
+const handleContextMenu = (item: any, index: number) => {
+  debug.log('UmgebungDialog', 'Context menu', { 
+    itemId: item.id, 
+    index,
+    state: state.value 
+  })
+  // Context menu handling if needed
+}
+
+const handleBackButton = () => {
+  switch (state.value) {
+    case 'subSubRegionView':
+      selectSubSubRegion(dict.ID_BACK)
+      break
+    case 'subRegionView':
+      selectSubRegion(dict.ID_BACK)
+      break
+    case 'mainView':
+    default:
+      goBack()
+      break
+  }
+}
+
+const handleItemSelection = (item: any, index: number) => {
+  switch (state.value) {
+    case 'mainView':
+      if (autoMode.index.value === index) {
+        selectMainRegion(item.id)
+      }
+      break
+    case 'subRegionView':
+      if (autoMode.index.value === index) {
+        selectSubRegion(item.id)
+      }
+      break
+    case 'subSubRegionView':
+      if (autoMode.index.value === index) {
+        selectSubSubRegion(item.id)
+      }
+      break
+    default:
+      debug.warn('UmgebungDialog', 'Item selection in unexpected state', { 
+        state: state.value 
+      })
+      break
+  }
+}
+
+// ===== TTS ACTIVATION =====
+const enableTTSOnInteraction = () => {
+  // Aktiviere TTS bei User-Interaktion
+  if (typeof (window as any).__enableTTS === 'function') {
+    (window as any).__enableTTS()
+  }
+}
+
+// ===== INPUT MANAGER =====
 const inputManager = useInputManager({
   onSelect: (event) => {
-    console.log('Input detected:', event.type, event.source)
+    debug.log('UmgebungDialog', 'Input detected', {
+      type: event.type,
+      source: event.source,
+      state: state.value,
+      currentIndex: autoMode.index.value
+    })
     handleBlink()
   },
   enabledInputs: ['blink', 'click'],
   cooldown: 300
 })
 
-// Lifecycle
+// ===== WATCHERS =====
+watch(() => state.value, (newState, oldState) => {
+  if (oldState !== undefined) {
+    debug.log('UmgebungDialog', 'State changed', {
+      from: oldState,
+      to: newState,
+      itemsCount: items.value.length,
+      title: title.value
+    })
+  }
+})
+
+watch(() => autoMode.index.value, (newIndex, oldIndex) => {
+  if (oldIndex !== undefined) {
+    debugAutoMode.indexChange(newIndex, items.value.length)
+  }
+})
+
+// ===== LIFECYCLE =====
 onMounted(() => {
-  console.log('UmgebungDialogView mounted')
+  debugComponent.lifecycle('UmgebungDialogView', 'mounted')
+  debugComponent.props('UmgebungDialogView', { isMobile: isMobile.value })
   
-  // Start Face Recognition (wichtig für Blink-Erkennung!)
+  // Start Face Recognition
   if (!faceRecognition.isActive.value) {
+    debug.log('UmgebungDialog', 'Starting face recognition')
     faceRecognition.start()
   }
   
-  // Initialize carousel if mobile
-  if (isMobile.value && machine.state.value === 'mainView') {
-    initializeCarousel(true) // resetPosition = true beim ersten Mount
-    // Stop auto-scroll (we use autoMode instead)
-    stopAutoScrollCompletely()
-  }
-  
-  // ✅ Index explizit auf 0 setzen, bevor AutoMode startet (verhindert Springen)
+  // Reset index
   autoMode.index.value = 0
   
-  // Start AutoMode (wie im pain-dialog)
+  // Start AutoMode
+  debugAutoMode.start(false)
   autoMode.start()
   
-  // Start Input Manager (wie im pain-dialog)
+  // Start Input Manager
+  debug.log('UmgebungDialog', 'Starting Input Manager')
   inputManager.start()
   
-  // Cleanup-Funktion global verfügbar machen für Router-Guard
+  // Global cleanup function
   ;(window as any).__umgebungDialogCleanup = () => {
-    console.log('UmgebungDialogView: Global cleanup aufgerufen (Router-Guard)')
-    
-    // Cleanup: Stoppe alle Timer und verhindere weitere AutoMode-Starts
+    debug.log('UmgebungDialog', 'Global cleanup called')
     machine.cleanup()
-    
-    // Stoppe Input Manager
     inputManager.stop()
-    
-    // Face Recognition nicht stoppen (läuft seitenübergreifend)
-    // if (faceRecognition.isActive.value) {
-    //   faceRecognition.stop()
-    // }
   }
 })
 
 onUnmounted(() => {
-  console.log('UmgebungDialogView unmounted - cleaning up')
+  debugComponent.lifecycle('UmgebungDialogView', 'unmounted')
   
-  // Cleanup carousel
-  if (isMobile.value) {
-    cleanupCarousel()
-  }
-  
-  // Stop AutoMode (stoppt auch alle Timer)
+  // Stop AutoMode
+  debugAutoMode.stop()
   autoMode.stop()
   
-  // Stop Input Manager (entfernt alle Event-Listener)
+  // Stop Input Manager
+  debug.log('UmgebungDialog', 'Stopping Input Manager')
   inputManager.stop()
   
-  // Stop Face Recognition (wie im pain-dialog)
+  // Stop Face Recognition
   if (faceRecognition.isActive.value) {
+    debug.log('UmgebungDialog', 'Stopping Face Recognition')
     faceRecognition.stop()
   }
   
-  // Global cleanup-Funktion entfernen
+  // Remove global cleanup
   delete (window as any).__umgebungDialogCleanup
 })
 </script>
 
-<style scoped>
+<!-- DialogBase.css Import - NICHT scoped, da globale Styles -->
+<style>
 @import '../../../shared/styles/DialogBase.css';
+</style>
+
+<!-- Spezifische Styles für diese Komponente - scoped -->
+<style scoped>
+/* Falls UmgebungDialog spezifische Styles braucht, hier einfügen */
 </style>

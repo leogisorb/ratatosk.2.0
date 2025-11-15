@@ -128,20 +128,20 @@ export function useVirtualKeyboard() {
       await delay(1500)
     } else {
       // TTS ist aktiv - normale Logik mit TTS
-      await speakText(
-        rowDescriptions[currentRowIndex.value],
-        () => { 
-          // onStart: Zeile hervorheben und Status-Text aktualisieren
-          statusText.value = rowDescriptions[currentRowIndex.value]
-          console.log('Row highlighted:', currentRowIndex.value, 'Status-Text:', statusText.value)
-        },
-        () => { 
-          // onEnd: Zeile zurücksetzen
-          console.log('Row unhighlighted:', currentRowIndex.value)
-        }
-      )
-      // Nach TTS-Ende + 3 Sekunden → nächste Zeile
-      await delay(3000)
+    await speakText(
+      rowDescriptions[currentRowIndex.value],
+      () => { 
+        // onStart: Zeile hervorheben und Status-Text aktualisieren
+        statusText.value = rowDescriptions[currentRowIndex.value]
+        console.log('Row highlighted:', currentRowIndex.value, 'Status-Text:', statusText.value)
+      },
+      () => { 
+        // onEnd: Zeile zurücksetzen
+        console.log('Row unhighlighted:', currentRowIndex.value)
+      }
+    )
+    // Nach TTS-Ende + 3 Sekunden → nächste Zeile
+    await delay(3000)
     }
     
     // Prüfen, ob Session oder Phase sich geändert haben
@@ -182,8 +182,8 @@ export function useVirtualKeyboard() {
       await delay(1500)
     } else {
       // TTS ist aktiv - normale Logik
-      await speakText(description)
-      await delay(3000)
+    await speakText(description)
+    await delay(3000)
     }
     
     // Starte Buchstabendurchlauf
@@ -210,20 +210,20 @@ export function useVirtualKeyboard() {
       await delay(1500)
     } else {
       // TTS ist aktiv - normale Logik mit TTS
-      await speakText(
-        letter,
-        () => { 
-          // onStart: Buchstabe hervorheben und Status-Text aktualisieren
-          statusText.value = letter
-          console.log('Letter highlighted:', letter)
-        },
-        () => { 
-          // onEnd: Buchstabe zurücksetzen
-          console.log('Letter unhighlighted:', letter)
-        }
-      )
-      // Nach TTS-Ende + 2 Sekunden → nächster Buchstabe
-      await delay(2000)
+    await speakText(
+      letter,
+      () => { 
+        // onStart: Buchstabe hervorheben und Status-Text aktualisieren
+        statusText.value = letter
+        console.log('Letter highlighted:', letter)
+      },
+      () => { 
+        // onEnd: Buchstabe zurücksetzen
+        console.log('Letter unhighlighted:', letter)
+      }
+    )
+    // Nach TTS-Ende + 2 Sekunden → nächster Buchstabe
+    await delay(2000)
     }
     
     // Prüfen, ob Session oder Phase sich geändert haben
@@ -289,8 +289,8 @@ export function useVirtualKeyboard() {
       await delay(1500)
     } else {
       // TTS ist aktiv - normale Logik
-      await speakText(`Zeile ${currentRowIndex.value + 1} ausgewählt.`)
-      await delay(5000)
+    await speakText(`Zeile ${currentRowIndex.value + 1} ausgewählt.`)
+    await delay(5000)
     }
     
     // Wechsel zu Phase 3
@@ -318,8 +318,8 @@ export function useVirtualKeyboard() {
       await delay(1500)
     } else {
       // TTS ist aktiv - normale Logik
-      await speakText(`${letter} gewählt.`)
-      await delay(3000)
+    await speakText(`${letter} gewählt.`)
+    await delay(3000)
     }
     
     // Letter Display deaktivieren und zurück zu Phase 2
@@ -340,8 +340,8 @@ export function useVirtualKeyboard() {
       await delay(1500)
     } else {
       // TTS ist aktiv - normale Logik
-      await speakText("Keine Eingabe erkannt.")
-      await delay(5000)
+    await speakText("Keine Eingabe erkannt.")
+    await delay(5000)
     }
     
     // Zurück zu Phase 2 (Zeile 1)

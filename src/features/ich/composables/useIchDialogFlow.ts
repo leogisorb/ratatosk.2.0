@@ -1,3 +1,21 @@
+/**
+ * @deprecated This composable is deprecated and will be removed in a future version.
+ * Please use `useIchDialogMachine` instead, which provides:
+ * - Better timer management (prevents memory leaks)
+ * - Race condition prevention with transaction pattern
+ * - Improved type safety
+ * - Centralized state management
+ * 
+ * Migration guide:
+ * - Replace `useIchDialogFlow()` with `useIchDialogMachine()`
+ * - Use `machine.state` instead of `currentState`
+ * - Use `machine.items` instead of `currentItems`
+ * - Use `machine.selectMainRegion()` instead of `selectMainRegion()`
+ * - Use `machine.selectSubRegion()` instead of `selectSubRegion()`
+ * 
+ * This file is kept for backward compatibility only.
+ */
+
 import { ref, computed } from 'vue'
 import { useRouter } from 'vue-router'
 import { 
@@ -16,6 +34,8 @@ import {
 export type IchDialogState = 'mainView' | 'subRegionView' | 'confirmation'
 
 export function useIchDialogFlow() {
+  console.warn('useIchDialogFlow is deprecated. Please use useIchDialogMachine instead.')
+  
   const router = useRouter()
 
   // Zustand der Dialog-Maschine

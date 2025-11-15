@@ -7,82 +7,126 @@
     <main class="main-content">
       <div class="content-wrapper">
         
-        <!-- Main View: Main Region Selection -->
-        <div v-if="state === 'mainView'">
-          <div class="main-title">
-            {{ title }}
+        <!-- Main Title - IMMER sichtbar (wie HomeView) -->
+        <h1 class="main-title">{{ title }}</h1>
+        
+        <!-- ===== MAIN VIEW ===== -->
+        <template v-if="state === 'mainView'">
+          <!-- Desktop Grid - DIREKT im content-wrapper (wie HomeView) -->
+          <div v-if="!isMobile" class="desktop-grid">
+            <div class="grid-container">
+              <div
+                v-for="(item, index) in items"
+                :key="item.id"
+                class="menu-tile"
+                :class="{
+                  'tile-active': index === autoMode.index.value,
+                  'tile-inactive': index !== autoMode.index.value
+                }"
+                @click="handleItemClick(item, index)"
+                @contextmenu.prevent="handleContextMenu(item, index)"
+              >
+                <div class="tile-icon-container">
+                  <img
+                    v-if="item.icon"
+                    :src="item.icon"
+                    :alt="item.title"
+                    class="tile-icon"
+                  />
+                </div>
+                <div class="tile-text">{{ item.title }}</div>
+              </div>
+            </div>
           </div>
 
-          <!-- Desktop Grid -->
-          <GridView
-            v-if="!isMobile"
-            :items="items"
-            :current-index="autoMode.index.value"
-            :back-id="dict.ID_BACK"
-            :on-item-click="(item, index) => {
-              if (item.id === dict.ID_BACK) {
-                goBack()
-              } else {
-                selectMainRegion(String(item.id))
-              }
-            }"
-            :on-context-menu="(item, index) => {
-              // Context menu handling if needed
-            }"
-          />
-
-          <!-- Mobile Vertical Carousel -->
-          <MobileCarouselView
-            v-if="isMobile"
-            :items="items"
-            :current-index="autoMode.index.value"
-            :carousel-style="carouselStyle"
-            :back-id="dict.ID_BACK"
-            :on-item-click="(item, index) => {
-              if (item.id === dict.ID_BACK) {
-                goBack()
-              } else {
-                selectMainRegion(String(item.id))
-              }
-            }"
-            :on-touch-start="handleTouchStart"
-            :on-touch-move="handleTouchMove"
-            :on-touch-end="handleTouchEnd"
-            :on-context-menu="(item, index) => {
-              // Context menu handling if needed
-            }"
-          />
-        </div>
-
-        <!-- Sub Region View -->
-        <div v-if="state === 'subRegionView'">
-          <div class="main-title">
-            {{ title }}
+          <!-- Mobile Carousel - DIREKT im content-wrapper (wie HomeView) -->
+          <div v-if="isMobile" class="mobile-carousel">
+            <div 
+              class="carousel-container"
+              @touchstart="handleTouchStart"
+              @touchmove="handleTouchMove"
+              @touchend="handleTouchEnd"
+            >
+              <div
+                v-for="(item, index) in items"
+                :key="item.id"
+                class="menu-tile"
+                :class="{
+                  'tile-active': index === autoMode.index.value,
+                  'tile-inactive': index !== autoMode.index.value
+                }"
+                :style="{
+                  '--offset': index - autoMode.index.value
+                }"
+                @click="handleItemClick(item, index)"
+              >
+                <div class="tile-icon-container">
+                  <img
+                    v-if="item.icon"
+                    :src="item.icon"
+                    :alt="item.title"
+                    class="tile-icon"
+                  />
+                </div>
+                <div class="tile-text">{{ item.title }}</div>
+              </div>
+            </div>
           </div>
+        </template>
 
-          <CarouselView
-            :items="items"
-            :current-index="autoMode.index.value"
-            :on-item-click="(item, index) => {
-              if (item.id === dict.ID_BACK) {
-                goBack()
-              } else {
-                selectSubRegion(String(item.id))
-              }
-            }"
-            :on-context-menu="(item, index) => {
-              // Context menu handling if needed
-            }"
-          />
-        </div>
+        <!-- ===== SUB REGION VIEW ===== -->
+        <template v-if="state === 'subRegionView'">
+          <!-- Horizontales Karussell für Sub-Regions -->
+          <div class="carousel-wrapper subview">
+            <div class="carousel-container">
+              <div
+                v-for="(item, index) in items"
+                :key="item.id"
+                class="carousel-item menu-tile"
+                :class="{
+                  'tile-active': index === autoMode.index.value,
+                  'tile-inactive': index !== autoMode.index.value
+                }"
+                :style="{
+                  '--offset': index - autoMode.index.value,
+                  '--rotation': `${(index - autoMode.index.value) * 15}deg`
+                }"
+                @click="handleItemClick(item, index)"
+              >
+                <div class="tile-icon-container">
+                  <div v-if="item.emoji" class="tile-emoji">{{ item.emoji }}</div>
+                </div>
+                <div class="tile-text">{{ item.title }}</div>
+              </div>
+            </div>
+            
+            <!-- Karussell Indikatoren -->
+            <div class="carousel-indicators">
+              <button
+                v-for="(item, index) in items"
+                :key="`indicator-${item.id}`"
+                class="carousel-indicator"
+                :class="{
+                  'carousel-indicator-active': index === autoMode.index.value,
+                  'carousel-indicator-inactive': index !== autoMode.index.value
+                }"
+                :aria-label="`Go to item ${index + 1}: ${item.title}`"
+                :aria-current="index === autoMode.index.value ? 'true' : 'false'"
+                @click="handleItemClick(item, index)"
+              >
+              </button>
+            </div>
+          </div>
+        </template>
 
-        <!-- Confirmation View -->
-        <div v-if="state === 'confirmation'">
+        <!-- ===== CONFIRMATION VIEW ===== -->
+        <template v-if="state === 'confirmation'">
           <div class="confirmation-container">
-            <div class="confirmation-title">{{ title }}</div>
-            <div class="confirmation-text">{{ confirmationText }}</div>
+            <div class="confirmation-icon">✓</div>
+            <h2 class="confirmation-title">{{ title }}</h2>
+            <p class="confirmation-text">{{ confirmationText }}</p>
           </div>
-        </div>
+        </template>
       </div>
     </main>
   </div>
@@ -95,175 +139,289 @@ import { useIchDictionary } from '../composables/useIchDictionary'
 import { useTTS } from '../composables/useTTS'
 import { useInputManager } from '../../../shared/composables/useInputManager'
 import { useFaceRecognition } from '../../face-recognition/composables/useFaceRecognition'
-import AppHeader from '../../../shared/components/AppHeader.vue'
-import CarouselView from '../../../shared/components/CarouselView.vue'
-import GridView from '../../../shared/components/GridView.vue'
-import MobileCarouselView from '../../../shared/components/MobileCarouselView.vue'
 import { useMobileDetection } from '../../../shared/composables/useMobileDetection'
-import { useCarousel } from '../../navigation/composables/useCarousel'
-import type { CarouselItem } from '../../navigation/config/carouselConfig'
+import AppHeader from '../../../shared/components/AppHeader.vue'
+import { debug, debugComponent, debugAutoMode } from '../../../shared/utils/debug'
 
-// Dialog Machine
+// ===== COMPOSABLES =====
 const machine = useIchDialogMachine()
 const dict = useIchDictionary()
 const tts = useTTS()
 const faceRecognition = useFaceRecognition()
-
-// Mobile Detection
 const { isMobile } = useMobileDetection()
 
-// Convert items to CarouselItem format for useCarousel
-const carouselItems = computed<CarouselItem[]>(() => {
-  if (machine.state.value !== 'mainView') return []
-  return machine.items.value.map(item => ({
-    id: item.id,
-    title: item.title,
-    icon: ('icon' in item && item.icon) ? String(item.icon) : '',
-    route: '',
-    category: 'main' as const
-  }))
-})
-
-// Carousel Composable (only for mobile)
-const {
-  carouselStyle,
-  position,
-  handleCarouselTouchStart,
-  handleCarouselTouchMove,
-  handleCarouselTouchEnd,
-  navigateToIndex,
-  initializeCarousel,
-  cleanup: cleanupCarousel,
-  stopAutoScrollCompletely
-} = useCarousel(carouselItems.value)
-
-// Touch handlers
-const handleTouchStart = (event: TouchEvent) => {
-  if (isMobile.value && machine.state.value === 'mainView') {
-    handleCarouselTouchStart(event)
-  }
-}
-
-const handleTouchMove = (event: TouchEvent) => {
-  if (isMobile.value && machine.state.value === 'mainView') {
-    handleCarouselTouchMove(event)
-  }
-}
-
-const handleTouchEnd = (event: TouchEvent) => {
-  if (isMobile.value && machine.state.value === 'mainView') {
-    handleCarouselTouchEnd(event)
-  }
-}
-
-// Sync autoMode.index with carousel position (nur wenn AutoMode nicht läuft)
-watch(() => position.currentIndex, (newIndex) => {
-  if (isMobile.value && machine.state.value === 'mainView' && !machine.autoMode.running.value) {
-    machine.autoMode.index.value = newIndex
-  }
-})
-
-// Sync carousel position with autoMode.index (AutoMode hat Vorrang für sequenziellen Durchlauf)
-watch(() => machine.autoMode.index.value, (newIndex) => {
-  if (isMobile.value && machine.state.value === 'mainView') {
-    // AutoMode läuft: Folge dem sequenziellen Durchlauf (0-1-2-3-4-5...)
-    navigateToIndex(newIndex)
-  }
-})
-
-// State & Computed
+// ===== STATE & COMPUTED =====
 const {
   state,
-  mainRegionId,
-  subRegionId,
   items,
   title,
   confirmationText,
   autoMode,
   selectMainRegion,
   selectSubRegion,
-  resetToMainView,
   goBack,
   handleBlink
 } = machine
 
-// Input Manager
+// ===== TOUCH HANDLING =====
+let touchStartY = 0
+let touchStartTime = 0
+
+const handleTouchStart = (event: TouchEvent) => {
+  if (!isMobile.value || state.value !== 'mainView') return
+  
+  touchStartY = event.touches[0].clientY
+  touchStartTime = Date.now()
+  debug.log('IchDialog', 'Touch start', { y: touchStartY })
+}
+
+const handleTouchMove = (event: TouchEvent) => {
+  if (!isMobile.value || state.value !== 'mainView') return
+  // Verhindere Default-Scroll-Verhalten
+  event.preventDefault()
+}
+
+const handleTouchEnd = (event: TouchEvent) => {
+  if (!isMobile.value || state.value !== 'mainView') return
+  
+  const touchEndY = event.changedTouches[0].clientY
+  const touchDuration = Date.now() - touchStartTime
+  const deltaY = touchEndY - touchStartY
+  
+  // Swipe-Erkennung: mindestens 50px und maximal 500ms
+  if (Math.abs(deltaY) > 50 && touchDuration < 500) {
+    if (deltaY > 0) {
+      // Swipe nach unten = vorherige Karte
+      const newIndex = Math.max(0, autoMode.index.value - 1)
+      autoMode.index.value = newIndex
+      debug.log('IchDialog', 'Swipe down', { newIndex })
+    } else {
+      // Swipe nach oben = nächste Karte
+      const newIndex = Math.min(items.value.length - 1, autoMode.index.value + 1)
+      autoMode.index.value = newIndex
+      debug.log('IchDialog', 'Swipe up', { newIndex })
+    }
+  }
+}
+
+// ===== ITEM INTERACTION =====
+const handleItemClick = (item: any, index: number) => {
+  debug.log('IchDialog', 'Item clicked', { 
+    itemId: item.id, 
+    index,
+    state: state.value 
+  })
+
+  // Aktiviere User-Interaktion für TTS
+  enableTTSOnInteraction()
+
+  if (item.id === dict.ID_BACK) {
+    handleBackButton()
+    return
+  }
+
+  handleItemSelection(item)
+}
+
+const handleContextMenu = (item: any, index: number) => {
+  debug.log('IchDialog', 'Context menu', { 
+    itemId: item.id, 
+    index,
+    state: state.value 
+  })
+  // Context menu handling if needed
+}
+
+const handleBackButton = () => {
+  switch (state.value) {
+    case 'subRegionView':
+      selectSubRegion(dict.ID_BACK)
+      break
+    case 'mainView':
+    default:
+      goBack()
+      break
+  }
+}
+
+const handleItemSelection = (item: any) => {
+  switch (state.value) {
+    case 'mainView':
+      selectMainRegion(item.id)
+      break
+    case 'subRegionView':
+      selectSubRegion(item.id)
+      break
+    default:
+      debug.warn('IchDialog', 'Item selection in unexpected state', { 
+        state: state.value 
+      })
+      break
+  }
+}
+
+// ===== TTS ACTIVATION =====
+const enableTTSOnInteraction = () => {
+  // Aktiviere TTS bei User-Interaktion
+  if (typeof (window as any).__enableTTS === 'function') {
+    (window as any).__enableTTS()
+  }
+}
+
+// ===== INPUT MANAGER =====
 const inputManager = useInputManager({
   onSelect: (event) => {
-    console.log('Input detected:', event.type, event.source)
+    debug.log('IchDialog', 'Input detected', {
+      type: event.type,
+      source: event.source,
+      state: state.value,
+      currentIndex: autoMode.index.value
+    })
     handleBlink()
   },
   enabledInputs: ['blink', 'click'],
   cooldown: 300
 })
 
-// Lifecycle
+// ===== WATCHERS =====
+watch(() => state.value, (newState, oldState) => {
+  if (oldState !== undefined) {
+    debug.log('IchDialog', 'State changed', {
+      from: oldState,
+      to: newState,
+      itemsCount: items.value.length,
+      title: title.value
+    })
+  }
+})
+
+watch(() => autoMode.index.value, (newIndex, oldIndex) => {
+  if (oldIndex !== undefined) {
+    debugAutoMode.indexChange(newIndex, items.value.length)
+  }
+})
+
+// ===== LIFECYCLE =====
 onMounted(() => {
-  console.log('IchDialogView mounted')
+  debugComponent.lifecycle('IchDialogView', 'mounted')
+  debugComponent.props('IchDialogView', { isMobile: isMobile.value })
   
-  // Start Face Recognition (wichtig für Blink-Erkennung!)
+  // Start Face Recognition
   if (!faceRecognition.isActive.value) {
+    debug.log('IchDialog', 'Starting face recognition')
     faceRecognition.start()
   }
   
-  // Initialize carousel if mobile
-  if (isMobile.value && machine.state.value === 'mainView') {
-    initializeCarousel(true) // resetPosition = true beim ersten Mount
-    // Stop auto-scroll (we use autoMode instead)
-    stopAutoScrollCompletely()
-  }
-  
-  // ✅ Index explizit auf 0 setzen, bevor AutoMode startet (verhindert Springen)
+  // Reset index
   autoMode.index.value = 0
   
-  // Start AutoMode (wie im PainDialogView)
+  // Start AutoMode
+  debugAutoMode.start(false)
   autoMode.start()
   
-  // Start Input Manager (wie im PainDialogView)
+  // Start Input Manager
+  debug.log('IchDialog', 'Starting Input Manager')
   inputManager.start()
   
-  // Cleanup-Funktion global verfügbar machen für Router-Guard
+  // Global cleanup function
   ;(window as any).__ichDialogCleanup = () => {
-    console.log('IchDialogView: Global cleanup aufgerufen (Router-Guard)')
-    
-    // Cleanup: Stoppe alle Timer und verhindere weitere AutoMode-Starts
+    debug.log('IchDialog', 'Global cleanup called')
     machine.cleanup()
-    
-    // Stoppe Input Manager
     inputManager.stop()
-    
-    // Face Recognition nicht stoppen (läuft seitenübergreifend)
-    // if (faceRecognition.isActive.value) {
-    //   faceRecognition.stop()
-    // }
   }
 })
 
 onUnmounted(() => {
-  console.log('IchDialogView unmounted - cleaning up')
+  debugComponent.lifecycle('IchDialogView', 'unmounted')
   
-  // Cleanup carousel
-  if (isMobile.value) {
-    cleanupCarousel()
-  }
-  
-  // Stop AutoMode (stoppt auch alle Timer)
+  // Stop AutoMode
+  debugAutoMode.stop()
   autoMode.stop()
   
-  // Stop Input Manager (entfernt alle Event-Listener)
+  // Stop Input Manager
+  debug.log('IchDialog', 'Stopping Input Manager')
   inputManager.stop()
   
-  // Stop Face Recognition (wie im PainDialogView)
+  // Stop Face Recognition
   if (faceRecognition.isActive.value) {
+    debug.log('IchDialog', 'Stopping Face Recognition')
     faceRecognition.stop()
   }
   
-  // Global cleanup-Funktion entfernen
+  // Remove global cleanup
   delete (window as any).__ichDialogCleanup
 })
 </script>
 
-<style scoped>
+<!-- DialogBase.css Import - NICHT scoped, da globale Styles -->
+<style>
 @import '../../../shared/styles/DialogBase.css';
+</style>
 
+<!-- Spezifische Styles für diese Komponente - scoped -->
+<style scoped>
+/* Emoji Styles für Sub-Regions */
+.tile-emoji {
+  font-size: clamp(3rem, 10vw, 6rem);
+  line-height: 1;
+}
+
+/* Confirmation View Styles */
+.confirmation-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 4rem 2rem;
+  text-align: center;
+  animation: fadeInScale 0.5s ease-out;
+}
+
+.confirmation-icon {
+  width: 120px;
+  height: 120px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  font-size: 4rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 2rem;
+  box-shadow: 0 10px 40px rgba(102, 126, 234, 0.3);
+  animation: pulse 2s ease-in-out infinite;
+}
+
+@keyframes fadeInScale {
+  from {
+    opacity: 0;
+    transform: scale(0.9);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+@keyframes pulse {
+  0%, 100% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.05);
+  }
+}
+
+/* Mobile Responsiveness */
+@media (max-width: 768px) {
+  .confirmation-icon {
+    width: 80px;
+    height: 80px;
+    font-size: 2.5rem;
+  }
+
+  .tile-emoji {
+    font-size: clamp(2.5rem, 8vw, 4rem);
+  }
+}
 </style>

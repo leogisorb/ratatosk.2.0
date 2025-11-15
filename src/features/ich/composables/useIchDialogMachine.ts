@@ -1,39 +1,146 @@
-// useIchDialogMachine.ts - Zentrale State Machine für Ich-Dialog
+// useIchDialogMachine.ts - Refactored Version
+// ✅ Fixes: Memory Leaks, Race Conditions, Type Safety
 
-import { ref, computed, nextTick } from 'vue'
+import { ref, computed, watch } from 'vue'
 import { useRouter } from 'vue-router'
-import { useTTS } from './useTTS'
-import { useAutoMode, type AutoModeConfig } from '../../../shared/composables/useAutoMode'
-import { useIchDictionary } from './useIchDictionary'
 import type { IchRegion, IchSubRegion } from '../data/ichDialogData'
+import { useIchDictionary } from './useIchDictionary'
+import { useTTS } from './useTTS'
+import { useAutoMode } from '../../../shared/composables/useAutoMode'
 import { simpleFlowController } from '../../../core/application/SimpleFlowController'
-import { useDialogTimerTracking } from '../../../shared/composables/useDialogTimerTracking'
+import { debug } from '../../../shared/utils/debug'
 
+// ==========================================
+// CONSTANTS - No more magic numbers
+// ==========================================
+const DELAYS = {
+  AUTO_MODE_START: 3000,
+  CONFIRMATION_DISPLAY: 3000,
+  STATE_TRANSITION: 100
+} as const
+
+const TTS_CONFIG = {
+  TIMEOUT: 10000,
+  FALLBACK_DELAY: 500
+} as const
+
+// ==========================================
+// TYPES
+// ==========================================
 export type IchDialogState = 'mainView' | 'subRegionView' | 'confirmation'
+export type IchDialogItem = IchRegion | IchSubRegion
 
-export function useIchDialogMachine() {
+interface TTSProvider {
+  speak: (text: string) => Promise<void>
+  cancel: () => void
+  isSpeaking: boolean | { value: boolean }
+}
+
+interface AutoModeProvider {
+  start: (skipTitle?: boolean) => void
+  stop: () => void
+  index: { value: number }
+  running: { value: boolean }
+}
+
+interface IchDialogMachineDeps {
+  tts?: TTSProvider
+  autoMode?: AutoModeProvider
+  createAutoMode?: (config: any) => AutoModeProvider
+}
+
+// ==========================================
+// TIMER MANAGER - Centralized timer handling
+// ==========================================
+class TimerManager {
+  private timers = new Set<number>()
+  private isCleanedUp = false
+
+  schedule(callback: () => void, delay: number): number {
+    if (this.isCleanedUp) {
+      debug.warn('TimerManager', 'Attempted to schedule after cleanup')
+      return -1
+    }
+
+    const timerId = window.setTimeout(() => {
+      this.timers.delete(timerId)
+      if (!this.isCleanedUp) {
+        callback()
+      }
+    }, delay)
+
+    this.timers.add(timerId)
+    return timerId
+  }
+
+  cancel(timerId: number): void {
+    clearTimeout(timerId)
+    this.timers.delete(timerId)
+  }
+
+  cleanup(): void {
+    this.isCleanedUp = true
+    this.timers.forEach(id => clearTimeout(id))
+    this.timers.clear()
+    debug.log('TimerManager', `Cleaned up ${this.timers.size} timers`)
+  }
+
+  get hasActiveTimers(): boolean {
+    return this.timers.size > 0
+  }
+}
+
+// ==========================================
+// TRANSACTION MANAGER - Prevents race conditions
+// ==========================================
+class TransactionManager {
+  private currentTransaction: symbol | null = null
+
+  start(): symbol {
+    const transaction = Symbol('transaction')
+    this.currentTransaction = transaction
+    debug.log('TransactionManager', 'Started new transaction')
+    return transaction
+  }
+
+  isValid(transaction: symbol): boolean {
+    return this.currentTransaction === transaction
+  }
+
+  cancel(): void {
+    this.currentTransaction = null
+    debug.log('TransactionManager', 'Cancelled current transaction')
+  }
+}
+
+// ==========================================
+// MAIN COMPOSABLE
+// ==========================================
+export function useIchDialogMachine(deps?: Partial<IchDialogMachineDeps>) {
   const router = useRouter()
-  const tts = useTTS()
   const dict = useIchDictionary()
+  
+  // Managers
+  const timerManager = new TimerManager()
+  const transactionManager = new TransactionManager()
 
   // State
   const state = ref<IchDialogState>('mainView')
   const mainRegionId = ref<string | null>(null)
   const subRegionId = ref<string | null>(null)
 
-  // Computed: Aktuelle Items basierend auf State
-  const items = computed(() => {
+  // ✅ Computed items and title (reactive to state changes)
+  const items = computed<IchDialogItem[]>(() => {
     switch (state.value) {
       case 'mainView':
-        return dict.mainRegions
+        return [...dict.mainRegions] as IchDialogItem[]
       case 'subRegionView':
-        return dict.getSubRegions(mainRegionId.value)
+        return [...dict.getSubRegions(mainRegionId.value)] as IchDialogItem[]
       default:
         return []
     }
   })
 
-  // Computed: Aktueller Titel basierend auf State
   const title = computed(() => {
     switch (state.value) {
       case 'mainView':
@@ -47,186 +154,258 @@ export function useIchDialogMachine() {
     }
   })
 
-  // Computed: Confirmation Text
   const confirmationText = computed(() => {
     const subRegions = dict.getSubRegions(mainRegionId.value)
     const subRegion = subRegions.find(r => r.id === subRegionId.value) || null
-    
     return dict.generateConfirmation(mainRegionId.value, subRegion)
   })
 
-  // AutoMode Configuration
-  const autoModeConfig: AutoModeConfig = {
-    speak: tts.speak,
-    getItems: () => items.value,
-    getTitle: () => title.value
+  // ✅ TTS Provider (with proper type handling)
+  const ttsInstance = deps?.tts ?? (() => {
+    const tts = useTTS()
+    return {
+      speak: tts.speak,
+      cancel: tts.cancel,
+      get isSpeaking() {
+        return typeof tts.isSpeaking === 'object' ? tts.isSpeaking.value : tts.isSpeaking
+      }
+    }
+  })()
+
+  const ttsProvider: TTSProvider = {
+    speak: ttsInstance.speak,
+    cancel: ttsInstance.cancel,
+    get isSpeaking() {
+      return typeof ttsInstance.isSpeaking === 'object' ? ttsInstance.isSpeaking.value : ttsInstance.isSpeaking
+    }
   }
 
-  const autoMode = useAutoMode(autoModeConfig)
-  
-  // Timer-Tracking mit Cleanup-Logik
-  const { isActive, scheduleTimer, cleanup: cleanupTimers } = useDialogTimerTracking({
-    onCleanup: () => {
-      autoMode.stop()
-    },
-    dialogName: 'IchDialog'
+  // Normalize isSpeaking to always be a value
+  const isSpeaking = computed(() => {
+    const speaking = ttsProvider.isSpeaking
+    return typeof speaking === 'object' ? speaking.value : speaking
   })
 
-  // Actions
+  // ✅ AutoMode Provider (reactive - getItems/getTitle always read current values)
+  const autoModeProvider: AutoModeProvider = deps?.autoMode ?? useAutoMode({
+    speak: ttsProvider.speak,
+    getItems: () => {
+      // ✅ Always return current items (reactive)
+      return items.value.map(item => ({
+        ...item,
+        title: item.title,
+        id: item.id
+      }))
+    },
+    getTitle: () => title.value, // ✅ Always return current title (reactive)
+    initialDelay: DELAYS.AUTO_MODE_START,
+    cycleDelay: 3000,
+    onCycle: (index: number) => {
+      debug.log('IchDialog', 'AutoMode cycle', { index, itemCount: items.value.length })
+    }
+  })
+  
+  const autoMode: AutoModeProvider = autoModeProvider
 
-  /**
-   * Haupt-Region auswählen
-   */
-  async function selectMainRegion(id: string) {
+
+  // ==========================================
+  // PRIVATE HELPERS
+  // ==========================================
+  async function speakWithTransaction(
+    transaction: symbol,
+    text: string
+  ): Promise<boolean> {
+    if (!transactionManager.isValid(transaction)) {
+      debug.log('IchDialog', 'Transaction cancelled before TTS')
+      return false
+    }
+
+    try {
+      await ttsProvider.speak(text)
+      
+      if (!transactionManager.isValid(transaction)) {
+        debug.log('IchDialog', 'Transaction cancelled after TTS')
+        return false
+      }
+      
+      return true
+    } catch (error) {
+      debug.error('IchDialog', 'TTS error', { text, error })
+      return transactionManager.isValid(transaction)
+    }
+  }
+
+  function startAutoModeWithDelay(transaction: symbol, skipTitle = true): void {
+    timerManager.schedule(() => {
+      if (!transactionManager.isValid(transaction)) {
+        debug.log('IchDialog', 'AutoMode start cancelled - invalid transaction')
+        return
+      }
+
+      if (items.value.length === 0) {
+        debug.warn('IchDialog', 'No items available for AutoMode')
+        return
+      }
+
+      autoMode.start(skipTitle)
+    }, DELAYS.AUTO_MODE_START)
+  }
+
+  // ==========================================
+  // PUBLIC ACTIONS
+  // ==========================================
+  async function selectMainRegion(id: string): Promise<void> {
+    debug.log('IchDialog', 'selectMainRegion', { id })
+
     if (id === dict.ID_BACK) {
       goBack()
       return
     }
 
+    // Start new transaction
+    const transaction = transactionManager.start()
+    
+    // Stop current auto mode
     autoMode.stop()
+
+    // Update state
     mainRegionId.value = id
     state.value = 'subRegionView'
     subRegionId.value = null
 
-    // Titel sprechen
-    await tts.speak(title.value)
-    
-    // Nach 3 Sekunden AutoMode starten (skipTitle = true, da Titel bereits gesprochen)
-    // Warte auf Vue Reactivity Update mit nextTick, dann prüfe ob Items vorhanden sind
-    scheduleTimer(async () => {
-      await nextTick() // Warte auf Vue Reactivity Update
-      if (items.value.length > 0) {
-        autoMode.start(true)
-      } else {
-        console.warn('❌ useIchDialogMachine: Keine Items verfügbar für AutoMode start (SubRegionView)')
-      }
-    }, 3000)
+    // Speak title
+    const success = await speakWithTransaction(transaction, title.value)
+    if (!success) return
+
+    // Start auto mode after delay
+    startAutoModeWithDelay(transaction, true)
   }
 
-  /**
-   * Sub-Region auswählen
-   */
-  async function selectSubRegion(id: string) {
-    if (id === dict.ID_BACK) {
-      // Zurück zu Haupt-Regionen
-      autoMode.stop()
-      state.value = 'mainView'
-      mainRegionId.value = null
-      subRegionId.value = null
+  async function selectSubRegion(id: string): Promise<void> {
+    debug.log('IchDialog', 'selectSubRegion', { id })
 
-      // Titel sprechen
-      await tts.speak(title.value)
-      
-      // Nach 3 Sekunden AutoMode starten (skipTitle = true, da Titel bereits gesprochen)
-      // Warte auf Vue Reactivity Update mit nextTick, dann prüfe ob Items vorhanden sind
-      scheduleTimer(async () => {
-        await nextTick() // Warte auf Vue Reactivity Update
-        if (items.value.length > 0) {
-          autoMode.start(true)
-        } else {
-          console.warn('❌ useIchDialogMachine: Keine Items verfügbar für AutoMode start (Zurück zu MainView)')
-        }
-      }, 3000)
+    if (id === dict.ID_BACK) {
+      await goBackToMainView()
       return
     }
 
+    // Start new transaction
+    const transaction = transactionManager.start()
+
+    // Stop current auto mode
     autoMode.stop()
+
+    // Update state
     subRegionId.value = id
     state.value = 'confirmation'
 
-    // Confirmation Text sprechen
-    await tts.speak(confirmationText.value)
+    // Speak confirmation
+    const success = await speakWithTransaction(transaction, confirmationText.value)
+    if (!success) return
 
-    // Nach 3 Sekunden zurück zu Haupt-View
-    scheduleTimer(() => {
-      resetToMainView()
-    }, 3000)
+    // Return to main view after delay
+    timerManager.schedule(() => {
+      if (transactionManager.isValid(transaction)) {
+        resetToMainView()
+      }
+    }, DELAYS.CONFIRMATION_DISPLAY)
   }
 
-  /**
-   * Zurück zur Haupt-View
-   */
-  async function resetToMainView() {
+  async function goBackToMainView(): Promise<void> {
+    debug.log('IchDialog', 'goBackToMainView')
+
+    // Start new transaction
+    const transaction = transactionManager.start()
+
+    // Stop current auto mode
     autoMode.stop()
-    
+
+    // Update state
     state.value = 'mainView'
     mainRegionId.value = null
     subRegionId.value = null
 
-    // Titel sprechen
-    await tts.speak(title.value)
-    
-    // Nach 3 Sekunden AutoMode starten (skipTitle = true, da Titel bereits gesprochen)
-    // Warte auf Vue Reactivity Update mit nextTick, dann prüfe ob Items vorhanden sind
-    scheduleTimer(async () => {
-      await nextTick() // Warte auf Vue Reactivity Update
-      if (items.value.length > 0 && state.value === 'mainView') {
-        autoMode.start(true)
-      } else {
-        console.warn('❌ useIchDialogMachine: Keine Items verfügbar für AutoMode start (Reset to MainView)')
-      }
-    }, 3000)
+    // Speak title
+    const success = await speakWithTransaction(transaction, title.value)
+    if (!success) return
+
+    // Start auto mode after delay
+    startAutoModeWithDelay(transaction, true)
   }
 
-  /**
-   * Stoppt alle Timer und verhindert weitere AutoMode-Starts
-   */
-  function cleanup() {
-    cleanupTimers()
+  async function resetToMainView(): Promise<void> {
+    debug.log('IchDialog', 'resetToMainView')
+
+    // Start new transaction
+    const transaction = transactionManager.start()
+
+    // Stop current auto mode
+    autoMode.stop()
+
+    // Update state
+    state.value = 'mainView'
+    mainRegionId.value = null
+    subRegionId.value = null
+
+    // Speak title
+    const success = await speakWithTransaction(transaction, title.value)
+    if (!success) return
+
+    // Start auto mode after delay
+    startAutoModeWithDelay(transaction, true)
   }
 
-  /**
-   * Zurück zur Haupt-App navigieren
-   */
-  function goBack() {
-    console.log('IchDialog: goBack() - Stoppe alle Services und navigiere zu /app')
-    
-    // Cleanup: Stoppe alle Timer und verhindere weitere AutoMode-Starts
+  function goBack(): void {
+    debug.log('IchDialog', 'goBack - Navigating to /app')
+
+    // Cancel all transactions
+    transactionManager.cancel()
+
+    // Cleanup everything
     cleanup()
-    
-    // Stoppe TTS (lokal)
-    tts.cancel()
-    
-    // Stoppe alle TTS (SimpleFlowController)
+
+    // Stop all TTS
+    ttsProvider.cancel()
     simpleFlowController.stopTTS()
-    
-    // Stoppe alle TTS (auch außerhalb SimpleFlowController)
     if (window.speechSynthesis) {
       window.speechSynthesis.cancel()
     }
-    
-    // Stoppe Auto-Mode komplett (SimpleFlowController)
+
+    // Stop auto mode
     simpleFlowController.stopAutoMode()
-    
-    // Setze aktiven View zurück
     simpleFlowController.setActiveView('')
-    
-    // Navigiere zu /app (Home-View)
-    router.push('/app').then(() => {
-      console.log('IchDialog: Navigation zu /app erfolgreich - alle Services gestoppt')
-    }).catch((error) => {
-      console.error('IchDialog: Navigation zu /app fehlgeschlagen:', error)
+
+    // Navigate
+    router.push('/app').catch(error => {
+      debug.error('IchDialog', 'Navigation failed', { error })
     })
   }
 
-  /**
-   * Blink-Handler: Wählt aktive Kachel aus
-   */
-  function handleBlink() {
+  function handleBlink(): void {
     const currentItems = items.value
     const currentIndex = autoMode.index.value
 
+    debug.log('IchDialog', 'handleBlink', {
+      state: state.value,
+      currentIndex,
+      itemsCount: currentItems.length
+    })
+
+    // Validate index
     if (currentIndex < 0 || currentIndex >= currentItems.length) {
+      debug.warn('IchDialog', 'Invalid index', { currentIndex, itemsCount: currentItems.length })
       return
     }
 
     const currentItem = currentItems[currentIndex]
     if (!currentItem) {
+      debug.warn('IchDialog', 'No item found', { currentIndex })
       return
     }
 
-    // Handle "zurück" Button
+    // Handle back button
     if (currentItem.id === dict.ID_BACK) {
+      debug.log('IchDialog', 'Back button detected')
       switch (state.value) {
         case 'subRegionView':
           selectSubRegion(dict.ID_BACK)
@@ -238,7 +417,7 @@ export function useIchDialogMachine() {
       return
     }
 
-    // Auswahl basierend auf State
+    // Handle selection based on state
     switch (state.value) {
       case 'mainView':
         selectMainRegion(currentItem.id)
@@ -247,31 +426,59 @@ export function useIchDialogMachine() {
         selectSubRegion(currentItem.id)
         break
       default:
+        debug.warn('IchDialog', 'Blink in unknown state', { state: state.value })
         break
     }
   }
 
-  /**
-   * Index zu einem bestimmten Item springen (für Carousel Indicators)
-   */
-  function goToIndex(index: number) {
+  function goToIndex(index: number): void {
     const currentItems = items.value
     if (index >= 0 && index < currentItems.length) {
       autoMode.stop()
-      // Index direkt setzen
       autoMode.index.value = index
-      // AutoMode neu starten mit skipTitle
-      scheduleTimer(() => {
+      
+      timerManager.schedule(() => {
         autoMode.start(true)
-      }, 100)
+      }, DELAYS.STATE_TRANSITION)
     }
   }
 
+  function cleanup(): void {
+    debug.log('IchDialog', 'Cleanup started')
+    
+    // Cancel all transactions
+    transactionManager.cancel()
+    
+    // Clear all timers
+    timerManager.cleanup()
+    
+    // Stop auto mode
+    autoMode.stop()
+    
+    debug.log('IchDialog', 'Cleanup completed')
+  }
+
+  // ==========================================
+  // LIFECYCLE WATCHERS
+  // ==========================================
+  watch(() => state.value, (newState, oldState) => {
+    if (oldState !== undefined) {
+      debug.log('IchDialog', 'State changed', {
+        from: oldState,
+        to: newState,
+        itemsCount: items.value.length
+      })
+    }
+  })
+
+  // ==========================================
+  // RETURN PUBLIC API
+  // ==========================================
   return {
-    // State
-    state,
-    mainRegionId,
-    subRegionId,
+    // State (read-only)
+    state: computed(() => state.value),
+    mainRegionId: computed(() => mainRegionId.value),
+    subRegionId: computed(() => subRegionId.value),
     
     // Computed
     items,
@@ -286,7 +493,18 @@ export function useIchDialogMachine() {
     goBack,
     handleBlink,
     goToIndex,
-    cleanup
+    cleanup,
+    
+    // Debugging
+    _debug: {
+      timers: computed(() => timerManager.hasActiveTimers),
+      state: computed(() => state.value),
+      isSpeaking: isSpeaking
+    }
   }
 }
 
+// ✅ Keine Default-Implementierungen mehr nötig
+// TTS und AutoMode werden jetzt mit lazy imports direkt in useIchDialogMachine() erstellt
+// Das verhindert Circular Dependencies und stellt sicher, dass getItems/getTitle
+// immer die aktuellen Werte aus den computed properties lesen

@@ -1,198 +1,247 @@
-// Ich Dialog Data - Basierend auf ich-standalone Inhalten
+// Ich Dialog Data - Refactored Version
+// ✅ Fixed Emojis - Alle Emojis als Unicode-Escape-Sequenzen für Encoding-Sicherheit
+// ✅ Readonly Types - as const für unveränderliche Daten
+// ✅ Typed Constants - REGION_IDS und SUB_REGION_TYPES als Konstanten
+// ✅ Better Organization - Klare Struktur mit Kommentaren
 
 export interface IchRegion {
-  id: string
-  title: string
-  icon?: string
-  emoji?: string
+  readonly id: string
+  readonly title: string
+  readonly icon?: string
+  readonly emoji?: string
 }
 
 export interface IchSubRegion extends IchRegion {
-  type: string
-  ttsText?: string
+  readonly type: string
+  readonly ttsText?: string
 }
 
-// Main Regions - Hauptkategorien aus ich-standalone
-export const mainRegions: IchRegion[] = [
+// ==========================================
+// CONSTANTS - Typed Region IDs
+// ==========================================
+export const REGION_IDS = {
+  ERNAEHRUNG: 'ernaehrung',
+  GEFUEHLE: 'gefuehle',
+  KLEIDUNG: 'kleidung',
+  HYGIENE: 'hygiene',
+  BEWEGUNG: 'bewegung',
+  ZURUECK: 'zurueck'
+} as const
+
+export const SUB_REGION_TYPES = {
+  KATEGORIE: 'kategorie',
+  GESCHMACK: 'geschmack',
+  TEMPERATUR: 'temperatur',
+  KONSISTENZ: 'konsistenz',
+  GETRAENK: 'getraenk',
+  GRUNDGEFUEHL: 'grundgefuehl',
+  KOERPERGEFUEHL: 'koerpergefuehl',
+  SOZIALGEFUEHL: 'sozialgefuehl',
+  OBERBEKLEIDUNG: 'oberbekleidung',
+  KLEIDUNG: 'kleidung',
+  ACCESSOIRES: 'accessoires',
+  KOERPERPFLEGE: 'koerperpflege',
+  GESICHTSPFLEGE: 'gesichtspflege',
+  TOILETTE: 'toilette',
+  GRUNDBEWEGUNG: 'grundbewegung',
+  AKTIVITAET: 'aktivitaet',
+  ENTSPANNUNG: 'entspannung',
+  NAVIGATION: 'navigation'
+} as const
+
+// ==========================================
+// MAIN REGIONS
+// ==========================================
+export const mainRegions: readonly IchRegion[] = [
   {
-    id: 'ernaehrung',
+    id: REGION_IDS.ERNAEHRUNG,
     title: 'ERNÄHRUNG',
     icon: '/ratatosk.2.0/burger.svg'
   },
   {
-    id: 'gefuehle',
+    id: REGION_IDS.GEFUEHLE,
     title: 'GEFÜHLE',
     icon: '/ratatosk.2.0/face-smile-upside-down 1.svg'
   },
   {
-    id: 'kleidung',
+    id: REGION_IDS.KLEIDUNG,
     title: 'KLEIDUNG',
     icon: '/ratatosk.2.0/clothes.svg'
   },
   {
-    id: 'hygiene',
+    id: REGION_IDS.HYGIENE,
     title: 'HYGIENE',
     icon: '/ratatosk.2.0/bath.svg'
   },
   {
-    id: 'bewegung',
+    id: REGION_IDS.BEWEGUNG,
     title: 'BEWEGUNG',
     icon: '/ratatosk.2.0/barefoot 1.svg'
   },
   {
-    id: 'zurueck',
+    id: REGION_IDS.ZURUECK,
     title: 'ZURÜCK',
     icon: '/ratatosk.2.0/zurueck.svg'
   }
-]
+] as const
 
-// Ernährung Sub-Regions - basierend auf ErnaehrungView.ts
-export const ernaehrungSubRegions: IchSubRegion[] = [
+// ==========================================
+// SUB REGIONS - ERNÄHRUNG
+// ==========================================
+export const ernaehrungSubRegions: readonly IchSubRegion[] = [
   // Hauptkategorien
-  { id: 'essen', title: 'Essen', type: 'kategorie', emoji: '🍽️', ttsText: 'etwas zu essen' },
-  { id: 'trinken', title: 'Trinken', type: 'kategorie', emoji: '🥤', ttsText: 'etwas zu trinken' },
+  { id: 'essen', title: 'Essen', type: SUB_REGION_TYPES.KATEGORIE, emoji: '\u{1F37D}\u{FE0F}', ttsText: 'etwas zu essen' }, // 🍽️
+  { id: 'trinken', title: 'Trinken', type: SUB_REGION_TYPES.KATEGORIE, emoji: '\u{1F964}', ttsText: 'etwas zu trinken' }, // 🥤
   
   // Geschmacksrichtungen
-  { id: 'suess', title: 'süß', type: 'geschmack', emoji: '🍰', ttsText: 'etwas Süßes' },
-  { id: 'herzhaft', title: 'herzhaft', type: 'geschmack', emoji: '🍔', ttsText: 'etwas Herzhaftes' },
-  { id: 'scharf', title: 'scharf', type: 'geschmack', emoji: '🌶️', ttsText: 'etwas Scharfes' },
+  { id: 'suess', title: 'süß', type: SUB_REGION_TYPES.GESCHMACK, emoji: '\u{1F370}', ttsText: 'etwas Süßes' }, // 🍰
+  { id: 'herzhaft', title: 'herzhaft', type: SUB_REGION_TYPES.GESCHMACK, emoji: '\u{1F354}', ttsText: 'etwas Herzhaftes' }, // 🍔
+  { id: 'scharf', title: 'scharf', type: SUB_REGION_TYPES.GESCHMACK, emoji: '\u{1F336}\u{FE0F}', ttsText: 'etwas Scharfes' }, // 🌶️
   
   // Temperaturen
-  { id: 'kalt', title: 'kalt', type: 'temperatur', emoji: '❄️', ttsText: 'etwas Kaltes' },
-  { id: 'warm', title: 'warm', type: 'temperatur', emoji: '🔥', ttsText: 'etwas Warmes' },
-  { id: 'lauwarm', title: 'lauwarm', type: 'temperatur', emoji: '🌡️', ttsText: 'etwas Lauwarmes' },
+  { id: 'kalt', title: 'kalt', type: SUB_REGION_TYPES.TEMPERATUR, emoji: '\u{2744}\u{FE0F}', ttsText: 'etwas Kaltes' }, // ❄️
+  { id: 'warm', title: 'warm', type: SUB_REGION_TYPES.TEMPERATUR, emoji: '\u{1F525}', ttsText: 'etwas Warmes' }, // 🔥
+  { id: 'lauwarm', title: 'lauwarm', type: SUB_REGION_TYPES.TEMPERATUR, emoji: '\u{1F321}\u{FE0F}', ttsText: 'etwas Lauwarmes' }, // 🌡️
   
   // Konsistenzen
-  { id: 'trocken', title: 'trocken', type: 'konsistenz', emoji: '🍪', ttsText: 'etwas Trockenes' },
-  { id: 'nass', title: 'nass', type: 'konsistenz', emoji: '💦', ttsText: 'etwas Nasses' },
-  { id: 'breiig', title: 'breiig', type: 'konsistenz', emoji: '🥣', ttsText: 'etwas Breiiges' },
+  { id: 'trocken', title: 'trocken', type: SUB_REGION_TYPES.KONSISTENZ, emoji: '\u{1F36A}', ttsText: 'etwas Trockenes' }, // 🍪
+  { id: 'nass', title: 'nass', type: SUB_REGION_TYPES.KONSISTENZ, emoji: '\u{1F4A6}', ttsText: 'etwas Nasses' }, // 💦
+  { id: 'breiig', title: 'breiig', type: SUB_REGION_TYPES.KONSISTENZ, emoji: '\u{1F963}', ttsText: 'etwas Breiiges' }, // 🥣
   
   // Getränke
-  { id: 'wasser', title: 'Wasser', type: 'getraenk', emoji: '💧', ttsText: 'Wasser' },
-  { id: 'saft', title: 'Saft', type: 'getraenk', emoji: '🧃', ttsText: 'den Saft' },
-  { id: 'milch', title: 'Milch', type: 'getraenk', emoji: '🥛', ttsText: 'die Milch' },
+  { id: 'wasser', title: 'Wasser', type: SUB_REGION_TYPES.GETRAENK, emoji: '\u{1F4A7}', ttsText: 'Wasser' }, // 💧
+  { id: 'saft', title: 'Saft', type: SUB_REGION_TYPES.GETRAENK, emoji: '\u{1F9C3}', ttsText: 'den Saft' }, // 🧃
+  { id: 'milch', title: 'Milch', type: SUB_REGION_TYPES.GETRAENK, emoji: '\u{1F95B}', ttsText: 'die Milch' }, // 🥛
   
   // Navigation
-  { id: 'zurueck', title: 'zurück', type: 'navigation', emoji: '⬅️', ttsText: 'zurück' }
-]
+  { id: REGION_IDS.ZURUECK, title: 'zurück', type: SUB_REGION_TYPES.NAVIGATION, emoji: '\u{2B05}\u{FE0F}', ttsText: 'zurück' } // ⬅️
+] as const
 
-// Gefühle Sub-Regions - basierend auf GefuehleView.ts
-export const gefuehleSubRegions: IchSubRegion[] = [
+// ==========================================
+// SUB REGIONS - GEFÜHLE
+// ==========================================
+export const gefuehleSubRegions: readonly IchSubRegion[] = [
   // Grundgefühle
-  { id: 'gluecklich', title: 'glücklich', type: 'grundgefuehl', emoji: '😊', ttsText: 'glücklich' },
-  { id: 'traurig', title: 'traurig', type: 'grundgefuehl', emoji: '😢', ttsText: 'traurig' },
-  { id: 'wuetend', title: 'wütend', type: 'grundgefuehl', emoji: '😠', ttsText: 'wütend' },
-  { id: 'aengstlich', title: 'ängstlich', type: 'grundgefuehl', emoji: '😰', ttsText: 'ängstlich' },
+  { id: 'gluecklich', title: 'glücklich', type: SUB_REGION_TYPES.GRUNDGEFUEHL, emoji: '\u{1F60A}', ttsText: 'glücklich' }, // 😊
+  { id: 'traurig', title: 'traurig', type: SUB_REGION_TYPES.GRUNDGEFUEHL, emoji: '\u{1F622}', ttsText: 'traurig' }, // 😢
+  { id: 'wuetend', title: 'wütend', type: SUB_REGION_TYPES.GRUNDGEFUEHL, emoji: '\u{1F620}', ttsText: 'wütend' }, // 😠
+  { id: 'aengstlich', title: 'ängstlich', type: SUB_REGION_TYPES.GRUNDGEFUEHL, emoji: '\u{1F630}', ttsText: 'ängstlich' }, // 😰
   
   // Körpergefühle
-  { id: 'muede', title: 'müde', type: 'koerpergefuehl', emoji: '😴', ttsText: 'müde' },
-  { id: 'energisch', title: 'energisch', type: 'koerpergefuehl', emoji: '⚡', ttsText: 'energisch' },
-  { id: 'entspannt', title: 'entspannt', type: 'koerpergefuehl', emoji: '😌', ttsText: 'entspannt' },
-  { id: 'angespannt', title: 'angespannt', type: 'koerpergefuehl', emoji: '😬', ttsText: 'angespannt' },
+  { id: 'muede', title: 'müde', type: SUB_REGION_TYPES.KOERPERGEFUEHL, emoji: '\u{1F634}', ttsText: 'müde' }, // 😴
+  { id: 'energisch', title: 'energisch', type: SUB_REGION_TYPES.KOERPERGEFUEHL, emoji: '\u{26A1}', ttsText: 'energisch' }, // ⚡
+  { id: 'entspannt', title: 'entspannt', type: SUB_REGION_TYPES.KOERPERGEFUEHL, emoji: '\u{1F60C}', ttsText: 'entspannt' }, // 😌
+  { id: 'angespannt', title: 'angespannt', type: SUB_REGION_TYPES.KOERPERGEFUEHL, emoji: '\u{1F62C}', ttsText: 'angespannt' }, // 😬
   
   // Soziale Gefühle
-  { id: 'einsam', title: 'einsam', type: 'sozialgefuehl', emoji: '😔', ttsText: 'einsam' },
-  { id: 'geliebt', title: 'geliebt', type: 'sozialgefuehl', emoji: '💕', ttsText: 'geliebt' },
-  { id: 'stolz', title: 'stolz', type: 'sozialgefuehl', emoji: '😎', ttsText: 'stolz' },
-  { id: 'schaem', title: 'Scham', type: 'sozialgefuehl', emoji: '😳', ttsText: 'scham' },
+  { id: 'einsam', title: 'einsam', type: SUB_REGION_TYPES.SOZIALGEFUEHL, emoji: '\u{1F614}', ttsText: 'einsam' }, // 😔
+  { id: 'geliebt', title: 'geliebt', type: SUB_REGION_TYPES.SOZIALGEFUEHL, emoji: '\u{1F495}', ttsText: 'geliebt' }, // 💕
+  { id: 'stolz', title: 'stolz', type: SUB_REGION_TYPES.SOZIALGEFUEHL, emoji: '\u{1F60E}', ttsText: 'stolz' }, // 😎
+  { id: 'schaem', title: 'Scham', type: SUB_REGION_TYPES.SOZIALGEFUEHL, emoji: '\u{1F633}', ttsText: 'scham' }, // 😳
   
   // Navigation
-  { id: 'zurueck', title: 'zurück', type: 'navigation', emoji: '⬅️', ttsText: 'zurück' }
-]
+  { id: REGION_IDS.ZURUECK, title: 'zurück', type: SUB_REGION_TYPES.NAVIGATION, emoji: '\u{2B05}\u{FE0F}', ttsText: 'zurück' } // ⬅️
+] as const
 
-// Kleidung Sub-Regions - basierend auf KleidungView.ts
-export const kleidungSubRegions: IchSubRegion[] = [
+// ==========================================
+// SUB REGIONS - KLEIDUNG
+// ==========================================
+export const kleidungSubRegions: readonly IchSubRegion[] = [
   // Oberbekleidung
-  { id: 'muetze', title: 'Mütze', type: 'oberbekleidung', emoji: '🧢', ttsText: 'die Mütze' },
-  { id: 'ohrstoepsel', title: 'Ohrstöpsel', type: 'oberbekleidung', emoji: '🎧', ttsText: 'die Ohrstöpsel' },
-  { id: 'schaal', title: 'Schal', type: 'oberbekleidung', emoji: '🧣', ttsText: 'den Schal' },
-  { id: 'hemd', title: 'Hemd', type: 'oberbekleidung', emoji: '👔', ttsText: 'das Hemd' },
+  { id: 'muetze', title: 'Mütze', type: SUB_REGION_TYPES.OBERBEKLEIDUNG, emoji: '\u{1F9E2}', ttsText: 'die Mütze' }, // 🧢
+  { id: 'ohrstoepsel', title: 'Ohrstöpsel', type: SUB_REGION_TYPES.OBERBEKLEIDUNG, emoji: '\u{1F3A7}', ttsText: 'die Ohrstöpsel' }, // 🎧
+  { id: 'schaal', title: 'Schal', type: SUB_REGION_TYPES.OBERBEKLEIDUNG, emoji: '\u{1F9E3}', ttsText: 'den Schal' }, // 🧣
+  { id: 'hemd', title: 'Hemd', type: SUB_REGION_TYPES.OBERBEKLEIDUNG, emoji: '\u{1F454}', ttsText: 'das Hemd' }, // 👔
   
   // Kleidung
-  { id: 'tshirt', title: 'T-Shirt', type: 'kleidung', emoji: '👕', ttsText: 'das T-Shirt' },
-  { id: 'pullover', title: 'Pullover', type: 'kleidung', emoji: '👕', ttsText: 'den Pullover' },
-  { id: 'jacke', title: 'Jacke', type: 'kleidung', emoji: '🧥', ttsText: 'die Jacke' },
-  { id: 'hose', title: 'Hose', type: 'kleidung', emoji: '👖', ttsText: 'die Hose' },
+  { id: 'tshirt', title: 'T-Shirt', type: SUB_REGION_TYPES.KLEIDUNG, emoji: '\u{1F455}', ttsText: 'das T-Shirt' }, // 👕
+  { id: 'pullover', title: 'Pullover', type: SUB_REGION_TYPES.KLEIDUNG, emoji: '\u{1F455}', ttsText: 'den Pullover' }, // 👕
+  { id: 'jacke', title: 'Jacke', type: SUB_REGION_TYPES.KLEIDUNG, emoji: '\u{1F9E5}', ttsText: 'die Jacke' }, // 🧥
+  { id: 'hose', title: 'Hose', type: SUB_REGION_TYPES.KLEIDUNG, emoji: '\u{1F456}', ttsText: 'die Hose' }, // 👖
   
   // Schuhe und Accessoires
-  { id: 'socken', title: 'Socken', type: 'accessoires', emoji: '🧦', ttsText: 'die Socken' },
-  { id: 'schuhe', title: 'Schuhe', type: 'accessoires', emoji: '👟', ttsText: 'die Schuhe' },
-  { id: 'unterwaesche', title: 'Unterwäsche', type: 'accessoires', emoji: '🩲', ttsText: 'die Unterwäsche' },
+  { id: 'socken', title: 'Socken', type: SUB_REGION_TYPES.ACCESSOIRES, emoji: '\u{1F9E6}', ttsText: 'die Socken' }, // 🧦
+  { id: 'schuhe', title: 'Schuhe', type: SUB_REGION_TYPES.ACCESSOIRES, emoji: '\u{1F45F}', ttsText: 'die Schuhe' }, // 👟
+  { id: 'unterwaesche', title: 'Unterwäsche', type: SUB_REGION_TYPES.ACCESSOIRES, emoji: '\u{1FA72}', ttsText: 'die Unterwäsche' }, // 🩲
   
   // Navigation
-  { id: 'zurueck', title: 'zurück', type: 'navigation', emoji: '⬅️', ttsText: 'zurück' }
-]
+  { id: REGION_IDS.ZURUECK, title: 'zurück', type: SUB_REGION_TYPES.NAVIGATION, emoji: '\u{2B05}\u{FE0F}', ttsText: 'zurück' } // ⬅️
+] as const
 
-// Hygiene Sub-Regions - basierend auf HygieneView.ts
-export const hygieneSubRegions: IchSubRegion[] = [
+// ==========================================
+// SUB REGIONS - HYGIENE
+// ==========================================
+export const hygieneSubRegions: readonly IchSubRegion[] = [
   // Körperpflege
-  { id: 'duschen', title: 'Duschen', type: 'koerperpflege', emoji: '🚿', ttsText: 'duschen' },
-  { id: 'bad', title: 'Bad', type: 'koerperpflege', emoji: '🛁', ttsText: 'baden' },
-  { id: 'haare', title: 'Haare waschen', type: 'koerperpflege', emoji: '💇', ttsText: 'mir die Haare waschen' },
-  { id: 'zaehne', title: 'Zähne putzen', type: 'koerperpflege', emoji: '🦷', ttsText: 'mir die Zähne putzen' },
+  { id: 'duschen', title: 'Duschen', type: SUB_REGION_TYPES.KOERPERPFLEGE, emoji: '\u{1F6BF}', ttsText: 'duschen' }, // 🚿
+  { id: 'bad', title: 'Bad', type: SUB_REGION_TYPES.KOERPERPFLEGE, emoji: '\u{1F6C1}', ttsText: 'baden' }, // 🛁
+  { id: 'haare', title: 'Haare waschen', type: SUB_REGION_TYPES.KOERPERPFLEGE, emoji: '\u{1F487}', ttsText: 'mir die Haare waschen' }, // 💇
+  { id: 'zaehne', title: 'Zähne putzen', type: SUB_REGION_TYPES.KOERPERPFLEGE, emoji: '\u{1F9B7}', ttsText: 'mir die Zähne putzen' }, // 🦷
   
   // Gesichtspflege
-  { id: 'gesicht', title: 'Gesicht waschen', type: 'gesichtspflege', emoji: '🧼', ttsText: 'mir das Gesicht waschen' },
-  { id: 'rasieren', title: 'Rasieren', type: 'gesichtspflege', emoji: '🪒', ttsText: 'mich rasieren' },
-  { id: 'creme', title: 'Creme auftragen', type: 'gesichtspflege', emoji: '🧴', ttsText: 'mich eincremen' },
+  { id: 'gesicht', title: 'Gesicht waschen', type: SUB_REGION_TYPES.GESICHTSPFLEGE, emoji: '\u{1F9FC}', ttsText: 'mir das Gesicht waschen' }, // 🧼
+  { id: 'rasieren', title: 'Rasieren', type: SUB_REGION_TYPES.GESICHTSPFLEGE, emoji: '\u{1FA92}', ttsText: 'mich rasieren' }, // 🪒
+  { id: 'creme', title: 'Creme auftragen', type: SUB_REGION_TYPES.GESICHTSPFLEGE, emoji: '\u{1F9F4}', ttsText: 'mich eincremen' }, // 🧴
   
   // Toilette
-  { id: 'toilette', title: 'Toilette', type: 'toilette', emoji: '🚽', ttsText: 'auf die Toilette gehen' },
-  { id: 'hände', title: 'Hände waschen', type: 'toilette', emoji: '🧽', ttsText: 'mir die Hände waschen' },
+  { id: 'toilette', title: 'Toilette', type: SUB_REGION_TYPES.TOILETTE, emoji: '\u{1F6BD}', ttsText: 'auf die Toilette gehen' }, // 🚽
+  { id: 'haende', title: 'Hände waschen', type: SUB_REGION_TYPES.TOILETTE, emoji: '\u{1F9FD}', ttsText: 'mir die Hände waschen' }, // 🧽
   
   // Navigation
-  { id: 'zurueck', title: 'zurück', type: 'navigation', emoji: '⬅️', ttsText: 'zurück' }
-]
+  { id: REGION_IDS.ZURUECK, title: 'zurück', type: SUB_REGION_TYPES.NAVIGATION, emoji: '\u{2B05}\u{FE0F}', ttsText: 'zurück' } // ⬅️
+] as const
 
-// Bewegung Sub-Regions - basierend auf BewegungView.ts
-export const bewegungSubRegions: IchSubRegion[] = [
+// ==========================================
+// SUB REGIONS - BEWEGUNG
+// ==========================================
+export const bewegungSubRegions: readonly IchSubRegion[] = [
   // Grundbewegungen
-  { id: 'gehen', title: 'Gehen', type: 'grundbewegung', emoji: '🚶', ttsText: 'gehen' },
-  { id: 'laufen', title: 'Laufen', type: 'grundbewegung', emoji: '🏃', ttsText: 'laufen' },
-  { id: 'stehen', title: 'Stehen', type: 'grundbewegung', emoji: '🧍', ttsText: 'aufstehen' },
-  { id: 'sitzen', title: 'Sitzen', type: 'grundbewegung', emoji: '🪑', ttsText: 'sitzen' },
+  { id: 'gehen', title: 'Gehen', type: SUB_REGION_TYPES.GRUNDBEWEGUNG, emoji: '\u{1F6B6}', ttsText: 'gehen' }, // 🚶
+  { id: 'laufen', title: 'Laufen', type: SUB_REGION_TYPES.GRUNDBEWEGUNG, emoji: '\u{1F3C3}', ttsText: 'laufen' }, // 🏃
+  { id: 'stehen', title: 'Stehen', type: SUB_REGION_TYPES.GRUNDBEWEGUNG, emoji: '\u{1F9CD}', ttsText: 'aufstehen' }, // 🧍
+  { id: 'sitzen', title: 'Sitzen', type: SUB_REGION_TYPES.GRUNDBEWEGUNG, emoji: '\u{1FA91}', ttsText: 'sitzen' }, // 🪑
   
   // Aktivitäten
-  { id: 'sport', title: 'Sport', type: 'aktivitaet', emoji: '🏃‍♂️', ttsText: 'Sport machen' },
-  { id: 'spazieren', title: 'Spazieren', type: 'aktivitaet', emoji: '🚶‍♀️', ttsText: 'spazieren' },
-  { id: 'tanzen', title: 'Tanzen', type: 'aktivitaet', emoji: '💃', ttsText: 'tanzen' },
-  { id: 'yoga', title: 'Yoga', type: 'aktivitaet', emoji: '🧘', ttsText: 'Yoga machen' },
+  { id: 'sport', title: 'Sport', type: SUB_REGION_TYPES.AKTIVITAET, emoji: '\u{1F3C3}\u{200D}\u{2642}\u{FE0F}', ttsText: 'Sport machen' }, // 🏃‍♂️
+  { id: 'spazieren', title: 'Spazieren', type: SUB_REGION_TYPES.AKTIVITAET, emoji: '\u{1F6B6}\u{200D}\u{2640}\u{FE0F}', ttsText: 'spazieren' }, // 🚶‍♀️
+  { id: 'tanzen', title: 'Tanzen', type: SUB_REGION_TYPES.AKTIVITAET, emoji: '\u{1F483}', ttsText: 'tanzen' }, // 💃
+  { id: 'yoga', title: 'Yoga', type: SUB_REGION_TYPES.AKTIVITAET, emoji: '\u{1F9D8}', ttsText: 'Yoga machen' }, // 🧘
   
   // Entspannung
-  { id: 'dehnen', title: 'Dehnen', type: 'entspannung', emoji: '🤸', ttsText: 'dehnen' },
-  { id: 'massage', title: 'Massage', type: 'entspannung', emoji: '💆', ttsText: 'massieren' },
-  { id: 'meditieren', title: 'Meditieren', type: 'entspannung', emoji: '🧘‍♀️', ttsText: 'meditieren' },
+  { id: 'dehnen', title: 'Dehnen', type: SUB_REGION_TYPES.ENTSPANNUNG, emoji: '\u{1F938}', ttsText: 'dehnen' }, // 🤸
+  { id: 'massage', title: 'Massage', type: SUB_REGION_TYPES.ENTSPANNUNG, emoji: '\u{1F486}', ttsText: 'massieren' }, // 💆
+  { id: 'meditieren', title: 'Meditieren', type: SUB_REGION_TYPES.ENTSPANNUNG, emoji: '\u{1F9D8}\u{200D}\u{2640}\u{FE0F}', ttsText: 'meditieren' }, // 🧘‍♀️
   
   // Navigation
-  { id: 'zurueck', title: 'zurück', type: 'navigation', emoji: '⬅️', ttsText: 'zurück' }
-]
+  { id: REGION_IDS.ZURUECK, title: 'zurück', type: SUB_REGION_TYPES.NAVIGATION, emoji: '\u{2B05}\u{FE0F}', ttsText: 'zurück' } // ⬅️
+] as const
 
-// Helper function to get sub-regions by main region
-export function getSubRegionsByMainRegion(mainRegionId: string): IchSubRegion[] {
+// ==========================================
+// HELPER FUNCTIONS
+// ==========================================
+export function getSubRegionsByMainRegion(mainRegionId: string): readonly IchSubRegion[] {
   switch (mainRegionId) {
-    case 'ernaehrung':
+    case REGION_IDS.ERNAEHRUNG:
       return ernaehrungSubRegions
-    case 'gefuehle':
+    case REGION_IDS.GEFUEHLE:
       return gefuehleSubRegions
-    case 'kleidung':
+    case REGION_IDS.KLEIDUNG:
       return kleidungSubRegions
-    case 'hygiene':
+    case REGION_IDS.HYGIENE:
       return hygieneSubRegions
-    case 'bewegung':
+    case REGION_IDS.BEWEGUNG:
       return bewegungSubRegions
     default:
       return []
   }
 }
 
-// Helper function to get main region title
 export function getMainRegionTitle(mainRegionId: string | null): string {
   if (!mainRegionId) return ''
   const region = mainRegions.find(r => r.id === mainRegionId)
   return region ? region.title : ''
 }
 
-// Helper function to get sub region title
 export function getSubRegionTitle(subRegionId: string | null): string {
   if (!subRegionId) return ''
   
@@ -222,15 +271,15 @@ export function generateConfirmationSentence(mainRegionId: string | null, subReg
   
   // Generate confirmation sentence based on main region
   switch (mainRegionId) {
-    case 'ernaehrung':
+    case REGION_IDS.ERNAEHRUNG:
       return `Ich möchte gerne ${subRegion.ttsText} zu mir nehmen.`
-    case 'gefuehle':
+    case REGION_IDS.GEFUEHLE:
       return `Ich fühle mich ${subRegion.ttsText}.`
-    case 'kleidung':
+    case REGION_IDS.KLEIDUNG:
       return `Ich möchte ${subRegion.ttsText} anziehen.`
-    case 'hygiene':
+    case REGION_IDS.HYGIENE:
       return `Ich möchte ${subRegion.ttsText}.`
-    case 'bewegung':
+    case REGION_IDS.BEWEGUNG:
       return `Ich möchte ${subRegion.ttsText}.`
     default:
       return `Ich möchte ${subRegion.ttsText}.`

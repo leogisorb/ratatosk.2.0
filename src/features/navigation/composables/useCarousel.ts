@@ -59,11 +59,22 @@ export function useCarousel(items: CarouselItem[]) {
     const isPortrait = height > width
     const isLandscape = width > height
     
-    // Mobile: <= 768px ODER iPad Pro im Hochformat (Portrait) - NICHT im Querformat!
+    // WICHTIG: Im Landscape-Modus IMMER Grid verwenden (nie Karussell)
+    if (isLandscape) {
+      if (isMobile.value !== false) {
+        isMobile.value = false
+      }
+      return
+    }
+    
+    // Mobile: Nur im Portrait-Modus
+    // <= 768px ODER iPad Pro im Hochformat (Portrait)
     // iPad Pro 11": 834px x 1194px (Portrait) / 1194px x 834px (Landscape)
     // iPad Pro 12.9": 1024px x 1366px (Portrait) / 1366px x 1024px (Landscape)
-    const newIsMobile = width <= CAROUSEL_CONFIG.MOBILE_BREAKPOINT || 
-                     (isPortrait && !isLandscape && width <= 1366 && width >= 768)
+    const newIsMobile = isPortrait && (
+      width <= CAROUSEL_CONFIG.MOBILE_BREAKPOINT || 
+      (width <= 1366 && width >= 768)
+    )
     
     // Nur aktualisieren, wenn sich der Wert tatsächlich ändert (verhindert unnötige Watcher-Auslösung bei Rotation)
     if (isMobile.value !== newIsMobile) {

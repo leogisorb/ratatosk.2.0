@@ -1,3 +1,19 @@
+/**
+ * @deprecated This composable is deprecated and will be removed in a future version.
+ * Please use `useIchDialogMachine` instead, which provides:
+ * - Better timer management (prevents memory leaks)
+ * - Race condition prevention with transaction pattern
+ * - Improved type safety
+ * - Centralized state management
+ * 
+ * Migration guide:
+ * - Replace `useIchAssessment()` with `useIchDialogMachine()`
+ * - Use `machine.handleBlink()` instead of `handleBlink()`
+ * - Use `machine.autoMode` instead of `currentTileIndex` and `startAutoMode()`
+ * 
+ * This file is kept for backward compatibility only.
+ */
+
 import { ref, computed, onMounted, onUnmounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { useSettingsStore } from '../../settings/stores/settings'
@@ -9,6 +25,8 @@ import { useAutoMode } from '../../../shared/composables/useAutoMode'
 // This eliminates duplicate auto-mode, TTS, and blink detection implementations
 
 export function useIchAssessment() {
+  console.warn('useIchAssessment is deprecated. Please use useIchDialogMachine instead.')
+  
   // Router
   const router = useRouter()
 
@@ -23,7 +41,7 @@ export function useIchAssessment() {
   const isAutoMode = ref(true)
   const closedFrames = ref(0)
   const eyesClosed = ref(false)
-  const userInteracted = ref(false)
+  const userInteracted = ref(true) // ✅ TTS sofort aktiviert
   const isSpeaking = ref(false)
 
   // Blink detection parameters - centralized
@@ -34,9 +52,6 @@ export function useIchAssessment() {
   // TTS über SimpleFlowController
   const speakText = async (text: string) => {
     console.log('IchAssessment: Requesting TTS for:', text)
-    console.log('IchAssessment: userInteracted:', userInteracted.value)
-    console.log('IchAssessment: simpleFlowController available:', !!simpleFlowController)
-    
     isSpeaking.value = true
     try {
       await simpleFlowController.speak(text)
@@ -57,9 +72,7 @@ export function useIchAssessment() {
   }
 
   // TTS sofort aktivieren für IchDialogView
-  userInteracted.value = true
   simpleFlowController.setUserInteracted(true)
-  console.log('IchAssessment: TTS activated immediately')
 
   // Auto-Mode Instanz (wird dynamisch erstellt)
   let autoModeInstance: ReturnType<typeof useAutoMode> | null = null

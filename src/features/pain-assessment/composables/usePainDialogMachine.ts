@@ -14,7 +14,7 @@
  * mainView
  */
 
-import { ref, computed } from 'vue'
+import { ref, computed, watch } from 'vue'
 import { useRouter } from 'vue-router'
 import { useTTS } from './useTTS'
 import { useAutoMode } from '../../../shared/composables/useAutoMode'
@@ -22,6 +22,7 @@ import { usePainDictionary } from './usePainDictionary'
 import { useFaceRecognition } from '../../face-recognition/composables/useFaceRecognition'
 import { simpleFlowController } from '../../../core/application/SimpleFlowController'
 import { useDialogTimerTracking } from '../../../shared/composables/useDialogTimerTracking'
+import { debug, debugAutoMode, debugTTS } from '../../../shared/utils/debug'
 
 export type PainDialogState = 'mainView' | 'subRegionView' | 'painScaleView' | 'confirmation'
 
@@ -76,17 +77,34 @@ export function usePainDialogMachine() {
   // Timer-Tracking mit Cleanup-Logik
   const { isActive, scheduleTimer, cleanup: cleanupTimers } = useDialogTimerTracking({
     onCleanup: () => {
+      debug.log('PainDialogMachine', 'Timer Cleanup - stoppe AutoMode')
       autoMode.stop()
     },
     dialogName: 'PainDialog'
   })
 
+  // Watch State changes
+  watch(() => state.value, (newState, oldState) => {
+    if (oldState !== undefined) {
+      debug.log('PainDialogMachine', 'State-Wechsel', {
+        from: oldState,
+        to: newState,
+        mainRegionId: mainRegionId.value,
+        subRegionId: subRegionId.value,
+        painLevel: painLevel.value
+      })
+    }
+  })
+
   // ✅ Hauptregion auswählen
   async function selectMainRegion(id: string) {
+    debug.log('PainDialogMachine', 'selectMainRegion', { id, currentState: state.value })
+    
     // ✅ Blockiere "zurueck" in mainView
     if (id === 'zurueck') return
     
     // Stoppe AutoMode
+    debugAutoMode.stop()
     autoMode.stop()
     
     // Setze State
@@ -97,6 +115,7 @@ export function usePainDialogMachine() {
     autoMode.index.value = 0
     
     // ✅ Spreche neuen Titel (skipTitle = true, da Titel hier schon gesprochen wird)
+    debugTTS.speak(title.value, simpleFlowController.getTTSMuted())
     await tts.speak(title.value)
     
     // Starte AutoMode nach 3 Sekunden (skipTitle = true, Titel wurde bereits gesprochen)
@@ -104,6 +123,7 @@ export function usePainDialogMachine() {
       if (state.value === 'subRegionView') {
         // ✅ Stelle sicher, dass Index noch bei 0 ist (falls State zwischenzeitlich geändert wurde)
         autoMode.index.value = 0
+        debugAutoMode.start(true)
         autoMode.start(true) // ✅ skipTitle = true, da Titel bereits gesprochen
       }
     }, 3000)
@@ -111,7 +131,10 @@ export function usePainDialogMachine() {
 
   // ✅ Unterregion auswählen
   async function selectSubRegion(id: string) {
+    debug.log('PainDialogMachine', 'selectSubRegion', { id, currentState: state.value })
+    
     // Stoppe AutoMode
+    debugAutoMode.stop()
     autoMode.stop()
     
     // ✅ Robustes zurueck-Handling
@@ -122,6 +145,7 @@ export function usePainDialogMachine() {
       // ✅ Index explizit auf 0 setzen, damit immer bei 0 beginnt (nicht aus Cache)
       autoMode.index.value = 0
       
+      debugTTS.speak(title.value, simpleFlowController.getTTSMuted())
       await tts.speak(title.value)
       
       // Starte AutoMode nach 3 Sekunden (skipTitle = true, Titel wurde bereits gesprochen)
@@ -129,6 +153,7 @@ export function usePainDialogMachine() {
         if (state.value === 'mainView') {
           // ✅ Stelle sicher, dass Index noch bei 0 ist (falls State zwischenzeitlich geändert wurde)
           autoMode.index.value = 0
+          debugAutoMode.start(true)
           autoMode.start(true) // ✅ skipTitle = true
         }
       }, 3000)
@@ -143,6 +168,7 @@ export function usePainDialogMachine() {
     autoMode.index.value = 0
     
     // ✅ Spreche neuen Titel (skipTitle = true, da Titel hier schon gesprochen wird)
+    debugTTS.speak(title.value, simpleFlowController.getTTSMuted())
     await tts.speak(title.value)
     
     // Starte AutoMode nach 3 Sekunden (skipTitle = true, Titel wurde bereits gesprochen)
@@ -150,6 +176,7 @@ export function usePainDialogMachine() {
       if (state.value === 'painScaleView') {
         // ✅ Stelle sicher, dass Index noch bei 0 ist (falls State zwischenzeitlich geändert wurde)
         autoMode.index.value = 0
+        debugAutoMode.start(true)
         autoMode.start(true) // ✅ skipTitle = true, da Titel bereits gesprochen
       }
     }, 3000)
@@ -157,7 +184,10 @@ export function usePainDialogMachine() {
 
   // ✅ Schmerzlevel auswählen
   async function selectPainLevel(level: number) {
+    debug.log('PainDialogMachine', 'selectPainLevel', { level, currentState: state.value })
+    
     // Stoppe AutoMode
+    debugAutoMode.stop()
     autoMode.stop()
     
     // Setze State
@@ -166,6 +196,7 @@ export function usePainDialogMachine() {
     
     // Spreche Bestätigungstext
     const textToSpeak = confirmationText.value || 'Ihre Angabe wurde gespeichert.'
+    debugTTS.speak(textToSpeak, simpleFlowController.getTTSMuted())
     await tts.speak(textToSpeak)
     
     // Nach 5 Sekunden zurück zum Start
@@ -180,6 +211,7 @@ export function usePainDialogMachine() {
       autoMode.index.value = 0
       
       // Spreche Titel
+      debugTTS.speak(title.value, simpleFlowController.getTTSMuted())
       tts.speak(title.value)
       
       // Starte AutoMode nach 3 Sekunden (skipTitle = true, Titel wurde bereits gesprochen)
@@ -187,6 +219,7 @@ export function usePainDialogMachine() {
         if (state.value === 'mainView') {
           // ✅ Stelle sicher, dass Index noch bei 0 ist (falls State zwischenzeitlich geändert wurde)
           autoMode.index.value = 0
+          debugAutoMode.start(true)
           autoMode.start(true) // ✅ skipTitle = true, da Titel bereits gesprochen
         }
       }, 3000)
@@ -247,7 +280,7 @@ export function usePainDialogMachine() {
 
   // ✅ Blink-Handler
   function handleBlink() {
-    console.log('PainDialog: handleBlink() aufgerufen', {
+    debug.log('PainDialogMachine', 'handleBlink', {
       state: state.value,
       itemsCount: items.value.length,
       currentIndex: autoMode.index.value
@@ -255,7 +288,7 @@ export function usePainDialogMachine() {
     
     const currentItems = items.value
     if (!currentItems || !currentItems.length) {
-      console.warn('PainDialog: handleBlink() - Keine Items verfügbar')
+      debug.warn('PainDialogMachine', 'handleBlink - Keine Items verfügbar')
       return
     }
     
@@ -263,15 +296,15 @@ export function usePainDialogMachine() {
     const currentItem = currentItems[currentIndex]
     
     if (!currentItem) {
-      console.warn('PainDialog: handleBlink() - Kein Item für Index', currentIndex)
+      debug.warn('PainDialogMachine', 'handleBlink - Kein Item für Index', { currentIndex })
       return
     }
     
-    console.log('PainDialog: handleBlink() - Aktuelles Item:', currentItem)
+    debug.log('PainDialogMachine', 'handleBlink - Aktuelles Item', currentItem)
     
     // ✅ Robustes zurueck-Handling
     if (currentItem.id === 'zurueck') {
-      console.log('PainDialog: handleBlink() - Zurück-Button erkannt, State:', state.value)
+      debug.log('PainDialogMachine', 'handleBlink - Zurück-Button erkannt', { state: state.value })
       switch (state.value) {
         case 'subRegionView':
           selectSubRegion('zurueck')
@@ -286,29 +319,29 @@ export function usePainDialogMachine() {
     // State-spezifische Auswahl
     if (state.value === 'mainView') {
       if (typeof currentItem.id === 'string') {
-        console.log('PainDialog: handleBlink() - Wähle Hauptregion:', currentItem.id)
+        debug.log('PainDialogMachine', 'handleBlink - Wähle Hauptregion', { id: currentItem.id })
         selectMainRegion(currentItem.id)
       }
     } else if (state.value === 'subRegionView') {
       if (typeof currentItem.id === 'string') {
-        console.log('PainDialog: handleBlink() - Wähle Unterregion:', currentItem.id)
+        debug.log('PainDialogMachine', 'handleBlink - Wähle Unterregion', { id: currentItem.id })
         selectSubRegion(currentItem.id)
       }
     } else if (state.value === 'painScaleView') {
       // Pain levels haben level property
       const item = currentItem as any
       if ('level' in item && typeof item.level === 'number') {
-        console.log('PainDialog: handleBlink() - Wähle Schmerzlevel:', item.level)
+        debug.log('PainDialogMachine', 'handleBlink - Wähle Schmerzlevel', { level: item.level })
         selectPainLevel(item.level)
       } else if ('id' in item && typeof item.id === 'number') {
         // Fallback: falls id als number verwendet wird
-        console.log('PainDialog: handleBlink() - Wähle Schmerzlevel (Fallback):', item.id)
+        debug.log('PainDialogMachine', 'handleBlink - Wähle Schmerzlevel (Fallback)', { id: item.id })
         selectPainLevel(item.id)
       } else {
-        console.warn('PainDialog: handleBlink() - Kein gültiges Level gefunden für Item:', item)
+        debug.warn('PainDialogMachine', 'handleBlink - Kein gültiges Level gefunden', { item })
       }
     } else {
-      console.warn('PainDialog: handleBlink() - Unbekannter State:', state.value)
+      debug.warn('PainDialogMachine', 'handleBlink - Unbekannter State', { state: state.value })
     }
   }
 

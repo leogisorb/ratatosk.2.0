@@ -86,6 +86,7 @@
 <script setup lang="ts">
 import { computed, watch, nextTick } from 'vue'
 import { useCarouselSizing } from '../../shared/composables/useCarouselSizing'
+import { debugCarousel, debugComponent } from '../../shared/utils/debug'
 
 /**
  * Flexible Carousel Item Interface
@@ -132,7 +133,12 @@ const {
 } = useCarouselSizing()
 
 // Watch for currentIndex changes to update container size
-watch(() => props.currentIndex, async () => {
+watch(() => props.currentIndex, async (newIndex, oldIndex) => {
+  // Debug: Log index change
+  if (oldIndex !== undefined) {
+    debugCarousel.indexChange(oldIndex, newIndex, props.items.length)
+  }
+  
   await nextTick()
   updateContainerSize()
 })
@@ -172,6 +178,9 @@ const hasIcon = (item: CarouselItem): boolean => {
  * Handle item click event
  */
 const handleItemClick = (item: CarouselItem, index: number) => {
+  // Debug: Log item click
+  debugCarousel.itemClick(item, index)
+  
   if (props.onItemClick) {
     props.onItemClick(item, index)
   }

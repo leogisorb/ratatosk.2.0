@@ -1,4 +1,7 @@
 // ichGrammar.ts - Grammatik-Regeln für Ich-Dialog
+// ✅ Verwendet REGION_IDS für Type Safety
+
+import { REGION_IDS } from './ichDialogData'
 
 /**
  * Generiert den Titel für die Sub-Region-View basierend auf der Haupt-Region
@@ -12,15 +15,15 @@ export function getSubRegionViewTitle(mainRegionId: string | null): string {
   // Spezifische Texte basierend auf der Confirmation-Logik
   // Die Fragen passen zu den Confirmation-Sätzen: "Ich möchte gerne X zu mir nehmen" → "Was wollen Sie zu sich nehmen?"
   switch (mainRegionId) {
-    case 'ernaehrung':
+    case REGION_IDS.ERNAEHRUNG:
       return 'Was wollen Sie zu sich nehmen?'
-    case 'gefuehle':
+    case REGION_IDS.GEFUEHLE:
       return 'Wie fühlen Sie sich?'
-    case 'kleidung':
+    case REGION_IDS.KLEIDUNG:
       return 'Was möchten Sie anziehen?'
-    case 'hygiene':
+    case REGION_IDS.HYGIENE:
       return 'Was möchten Sie machen?'
-    case 'bewegung':
+    case REGION_IDS.BEWEGUNG:
       return 'Was möchten Sie machen?'
     default:
       return 'Was möchten Sie machen?'
@@ -39,15 +42,15 @@ export function generateConfirmationText(
   }
   
   switch (mainRegionId) {
-    case 'ernaehrung':
+    case REGION_IDS.ERNAEHRUNG:
       return `Ich möchte gerne ${subRegionTtsText} zu mir nehmen.`
-    case 'gefuehle':
+    case REGION_IDS.GEFUEHLE:
       return `Ich fühle mich ${subRegionTtsText}.`
-    case 'kleidung':
+    case REGION_IDS.KLEIDUNG:
       return `Ich möchte ${subRegionTtsText} anziehen.`
-    case 'hygiene':
+    case REGION_IDS.HYGIENE:
       return `Ich möchte ${subRegionTtsText}.`
-    case 'bewegung':
+    case REGION_IDS.BEWEGUNG:
       return `Ich möchte ${subRegionTtsText}.`
     default:
       return `Ich möchte ${subRegionTtsText}.`
