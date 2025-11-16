@@ -1,12 +1,22 @@
 import { defineStore } from 'pinia'
 import { ref, computed } from 'vue'
-import type { Message, QuickMessage } from '../../../shared/types/index'
+import type { Message } from '../../../shared/types/index'
+import { createMessageId, createUserId } from '../../../core/domain/types/Branded'
+import { MESSAGE_TYPES } from '../../../core/domain/entities/Message'
+
+// Legacy QuickMessage format for UI (simplified, not full Domain Entity)
+interface QuickMessageItem {
+  id: string
+  text: string
+  category: 'greeting' | 'pain' | 'need' | 'feeling'
+  icon?: string
+}
 
 export const useCommunicationStore = defineStore('communication', () => {
   // State
   const messages = ref<Message[]>([])
   const currentMessage = ref('')
-  const quickMessages = ref<QuickMessage[]>([
+  const quickMessages = ref<QuickMessageItem[]>([
     {
       id: '1',
       text: 'Hallo!',
@@ -63,10 +73,10 @@ export const useCommunicationStore = defineStore('communication', () => {
 
   const messagesByCategory = computed(() => {
     const grouped = {
-      greeting: [] as QuickMessage[],
-      pain: [] as QuickMessage[],
-      need: [] as QuickMessage[],
-      feeling: [] as QuickMessage[]
+      greeting: [] as QuickMessageItem[],
+      pain: [] as QuickMessageItem[],
+      need: [] as QuickMessageItem[],
+      feeling: [] as QuickMessageItem[]
     }
     
     quickMessages.value.forEach(msg => {
@@ -77,12 +87,15 @@ export const useCommunicationStore = defineStore('communication', () => {
   })
 
   // Actions
-  function addMessage(text: string, type: Message['type'] = 'user') {
+  function addMessage(text: string, type: Message['type'] = MESSAGE_TYPES.USER) {
+    // Create a UserMessage with proper branded types
     const message: Message = {
-      id: Date.now().toString(),
-      text,
-      timestamp: new Date(),
-      type
+      id: createMessageId(Date.now().toString()),
+      content: text,
+      timestamp: Date.now(), // Unix timestamp in milliseconds
+      userId: createUserId('default-user'), // TODO: Use actual user ID
+      type: MESSAGE_TYPES.USER,
+      category: 'feeling' // Default category
     }
     messages.value.push(message)
     saveMessages()
@@ -91,7 +104,17 @@ export const useCommunicationStore = defineStore('communication', () => {
   function addQuickMessage(messageId: string) {
     const quickMessage = quickMessages.value.find(msg => msg.id === messageId)
     if (quickMessage) {
-      addMessage(quickMessage.text, 'quick')
+      // Create a QuickMessage with proper branded types
+      const message: Message = {
+        id: createMessageId(Date.now().toString()),
+        content: quickMessage.text,
+        timestamp: Date.now(),
+        userId: createUserId('default-user'), // TODO: Use actual user ID
+        type: MESSAGE_TYPES.QUICK,
+        category: quickMessage.category
+      }
+      messages.value.push(message)
+      saveMessages()
     }
   }
 
@@ -128,10 +151,24 @@ export const useCommunicationStore = defineStore('communication', () => {
     if (saved) {
       try {
         const parsed = JSON.parse(saved)
-        messages.value = parsed.map((msg: any) => ({
-          ...msg,
-          timestamp: new Date(msg.timestamp)
-        }))
+        // Convert legacy format to new format if needed
+        messages.value = parsed.map((msg: any) => {
+          // Handle legacy format with 'text' instead of 'content'
+          const content = msg.content || msg.text || ''
+          const timestamp = typeof msg.timestamp === 'number' 
+            ? msg.timestamp 
+            : new Date(msg.timestamp).getTime()
+          
+          return {
+            ...msg,
+            id: typeof msg.id === 'string' ? createMessageId(msg.id) : createMessageId(String(msg.id)),
+            content,
+            timestamp,
+            userId: typeof msg.userId === 'string' ? createUserId(msg.userId) : createUserId('default-user'),
+            type: msg.type || MESSAGE_TYPES.USER,
+            category: msg.category || 'feeling'
+          } as Message
+        })
       } catch (error) {
         console.error('Failed to load messages:', error)
       }

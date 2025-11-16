@@ -173,7 +173,9 @@ export class SimpleFlowController {
       return
     }
 
-    console.log('SimpleFlowController: Auto-mode cycle:', currentItem.title || currentItem.text, 'at index:', this.currentIndex)
+    // Type guard for items with title or text property
+    const itemTitle = (currentItem as any)?.title || (currentItem as any)?.text || 'Unknown'
+    console.log('SimpleFlowController: Auto-mode cycle:', itemTitle, 'at index:', this.currentIndex)
     
     // Führe Callback aus
     this.onCycleCallback(this.currentIndex, currentItem)
