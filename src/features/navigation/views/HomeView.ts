@@ -114,7 +114,6 @@ export function useHomeViewLogic() {
   const {
     isMobile,
     position,
-    carouselStyle,
     currentItem,
     itemCount,
     autoScrollState,
