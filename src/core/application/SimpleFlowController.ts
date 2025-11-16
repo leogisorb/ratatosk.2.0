@@ -3,15 +3,53 @@
  * Basiert auf der bewährten alten Architektur, aber zentralisiert
  */
 
+// Named Constants für Magic Numbers
+const TTS_CONFIG = {
+  CHECK_INTERVAL_MS: 100,
+  PAUSE_BETWEEN_ITEMS_MS: 500,
+  RESTART_DELAY_MS: 200,
+  FALLBACK_TIMEOUT_MS: 100,
+  LOCK_POLL_INTERVAL_MS: 50
+} as const
+
+const AUTO_MODE_CONFIG = {
+  CYCLE_POST_TTS_DELAY_MS: 1000,
+  DEFAULT_INITIAL_DELAY_MS: 3000,
+  DEFAULT_CYCLE_DELAY_MS: 3000
+} as const
+
+const STORAGE_CONFIG = {
+  MUTE_STATE_KEY: 'ratatosk-tts-muted',
+  USER_INTERACTION_TIMEOUT_MS: 10000
+} as const
+
 export class SimpleFlowController {
-  private static instance: SimpleFlowController | null = null
+  // Singleton mit besserer Typsicherheit (Lazy Initialization ohne null)
+  private static instance: SimpleFlowController
+  
+  // Error-Map statt Switch-Case für TTS Errors
+  private readonly TTS_ERROR_MESSAGES: Record<string, string> = {
+    'not-allowed': 'TTS not allowed - user interaction required',
+    'canceled': 'TTS canceled by browser',
+    'interrupted': 'TTS interrupted',
+    'audio-busy': 'Audio system busy',
+    'audio-hardware': 'Audio hardware error',
+    'network': 'Network error',
+    'synthesis-unavailable': 'Synthesis unavailable',
+    'synthesis-failed': 'Synthesis failed',
+    'language-unavailable': 'Language unavailable',
+    'voice-unavailable': 'Voice unavailable',
+    'text-too-long': 'Text too long',
+    'invalid-argument': 'Invalid argument'
+  }
+  
   private speechSynthesis: SpeechSynthesis
   private currentUtterance: SpeechSynthesisUtterance | null = null
   private autoModeInterval: number | null = null
   private currentView: string | null = null
-  private currentItems: any[] = []
+  private currentItems: unknown[] = []
   private currentIndex: number = 0
-  private onCycleCallback: ((index: number, item: any) => void) | null = null
+  private onCycleCallback: ((index: number, item: unknown) => void) | null = null
   private isAutoModeActive: boolean = false
   private userInteracted: boolean = false
   private isSpeaking: boolean = false
@@ -21,6 +59,10 @@ export class SimpleFlowController {
   private ttsQueue: string[] = []
   private isProcessingQueue: boolean = false
   private ttsEndListeners: (() => void)[] = []
+  
+  // ✅ Async Queue statt Busy-Wait: Promise-basierte Queue
+  // Jeder neue TTS-Request wird an die Queue angehängt
+  private ttsQueuePromise: Promise<void> = Promise.resolve()
 
   private constructor() {
     this.speechSynthesis = window.speechSynthesis
@@ -30,10 +72,7 @@ export class SimpleFlowController {
   }
 
   public static getInstance(): SimpleFlowController {
-    if (!SimpleFlowController.instance) {
-      SimpleFlowController.instance = new SimpleFlowController()
-    }
-    return SimpleFlowController.instance
+    return this.instance ??= new SimpleFlowController()
   }
 
   /**
@@ -64,8 +103,8 @@ export class SimpleFlowController {
    * Startet Auto-Mode für den aktuellen View
    */
   public startAutoMode(
-    items: any[],
-    onCycle: (currentIndex: number, currentItem: any) => void,
+    items: unknown[],
+    onCycle: (currentIndex: number, currentItem: unknown) => void,
     initialDelay: number = 3000,
     cycleDelay: number = 3000
   ): boolean {
@@ -96,7 +135,7 @@ export class SimpleFlowController {
       if (this.isAutoModeActive) {
         this.executeCycle(cycleDelay)
       }
-    }, initialDelay)
+    }, initialDelay || AUTO_MODE_CONFIG.DEFAULT_INITIAL_DELAY_MS)
 
     return true
   }
@@ -204,6 +243,8 @@ export class SimpleFlowController {
 
   /**
    * TTS in Queue einreihen und verarbeiten
+   * ✅ Fix: Async Queue statt Busy-Wait (Promise-basiert)
+   * Verhindert Race Conditions durch sequentielle Promise-Kette
    */
   private async queueAndSpeak(text: string): Promise<void> {
     // Prüfe auf Duplikate in der Queue
@@ -216,56 +257,56 @@ export class SimpleFlowController {
     this.ttsQueue.push(text)
     console.log('SimpleFlowController: Added to TTS queue:', text, 'Queue length:', this.ttsQueue.length)
     
-    // Starte Queue-Verarbeitung, falls nicht bereits aktiv
-    if (!this.isProcessingQueue) {
-      this.processQueue()
-    }
-  }
-
-  /**
-   * TTS-Queue verarbeiten
-   */
-  private async processQueue(): Promise<void> {
-    if (this.isProcessingQueue || this.ttsQueue.length === 0) {
-      return
-    }
-
-    this.isProcessingQueue = true
-    console.log('SimpleFlowController: Processing TTS queue, length:', this.ttsQueue.length)
-
-    while (this.ttsQueue.length > 0) {
-      const text = this.ttsQueue.shift()!
-      console.log('SimpleFlowController: Processing queue item:', text)
-      
-      await this.performSpeak(text)
-      
-      // Warte bis TTS fertig ist
-      while (this.isSpeaking) {
-        await new Promise(resolve => setTimeout(resolve, 100))
+    // ✅ Async Queue: Jeder neue Request wird an die Promise-Kette angehängt
+    // Dies verhindert Race Conditions, da alle Requests sequentiell verarbeitet werden
+    this.ttsQueuePromise = this.ttsQueuePromise.then(async () => {
+      // Verarbeite alle Items in der Queue sequentiell
+      while (this.ttsQueue.length > 0) {
+        // Warte bis vorherige TTS fertig ist
+        while (this.isSpeaking) {
+          await new Promise(resolve => setTimeout(resolve, TTS_CONFIG.CHECK_INTERVAL_MS))
+        }
+        
+        // Verarbeite nächsten Queue-Item
+        const text = this.ttsQueue.shift()!
+        console.log('SimpleFlowController: Processing queue item:', text)
+        await this.performSpeak(text)
+        
+        // Pause zwischen TTS-Items um Browser-Abbrüche zu vermeiden
+        if (this.ttsQueue.length > 0) {
+          await new Promise(resolve => setTimeout(resolve, TTS_CONFIG.PAUSE_BETWEEN_ITEMS_MS))
+        }
       }
       
-      // Pause zwischen TTS-Items um Browser-Abbrüche zu vermeiden
-      await new Promise(resolve => setTimeout(resolve, 500))
-    }
-
-    this.isProcessingQueue = false
-    console.log('SimpleFlowController: TTS queue processing completed')
+      // Triggere TTS-Ende-Listener wenn Queue komplett abgearbeitet ist
+      if (this.ttsQueue.length === 0 && this.ttsEndListeners.length > 0) {
+        this.triggerTTSEndListeners()
+      }
+    }).catch(error => {
+      console.error('SimpleFlowController: Error in TTS queue:', error)
+    })
     
-    // Triggere TTS-Ende-Listener wenn Queue komplett abgearbeitet ist
-    if (this.ttsQueue.length === 0 && this.ttsEndListeners.length > 0) {
-      this.triggerTTSEndListeners()
-    }
+    return this.ttsQueuePromise
   }
 
   /**
-   * TTS ausführen
+   * @deprecated TTS-Queue wird jetzt über async Promise-Kette verwaltet
+   * Diese Methode wird nicht mehr verwendet, bleibt für Rückwärtskompatibilität
+   */
+  private async processQueue(): Promise<void> {
+    // Wird nicht mehr verwendet - Queue wird über queueAndSpeak() verwaltet
+    console.warn('SimpleFlowController: processQueue() is deprecated, queue is managed via async Promise chain')
+  }
+
+  /**
+   * TTS ausführen (Promise-basiert statt Callbacks)
    */
   private async performSpeak(text: string): Promise<void> {
     console.log('SimpleFlowController: Speaking:', text)
     
     // Stoppe nur die aktuelle TTS, aber leere nicht die Queue
     this.stopTTSOnly()
-    await new Promise(resolve => setTimeout(resolve, 200)) // 200ms Pause
+    await new Promise(resolve => setTimeout(resolve, TTS_CONFIG.RESTART_DELAY_MS))
     
     // Prüfe ob Speech Synthesis verfügbar ist
     if (!this.speechSynthesis) {
@@ -303,101 +344,85 @@ export class SimpleFlowController {
       }
     }
 
-    // Event-Handler
-    this.currentUtterance.onend = () => {
-      console.log('SimpleFlowController: Finished speaking:', text)
-      this.isSpeaking = false
-      
-      // Wenn Auto-Mode wartet, starte nächsten Zyklus nach 1 Sekunde
-      if (this.pendingCycle && this.isAutoModeActive) {
-        this.pendingCycle = false
-        console.log('SimpleFlowController: TTS finished, starting next cycle in 1 second...')
-        setTimeout(() => {
-          if (this.isAutoModeActive) {
-            // Verwende den aktuellen cycleDelay
-            this.autoModeInterval = window.setTimeout(() => {
-              this.executeCycle(this.currentCycleDelay)
-            }, 1000) // 1 Sekunde Pause nach TTS-Ende
-          }
-        }, 1000)
+    // Promise-basiertes TTS statt Callbacks
+    return new Promise((resolve, reject) => {
+      if (!this.currentUtterance) {
+        reject(new Error('Utterance not created'))
+        return
       }
-      
-      // Prüfe ob TTS-Queue leer ist und triggere Listener
-      if (this.ttsQueue.length === 0 && this.ttsEndListeners.length > 0) {
-        this.triggerTTSEndListeners()
-      }
-    }
 
-    this.currentUtterance.onerror = (event) => {
-      console.warn('SimpleFlowController: TTS error:', event.error, 'for text:', text)
-      this.isSpeaking = false
-      
-      // Behandle verschiedene Fehlertypen
-      switch (event.error) {
-        case 'not-allowed':
-          console.warn('SimpleFlowController: TTS not allowed - user interaction required')
-          // Versuche User-Interaktion zu triggern
-          this.requestUserInteraction()
-          break
-        case 'canceled':
-          console.warn('SimpleFlowController: TTS canceled by browser')
-          break
-        case 'interrupted':
-          console.warn('SimpleFlowController: TTS interrupted')
-          break
-        case 'audio-busy':
-          console.warn('SimpleFlowController: Audio system busy')
-          break
-        case 'audio-hardware':
-          console.warn('SimpleFlowController: Audio hardware error')
-          break
-        case 'network':
-          console.warn('SimpleFlowController: Network error')
-          break
-        case 'synthesis-unavailable':
-          console.warn('SimpleFlowController: Synthesis unavailable')
-          break
-        case 'synthesis-failed':
-          console.warn('SimpleFlowController: Synthesis failed')
-          break
-        case 'language-unavailable':
-          console.warn('SimpleFlowController: Language unavailable')
-          break
-        case 'voice-unavailable':
-          console.warn('SimpleFlowController: Voice unavailable')
-          break
-        case 'text-too-long':
-          console.warn('SimpleFlowController: Text too long')
-          break
-        case 'invalid-argument':
-          console.warn('SimpleFlowController: Invalid argument')
-          break
-        default:
-          console.warn('SimpleFlowController: Unknown TTS error:', event.error)
-      }
-      
-      // Auch bei Fehlern prüfen ob TTS-Queue leer ist und Listener triggern
-      if (this.ttsQueue.length === 0 && this.ttsEndListeners.length > 0) {
-        this.triggerTTSEndListeners()
-      }
-    }
-
-    // Starte TTS mit Fehlerbehandlung
-    try {
-      this.speechSynthesis.speak(this.currentUtterance)
-      
-      // Fallback: Wenn TTS nach 100ms nicht startet, markiere als fehlgeschlagen
-      setTimeout(() => {
-        if (this.isSpeaking && !this.speechSynthesis.speaking) {
-          console.warn('SimpleFlowController: TTS failed to start, marking as failed')
-          this.isSpeaking = false
+      // Event-Handler
+      this.currentUtterance.onend = () => {
+        console.log('SimpleFlowController: Finished speaking:', text)
+        this.isSpeaking = false
+        
+        // ✅ Fix: Race Condition bei TTS + Auto-Mode
+        // Atomare Prüfung und Update von pendingCycle
+        const wasPending = this.pendingCycle
+        const isAutoModeStillActive = this.isAutoModeActive
+        
+        if (wasPending && isAutoModeStillActive) {
+          // Atomare Update: Setze pendingCycle auf false
+          this.pendingCycle = false
+          console.log('SimpleFlowController: TTS finished, starting next cycle...')
+          
+          // Starte nächsten Zyklus nach Delay
+          setTimeout(() => {
+            // Prüfe nochmal ob Auto-Mode noch aktiv (Race Condition Prevention)
+            if (this.isAutoModeActive) {
+              // Verwende den aktuellen cycleDelay
+              this.autoModeInterval = window.setTimeout(() => {
+                this.executeCycle(this.currentCycleDelay)
+              }, AUTO_MODE_CONFIG.CYCLE_POST_TTS_DELAY_MS)
+            }
+          }, AUTO_MODE_CONFIG.CYCLE_POST_TTS_DELAY_MS)
         }
-      }, 100)
-      
-    } catch (error) {
-      console.warn('SimpleFlowController: TTS blocked by browser:', error)
-      this.isSpeaking = false
-    }
+        
+        // Prüfe ob TTS-Queue leer ist und triggere Listener
+        if (this.ttsQueue.length === 0 && this.ttsEndListeners.length > 0) {
+          this.triggerTTSEndListeners()
+        }
+        
+        resolve()
+      }
+
+      this.currentUtterance.onerror = (event) => {
+        const errorMessage = this.TTS_ERROR_MESSAGES[event.error] || `Unknown TTS error: ${event.error}`
+        console.warn('SimpleFlowController:', errorMessage, 'for text:', text)
+        this.isSpeaking = false
+        
+        // Spezielle Behandlung für not-allowed
+        if (event.error === 'not-allowed') {
+          this.requestUserInteraction()
+        }
+        
+        // Auch bei Fehlern prüfen ob TTS-Queue leer ist und Listener triggern
+        if (this.ttsQueue.length === 0 && this.ttsEndListeners.length > 0) {
+          this.triggerTTSEndListeners()
+        }
+        
+        reject(new Error(errorMessage))
+      }
+
+      // Starte TTS mit Fehlerbehandlung
+      try {
+        this.speechSynthesis.speak(this.currentUtterance)
+        
+        // Fallback: Wenn TTS nach Timeout nicht startet, markiere als fehlgeschlagen
+        setTimeout(() => {
+          if (this.isSpeaking && !this.speechSynthesis.speaking) {
+            console.warn('SimpleFlowController: TTS failed to start, marking as failed')
+            this.isSpeaking = false
+            reject(new Error('TTS failed to start'))
+          }
+        }, TTS_CONFIG.FALLBACK_TIMEOUT_MS)
+        
+      } catch (error) {
+        console.warn('SimpleFlowController: TTS blocked by browser:', error)
+        this.isSpeaking = false
+        reject(error instanceof Error ? error : new Error('TTS blocked by browser'))
+      }
+    })
   }
 
   /**
@@ -414,7 +439,8 @@ export class SimpleFlowController {
     
     // Leere auch die TTS-Queue nur bei explizitem Stoppen
     this.ttsQueue = []
-    this.isProcessingQueue = false
+    // Reset Promise-Kette für neue Queue
+    this.ttsQueuePromise = Promise.resolve()
     console.log('SimpleFlowController: TTS queue cleared (explicit stop)')
     
     // Entferne alle Listener bei explizitem Stoppen
@@ -468,21 +494,22 @@ export class SimpleFlowController {
     document.addEventListener('keydown', enableTTS, { once: true })
     window.addEventListener('faceBlinkDetected', enableTTS, { once: true })
     
-    // Fallback: Entferne Event Listener nach 10 Sekunden
+    // Fallback: Entferne Event Listener nach Timeout
     setTimeout(() => {
       document.removeEventListener('click', enableTTS)
       document.removeEventListener('touchstart', enableTTS)
       document.removeEventListener('keydown', enableTTS)
       window.removeEventListener('faceBlinkDetected', enableTTS)
-    }, 10000)
+    }, STORAGE_CONFIG.USER_INTERACTION_TIMEOUT_MS)
   }
 
   /**
    * Lädt Mute-State aus localStorage
+   * Mit besserer Fehlerbehandlung für Safari Private Mode etc.
    */
   private loadMuteState(): void {
     try {
-      const savedMuted = localStorage.getItem('ratatosk-tts-muted')
+      const savedMuted = localStorage.getItem(STORAGE_CONFIG.MUTE_STATE_KEY)
       if (savedMuted !== null) {
         this.isTTSMuted = savedMuted === 'true'
         console.log('SimpleFlowController: Mute state loaded from localStorage:', this.isTTSMuted)
@@ -492,20 +519,31 @@ export class SimpleFlowController {
         console.log('SimpleFlowController: No saved mute state, using default (not muted)')
       }
     } catch (error) {
-      console.error('SimpleFlowController: Failed to load mute state from localStorage:', error)
+      // Safari Private Mode wirft DOMException
+      if (error instanceof DOMException && error.name === 'QuotaExceededError') {
+        console.warn('SimpleFlowController: localStorage quota exceeded')
+      } else {
+        console.error('SimpleFlowController: Failed to load mute state:', error)
+      }
       this.isTTSMuted = false
     }
   }
 
   /**
    * Speichert Mute-State in localStorage
+   * Mit besserer Fehlerbehandlung für Safari Private Mode etc.
    */
   private saveMuteState(): void {
     try {
-      localStorage.setItem('ratatosk-tts-muted', String(this.isTTSMuted))
+      localStorage.setItem(STORAGE_CONFIG.MUTE_STATE_KEY, String(this.isTTSMuted))
       console.log('SimpleFlowController: Mute state saved to localStorage:', this.isTTSMuted)
     } catch (error) {
-      console.error('SimpleFlowController: Failed to save mute state to localStorage:', error)
+      // Safari Private Mode wirft DOMException
+      if (error instanceof DOMException && error.name === 'QuotaExceededError') {
+        console.warn('SimpleFlowController: localStorage quota exceeded')
+      } else {
+        console.error('SimpleFlowController: Failed to save mute state:', error)
+      }
     }
   }
 

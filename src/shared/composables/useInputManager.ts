@@ -15,7 +15,7 @@
  * ```
  */
 
-import { ref, onUnmounted } from 'vue'
+import { ref, computed, readonly, onUnmounted } from 'vue'
 import { InputManager, type InputType, type InputEvent, type InputManagerConfig } from '../../core/application/InputManager'
 
 export function useInputManager(config: InputManagerConfig) {
@@ -40,6 +40,10 @@ export function useInputManager(config: InputManagerConfig) {
     return manager.getStatus()
   }
 
+  // Reaktive Status
+  const status = computed(() => manager.getStatus())
+  const enabledInputs = computed(() => manager.getStatus().enabledInputs)
+
   // ✅ Auto-cleanup beim Unmount
   onUnmounted(() => {
     stop()
@@ -50,7 +54,12 @@ export function useInputManager(config: InputManagerConfig) {
     stop,
     enableInput,
     getStatus,
-    isActive
+    isActive,
+    // Reaktive Status
+    status,
+    enabledInputs,
+    // Manager für advanced use cases (read-only)
+    manager: readonly(manager) as Readonly<InputManager>
   }
 }
 

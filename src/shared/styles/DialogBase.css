@@ -8,8 +8,8 @@
 
 /* === DIALOG CONTAINER === */
 .pain-dialog,
-.ich-dialog,
-.umgebung-dialog,
+.self-dialog,
+.environment-dialog,
 .settings-dialog {
   height: 100vh;
   max-height: 100vh;
@@ -26,8 +26,8 @@
 
 /* === MAIN TITLE (Dialog-spezifisch) === */
 .pain-dialog .main-title,
-.ich-dialog .main-title,
-.umgebung-dialog .main-title,
+.self-dialog .main-title,
+.environment-dialog .main-title,
 .settings-dialog .main-title {
   /* 30% größere Schrift */
   font-size: clamp(1.95rem, 5.2vw, 3.25rem); /* 30% größer als BaseLayout */
@@ -65,8 +65,8 @@
 
 /* Dark Mode Anpassung für main-title */
 .dark .pain-dialog .main-title,
-.dark .ich-dialog .main-title,
-.dark .umgebung-dialog .main-title,
+.dark .self-dialog .main-title,
+.dark .environment-dialog .main-title,
 .dark .settings-dialog .main-title {
   background: linear-gradient(
     to bottom,
@@ -82,8 +82,8 @@
 /* Mobile: Mehr Padding und stärkerer Fade */
 @media (max-width: 1024px) and (orientation: portrait) {
   .pain-dialog .main-title,
-  .ich-dialog .main-title,
-  .umgebung-dialog .main-title,
+  .self-dialog .main-title,
+  .environment-dialog .main-title,
   .settings-dialog .main-title {
     font-size: clamp(1.95rem, 7.8vw, 3.25rem); /* 30% größer */
     padding: var(--space-lg) var(--space-md);
@@ -100,8 +100,8 @@
   }
   
   .dark .pain-dialog .main-title,
-  .dark .ich-dialog .main-title,
-  .dark .umgebung-dialog .main-title,
+  .dark .self-dialog .main-title,
+  .dark .environment-dialog .main-title,
   .dark .settings-dialog .main-title {
     background: linear-gradient(
       to bottom,

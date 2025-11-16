@@ -1,0 +1,619 @@
+/* CommunicationView Styles */
+
+/* Spezifische UnterhaltenView Styles - Vertikales Layout */
+.main-content {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 2rem;
+}
+
+/* Satz-für-Satz Anzeige Styles */
+.sentence-display-container {
+  width: 100%;
+  max-width: 100%;
+  height: 7.5rem;
+  overflow: hidden;
+  background-color: transparent;
+  border: none;
+  margin: 0 auto 1.5rem auto;
+  padding: 0 1rem;
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.sentence-display {
+  width: 100%;
+  height: 100%;
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.sentence-item {
+  position: absolute;
+  width: 100%;
+  text-align: center;
+  font-size: 3rem;
+  color: #1f2937; /* Dunkle Farbe für Light Mode */
+  font-family: 'Source Code Pro', monospace;
+  font-weight: 600;
+  opacity: 0;
+  transform: translateY(20px);
+  transition: all 0.5s ease-in-out;
+  padding: 0 1rem;
+  line-height: 1.4;
+}
+
+.sentence-item.sentence-active {
+  opacity: 1;
+  transform: translateY(0);
+  color: #1f2937; /* Dunkle Farbe für Light Mode */
+}
+
+.sentence-display.sentence-paused .sentence-item {
+  transition: none;
+}
+
+.text-display-container {
+  width: 100%;
+  max-width: 100%;
+  margin: 0 auto;
+  padding: 0 1rem;
+}
+
+.text-display-box {
+  background-color: #f3f4f6;
+  border-radius: 0.5rem;
+  padding: 1.5rem;
+  border: 2px solid #d1d5db;
+  min-height: 104px !important;
+  height: 104px !important;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.text-display-text {
+  font-size: 2.15625rem;
+  color: #1f2937;
+  font-family: 'Source Code Pro', monospace;
+  font-weight: bold;
+  margin: 0;
+  word-break: break-word;
+  text-align: center;
+}
+
+/* Zusätzliche spezifische Regel für Textfeld-Höhe */
+.main-content .text-display-container .text-display-box {
+  min-height: 104px !important;
+  height: 104px !important;
+  background-color: #f3f4f6 !important; /* Normale Farbe zurück */
+}
+
+.instructions-section {
+  text-align: center;
+  width: 100%;
+  max-width: 600px;
+}
+
+.instructions-text {
+  font-size: 1.25rem;
+  color: #4b5563;
+  font-family: 'Source Code Pro', monospace;
+  font-weight: 300;
+  margin: 0;
+}
+
+.spacer {
+  height: 2rem;
+  width: 100%;
+}
+
+.keyboard-container {
+  margin: 0;
+  width: 100%;
+  max-width: 100%;
+  margin-left: auto;
+  margin-right: auto;
+  padding: 0 1rem;
+}
+
+.keyboard-vertical {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  align-items: center;
+  width: 100%;
+}
+
+.keyboard-row {
+  display: flex;
+  justify-content: center;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+  width: 100%;
+  max-width: 100%;
+  overflow-x: auto;
+  /* Rahmen-Abstand immer reservieren, um Zucken zu vermeiden */
+  border: 3px solid transparent;
+  border-radius: 8px;
+  box-sizing: border-box;
+}
+
+.keyboard-key {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.3s ease;
+  cursor: pointer;
+  border: 2px solid #d1d5db;
+  font-family: 'Source Code Pro', monospace;
+  font-weight: bold;
+  box-sizing: border-box;
+  flex: 1;
+  min-width: 0;
+  min-height: 45px;
+  flex-shrink: 1;
+  flex-basis: 0;
+  width: 100%;
+}
+
+/* Alle Tasten gleich groß - keine speziellen Regeln für die letzte Zeile */
+
+
+.keyboard-key-active {
+  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+}
+
+.keyboard-key-inactive {
+  background-color: white;
+  color: #374151;
+}
+
+.keyboard-key-text {
+  font-family: 'Source Code Pro', monospace;
+  font-weight: bold;
+}
+
+
+.instructions-box {
+  background-color: transparent;
+  color: #374151;
+  padding: 1rem;
+  max-width: 600px;
+  width: 100%;
+  text-align: center;
+}
+
+.instructions-title {
+  font-size: 1.25rem;
+  font-weight: bold;
+  margin: 0 0 1rem 0;
+  color: #1f2937;
+}
+
+.instructions-text {
+  margin: 0;
+  line-height: 1.6;
+  color: #374151;
+  font-size: 1rem;
+}
+
+.instructions-text strong {
+  font-weight: bold;
+  color: #1f2937;
+}
+
+/* Custom animations */
+@keyframes pulse {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.5;
+  }
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .main-content {
+    padding: 1rem;
+  }
+  
+  .sentence-display-container {
+    height: 5.625rem;
+    margin: 0 auto 1rem auto;
+    padding: 0 0.5rem;
+  }
+  
+  .sentence-item {
+    font-size: 2.4rem;
+    color: #1f2937; /* Dunkle Farbe für Light Mode */
+  }
+  
+  .letter-display {
+    font-size: 4rem;
+  }
+  
+  .keyboard-row {
+    gap: 0.5rem;
+  }
+  
+  .keyboard-key {
+    min-width: 40px;
+    min-height: 40px;
+  }
+  
+  /* Tastatur responsive - Tasten proportional verkleinern */
+  .keyboard-key {
+    flex: 1 !important;
+    min-width: 50px !important;
+    min-height: 35px !important;
+    max-width: 80px !important;
+    width: auto !important;
+    height: auto !important;
+  }
+  
+  .keyboard-key-text {
+    font-size: 12px !important;
+  }
+  
+  .keyboard-container {
+    max-width: 100%;
+    overflow-x: auto;
+    padding: 0 0.5rem;
+  }
+  
+  .text-display-container {
+    max-width: 100%;
+    padding: 0 0.5rem;
+  }
+  
+  .keyboard-vertical {
+    gap: 0.25rem;
+  }
+  
+  .keyboard-row {
+    gap: 0.25rem;
+    flex-wrap: wrap;
+    justify-content: center;
+  }
+  
+}
+
+/* iPhone 14 und ähnliche Geräte (430px) */
+@media (max-width: 430px) {
+  .sentence-display-container {
+    height: 5rem;
+    margin: 0 auto 0.75rem auto;
+    padding: 0 1rem;
+  }
+  
+  .sentence-item {
+    font-size: 2rem;
+    color: #1f2937; /* Dunkle Farbe für Light Mode */
+  }
+  
+  .keyboard-key {
+    flex: 1 !important;
+    min-width: 70px !important;
+    min-height: 55px !important;
+    max-width: 120px !important;
+    width: auto !important;
+    height: auto !important;
+  }
+  
+  .keyboard-key-text {
+    font-size: 16px !important;
+  }
+  
+  .keyboard-row {
+    gap: 0.75rem;
+    flex-wrap: wrap;
+    justify-content: center;
+  }
+  
+  .keyboard-container {
+    padding: 0 1rem;
+  }
+  
+  .text-display-container {
+    padding: 0 1rem;
+  }
+  
+}
+
+@media (max-width: 320px) {
+  .sentence-display-container {
+    height: 4.375rem;
+    margin: 0 auto 0.5rem auto;
+    padding: 0 0.125rem;
+  }
+  
+  .sentence-item {
+    font-size: 1.8rem;
+    color: #1f2937; /* Dunkle Farbe für Light Mode */
+  }
+  
+  .keyboard-key {
+    flex: 1 !important;
+    min-width: 25px !important;
+    min-height: 20px !important;
+    max-width: 40px !important;
+    width: auto !important;
+    height: auto !important;
+  }
+  
+  .keyboard-key-text {
+    font-size: 8px !important;
+  }
+  
+  .keyboard-row {
+    gap: 0.0625rem;
+    flex-wrap: wrap;
+    justify-content: center;
+  }
+  
+  .keyboard-container {
+    padding: 0 0.125rem;
+  }
+  
+  .text-display-container {
+    padding: 0 0.125rem;
+  }
+}
+
+/* Virtuelle Tastatur State-Machine CSS-Klassen */
+
+/* TTS-Indikator */
+.tts-indicator {
+  position: absolute;
+  top: 1rem;
+  right: 1rem;
+  font-size: 1.5rem;
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+
+.tts-indicator.tts-active {
+  opacity: 1;
+  animation: tts-pulse 1s infinite;
+}
+
+@keyframes tts-pulse {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.1); }
+}
+
+/* Zeilen-Hervorhebung - türkise Farbe #00B098 */
+/* Rahmen-Abstand ist bereits in .keyboard-row reserviert, hier nur Farbe ändern */
+.keyboard-row.row-active {
+  border-color: #00B098; /* Türkiser Rahmen #00B098 - nur Farbe ändern, nicht Dicke */
+  background-color: rgba(0, 176, 152, 0.1); /* Türkise Hintergrundfarbe mit Transparenz */
+  box-shadow: 0 4px 12px rgba(0, 176, 152, 0.3); /* Türkiser Glow-Effekt */
+  transition: all 0.3s ease;
+}
+
+.keyboard-row.row-selected {
+  border-color: #10b981; /* Grün für ausgewählte Zeile - nur Farbe ändern */
+  background-color: rgba(16, 185, 129, 0.1);
+  transition: all 0.3s ease;
+}
+
+.keyboard-row.row-inactive {
+  border-color: transparent; /* Transparenter Rahmen - Abstand bleibt erhalten */
+  transition: all 0.3s ease;
+}
+
+/* Buchstaben-Hervorhebung - türkise Farbe #00B098 */
+.keyboard-key.letter-active {
+  border: 3px solid #f97316 !important; /* Orange Rahmen */
+  background-color: #00B098 !important; /* Türkise Farbe #00B098 */
+  color: #ffffff !important; /* Weiße Schrift für besseren Kontrast */
+  box-shadow: 0 4px 12px rgba(0, 176, 152, 0.3);
+  transition: all 0.3s ease;
+}
+
+.keyboard-key.letter-inactive {
+  transition: all 0.3s ease;
+}
+
+/* Verbesserte Hervorhebung für aktive Elemente */
+.keyboard-key.keyboard-key-active {
+  border: 3px solid #f97316 !important;
+  background-color: rgba(249, 115, 22, 0.2) !important;
+  box-shadow: 0 4px 12px rgba(249, 115, 22, 0.3);
+  transition: all 0.3s ease;
+}
+
+.keyboard-key.keyboard-key-inactive {
+  transition: all 0.3s ease;
+}
+
+/* Textfeld-Container für TTS-Indikator */
+.text-display-container {
+  position: relative;
+}
+
+/* Dark Mode Styles für Begrüßungstext */
+.dark .sentence-item {
+  color: #f9fafb; /* Helle Farbe für Dark Mode */
+}
+
+.dark .sentence-item.sentence-active {
+  color: #f9fafb; /* Helle Farbe für Dark Mode */
+}
+
+/* Dark Mode Styles für Tasten */
+.dark .keyboard-key {
+  background-color: #374151 !important; /* Dunkler Hintergrund */
+  border-color: #4b5563 !important; /* Dunkler Border */
+  color: #f9fafb !important; /* Weiße Schrift */
+}
+
+.dark .keyboard-key:hover {
+  background-color: #4b5563 !important; /* Hellerer Hintergrund beim Hover */
+  border-color: #6b7280 !important; /* Hellerer Border beim Hover */
+  color: #ffffff !important; /* Weiße Schrift */
+}
+
+.dark .keyboard-key:active {
+  background-color: #1f2937 !important; /* Noch dunklerer Hintergrund beim Klicken */
+  border-color: #374151 !important; /* Dunklerer Border beim Klicken */
+  color: #ffffff !important; /* Weiße Schrift */
+}
+
+.dark .keyboard-key.keyboard-key-inactive {
+  background-color: #374151 !important; /* Dunkler Hintergrund */
+  border-color: #4b5563 !important; /* Dunkler Border */
+  color: #f9fafb !important; /* Weiße Schrift */
+}
+
+.dark .keyboard-key.keyboard-key-active {
+  background-color: #00B098 !important; /* Türkise Farbe für aktive Tasten */
+  border-color: #00B098 !important; /* Türkiser Border */
+  color: #ffffff !important; /* Weiße Schrift */
+}
+
+/* Dark Mode Styles für letter-active (aktive Buchstaben-Taste) */
+.dark .keyboard-key.letter-active {
+  background-color: #00B098 !important; /* Türkise Farbe #00B098 */
+  border-color: #00B098 !important; /* Türkiser Border */
+  color: #ffffff !important; /* Weiße Schrift für besseren Kontrast */
+  box-shadow: 0 4px 12px rgba(0, 176, 152, 0.5); /* Stärkerer Glow-Effekt für Dark Mode */
+  transition: all 0.3s ease;
+}
+
+/* Dark Mode Styles für row-active (aktive Zeile im Zeilenauswahl-Modus) */
+/* Rahmen-Abstand ist bereits in .keyboard-row reserviert, hier nur Farbe ändern */
+.dark .keyboard-row.row-active {
+  border-color: #00B098 !important; /* Türkiser Rahmen #00B098 - nur Farbe ändern */
+  background-color: rgba(0, 176, 152, 0.3) !important; /* Türkise Hintergrundfarbe mit mehr Transparenz im Dark Mode */
+  box-shadow: 0 4px 12px rgba(0, 176, 152, 0.5) !important; /* Stärkerer türkiser Glow-Effekt für Dark Mode */
+  transition: all 0.3s ease !important;
+}
+
+/* Responsive Dark Mode Styles */
+@media (max-width: 768px) {
+  .dark .sentence-item {
+    color: #f9fafb; /* Helle Farbe für Dark Mode */
+  }
+}
+
+@media (max-width: 430px) {
+  .dark .sentence-item {
+    color: #f9fafb; /* Helle Farbe für Dark Mode */
+  }
+}
+
+@media (max-width: 320px) {
+  .dark .sentence-item {
+    color: #f9fafb; /* Helle Farbe für Dark Mode */
+  }
+}
+
+/* ===== ENHANCED KEYBOARD STYLING ===== */
+
+/* Enhanced keyboard key styling */
+.keyboard-key {
+  background-color: #ffffff;
+  border: 2px solid #d1d5db;
+  color: #374151;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.15s ease;
+  user-select: none;
+  position: relative;
+  overflow: hidden;
+}
+
+.keyboard-key:hover {
+  background-color: #f9fafb;
+  border-color: #9ca3af;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+.keyboard-key:active {
+  transform: translateY(0);
+  background-color: #e5e7eb;
+  border-color: #6b7280;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.keyboard-key-text {
+  font-weight: 600;
+  text-align: center;
+  line-height: 1;
+}
+
+/* Press animation effect */
+.keyboard-key::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: radial-gradient(circle, rgba(59, 130, 246, 0.1) 0%, transparent 70%);
+  opacity: 0;
+  transition: opacity 0.2s ease;
+  pointer-events: none;
+}
+
+.keyboard-key:active::before {
+  opacity: 1;
+}
+
+/* Smooth scrolling for keyboard container */
+.keyboard-container {
+  scroll-behavior: smooth;
+  overflow-x: auto;
+  padding: 0 1rem;
+}
+
+/* Focus styles for accessibility */
+.keyboard-key:focus {
+  outline: 2px solid #3b82f6;
+  outline-offset: 2px;
+}
+
+/* Status text improvements */
+.sentence-item {
+  transition: all 0.3s ease;
+}
+
+.sentence-item.sentence-active {
+  /* Animation entfernt - Text soll nicht blinken */
+}
+
+@keyframes pulse {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.7;
+  }
+}
+
+/* ===== Buchstabenanzeige oben ===== */
+.sentence-item.letter-display {
+  color: #f97316; /* Orange */
+  font-size: 2.5em; /* doppelt so groß wie normaler Text */
+  font-weight: bold;
+  text-align: center;
+  transition: all 0.3s ease;
+  text-shadow: 2px 2px 4px rgba(249, 115, 22, 0.3); /* Orange Schatten */
+}
+
+/* Sanfte Übergänge für alle sentence-items */
+.sentence-item {
+  transition: all 0.3s ease;
+}

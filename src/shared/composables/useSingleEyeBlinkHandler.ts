@@ -1,4 +1,12 @@
-import { onMounted, onUnmounted } from 'vue'
+import { ref, readonly, onMounted, onUnmounted } from 'vue'
+
+/**
+ * Typed Event für einseitiges Blinzeln
+ */
+export interface SingleEyeBlinkEventDetail {
+  eye: 'left' | 'right'
+  timestamp: number
+}
 
 /**
  * useSingleEyeBlinkHandler
@@ -9,12 +17,11 @@ import { onMounted, onUnmounted } from 'vue'
  * Verwendungsbeispiel:
  * ```ts
  * const handler = useSingleEyeBlinkHandler({
- *   onLeftEyeBlink: () => {
- *     console.log('Linkes Auge geblinzelt - Shortcut 1')
- *   },
- *   onRightEyeBlink: () => {
- *     console.log('Rechtes Auge geblinzelt - Shortcut 2')
- *   }
+ *   onLeftEyeBlink: [
+ *     () => console.log('Shortcut 1'),
+ *     () => console.log('Shortcut 2')
+ *   ],
+ *   onRightEyeBlink: () => console.log('Shortcut 3')
  * })
  * 
  * handler.start()
@@ -24,14 +31,14 @@ import { onMounted, onUnmounted } from 'vue'
 
 export interface SingleEyeBlinkHandlerConfig {
   /**
-   * Callback für linkes Auge Blinzeln
+   * Callbacks für linkes Auge Blinzeln (Array für mehrere Callbacks)
    */
-  onLeftEyeBlink?: () => void
+  onLeftEyeBlink?: (() => void) | (() => void)[]
   
   /**
-   * Callback für rechtes Auge Blinzeln
+   * Callbacks für rechtes Auge Blinzeln (Array für mehrere Callbacks)
    */
-  onRightEyeBlink?: () => void
+  onRightEyeBlink?: (() => void) | (() => void)[]
   
   /**
    * Cooldown zwischen Shortcuts (in ms)
@@ -47,19 +54,24 @@ export function useSingleEyeBlinkHandler(config: SingleEyeBlinkHandlerConfig = {
     cooldown = 500 // Standard: 500ms Cooldown
   } = config
 
-  let isActive = false
-  let lastShortcutTime = 0
+  // Refs statt let für Reaktivität
+  const isActive = ref(false)
+  const lastShortcutTime = ref(0)
   let eventListener: EventListener | null = null
+  
+  // Normalisiere Callbacks zu Arrays
+  const leftCallbacks = Array.isArray(onLeftEyeBlink) ? onLeftEyeBlink : (onLeftEyeBlink ? [onLeftEyeBlink] : [])
+  const rightCallbacks = Array.isArray(onRightEyeBlink) ? onRightEyeBlink : (onRightEyeBlink ? [onRightEyeBlink] : [])
 
   /**
    * Prüft ob Cooldown abgelaufen ist
    */
   function checkCooldown(): boolean {
     const now = Date.now()
-    if (now - lastShortcutTime < cooldown) {
+    if (now - lastShortcutTime.value < cooldown) {
       return false
     }
-    lastShortcutTime = now
+    lastShortcutTime.value = now
     return true
   }
 
@@ -67,22 +79,34 @@ export function useSingleEyeBlinkHandler(config: SingleEyeBlinkHandlerConfig = {
    * Event-Handler für einseitiges Blinzeln
    */
   function handleSingleEyeBlink(event: Event) {
-    if (!isActive) return
+    if (!isActive.value) return
     
-    const customEvent = event as CustomEvent
-    const { eye } = customEvent.detail || {}
+    const customEvent = event as CustomEvent<SingleEyeBlinkEventDetail>
+    const { eye, timestamp } = customEvent.detail || {}
     
     if (!checkCooldown()) {
       console.log('SingleEyeBlinkHandler: Cooldown aktiv, ignoriere Event')
       return
     }
 
-    if (eye === 'left' && onLeftEyeBlink) {
+    if (eye === 'left' && leftCallbacks.length > 0) {
       console.log('SingleEyeBlinkHandler: Linkes Auge Blinzeln erkannt - Shortcut ausgelöst')
-      onLeftEyeBlink()
-    } else if (eye === 'right' && onRightEyeBlink) {
+      leftCallbacks.forEach(callback => {
+        try {
+          callback()
+        } catch (error) {
+          console.error('SingleEyeBlinkHandler: Left eye blink callback error:', error)
+        }
+      })
+    } else if (eye === 'right' && rightCallbacks.length > 0) {
       console.log('SingleEyeBlinkHandler: Rechtes Auge Blinzeln erkannt - Shortcut ausgelöst')
-      onRightEyeBlink()
+      rightCallbacks.forEach(callback => {
+        try {
+          callback()
+        } catch (error) {
+          console.error('SingleEyeBlinkHandler: Right eye blink callback error:', error)
+        }
+      })
     }
   }
 
@@ -90,12 +114,12 @@ export function useSingleEyeBlinkHandler(config: SingleEyeBlinkHandlerConfig = {
    * Startet den Handler
    */
   function start() {
-    if (isActive) {
+    if (isActive.value) {
       console.warn('SingleEyeBlinkHandler: Bereits aktiv')
       return
     }
 
-    isActive = true
+    isActive.value = true
     console.log('✅ SingleEyeBlinkHandler: Gestartet')
 
     // Event-Listener registrieren
@@ -107,11 +131,11 @@ export function useSingleEyeBlinkHandler(config: SingleEyeBlinkHandlerConfig = {
    * Stoppt den Handler
    */
   function stop() {
-    if (!isActive) {
+    if (!isActive.value) {
       return
     }
 
-    isActive = false
+    isActive.value = false
     console.log('✅ SingleEyeBlinkHandler: Gestoppt')
 
     // Event-Listener entfernen
@@ -129,7 +153,7 @@ export function useSingleEyeBlinkHandler(config: SingleEyeBlinkHandlerConfig = {
   return {
     start,
     stop,
-    isActive: () => isActive
+    isActive: readonly(isActive) // Reaktiv und read-only
   }
 }
 

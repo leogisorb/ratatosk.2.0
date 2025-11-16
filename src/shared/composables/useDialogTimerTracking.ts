@@ -43,8 +43,18 @@ export function useDialogTimerTracking(config: DialogTimerTrackingConfig = {}) {
   // Flag: Verhindert, dass AutoMode gestartet wird, wenn der Dialog verlassen wurde
   const isActive = ref(true)
   
-  // Timer-Tracking: Alle Timer, die AutoMode starten könnten
-  const pendingTimers: number[] = []
+  // Timer-Tracking: Set statt Array für O(1) Operationen
+  const pendingTimers = new Set<number>()
+  
+  // Cleanup Registry für mehrere Cleanup-Funktionen
+  const cleanupFunctions: (() => void)[] = []
+  
+  /**
+   * Registriert eine Cleanup-Funktion
+   */
+  function registerCleanup(cleanup: () => void): void {
+    cleanupFunctions.push(cleanup)
+  }
   
   /**
    * Erstellt einen Timer mit automatischer Prüfung auf isActive
@@ -52,11 +62,8 @@ export function useDialogTimerTracking(config: DialogTimerTrackingConfig = {}) {
    */
   function scheduleTimer(callback: () => void, delay: number): number {
     const timerId = window.setTimeout(() => {
-      // Timer aus Liste entfernen
-      const index = pendingTimers.indexOf(timerId)
-      if (index > -1) {
-        pendingTimers.splice(index, 1)
-      }
+      // Timer aus Set entfernen
+      pendingTimers.delete(timerId)
       
       // Prüfe ob Dialog noch aktiv ist
       if (!isActive.value) {
@@ -68,10 +75,38 @@ export function useDialogTimerTracking(config: DialogTimerTrackingConfig = {}) {
       callback()
     }, delay)
     
-    // Timer zur Liste hinzufügen
-    pendingTimers.push(timerId)
+    // Timer zum Set hinzufügen
+    pendingTimers.add(timerId)
     
     return timerId
+  }
+  
+  /**
+   * Erstellt einen Timer mit Promise und async/await Support
+   */
+  function scheduleTimerAsync<T>(
+    callback: () => T | Promise<T>,
+    delay: number
+  ): Promise<T> {
+    return new Promise((resolve, reject) => {
+      const timerId = window.setTimeout(async () => {
+        pendingTimers.delete(timerId)
+        
+        if (!isActive.value) {
+          reject(new Error('Dialog inactive'))
+          return
+        }
+        
+        try {
+          const result = await callback()
+          resolve(result)
+        } catch (error) {
+          reject(error)
+        }
+      }, delay)
+      
+      pendingTimers.add(timerId)
+    })
   }
   
   /**
@@ -87,7 +122,17 @@ export function useDialogTimerTracking(config: DialogTimerTrackingConfig = {}) {
     pendingTimers.forEach((timerId) => {
       clearTimeout(timerId)
     })
-    pendingTimers.length = 0
+    pendingTimers.clear()
+    
+    // Führe alle registrierten Cleanup-Funktionen aus
+    cleanupFunctions.forEach(fn => {
+      try {
+        fn()
+      } catch (error) {
+        console.error(`${dialogName}: Cleanup error:`, error)
+      }
+    })
+    cleanupFunctions.length = 0
     
     // Callback aufrufen (z.B. um AutoMode zu stoppen)
     if (onCleanup) {
@@ -110,6 +155,8 @@ export function useDialogTimerTracking(config: DialogTimerTrackingConfig = {}) {
     
     // Functions
     scheduleTimer,
+    scheduleTimerAsync,
+    registerCleanup,
     cleanup,
     checkIsActive
   }

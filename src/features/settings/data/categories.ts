@@ -1,12 +1,12 @@
 // categories.ts - Settings Kategorien
 
-// Import icons
-import leuchtdauerIcon from '@/assets/leuchtdauer.svg'
-import blinzeldauerIcon from '@/assets/blinzeldauer.svg'
-import farbmodusIcon from '@/assets/farbmodus.svg'
-import kameraIcon from '@/assets/kamera.svg'
-import kamerapositionIcon from '@/assets/kameraposition.svg'
-import impressumIcon from '@/assets/impressum.svg'
+// Icons from public folder
+const leuchtdauerIcon = '/leuchtdauer.svg'
+const blinzeldauerIcon = '/blinzeldauer.svg'
+const farbmodusIcon = '/farbmodus.svg'
+const kameraIcon = '/kamera.svg'
+const kamerapositionIcon = '/kameraposition.svg'
+const impressumIcon = '/impressum.svg'
 
 export interface SettingsCategory {
   id: string

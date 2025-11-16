@@ -2,10 +2,10 @@ import { createRouter, createWebHistory } from 'vue-router'
 import StartView from '../features/navigation/views/StartView.vue'
 import HomeView from '../features/navigation/views/HomeView.vue'
 import WarningView from '../features/warning/views/WarningView.vue'
-import UnterhaltenView from '../features/communication/views/UnterhaltenView.vue'
+import CommunicationView from '../features/communication/views/CommunicationView.vue'
 import PainDialogView from '../features/pain-assessment/views/PainDialogView.vue'
-import IchDialogView from '../features/ich/views/IchDialogView.vue'
-import UmgebungDialogView from '../features/umgebung-dialog/views/UmgebungDialogView.vue'
+import SelfDialogView from '../features/self-dialog/views/SelfDialogView.vue'
+import EnvironmentDialogView from '../features/environment-dialog/views/EnvironmentDialogView.vue'
 import SettingsDialogView from '../features/settings/views/SettingsDialogView.vue'
 import { simpleFlowController } from '../core/application/SimpleFlowController'
 // Alte Settings-Views entfernt - werden durch SettingsDialogView ersetzt
@@ -29,15 +29,9 @@ const router = createRouter({
       component: WarningView,
     },
     {
-      path: '/unterhalten',
-      name: 'unterhalten',
-      component: UnterhaltenView,
-    },
-    // Alte Ich-Routes entfernt - ersetzt durch /ich-dialog
-    {
-      path: '/schmerz',
-      name: 'schmerz',
-      component: PainDialogView,
+      path: '/communication',
+      name: 'communication',
+      component: CommunicationView,
     },
     {
       path: '/pain-dialog',
@@ -45,18 +39,18 @@ const router = createRouter({
       component: PainDialogView,
     },
     {
-      path: '/ich-dialog',
-      name: 'ich-dialog',
-      component: IchDialogView,
+      path: '/self-dialog',
+      name: 'self-dialog',
+      component: SelfDialogView,
     },
     {
-      path: '/umgebung-dialog',
-      name: 'umgebung-dialog',
-      component: UmgebungDialogView,
+      path: '/environment-dialog',
+      name: 'environment-dialog',
+      component: EnvironmentDialogView,
     },
     {
-      path: '/einstellungen',
-      name: 'einstellungen',
+      path: '/settings',
+      name: 'settings',
       component: SettingsDialogView,
     },
     // Alte Settings-Routes entfernt - werden durch /einstellungen (SettingsDialogView) ersetzt
@@ -91,11 +85,10 @@ router.beforeEach((to, from, next) => {
     const viewCleanups: Record<string, string> = {
       'warning': '__warningCleanup',
       'pain-dialog': '__painDialogCleanup',
-      'schmerz': '__painDialogCleanup',
-      'umgebung-dialog': '__umgebungDialogCleanup',
-      'ich-dialog': '__ichDialogCleanup',
-      'einstellungen': '__settingsDialogCleanup',
-      'unterhalten': '__unterhaltenViewCleanup'
+      'environment-dialog': '__environmentDialogCleanup',
+      'self-dialog': '__selfDialogCleanup',
+      'settings': '__settingsDialogCleanup',
+      'communication': '__communicationViewCleanup'
     }
     
     const fromName = String(from.name)

@@ -77,35 +77,35 @@ export function useHomeViewLogic() {
       id: 'communication',
       title: 'UNTERHALTEN',
       icon: '/comment-dots.svg',
-      route: '/unterhalten',
+      route: '/communication',
       category: 'communication'
     },
     {
       id: 'ich',
       title: 'ICH',
       icon: '/user.svg',
-      route: '/ich-dialog',
+      route: '/self-dialog',
       category: 'main'
     },
     {
       id: 'pain',
       title: 'SCHMERZEN',
       icon: '/headache.svg',
-      route: '/schmerz',
+      route: '/pain-dialog',
       category: 'pain'
     },
     {
       id: 'environment',
       title: 'UMGEBUNG',
       icon: '/house-chimney.svg',
-      route: '/umgebung-dialog',
+      route: '/environment-dialog',
       category: 'main'
     },
     {
       id: 'settings',
       title: 'EINSTELLUNGEN',
       icon: '/settings-sliders.svg',
-      route: '/einstellungen',
+      route: '/settings',
       category: 'settings'
     }
   ]
@@ -448,8 +448,6 @@ export function useHomeViewLogic() {
     
     // Mobile Carousel State (von Composable)
     isMobile,
-    carouselOffset: computed(() => position.offset),
-    carouselStyle,
     currentItem,
     itemCount,
     autoScrollState,

@@ -57,9 +57,9 @@ export interface CarouselItem {
 
 /**
  * Interface für Karussell-Position
+ * @deprecated offset wird nicht mehr verwendet - Positionierung erfolgt über CSS-Variablen
  */
 export interface CarouselPosition {
-  offset: number
   currentIndex: number
   isAnimating: boolean
 }

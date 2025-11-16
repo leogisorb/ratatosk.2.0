@@ -4,12 +4,14 @@ import { useAutoScroll } from './useAutoScroll'
 import { useCarouselPosition } from './useCarouselPosition'
 import { CAROUSEL_CONFIG, type CarouselItem } from '../config/carouselConfig'
 import { simpleFlowController } from '../../../core/application/SimpleFlowController'
+import { useMobileDetection } from '../../../shared/composables/useMobileDetection'
 
 /**
  * Haupt-Composable für das mobile Karussell
  */
 export function useCarousel(items: CarouselItem[]) {
-  // Mobile Detection
+  // Mobile Detection - vereinheitlicht mit shared/composables
+  const { isMobile: sharedIsMobile } = useMobileDetection()
   const isMobile = ref(false)
   
   // Flag um zu verhindern, dass Auto-Scroll startet, wenn Auto-Mode gerade startet
@@ -37,7 +39,6 @@ export function useCarousel(items: CarouselItem[]) {
   // Position
   const { 
     position, 
-    carouselStyle, 
     updatePosition, 
     animateToPosition, 
     getNextIndex, 
@@ -49,9 +50,8 @@ export function useCarousel(items: CarouselItem[]) {
   const itemCount = computed(() => items.length)
 
   /**
-   * Mobile Detection
-   * iPad Pro im Hochformat (Portrait) wird auch als Mobile behandelt
-   * iPad im Querformat (Landscape) verwendet das normale Grid
+   * Mobile Detection - vereinheitlicht mit useMobileDetection
+   * Berücksichtigt Landscape/Portrait: Im Landscape-Modus IMMER Grid verwenden (nie Karussell)
    */
   const checkIsMobile = () => {
     const width = window.innerWidth
@@ -67,14 +67,9 @@ export function useCarousel(items: CarouselItem[]) {
       return
     }
     
-    // Mobile: Nur im Portrait-Modus
-    // <= 768px ODER iPad Pro im Hochformat (Portrait)
-    // iPad Pro 11": 834px x 1194px (Portrait) / 1194px x 834px (Landscape)
-    // iPad Pro 12.9": 1024px x 1366px (Portrait) / 1366px x 1024px (Landscape)
-    const newIsMobile = isPortrait && (
-      width <= CAROUSEL_CONFIG.MOBILE_BREAKPOINT || 
-      (width <= 1366 && width >= 768)
-    )
+    // Mobile: Nur im Portrait-Modus - verwende shared Mobile Detection
+    // sharedIsMobile ist bereits reaktiv und wird automatisch aktualisiert
+    const newIsMobile = isPortrait && sharedIsMobile.value
     
     // Nur aktualisieren, wenn sich der Wert tatsächlich ändert (verhindert unnötige Watcher-Auslösung bei Rotation)
     if (isMobile.value !== newIsMobile) {
@@ -86,10 +81,18 @@ export function useCarousel(items: CarouselItem[]) {
     if (isMobile.value) {
       const autoModeState = simpleFlowController.getState()
       if (!autoModeState.isAutoModeActive) {
-      updatePosition(position.currentIndex, items.length)
+        updatePosition(position.currentIndex, items.length)
       }
     }
   }
+  
+  // Initial Mobile Detection
+  checkIsMobile()
+  
+  // Watch shared Mobile Detection für automatische Updates
+  watch(sharedIsMobile, () => {
+    checkIsMobile()
+  })
 
   /**
    * Startet Auto-Scroll mit Callback
@@ -260,7 +263,6 @@ export function useCarousel(items: CarouselItem[]) {
     // State
     isMobile,
     position,
-    carouselStyle,
     currentItem,
     itemCount,
     autoScrollState,

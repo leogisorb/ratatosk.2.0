@@ -68,6 +68,14 @@ export function useFaceRecognition() {
 
       console.log('Face Recognition Initialisierung gestartet...')
       
+      // Prüfe ob HTTPS verwendet wird (erforderlich für Kamera-API)
+      const isSecureContext = window.isSecureContext || location.protocol === 'https:'
+      if (!isSecureContext) {
+        const errorMsg = 'Kamera-API erfordert HTTPS. Bitte verwende https://localhost:5555 oder https://192.168.178.23:5555'
+        console.error(errorMsg)
+        throw new Error(errorMsg)
+      }
+      
       // Prüfe Kamera-Berechtigung
       if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
         throw new Error('Kamera-API nicht unterstützt in diesem Browser')

@@ -1,36 +1,80 @@
-// Communication Types
-export interface Message {
-  id: string
-  text: string
-  timestamp: Date
-  type: 'user' | 'system' | 'quick'
-}
+/**
+ * Shared Types Barrel Export
+ * Re-exports types from Domain Entities for convenience
+ * 
+ * NOTE: Domain Entities in core/domain/entities/ are the Single Source of Truth
+ * This file only re-exports them for easier imports
+ */
 
-export interface QuickMessage {
-  id: string
-  text: string
-  category: 'greeting' | 'pain' | 'need' | 'feeling'
-  icon?: string
-}
+// Re-export Message types from Domain Entity
+export type {
+  Message,
+  UserMessage,
+  SystemMessage,
+  QuickMessage,
+  PainAssessmentMessage,
+  MessageType,
+  MessageCategory,
+  QuickMessageMetadata,
+  UserMessageMetadata,
+  SystemMessageMetadata,
+  PainAssessmentMessageMetadata
+} from '../../core/domain/entities/Message'
 
-// Pain Assessment Types
-export interface PainLocation {
-  id: string
-  name: string
-  category: 'head' | 'torso' | 'arms' | 'legs'
-  subCategory: string
-  icon: string
-}
+// Re-export Face Recognition types from Domain Entity
+export type {
+  FaceRecognitionState,
+  EyeState,
+  FaceLandmarks,
+  BlinkEvent,
+  FaceRecognitionConfig
+} from '../../core/domain/entities/FaceRecognition'
 
-export interface PainAssessment {
-  id: string
-  location: PainLocation
-  intensity: number // 0-10
-  description?: string
-  timestamp: Date
-}
+// Re-export User types from Domain Entity
+export type {
+  User,
+  UserPreferences,
+  AccessibilitySettings,
+  SupportedLanguage
+} from '../../core/domain/entities/User'
 
-// Settings Types
+// Re-export Pain Assessment types from Domain Entity
+export type {
+  PainAssessment,
+  PainLocation,
+  PainIntensity
+} from '../../core/domain/entities/PainAssessment'
+
+// Re-export Pain Record types from Domain Entity
+export type {
+  PainRecord,
+  PainSession,
+  PainSessionStats
+} from '../../core/domain/entities/PainRecord'
+
+// Re-export BodyPart types
+export type {
+  BodyPartId,
+  PainCategory,
+  BodyPartInfo
+} from '../../core/domain/types/BodyPart'
+
+// Re-export Branded types
+export type {
+  UserId,
+  SessionId,
+  MessageId,
+  PainAssessmentId,
+  PainRecordId,
+  Confidence,
+  Percentage,
+  PainLevel,
+  AutoModeSpeed,
+  BlinkSensitivity
+} from '../../core/domain/types/Branded'
+
+// Legacy UserSettings interface for backwards compatibility with stores
+// TODO: Migrate stores to use UserPreferences from User entity
 export interface UserSettings {
   theme: 'light' | 'dark' | 'auto'
   keyboardLayout: 'alphabetical' | 'qwertz' | 'frequency'
@@ -54,72 +98,12 @@ export interface UserSettings {
   }
 }
 
-// Face Recognition Types
-export interface FaceLandmarks {
-  x: number
-  y: number
-  z: number
-}
-
-export interface EyeState {
-  left: boolean // true = open, false = closed
-  right: boolean
-  confidence: number
-}
-
-export interface FaceRecognitionState {
-  isDetected: boolean
-  eyes: EyeState
-  landmarks: FaceLandmarks[]
-  confidence: number
-}
-
-// Navigation Types
-export interface MenuItem {
-  id: string
-  title: string
-  icon: string
-  route: string
-  category: 'main' | 'communication' | 'pain' | 'settings'
-  requiresFaceRecognition?: boolean
-}
-
-// Audio Types
-export interface AudioSettings {
-  volume: number
-  enabled: boolean
-  soundEffects: {
-    bell: string
-    notification: string
-    confirm: string
-  }
-}
-
-// App State Types
-export interface AppState {
-  currentMenu: string
-  isFaceRecognitionActive: boolean
-  isAudioPlaying: boolean
-  lastActivity: Date
-  sessionStart: Date
-}
-
-// Error Types
-export interface AppError {
-  id: string
-  message: string
-  type: 'face_recognition' | 'audio' | 'camera' | 'network' | 'general'
-  timestamp: Date
-  resolved: boolean
-}
-
-// Analytics Types
-export interface UsageAnalytics {
-  sessionDuration: number
-  messagesSent: number
-  painAssessments: number
-  faceRecognitionAccuracy: number
-  errors: AppError[]
-}
-
-// All types are already exported above with their interface declarations 
+// ============================================
+// UNUSED TYPES (removed - not used anywhere)
+// ============================================
+// The following types were removed as they are not used:
+// - MenuItem (use CarouselItem from navigation/config/carouselConfig.ts)
+// - AudioSettings (not implemented)
+// - AppState (not implemented)
+// - AppError (not implemented)
+// - UsageAnalytics (not implemented) 

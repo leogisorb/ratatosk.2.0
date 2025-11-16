@@ -182,5 +182,5 @@ const goBack = () => {
 </script>
 
 <style scoped>
-/* AppHeader verwendet globale CSS-Klassen aus main.css */
+/* AppHeader verwendet globale CSS-Klassen aus BaseLayout.css */
 </style>

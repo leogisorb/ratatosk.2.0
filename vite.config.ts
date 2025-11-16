@@ -3,12 +3,14 @@ import { fileURLToPath, URL } from 'node:url'
 import { defineConfig } from 'vite'
 import vue from '@vitejs/plugin-vue'
 import vueDevTools from 'vite-plugin-vue-devtools'
+import basicSsl from '@vitejs/plugin-basic-ssl'
 
 // https://vite.dev/config/
 export default defineConfig({
   plugins: [
     vue(),
     vueDevTools(), // Vue DevTools für Debugging aktivieren
+    basicSsl(), // HTTPS für localhost (erforderlich für Kamera-API)
   ],
   base: '/ratatosk.2.0/',
   build: {
@@ -28,6 +30,7 @@ export default defineConfig({
   server: {
     host: true,
     port: 5555,
+    https: true, // HTTPS aktivieren für Kamera-API
   },
   resolve: {
     alias: {

@@ -5,15 +5,46 @@
 
 /* === CSS VARIABLES === */
 :root {
-  /* Colors */
+  /* Colors - Neue Namenskonvention */
   --color-primary: #00B098;
   --color-primary-rgb: 0, 176, 152;
   --color-text-primary: #000000;
   --color-text-secondary: #666666;
+  --color-text-tertiary: #6b7280;
   --color-bg-primary: #ffffff;
   --color-bg-secondary: #f8f9fa;
+  --color-bg-tertiary: #e5e7eb;
   --color-border-primary: #dee2e6;
+  --color-border-secondary: #d1d5db;
   --color-shadow: rgba(0, 0, 0, 0.15);
+  --color-shadow-secondary: rgba(0, 0, 0, 0.05);
+  --color-accent-hover: #008a7a;
+  --color-accent-secondary: #6b7280;
+  --color-accent-secondary-hover: #4b5563;
+  --color-success: #10b981;
+  --color-warning: #f59e0b;
+  --color-error: #ef4444;
+  --color-info: #3b82f6;
+  
+  /* Alte Namenskonvention (Aliase für Kompatibilität) */
+  --bg-primary: var(--color-bg-primary);
+  --bg-secondary: var(--color-bg-secondary);
+  --bg-tertiary: var(--color-bg-tertiary);
+  --text-primary: var(--color-text-primary);
+  --text-secondary: var(--color-text-secondary);
+  --text-tertiary: var(--color-text-tertiary);
+  --border-primary: var(--color-border-primary);
+  --border-secondary: var(--color-border-secondary);
+  --accent-primary: var(--color-primary);
+  --accent-hover: var(--color-accent-hover);
+  --accent-secondary: var(--color-accent-secondary);
+  --accent-secondary-hover: var(--color-accent-secondary-hover);
+  --shadow-primary: var(--color-shadow);
+  --shadow-secondary: var(--color-shadow-secondary);
+  --success: var(--color-success);
+  --warning: var(--color-warning);
+  --error: var(--color-error);
+  --info: var(--color-info);
   
   /* Spacing */
   --space-xs: 0.5rem;
@@ -57,13 +88,24 @@
 /* Dark Mode Variables */
 .dark {
   --color-text-primary: #f9fafb;
+  --color-text-secondary: #e5e7eb;
+  --color-text-tertiary: #9ca3af;
   --color-bg-primary: #1f2937;
   --color-bg-secondary: #374151;
+  --color-bg-tertiary: #4b5563;
   --color-border-primary: #374151;
+  --color-border-secondary: #4b5563;
   --color-shadow: rgba(0, 0, 0, 0.3);
+  --color-shadow-secondary: rgba(0, 0, 0, 0.2);
+  --color-accent-hover: #00d4aa;
+  --color-accent-secondary-hover: #9ca3af;
 }
 
 /* === GLOBAL RESETS === */
+* {
+  box-sizing: border-box;
+}
+
 html, body {
   margin: 0;
   padding: 0;
@@ -72,6 +114,10 @@ html, body {
   max-height: 100vh;
   width: 100vw;
   max-width: 100vw;
+  font-family: var(--font-family);
+  background-color: var(--color-bg-primary);
+  color: var(--color-text-primary);
+  transition: background-color var(--transition-fast), color var(--transition-fast);
 }
 
 /* === MAIN CONTAINER STRUCTURE === */
@@ -535,5 +581,336 @@ html, body {
   
   .menu-tile.tile-active {
     border-width: 5px;
+  }
+}
+
+/* ============================================
+   HEADER STYLES
+   ============================================ */
+.global-header {
+  background-color: var(--color-bg-primary);
+  box-shadow: 0 10px 15px -3px var(--color-shadow), 0 4px 6px -2px var(--color-shadow-secondary);
+  flex-shrink: 0;
+  width: 100%;
+  border-bottom: 1px solid var(--color-border-primary);
+  transition: background-color var(--transition-fast), border-color var(--transition-fast);
+}
+
+.header-content {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1rem 2rem;
+  width: 100%;
+  max-width: 100%;
+}
+
+.header-left {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.header-right {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.header-button {
+  padding: 0.75rem;
+  border-radius: 0.5rem;
+  border: none;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: var(--color-bg-secondary);
+  color: var(--color-text-secondary);
+}
+
+.header-button:hover {
+  background-color: var(--color-bg-tertiary);
+  transform: translateY(-1px);
+}
+
+.header-button.active {
+  background-color: var(--color-primary);
+  color: white;
+}
+
+.dark .header-button-home {
+  background-color: #00B098 !important;
+  color: white !important;
+}
+
+.dark .header-button-home:hover {
+  background-color: #00d4aa !important;
+  transform: translateY(-1px);
+}
+
+.dark .header-button-home .header-button-icon {
+  filter: brightness(0) invert(1) !important;
+}
+
+.header-button-icon {
+  width: 1.25rem;
+  height: 1.25rem;
+  object-fit: contain;
+  display: block;
+}
+
+.header-title {
+  font-size: 1.5rem;
+  font-weight: bold;
+  color: var(--color-text-primary);
+  font-family: var(--font-family);
+  font-weight: 300;
+  margin: 0;
+  transition: color var(--transition-fast);
+}
+
+.header-logo {
+  width: 3rem;
+  height: 3rem;
+  transition: all var(--transition-fast);
+  object-fit: contain;
+}
+
+/* ============================================
+   BUTTON STYLES
+   ============================================ */
+.btn-primary {
+  background-color: var(--color-primary);
+  color: white;
+  font-weight: 500;
+  padding: 0.5rem 1rem;
+  border-radius: 0.5rem;
+  transition: background-color 0.2s;
+  border: none;
+  cursor: pointer;
+  font-family: var(--font-family);
+}
+
+.btn-primary:hover {
+  background-color: var(--color-accent-hover);
+}
+
+.btn-secondary {
+  background-color: var(--color-accent-secondary);
+  color: white;
+  font-weight: 500;
+  padding: 0.5rem 1rem;
+  border-radius: 0.5rem;
+  transition: background-color 0.2s;
+  border: none;
+  cursor: pointer;
+  font-family: var(--font-family);
+}
+
+.btn-secondary:hover {
+  background-color: var(--color-accent-secondary-hover);
+}
+
+.btn-back {
+  padding: 0.5rem;
+  border-radius: 0.5rem;
+  background-color: var(--color-bg-secondary);
+  border: none;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.btn-back:hover {
+  background-color: var(--color-bg-tertiary);
+}
+
+.btn-back-icon {
+  width: 1.5rem;
+  height: 1.5rem;
+  color: var(--color-text-secondary);
+}
+
+/* ============================================
+   TTS ACTIVATION STYLES
+   ============================================ */
+.tts-activation-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.8);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 9999;
+  color: white;
+  font-family: var(--font-family);
+}
+
+.tts-activation-box {
+  background: var(--color-bg-primary);
+  color: var(--color-text-primary);
+  padding: 2rem;
+  border-radius: 1rem;
+  text-align: center;
+  max-width: 400px;
+  box-shadow: 0 20px 25px -5px var(--color-shadow);
+  border: 1px solid var(--color-border-primary);
+  transition: background-color var(--transition-fast), color var(--transition-fast), border-color var(--transition-fast);
+}
+
+.tts-activation-title {
+  font-size: 1.5rem;
+  font-weight: bold;
+  margin-bottom: 1rem;
+  color: var(--color-text-primary);
+  transition: color var(--transition-fast);
+}
+
+.tts-activation-text {
+  margin-bottom: 1.5rem;
+  line-height: 1.6;
+  color: var(--color-text-secondary);
+  transition: color var(--transition-fast);
+}
+
+.tts-activation-button {
+  background: var(--color-primary);
+  color: white;
+  border: none;
+  padding: 1rem 2rem;
+  border-radius: 0.5rem;
+  font-size: 1.2rem;
+  cursor: pointer;
+  font-family: var(--font-family);
+  transition: background-color 0.2s;
+}
+
+.tts-activation-button:hover {
+  background: var(--color-accent-hover);
+}
+
+/* ============================================
+   TTS BUTTON STYLES
+   ============================================ */
+.tts-button {
+  padding: 0.5rem;
+  border-radius: 0.5rem;
+  transition: background-color 0.2s;
+  border: none;
+  cursor: pointer;
+}
+
+.tts-enabled {
+  background-color: #86efac;
+}
+
+.tts-enabled:hover {
+  background-color: #4ade80;
+}
+
+.tts-disabled {
+  background-color: #d1d5db;
+}
+
+.tts-disabled:hover {
+  background-color: #9ca3af;
+}
+
+.speaker-icon {
+  width: 1.5rem;
+  height: 1.5rem;
+}
+
+.speaker-icon.enabled {
+  color: #16a34a;
+}
+
+.speaker-icon.disabled {
+  color: #6b7280;
+}
+
+/* ============================================
+   GLOBAL TEXT STYLES
+   ============================================ */
+.main-text {
+  font-family: var(--font-family) !important;
+  font-size: 3rem !important;
+  font-weight: 600 !important;
+  color: var(--color-text-primary) !important;
+  margin: 0 !important;
+  text-align: center !important;
+  width: 100% !important;
+}
+
+@media (max-width: 768px) {
+  .main-text {
+    font-size: 2.5rem !important;
+  }
+}
+
+@media (max-width: 480px) {
+  .main-text {
+    font-size: 2rem !important;
+  }
+}
+
+/* ============================================
+   RESPONSIVE HEADER ADJUSTMENTS
+   ============================================ */
+@media (max-width: 768px) {
+  .header-content {
+    padding: 0.75rem 1rem;
+  }
+  
+  .header-logo {
+    width: 2.5rem;
+    height: 2.5rem;
+  }
+  
+  .header-title {
+    font-size: 1.25rem;
+  }
+  
+  .header-button {
+    padding: 0.5rem;
+  }
+  
+  .header-button-icon {
+    width: 1rem;
+    height: 1rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .header-logo {
+    width: 2rem;
+    height: 2rem;
+  }
+  
+  .header-title {
+    font-size: 1rem;
+  }
+  
+  .header-left {
+    gap: 0.5rem;
+  }
+  
+  .header-right {
+    gap: 0.5rem;
+  }
+}
+
+@media (max-width: 320px) {
+  .header-logo {
+    width: 1.5rem;
+    height: 1.5rem;
+  }
+  
+  .header-title {
+    font-size: 0.875rem;
   }
 }

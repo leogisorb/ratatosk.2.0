@@ -19,7 +19,12 @@
  * ```
  */
 
-import { useFaceRecognition } from '../../features/face-recognition/composables/useFaceRecognition'
+// Named Constants für Magic Numbers
+const INPUT_CONFIG = {
+  DEFAULT_COOLDOWN_MS: 300,
+  EVENT_DEBOUNCE_MS: 100,
+  BLINK_POLLING_INTERVAL_MS: 16 // ~60fps (requestAnimationFrame)
+} as const
 
 export type InputType = 'blink' | 'click' | 'touch' | 'voice' | 'gesture'
 export type InputEvent = {
@@ -27,6 +32,11 @@ export type InputEvent = {
   timestamp: number
   source?: string
   data?: any
+}
+
+export interface FaceRecognitionAPI {
+  isBlinking(): boolean
+  isActive?: { value: boolean } // Optional für Kompatibilität
 }
 
 export interface InputManagerConfig {
@@ -49,6 +59,17 @@ export interface InputManagerConfig {
    * Optional: Custom Blink-Erkennung (falls nicht Face Recognition)
    */
   customBlinkHandler?: () => boolean
+  
+  /**
+   * Optional: Face Recognition API (für Dependency Injection)
+   * Falls nicht angegeben, wird useFaceRecognition() verwendet
+   */
+  faceRecognition?: FaceRecognitionAPI
+}
+
+type InputSetupConfig = {
+  setup: () => void
+  cleanup: () => void
 }
 
 export class InputManager {
@@ -57,9 +78,10 @@ export class InputManager {
     cooldown: number
     onSelect: (event: InputEvent) => void
   }
-  private faceRecognition = useFaceRecognition()
+  private faceRecognition: FaceRecognitionAPI | null = null
   
   private isActive = false
+  private shouldCleanup = false // Explizites Cleanup-Flag
   private lastInputTime = 0
   private blinkCheckInterval: number | null = null
   
@@ -68,13 +90,60 @@ export class InputManager {
   private touchHandler: ((event: TouchEvent) => void) | null = null
   private blinkEventListener: EventListener | null = null
   
+  // AbortController für Event Listeners (Memory Leak Prevention)
+  private abortController: AbortController | null = null
+  
+  // Map-basiertes Input-Setup zur Reduzierung von Code-Duplikation
+  private inputSetup: Map<InputType, InputSetupConfig> = new Map()
+  
+  // Event-Deduplication: Verhindert doppelte Events
+  private lastEventHash: string | null = null
+  private lastEventTime = 0
+  
+  // Blink Detection Mode: 'event' oder 'polling' (nur eine Methode aktiv)
+  private blinkDetectionMode: 'event' | 'polling' | null = null
+  
   constructor(config: InputManagerConfig) {
+    // Dependency Injection für Face Recognition (optional)
+    // ✅ Bevorzugt: faceRecognition über Config injizieren
+    if (config.faceRecognition) {
+      this.faceRecognition = config.faceRecognition
+    } else {
+      // Fallback: Direkter Import (für Rückwärtskompatibilität)
+      // ⚠️ Tight Coupling - sollte durch Dependency Injection ersetzt werden
+      try {
+        // Dynamischer Import zur Laufzeit (verhindert Circular Dependencies)
+        // Wird asynchron geladen, daher wird faceRecognition erst später verfügbar
+        void import('../../features/face-recognition/composables/useFaceRecognition').then(module => {
+          this.faceRecognition = module.useFaceRecognition() as FaceRecognitionAPI
+        }).catch(error => {
+          console.warn('InputManager: Face Recognition not available', error)
+        })
+      } catch (error) {
+        console.warn('InputManager: Face Recognition not available', error)
+      }
+    }
+    
     this.config = {
       enabledInputs: config.enabledInputs || ['blink', 'click', 'touch'],
-      cooldown: config.cooldown || 300,
+      cooldown: config.cooldown || INPUT_CONFIG.DEFAULT_COOLDOWN_MS,
       customBlinkHandler: config.customBlinkHandler,
       onSelect: config.onSelect
     }
+    
+    // Initialisiere Input-Setup Map
+    this.inputSetup.set('blink', {
+      setup: () => this.setupBlinkDetection(),
+      cleanup: () => this.cleanupBlinkDetection()
+    })
+    this.inputSetup.set('click', {
+      setup: () => this.setupClickDetection(),
+      cleanup: () => this.cleanupClickDetection()
+    })
+    this.inputSetup.set('touch', {
+      setup: () => this.setupTouchDetection(),
+      cleanup: () => this.cleanupTouchDetection()
+    })
   }
 
   /**
@@ -87,33 +156,21 @@ export class InputManager {
     }
 
     this.isActive = true
+    this.shouldCleanup = false // Reset Cleanup-Flag
     console.log('✅ InputManager: Starting with inputs:', this.config.enabledInputs)
 
-    // ✅ Blink Detection
-    if (this.config.enabledInputs.includes('blink')) {
-      this.setupBlinkDetection()
-    }
+    // Erstelle neuen AbortController für Event Listeners
+    this.abortController = new AbortController()
 
-    // ✅ Click Detection
-    if (this.config.enabledInputs.includes('click')) {
-      this.setupClickDetection()
-    }
-
-    // ✅ Touch Detection
-    if (this.config.enabledInputs.includes('touch')) {
-      this.setupTouchDetection()
-    }
-
-    // ✅ Voice Commands (zukünftig)
-    if (this.config.enabledInputs.includes('voice')) {
-      // TODO: Voice recognition setup
-      console.log('InputManager: Voice commands not yet implemented')
-    }
-
-    // ✅ Gestures (zukünftig)
-    if (this.config.enabledInputs.includes('gesture')) {
-      // TODO: Gesture recognition setup
-      console.log('InputManager: Gestures not yet implemented')
+    // Setup für alle aktivierten Input-Typen über Map
+    for (const inputType of this.config.enabledInputs) {
+      const setup = this.inputSetup.get(inputType)
+      if (setup) {
+        setup.setup()
+      } else if (inputType === 'voice' || inputType === 'gesture') {
+        // TODO: Voice/Gesture recognition setup
+        console.log(`InputManager: ${inputType} not yet implemented`)
+      }
     }
   }
 
@@ -125,31 +182,25 @@ export class InputManager {
       return
     }
 
+    this.shouldCleanup = true // Setze Cleanup-Flag zuerst
     this.isActive = false
     console.log('✅ InputManager: Stopping')
 
-    // ✅ Cleanup Blink Detection
-    if (this.blinkCheckInterval) {
-      clearInterval(this.blinkCheckInterval)
-      this.blinkCheckInterval = null
+    // Cleanup für alle aktivierten Input-Typen über Map
+    for (const inputType of this.config.enabledInputs) {
+      const setup = this.inputSetup.get(inputType)
+      if (setup) {
+        setup.cleanup()
+      }
     }
 
-    if (this.blinkEventListener) {
-      window.removeEventListener('faceBlinkDetected', this.blinkEventListener as EventListener)
-      this.blinkEventListener = null
-    }
-
-    // ✅ Cleanup Click Detection
-    if (this.clickHandler) {
-      document.removeEventListener('contextmenu', this.clickHandler)
-      this.clickHandler = null
-    }
-
-    // ✅ Cleanup Touch Detection
-    if (this.touchHandler) {
-      document.removeEventListener('touchstart', this.touchHandler)
-      this.touchHandler = null
-    }
+    // AbortController für alle Event Listeners
+    this.abortController?.abort()
+    this.abortController = null
+    
+    // Reset Event-Deduplication
+    this.lastEventHash = null
+    this.lastEventTime = 0
   }
 
   /**
@@ -162,9 +213,10 @@ export class InputManager {
         
         // Setup wenn Manager bereits aktiv
         if (this.isActive) {
-          if (type === 'blink') this.setupBlinkDetection()
-          if (type === 'click') this.setupClickDetection()
-          if (type === 'touch') this.setupTouchDetection()
+          const setup = this.inputSetup.get(type)
+          if (setup) {
+            setup.setup()
+          }
         }
       }
     } else {
@@ -172,23 +224,9 @@ export class InputManager {
       
       // Cleanup wenn Manager aktiv
       if (this.isActive) {
-        if (type === 'blink') {
-          if (this.blinkCheckInterval) {
-            clearInterval(this.blinkCheckInterval)
-            this.blinkCheckInterval = null
-          }
-          if (this.blinkEventListener) {
-            window.removeEventListener('faceBlinkDetected', this.blinkEventListener as EventListener)
-            this.blinkEventListener = null
-          }
-        }
-        if (type === 'click' && this.clickHandler) {
-          document.removeEventListener('contextmenu', this.clickHandler)
-          this.clickHandler = null
-        }
-        if (type === 'touch' && this.touchHandler) {
-          document.removeEventListener('touchstart', this.touchHandler)
-          this.touchHandler = null
+        const setup = this.inputSetup.get(type)
+        if (setup) {
+          setup.cleanup()
         }
       }
     }
@@ -208,15 +246,32 @@ export class InputManager {
 
   /**
    * Erstellt ein Input-Event und ruft den Callback auf
+   * Mit Event-Deduplication um doppelte Events zu vermeiden
    */
   private triggerInput(type: InputType, source?: string, data?: any) {
     if (!this.checkCooldown()) {
       return
     }
 
+    // Event-Deduplication: Verhindert doppelte Events innerhalb kurzer Zeit
+    const now = Date.now()
+    const eventHash = `${type}-${source}-${JSON.stringify(data)}`
+    
+    // Prüfe ob identisches Event innerhalb von DEBOUNCE_MS
+    if (
+      this.lastEventHash === eventHash &&
+      now - this.lastEventTime < INPUT_CONFIG.EVENT_DEBOUNCE_MS
+    ) {
+      console.log('InputManager: Duplicate event ignored:', eventHash)
+      return
+    }
+    
+    this.lastEventHash = eventHash
+    this.lastEventTime = now
+
     const event: InputEvent = {
       type,
-      timestamp: Date.now(),
+      timestamp: now,
       source,
       data
     }
@@ -226,11 +281,20 @@ export class InputManager {
 
   /**
    * Setup Blink Detection
+   * ✅ Fix: Nur eine Methode aktiv (Event-basiert hat Priorität)
+   * Verhindert Race Conditions zwischen Event Listener und Polling
    */
   private setupBlinkDetection() {
-    // ✅ Methode 1: Event-basiert (faceBlinkDetected Event)
+    // Prüfe ob bereits aktiv
+    if (this.blinkDetectionMode !== null) {
+      console.warn('InputManager: Blink detection already set up')
+      return
+    }
+
+    // ✅ Methode 1: Event-basiert (faceBlinkDetected Event) - HAT PRIORITÄT
+    // Wenn Events verfügbar sind, verwende diese (effizienter)
     this.blinkEventListener = (event: Event) => {
-      if (!this.isActive) return
+      if (!this.isActive || this.shouldCleanup) return
       
       const customEvent = event as CustomEvent
       // Ignoriere Events von bestimmten Quellen (z.B. Header-Buttons)
@@ -241,27 +305,76 @@ export class InputManager {
       this.triggerInput('blink', 'face-recognition', customEvent.detail)
     }
 
-    window.addEventListener('faceBlinkDetected', this.blinkEventListener)
+    window.addEventListener('faceBlinkDetected', this.blinkEventListener, {
+      signal: this.abortController?.signal
+    })
+    
+    this.blinkDetectionMode = 'event'
+    console.log('✅ InputManager: Blink detection (event-based) activated')
 
-    // ✅ Methode 2: Polling-basiert (falls Event nicht funktioniert)
-    if (this.faceRecognition && !this.blinkCheckInterval) {
-      this.blinkCheckInterval = window.setInterval(() => {
-        if (!this.isActive) return
-        
-        // Custom Blink Handler hat Priorität
-        if (this.config.customBlinkHandler) {
-          if (this.config.customBlinkHandler()) {
-            this.triggerInput('blink', 'custom', null)
+    // ✅ Methode 2: Polling-basiert NUR wenn Event-basiert nicht verfügbar
+    // Wird nur verwendet, wenn kein Event-System vorhanden ist
+    // ODER wenn customBlinkHandler vorhanden ist (benötigt Polling)
+    if (this.config.customBlinkHandler || (!this.faceRecognition && !this.blinkEventListener)) {
+      // Wechsle zu Polling-Modus
+      if (this.blinkEventListener) {
+        window.removeEventListener('faceBlinkDetected', this.blinkEventListener)
+        this.blinkEventListener = null
+      }
+      
+      this.blinkDetectionMode = 'polling'
+      console.log('✅ InputManager: Blink detection (polling-based) activated')
+      
+      if (!this.blinkCheckInterval) {
+        const checkBlink = () => {
+          // Explizites Cleanup-Flag prüfen
+          if (!this.isActive || this.shouldCleanup) {
+            if (this.blinkCheckInterval !== null) {
+              window.cancelAnimationFrame(this.blinkCheckInterval)
+              this.blinkCheckInterval = null
+            }
+            return
           }
-          return
+          
+          // Custom Blink Handler hat Priorität
+          if (this.config.customBlinkHandler) {
+            if (this.config.customBlinkHandler()) {
+              this.triggerInput('blink', 'custom', null)
+            }
+          } else if (this.faceRecognition?.isBlinking()) {
+            // Standard: Face Recognition
+            this.triggerInput('blink', 'face-recognition', null)
+          }
+          
+          // Nächster Frame, wenn noch aktiv und nicht im Cleanup
+          if (this.isActive && !this.shouldCleanup) {
+            this.blinkCheckInterval = window.requestAnimationFrame(checkBlink)
+          } else {
+            this.blinkCheckInterval = null
+          }
         }
-
-        // Standard: Face Recognition
-        if (this.faceRecognition.isBlinking()) {
-          this.triggerInput('blink', 'face-recognition', null)
-        }
-      }, 100) // Check alle 100ms
+        
+        this.blinkCheckInterval = window.requestAnimationFrame(checkBlink)
+      }
     }
+  }
+
+  /**
+   * Cleanup Blink Detection
+   */
+  private cleanupBlinkDetection() {
+    this.shouldCleanup = true // Setze Cleanup-Flag
+    
+    if (this.blinkCheckInterval !== null) {
+      window.cancelAnimationFrame(this.blinkCheckInterval)
+      this.blinkCheckInterval = null
+    }
+    if (this.blinkEventListener) {
+      window.removeEventListener('faceBlinkDetected', this.blinkEventListener as EventListener)
+      this.blinkEventListener = null
+    }
+    
+    this.blinkDetectionMode = null
   }
 
   /**
@@ -290,7 +403,20 @@ export class InputManager {
     }
 
     // ✅ Rechtsklick (contextmenu) - überall auf der Seite
-    document.addEventListener('contextmenu', this.clickHandler, { passive: false })
+    document.addEventListener('contextmenu', this.clickHandler, { 
+      passive: false,
+      signal: this.abortController?.signal
+    })
+  }
+
+  /**
+   * Cleanup Click Detection
+   */
+  private cleanupClickDetection() {
+    if (this.clickHandler) {
+      document.removeEventListener('contextmenu', this.clickHandler)
+      this.clickHandler = null
+    }
   }
 
   /**
@@ -310,7 +436,20 @@ export class InputManager {
       }
     }
 
-    document.addEventListener('touchstart', this.touchHandler, { passive: true })
+    document.addEventListener('touchstart', this.touchHandler, { 
+      passive: true,
+      signal: this.abortController?.signal
+    })
+  }
+
+  /**
+   * Cleanup Touch Detection
+   */
+  private cleanupTouchDetection() {
+    if (this.touchHandler) {
+      document.removeEventListener('touchstart', this.touchHandler)
+      this.touchHandler = null
+    }
   }
 
   /**

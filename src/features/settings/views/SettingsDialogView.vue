@@ -176,8 +176,6 @@
         <!-- ===== CONFIRMATION VIEW ===== -->
         <template v-if="state === 'confirmation'">
           <div class="confirmation-container">
-            <div class="confirmation-icon">✓</div>
-            <h2 class="confirmation-title">{{ title }}</h2>
             <p class="confirmation-text">{{ confirmationText }}</p>
           </div>
         </template>
@@ -190,7 +188,6 @@
 import { computed, watch, onMounted, onUnmounted, ref, nextTick } from 'vue'
 import { useSettingsDialogMachine } from '../composables/useSettingsDialogMachine'
 import { useSettingsDictionary } from '../composables/useSettingsDictionary'
-import { useTTS } from '../composables/useTTS'
 import { useInputManager } from '../../../shared/composables/useInputManager'
 import { useSettingsStore } from '../stores/settings'
 import { useFaceRecognition } from '../../face-recognition/composables/useFaceRecognition'
@@ -201,7 +198,6 @@ import { debug, debugComponent, debugAutoMode } from '../../../shared/utils/debu
 // ===== COMPOSABLES =====
 const machine = useSettingsDialogMachine()
 const dict = useSettingsDictionary()
-const tts = useTTS()
 const settingsStore = useSettingsStore()
 const faceRecognition = useFaceRecognition()
 const { isMobile } = useMobileDetection()

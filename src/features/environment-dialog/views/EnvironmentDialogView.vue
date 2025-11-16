@@ -1,5 +1,5 @@
 <template>
-  <div id="app" class="pain-dialog">
+  <div id="app" class="environment-dialog">
     <!-- App Header -->
     <AppHeader />
 
@@ -77,7 +77,7 @@
         <!-- ===== SUB REGION VIEW ===== -->
         <template v-if="state === 'subRegionView'">
           <!-- Horizontales Karussell für Sub-Regions -->
-          <div class="carousel-wrapper subview">
+          <div class="carousel-wrapper">
             <div class="carousel-container">
               <div
                 v-for="(item, index) in items"
@@ -94,6 +94,12 @@
               >
                 <div class="tile-icon-container">
                   <div v-if="item.emoji" class="tile-emoji">{{ item.emoji }}</div>
+                  <img
+                    v-else-if="item.icon"
+                    :src="item.icon"
+                    :alt="item.title"
+                    class="tile-icon"
+                  />
                 </div>
                 <div class="tile-text">{{ item.title }}</div>
               </div>
@@ -118,10 +124,10 @@
           </div>
         </template>
 
-        <!-- ===== PAIN SCALE VIEW ===== -->
-        <template v-if="state === 'painScaleView'">
-          <!-- Horizontales Karussell für Schmerzskala -->
-          <div class="carousel-wrapper subview">
+        <!-- ===== SUB SUB REGION VIEW (Verben) ===== -->
+        <template v-if="state === 'subSubRegionView'">
+          <!-- Horizontales Karussell für Sub-Sub-Regions (Verben) -->
+          <div class="carousel-wrapper">
             <div class="carousel-container">
               <div
                 v-for="(item, index) in items"
@@ -137,10 +143,15 @@
                 @click="handleItemClick(item, index)"
               >
                 <div class="tile-icon-container">
-                  <div class="tile-emoji">{{ item.level }}</div>
+                  <div v-if="item.emoji" class="tile-emoji">{{ item.emoji }}</div>
+                  <img
+                    v-else-if="item.icon"
+                    :src="item.icon"
+                    :alt="item.title"
+                    class="tile-icon"
+                  />
                 </div>
                 <div class="tile-text">{{ item.title }}</div>
-                <div class="tile-description">{{ item.description }}</div>
               </div>
             </div>
             
@@ -175,8 +186,9 @@
 </template>
 
 <script setup lang="ts">
-import { computed, watch, onMounted, onUnmounted } from 'vue'
-import { usePainDialogMachine } from '../composables/usePainDialogMachine'
+import { watch, onMounted, onUnmounted } from 'vue'
+import { useEnvironmentDialogMachine } from '../composables/useEnvironmentDialogMachine'
+import { useEnvironmentDictionary } from '../composables/useEnvironmentDictionary'
 import { useInputManager } from '../../../shared/composables/useInputManager'
 import { useFaceRecognition } from '../../face-recognition/composables/useFaceRecognition'
 import { useMobileDetection } from '../../../shared/composables/useMobileDetection'
@@ -184,7 +196,8 @@ import AppHeader from '../../../shared/components/AppHeader.vue'
 import { debug, debugComponent, debugAutoMode } from '../../../shared/utils/debug'
 
 // ===== COMPOSABLES =====
-const machine = usePainDialogMachine()
+const machine = useEnvironmentDialogMachine()
+const dict = useEnvironmentDictionary()
 const faceRecognition = useFaceRecognition()
 const { isMobile } = useMobileDetection()
 
@@ -197,7 +210,7 @@ const {
   autoMode,
   selectMainRegion,
   selectSubRegion,
-  selectPainLevel,
+  selectSubSubRegion,
   goBack,
   handleBlink
 } = machine
@@ -211,7 +224,7 @@ const handleTouchStart = (event: TouchEvent) => {
   
   touchStartY = event.touches[0].clientY
   touchStartTime = Date.now()
-  debug.log('PainDialog', 'Touch start', { y: touchStartY })
+  debug.log('UmgebungDialog', 'Touch start', { y: touchStartY })
 }
 
 const handleTouchMove = (event: TouchEvent) => {
@@ -233,19 +246,19 @@ const handleTouchEnd = (event: TouchEvent) => {
       // Swipe nach unten = vorherige Karte
       const newIndex = Math.max(0, autoMode.index.value - 1)
       autoMode.index.value = newIndex
-      debug.log('PainDialog', 'Swipe down', { newIndex })
+      debug.log('UmgebungDialog', 'Swipe down', { newIndex })
     } else {
       // Swipe nach oben = nächste Karte
       const newIndex = Math.min(items.value.length - 1, autoMode.index.value + 1)
       autoMode.index.value = newIndex
-      debug.log('PainDialog', 'Swipe up', { newIndex })
+      debug.log('UmgebungDialog', 'Swipe up', { newIndex })
     }
   }
 }
 
 // ===== ITEM INTERACTION =====
 const handleItemClick = (item: any, index: number) => {
-  debug.log('PainDialog', 'Item clicked', { 
+  debug.log('UmgebungDialog', 'Item clicked', { 
     itemId: item.id, 
     index,
     state: state.value 
@@ -254,16 +267,16 @@ const handleItemClick = (item: any, index: number) => {
   // Aktiviere User-Interaktion für TTS
   enableTTSOnInteraction()
 
-  if (item.id === 'zurueck') {
+  if (item.id === dict.ID_BACK) {
     handleBackButton()
     return
   }
 
-  handleItemSelection(item)
+  handleItemSelection(item, index)
 }
 
 const handleContextMenu = (item: any, index: number) => {
-  debug.log('PainDialog', 'Context menu', { 
+  debug.log('UmgebungDialog', 'Context menu', { 
     itemId: item.id, 
     index,
     state: state.value 
@@ -273,11 +286,11 @@ const handleContextMenu = (item: any, index: number) => {
 
 const handleBackButton = () => {
   switch (state.value) {
-    case 'subRegionView':
-      selectSubRegion('zurueck')
+    case 'subSubRegionView':
+      selectSubSubRegion(dict.ID_BACK)
       break
-    case 'painScaleView':
-      selectSubRegion('zurueck')
+    case 'subRegionView':
+      selectSubRegion(dict.ID_BACK)
       break
     case 'mainView':
     default:
@@ -286,25 +299,25 @@ const handleBackButton = () => {
   }
 }
 
-const handleItemSelection = (item: any) => {
+const handleItemSelection = (item: any, index: number) => {
   switch (state.value) {
     case 'mainView':
-      selectMainRegion(item.id)
+      if (autoMode.index.value === index) {
+        selectMainRegion(item.id)
+      }
       break
     case 'subRegionView':
-      selectSubRegion(item.id)
+      if (autoMode.index.value === index) {
+        selectSubRegion(item.id)
+      }
       break
-    case 'painScaleView':
-      // Pain levels haben level property
-      if ('level' in item && typeof item.level === 'number') {
-        selectPainLevel(item.level)
-      } else if ('id' in item && typeof item.id === 'number') {
-        // Fallback: falls id als number verwendet wird
-        selectPainLevel(item.id)
+    case 'subSubRegionView':
+      if (autoMode.index.value === index) {
+        selectSubSubRegion(item.id)
       }
       break
     default:
-      debug.warn('PainDialog', 'Item selection in unexpected state', { 
+      debug.warn('UmgebungDialog', 'Item selection in unexpected state', { 
         state: state.value 
       })
       break
@@ -322,7 +335,7 @@ const enableTTSOnInteraction = () => {
 // ===== INPUT MANAGER =====
 const inputManager = useInputManager({
   onSelect: (event) => {
-    debug.log('PainDialog', 'Input detected', {
+    debug.log('UmgebungDialog', 'Input detected', {
       type: event.type,
       source: event.source,
       state: state.value,
@@ -337,7 +350,7 @@ const inputManager = useInputManager({
 // ===== WATCHERS =====
 watch(() => state.value, (newState, oldState) => {
   if (oldState !== undefined) {
-    debug.log('PainDialog', 'State changed', {
+    debug.log('UmgebungDialog', 'State changed', {
       from: oldState,
       to: newState,
       itemsCount: items.value.length,
@@ -354,12 +367,12 @@ watch(() => autoMode.index.value, (newIndex, oldIndex) => {
 
 // ===== LIFECYCLE =====
 onMounted(() => {
-  debugComponent.lifecycle('PainDialogView', 'mounted')
-  debugComponent.props('PainDialogView', { isMobile: isMobile.value })
+  debugComponent.lifecycle('EnvironmentDialogView', 'mounted')
+  debugComponent.props('EnvironmentDialogView', { isMobile: isMobile.value })
   
   // Start Face Recognition
   if (!faceRecognition.isActive.value) {
-    debug.log('PainDialog', 'Starting face recognition')
+    debug.log('UmgebungDialog', 'Starting face recognition')
     faceRecognition.start()
   }
   
@@ -371,36 +384,36 @@ onMounted(() => {
   autoMode.start()
   
   // Start Input Manager
-  debug.log('PainDialog', 'Starting Input Manager')
+  debug.log('UmgebungDialog', 'Starting Input Manager')
   inputManager.start()
   
   // Global cleanup function
-  ;(window as any).__painDialogCleanup = () => {
-    debug.log('PainDialog', 'Global cleanup called')
+  ;(window as any).__environmentDialogCleanup = () => {
+    debug.log('UmgebungDialog', 'Global cleanup called')
     machine.cleanup()
     inputManager.stop()
   }
 })
 
 onUnmounted(() => {
-  debugComponent.lifecycle('PainDialogView', 'unmounted')
+  debugComponent.lifecycle('EnvironmentDialogView', 'unmounted')
   
   // Stop AutoMode
   debugAutoMode.stop()
   autoMode.stop()
   
   // Stop Input Manager
-  debug.log('PainDialog', 'Stopping Input Manager')
+  debug.log('UmgebungDialog', 'Stopping Input Manager')
   inputManager.stop()
   
   // Stop Face Recognition
   if (faceRecognition.isActive.value) {
-    debug.log('PainDialog', 'Stopping Face Recognition')
+    debug.log('UmgebungDialog', 'Stopping Face Recognition')
     faceRecognition.stop()
   }
   
   // Remove global cleanup
-  delete (window as any).__painDialogCleanup
+  delete (window as any).__environmentDialogCleanup
 })
 </script>
 
@@ -411,81 +424,5 @@ onUnmounted(() => {
 
 <!-- Spezifische Styles für diese Komponente - scoped -->
 <style scoped>
-/* Emoji Styles für Sub-Regions */
-.tile-emoji {
-  font-size: clamp(3rem, 10vw, 6rem);
-  line-height: 1;
-}
-
-/* Pain Scale Description */
-.tile-description {
-  font-size: clamp(0.9rem, 2vw, 1.2rem);
-  color: var(--text-secondary, #666);
-  margin-top: 0.5rem;
-  text-align: center;
-}
-
-.dark-mode .tile-description {
-  color: var(--text-secondary-dark, #aaa);
-}
-
-/* Confirmation View Styles */
-.confirmation-container {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  padding: 4rem 2rem;
-  text-align: center;
-  animation: fadeInScale 0.5s ease-out;
-}
-
-.confirmation-icon {
-  width: 120px;
-  height: 120px;
-  border-radius: 50%;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  color: white;
-  font-size: 4rem;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  margin-bottom: 2rem;
-  box-shadow: 0 10px 40px rgba(102, 126, 234, 0.3);
-  animation: pulse 2s ease-in-out infinite;
-}
-
-@keyframes fadeInScale {
-  from {
-    opacity: 0;
-    transform: scale(0.9);
-  }
-  to {
-    opacity: 1;
-    transform: scale(1);
-  }
-}
-
-@keyframes pulse {
-  0%, 100% {
-    transform: scale(1);
-  }
-  50% {
-    transform: scale(1.05);
-  }
-}
-
-/* Mobile Responsiveness */
-@media (max-width: 768px) {
-  .confirmation-icon {
-    width: 80px;
-    height: 80px;
-    font-size: 2.5rem;
-  }
-
-  .tile-emoji {
-    font-size: clamp(2.5rem, 8vw, 4rem);
-  }
-}
+/* Falls UmgebungDialog spezifische Styles braucht, hier einfügen */
 </style>
-

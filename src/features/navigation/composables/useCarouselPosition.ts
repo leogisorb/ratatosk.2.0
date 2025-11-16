@@ -7,14 +7,13 @@ import { CAROUSEL_CONFIG, type CarouselPosition } from '../config/carouselConfig
 export function useCarouselPosition() {
   // Position State
   const position = reactive<CarouselPosition>({
-    offset: 0,
     currentIndex: 0,
     isAnimating: false
   })
 
-  // Computed für CSS-Transform - KEINE Container-Verschiebung mehr
-  // Stattdessen wird CSS verwendet wie im Pain Dialog
-  const carouselStyle = computed(() => ({}))
+  // HINWEIS: carouselStyle wurde entfernt
+  // Positionierung erfolgt über CSS-Variablen (--offset) direkt im Template
+  // Siehe HomeView.vue: :style="{ '--offset': 0 - currentTileIndex }"
 
   /**
    * Aktualisiert die Karussell-Position
@@ -25,9 +24,8 @@ export function useCarouselPosition() {
       return
     }
 
-    // Nur Index setzen - CSS macht die Positionierung
+    // Nur Index setzen - CSS macht die Positionierung über CSS-Variablen (--offset)
     position.currentIndex = index
-    position.offset = 0 // Nicht mehr verwendet
   }
 
   /**
@@ -71,7 +69,6 @@ export function useCarouselPosition() {
    * Setzt Position zurück
    */
   const resetPosition = () => {
-    position.offset = 0
     position.currentIndex = 0
     position.isAnimating = false
   }
@@ -86,7 +83,6 @@ export function useCarouselPosition() {
   return {
     // State
     position,
-    carouselStyle,
     
     // Methods
     updatePosition,

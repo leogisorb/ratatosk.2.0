@@ -2,7 +2,6 @@
 // Import external JavaScript logic
 import { useHomeViewLogic } from './HomeView.ts'
 import AppHeader from '../../../shared/components/AppHeader.vue'
-import MenuTile from '../components/MenuTile.vue'
 
 // Use the composable function
 const {
@@ -12,8 +11,6 @@ const {
   userInteracted,
   // Mobile Carousel State
   isMobile,
-  carouselOffset,
-  carouselStyle,
   currentItem,
   itemCount,
   autoScrollState,
@@ -182,7 +179,6 @@ const {
         <div class="mobile-carousel" v-else>
           <div 
             class="carousel-container" 
-            :style="carouselStyle"
             @touchstart="handleTouchStart"
             @touchmove="handleTouchMove"
             @touchend="handleTouchEnd"

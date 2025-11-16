@@ -42,11 +42,10 @@ function stopAllServices() {
   const viewCleanups: Record<string, string> = {
     'warning': '__warningCleanup',
     'pain-dialog': '__painDialogCleanup',
-    'schmerz': '__painDialogCleanup',
-    'umgebung-dialog': '__umgebungDialogCleanup',
-    'ich-dialog': '__ichDialogCleanup',
-    'einstellungen': '__settingsDialogCleanup',
-    'unterhalten': '__unterhaltenViewCleanup',
+    'environment-dialog': '__environmentDialogCleanup',
+    'self-dialog': '__selfDialogCleanup',
+    'settings': '__settingsDialogCleanup',
+    'communication': '__communicationViewCleanup',
     'app': '__homeViewCleanup' // HomeView hat möglicherweise auch Cleanup
   }
   

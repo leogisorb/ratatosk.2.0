@@ -234,3 +234,4 @@ if (DEBUG_MODE && typeof window !== 'undefined') {
   console.log('🔧 Ratatosk Debug-Tools verfügbar: window.__RATATOSK_DEBUG__')
 }
 
+
