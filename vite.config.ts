@@ -31,7 +31,7 @@ export default defineConfig({
   server: {
     host: true,
     port: 5555,
-    https: true, // HTTPS aktivieren für Kamera-API
+    https: {} as any, // HTTPS wird durch basicSsl() Plugin konfiguriert, {} als Fallback
   },
   resolve: {
     alias: {

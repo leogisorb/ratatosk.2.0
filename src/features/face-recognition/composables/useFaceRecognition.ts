@@ -1,6 +1,7 @@
 import { ref, onMounted, onUnmounted, readonly } from 'vue'
 import type { FaceRecognitionState, EyeState, FaceLandmarks } from '../../../shared/types/index'
 import { useSettingsStore } from '../../settings/stores/settings'
+import { createConfidence } from '../../../core/domain/types/Branded'
 
 export function useFaceRecognition() {
   // Settings Store
@@ -9,11 +10,12 @@ export function useFaceRecognition() {
   // State
   const isActive = ref(false)
   const isDetected = ref(false)
-  const confidence = ref(0)
+  const confidence = ref(createConfidence(0))
   const eyeState = ref<EyeState>({
     left: true,
     right: true,
-    confidence: 0
+    confidence: createConfidence(0),
+    blinkDuration: 0
   })
   const landmarks = ref<FaceLandmarks[]>([])
   const error = ref<string | null>(null)
@@ -377,10 +379,10 @@ export function useFaceRecognition() {
       eyeState.value = newEyeState
 
       isDetected.value = true
-      confidence.value = results.multiFaceLandmarks.length > 0 ? 1 : 0
+      confidence.value = createConfidence(results.multiFaceLandmarks.length > 0 ? 1 : 0)
     } else {
       isDetected.value = false
-      confidence.value = 0
+      confidence.value = createConfidence(0)
     }
   }
 
@@ -392,7 +394,8 @@ export function useFaceRecognition() {
     return {
       left: leftEyeOpen,
       right: rightEyeOpen,
-      confidence: (leftEyeOpen && rightEyeOpen) ? 1 : 0.5
+      confidence: createConfidence((leftEyeOpen && rightEyeOpen) ? 1 : 0.5),
+      blinkDuration: 0
     }
   }
 
@@ -590,10 +593,14 @@ export function useFaceRecognition() {
   // Get current face recognition state
   function getState(): FaceRecognitionState {
     return {
+      isActive: isActive.value,
       isDetected: isDetected.value,
-      eyes: eyeState.value,
+      eyeState: eyeState.value,
       landmarks: landmarks.value,
-      confidence: confidence.value
+      confidence: confidence.value,
+      lastBlinkTime: null, // TODO: Track last blink time
+      blinkCount: 0, // TODO: Track blink count
+      sessionStartTime: Date.now() // TODO: Track session start time
     }
   }
 

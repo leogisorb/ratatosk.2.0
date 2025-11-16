@@ -4,6 +4,11 @@ import type {
   BlinkEvent,
   EyeState 
 } from '../../../core/domain/entities/FaceRecognition'
+import { 
+  createConfidence, 
+  createAutoModeSpeed, 
+  createBlinkSensitivity 
+} from '../../../core/domain/types/Branded'
 
 /**
  * Face Recognition Service
@@ -13,27 +18,27 @@ export class FaceRecognitionService {
   private state: FaceRecognitionState = {
     isActive: false,
     isDetected: false,
-    confidence: 0,
-    eyeState: { left: true, right: true, confidence: 0, blinkDuration: 0 },
+    confidence: createConfidence(0),
+    eyeState: { left: true, right: true, confidence: createConfidence(0), blinkDuration: 0 },
     landmarks: [],
     lastBlinkTime: null,
     blinkCount: 0,
-    sessionStartTime: new Date()
+    sessionStartTime: Date.now() // Unix timestamp in milliseconds
   }
 
   private config: FaceRecognitionConfig = {
     maxNumFaces: 1,
     refineLandmarks: true,
-    minDetectionConfidence: 0.5,
-    minTrackingConfidence: 0.5,
-    blinkThreshold: 0.3,
-    autoModeSpeed: 3000,
-    blinkSensitivity: 0.5
+    minDetectionConfidence: createConfidence(0.5),
+    minTrackingConfidence: createConfidence(0.5),
+    blinkThreshold: createConfidence(0.3),
+    autoModeSpeed: createAutoModeSpeed(3), // 1-10 range, 3 is middle
+    blinkSensitivity: createBlinkSensitivity(0.5)
   }
 
   private blinkEvents: BlinkEvent[] = []
   private isBlinking = false
-  private blinkStartTime: Date | null = null
+  private blinkStartTime: number | null = null // Unix timestamp in milliseconds
 
   /**
    * Get current face recognition state
@@ -47,7 +52,7 @@ export class FaceRecognitionService {
    */
   updateDetection(isDetected: boolean, confidence: number): void {
     this.state.isDetected = isDetected
-    this.state.confidence = confidence
+    this.state.confidence = createConfidence(confidence)
   }
 
   /**
@@ -75,7 +80,7 @@ export class FaceRecognitionService {
    */
   startSession(): void {
     this.state.isActive = true
-    this.state.sessionStartTime = new Date()
+    this.state.sessionStartTime = Date.now() // Unix timestamp in milliseconds
     this.state.blinkCount = 0
     this.blinkEvents = []
   }
@@ -86,7 +91,7 @@ export class FaceRecognitionService {
   stopSession(): void {
     this.state.isActive = false
     this.state.isDetected = false
-    this.state.confidence = 0
+    this.state.confidence = createConfidence(0)
     this.state.landmarks = []
     this.blinkEvents = []
   }
@@ -110,7 +115,7 @@ export class FaceRecognitionService {
    */
   getRecentBlinks(limit: number = 10): BlinkEvent[] {
     return this.blinkEvents
-      .sort((a, b) => b.timestamp.getTime() - a.timestamp.getTime())
+      .sort((a, b) => b.timestamp - a.timestamp) // timestamp is already number
       .slice(0, limit)
   }
 
@@ -120,8 +125,8 @@ export class FaceRecognitionService {
   hasBlinkedFor(duration: number): boolean {
     if (!this.state.lastBlinkTime) return false
     
-    const now = new Date()
-    const blinkDuration = now.getTime() - this.state.lastBlinkTime.getTime()
+    const now = Date.now() // Unix timestamp in milliseconds
+    const blinkDuration = now - this.state.lastBlinkTime
     
     return blinkDuration >= duration
   }
@@ -135,8 +140,8 @@ export class FaceRecognitionService {
     averageBlinkDuration: number
     blinkRate: number // blinks per minute
   } {
-    const now = new Date()
-    const sessionDuration = now.getTime() - this.state.sessionStartTime.getTime()
+    const now = Date.now() // Unix timestamp in milliseconds
+    const sessionDuration = now - this.state.sessionStartTime
     const sessionMinutes = sessionDuration / (1000 * 60)
     
     const totalBlinks = this.state.blinkCount
@@ -173,7 +178,7 @@ export class FaceRecognitionService {
    */
   private detectBlink(eyeState: EyeState): void {
     const bothEyesClosed = !eyeState.left && !eyeState.right
-    const now = new Date()
+    const now = Date.now() // Unix timestamp in milliseconds
 
     if (bothEyesClosed && !this.isBlinking) {
       // Blink started
@@ -184,7 +189,7 @@ export class FaceRecognitionService {
       this.isBlinking = false
       
       if (this.blinkStartTime) {
-        const blinkDuration = now.getTime() - this.blinkStartTime.getTime()
+        const blinkDuration = now - this.blinkStartTime
         
         // Only count as blink if duration is within reasonable range
         if (blinkDuration >= 100 && blinkDuration <= 2000) {
