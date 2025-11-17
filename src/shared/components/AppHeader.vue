@@ -85,7 +85,9 @@ import { useRouter } from 'vue-router'
 import { useSettingsStore } from '../../features/settings/stores/settings'
 import { simpleFlowController } from '../../core/application/SimpleFlowController'
 
-// Keine baseUrl mehr nötig - verwende absolute Pfade direkt
+// Base URL für Assets (aus Vite-Konfiguration)
+// BASE_URL wird zur Build-Zeit durch Vite ersetzt
+const baseUrl = import.meta.env.BASE_URL || '/ratatosk.2.0/'
 
 // Router
 const router = useRouter()
