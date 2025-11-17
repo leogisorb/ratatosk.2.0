@@ -1,13 +1,13 @@
 // categories.ts - Settings Kategorien
 
-// Icons from public/images folder - use BASE_URL to support base path
+// Icons from public folder - use BASE_URL to support base path
 const baseUrl = import.meta.env.BASE_URL
-const leuchtdauerIcon = `${baseUrl}images/leuchtdauer.svg`
-const blinzeldauerIcon = `${baseUrl}images/blinzeldauer.svg`
-const farbmodusIcon = `${baseUrl}images/farbmodus.svg`
-const kameraIcon = `${baseUrl}images/kamera.svg`
-const impressumIcon = `${baseUrl}images/impressum.svg`
-const zurueckIcon = `${baseUrl}images/zurueck.svg`
+const leuchtdauerIcon = `${baseUrl}leuchtdauer.svg`
+const blinzeldauerIcon = `${baseUrl}blinzeldauer.svg`
+const farbmodusIcon = `${baseUrl}farbmodus.svg`
+const kameraIcon = `${baseUrl}kamera.svg`
+const impressumIcon = `${baseUrl}impressum.svg`
+const zurueckIcon = `${baseUrl}zurueck.svg`
 
 export interface SettingsCategory {
   id: string

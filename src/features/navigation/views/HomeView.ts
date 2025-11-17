@@ -69,42 +69,42 @@ export function useHomeViewLogic() {
     {
       id: 'warning',
       title: 'WARNGERÄUSCH',
-      icon: '/ratatosk.2.0/images/bell.svg',
+      icon: '/bell.svg',
       route: '/warning',
       category: 'main'
     },
     {
       id: 'communication',
       title: 'UNTERHALTEN',
-      icon: '/ratatosk.2.0/images/comment-dots.svg',
+      icon: '/comment-dots.svg',
       route: '/communication',
       category: 'communication'
     },
     {
       id: 'ich',
       title: 'ICH',
-      icon: '/ratatosk.2.0/images/user.svg',
+      icon: '/user.svg',
       route: '/self-dialog',
       category: 'main'
     },
     {
       id: 'pain',
       title: 'SCHMERZEN',
-      icon: '/ratatosk.2.0/images/headache.svg',
+      icon: '/headache.svg',
       route: '/pain-dialog',
       category: 'pain'
     },
     {
       id: 'environment',
       title: 'UMGEBUNG',
-      icon: '/ratatosk.2.0/images/house-chimney.svg',
+      icon: '/house-chimney.svg',
       route: '/environment-dialog',
       category: 'main'
     },
     {
       id: 'settings',
       title: 'EINSTELLUNGEN',
-      icon: '/ratatosk.2.0/images/settings-sliders.svg',
+      icon: '/settings-sliders.svg',
       route: '/settings',
       category: 'settings'
     }

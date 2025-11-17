@@ -70,7 +70,7 @@ onUnmounted(() => {
           ]"
         >
           <img
-            src="/ratatosk.2.0/images/bell.svg"
+            src="/ratatosk.2.0/bell.svg"
             alt="WARNGERÄUSCH"
             class="bell-icon"
           />
