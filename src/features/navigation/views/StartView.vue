@@ -187,7 +187,8 @@ import { simpleFlowController } from '../../../core/application/SimpleFlowContro
 import { useAutoMode } from '../../../shared/composables/useAutoMode'
 
 // Base URL für Assets (aus Vite-Konfiguration)
-const baseUrl = import.meta.env.BASE_URL
+// BASE_URL wird zur Build-Zeit durch Vite ersetzt
+const baseUrl = import.meta.env.BASE_URL || '/ratatosk.2.0/'
 import { useInputManager } from '../../../shared/composables/useInputManager'
 import './StartView.css'
 

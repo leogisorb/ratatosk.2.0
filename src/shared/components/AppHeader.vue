@@ -86,7 +86,8 @@ import { useSettingsStore } from '../../features/settings/stores/settings'
 import { simpleFlowController } from '../../core/application/SimpleFlowController'
 
 // Base URL für Assets (aus Vite-Konfiguration)
-const baseUrl = import.meta.env.BASE_URL
+// BASE_URL wird zur Build-Zeit durch Vite ersetzt
+const baseUrl = import.meta.env.BASE_URL || '/ratatosk.2.0/'
 
 // Router
 const router = useRouter()
