@@ -609,6 +609,11 @@ html, body {
   display: flex;
   align-items: center;
   gap: 1rem;
+  transition: opacity 0.2s ease;
+}
+
+.header-left:hover {
+  opacity: 0.8;
 }
 
 .header-right {

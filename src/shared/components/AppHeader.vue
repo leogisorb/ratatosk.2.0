@@ -2,9 +2,9 @@
   <header class="global-header">
     <div class="header-content">
       <!-- Linke Seite - RATATOSK Logo -->
-      <div class="header-left">
+      <div class="header-left" @click="goToApp" style="cursor: pointer;">
         <h1 class="header-title">RATATOSK</h1>
-        <img src="/rattenkopf.svg" alt="Ratatosk Logo" class="header-logo" />
+        <img src="/ratatosk.2.0/images/rattenkopf.svg" alt="Ratatosk Logo" class="header-logo" />
       </div>
 
       <!-- Rechte Seite - 3 Buttons -->
@@ -72,7 +72,7 @@
           class="header-button header-button-home"
           title="Zurück zum Hauptmenü (Hard Reset)"
         >
-          <img src="/GoHome.svg" alt="Home" class="header-button-icon" />
+          <img src="/ratatosk.2.0/images/GoHome.svg" alt="Home" class="header-button-icon" />
         </button>
       </div>
     </div>
@@ -91,10 +91,10 @@ const router = useRouter()
 // Stores
 const settingsStore = useSettingsStore()
 
-// ✅ Reaktiver State - synchronisiert mit globalem SimpleFlowController State
+// Reaktiver State - synchronisiert mit globalem SimpleFlowController State
 const isVolumeEnabled = ref(!simpleFlowController.getTTSMuted())
 
-// ✅ Aktualisiere State wenn sich der globale Mute-State ändert
+// State aktualisieren wenn sich der globale Mute-State ändert
 const updateVolumeState = () => {
   isVolumeEnabled.value = !simpleFlowController.getTTSMuted()
   console.log('Header: Volume state updated from global state:', isVolumeEnabled.value)
@@ -104,20 +104,20 @@ const updateVolumeState = () => {
 const isDarkMode = computed(() => settingsStore.isDarkMode)
 
 // Methods
-// ✅ NUR der Header-Button darf den Mute-State ändern!
+// Nur der Header-Button darf den Mute-State ändern!
 const toggleVolume = () => {
   const currentMuted = simpleFlowController.getTTSMuted()
   const newMuted = !currentMuted
   
   console.log('Header: Volume button clicked - changing mute state from', currentMuted, 'to', newMuted)
   
-  // ✅ Ändere globalen TTS-State über SimpleFlowController (einzige Quelle der Wahrheit)
+  // Globalen TTS-State über SimpleFlowController ändern (einzige Quelle der Wahrheit)
   simpleFlowController.setTTSMuted(newMuted)
-  
-  // ✅ Aktualisiere lokalen State sofort
+
+  // Lokalen State sofort aktualisieren
   isVolumeEnabled.value = !newMuted
-  
-  // ✅ Wenn TTS aktiviert oder deaktiviert wird, View neu laden
+
+  // Wenn TTS aktiviert oder deaktiviert wird, View neu laden
   // (damit Begrüßungstexte und andere TTS-abhängige Inhalte neu gestartet werden)
   if (currentMuted !== newMuted) {
     console.log('Header: TTS wurde geändert (von', currentMuted, 'zu', newMuted, ') - lade aktuellen View neu')
@@ -135,7 +135,7 @@ const toggleVolume = () => {
   console.log('Header: Mute state changed to', newMuted, '- isVolumeEnabled:', !newMuted)
 }
 
-// ✅ Lifecycle - Lade initialen State und höre auf Events
+// Lifecycle - Initialen State laden und auf Events hören
 onMounted(() => {
   // Lade initialen State aus SimpleFlowController
   updateVolumeState()
@@ -152,6 +152,16 @@ onUnmounted(() => {
 const toggleDarkMode = () => {
   settingsStore.toggleDarkMode()
   console.log('Dark mode toggled:', isDarkMode.value)
+}
+
+// Logo/Titel Klick - Navigiert zu /app
+const goToApp = () => {
+  console.log('Header: Logo geklickt - Navigation zu /app')
+  router.push('/app').then(() => {
+    console.log('Header: Logo - Navigation zu /app erfolgreich')
+  }).catch((error) => {
+    console.error('Header: Logo - Navigation fehlgeschlagen:', error)
+  })
 }
 
 // Zurück Button (Hard Reset) - Stoppt alle Services und navigiert zu /
