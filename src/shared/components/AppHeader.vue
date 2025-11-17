@@ -4,7 +4,7 @@
       <!-- Linke Seite - RATATOSK Logo -->
       <div class="header-left" @click="goToApp" style="cursor: pointer;">
         <h1 class="header-title">RATATOSK</h1>
-        <img :src="`${baseUrl}images/rattenkopf.svg`" alt="Ratatosk Logo" class="header-logo" />
+        <img :src="`${baseUrl}rattenkopf.svg`" alt="Ratatosk Logo" class="header-logo" />
       </div>
 
       <!-- Rechte Seite - 3 Buttons -->
