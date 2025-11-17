@@ -4,7 +4,7 @@
     <header class="start-header">
       <div class="start-header-content">
         <h1 class="start-title">RATATOSK</h1>
-        <img :src="`${baseUrl}images/rattenkopf.svg`" alt="Ratatosk Logo" class="start-logo" />
+        <img src="/ratatosk.2.0/rattenkopf.svg" alt="Ratatosk Logo" class="start-logo" />
       </div>
     </header>
 
@@ -186,9 +186,7 @@ import { useFaceRecognition } from '../../face-recognition/composables/useFaceRe
 import { simpleFlowController } from '../../../core/application/SimpleFlowController'
 import { useAutoMode } from '../../../shared/composables/useAutoMode'
 
-// Base URL für Assets (aus Vite-Konfiguration)
-// BASE_URL wird zur Build-Zeit durch Vite ersetzt
-const baseUrl = import.meta.env.BASE_URL || '/ratatosk.2.0/'
+// Keine baseUrl mehr nötig - verwende absolute Pfade direkt
 import { useInputManager } from '../../../shared/composables/useInputManager'
 import './StartView.css'
 
