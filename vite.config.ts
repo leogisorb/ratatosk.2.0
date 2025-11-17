@@ -1,14 +1,30 @@
 import { fileURLToPath, URL } from 'node:url'
 
-import { defineConfig } from 'vite'
+import { defineConfig, Plugin } from 'vite'
 import vue from '@vitejs/plugin-vue'
 import vueDevTools from 'vite-plugin-vue-devtools'
 // @ts-ignore - basicSsl has type issues but works correctly
 import basicSsl from '@vitejs/plugin-basic-ssl'
 
+// Plugin, das absolute Pfade in Vue-Templates unverändert lässt
+const preserveAbsolutePathsPlugin = (): Plugin => {
+  return {
+    name: 'preserve-absolute-paths',
+    enforce: 'pre',
+    resolveId(id) {
+      // Ignoriere absolute Pfade, die mit /ratatosk.2.0/ beginnen
+      if (id.startsWith('/ratatosk.2.0/')) {
+        return { id, external: true }
+      }
+      return null
+    },
+  }
+}
+
 // https://vite.dev/config/
 export default defineConfig({
   plugins: [
+    preserveAbsolutePathsPlugin(),
     vue(),
     vueDevTools(), // Vue DevTools für Debugging aktivieren
     basicSsl(), // HTTPS für localhost (erforderlich für Kamera-API)
@@ -20,9 +36,25 @@ export default defineConfig({
     sourcemap: true, // Sourcemaps für besseres Debugging aktivieren
     minify: 'esbuild',
     rollupOptions: {
+      // Markiere absolute Pfade als externe Ressourcen (werden nicht als Imports behandelt)
+      external: (id) => {
+        // Pfade, die mit /ratatosk.2.0/images/ beginnen, sind externe Ressourcen
+        return id.startsWith('/ratatosk.2.0/images/') || id.startsWith('/ratatosk.2.0/')
+      },
       output: {
         manualChunks: undefined,
-        assetFileNames: 'assets/[name]-[hash][extname]',
+        assetFileNames: (assetInfo) => {
+          // Dateien aus public/images/ behalten ihre Struktur
+          // Vite kopiert public/images/ automatisch nach dist/images/
+          // Nur für importierte Assets (aus src/) verwenden wir assets/
+          const name = assetInfo.name || ''
+          if (name.includes('images/') || name.startsWith('images/')) {
+            // Entferne 'images/' aus dem Pfad, da es bereits im dist/images/ Ordner ist
+            const fileName = name.replace(/^images\//, '')
+            return `images/${fileName}[extname]`
+          }
+          return 'assets/[name]-[hash][extname]'
+        },
         chunkFileNames: 'assets/[name]-[hash].js',
         entryFileNames: 'assets/[name]-[hash].js',
       },
