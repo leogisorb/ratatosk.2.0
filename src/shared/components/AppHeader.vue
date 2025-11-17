@@ -4,7 +4,7 @@
       <!-- Linke Seite - RATATOSK Logo -->
       <div class="header-left" @click="goToApp" style="cursor: pointer;">
         <h1 class="header-title">RATATOSK</h1>
-        <img src="/ratatosk.2.0/images/rattenkopf.svg" alt="Ratatosk Logo" class="header-logo" />
+        <img :src="`${baseUrl}images/rattenkopf.svg`" alt="Ratatosk Logo" class="header-logo" />
       </div>
 
       <!-- Rechte Seite - 3 Buttons -->
@@ -72,7 +72,7 @@
           class="header-button header-button-home"
           title="Zurück zum Hauptmenü (Hard Reset)"
         >
-          <img src="/ratatosk.2.0/images/GoHome.svg" alt="Home" class="header-button-icon" />
+          <img :src="`${baseUrl}images/GoHome.svg`" alt="Home" class="header-button-icon" />
         </button>
       </div>
     </div>
@@ -84,6 +84,9 @@ import { ref, computed, onMounted, onUnmounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { useSettingsStore } from '../../features/settings/stores/settings'
 import { simpleFlowController } from '../../core/application/SimpleFlowController'
+
+// Base URL für Assets (aus Vite-Konfiguration)
+const baseUrl = import.meta.env.BASE_URL
 
 // Router
 const router = useRouter()

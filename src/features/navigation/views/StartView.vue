@@ -4,7 +4,7 @@
     <header class="start-header">
       <div class="start-header-content">
         <h1 class="start-title">RATATOSK</h1>
-        <img src="/rattenkopf.svg" alt="Ratatosk Logo" class="start-logo" />
+        <img :src="`${baseUrl}images/rattenkopf.svg`" alt="Ratatosk Logo" class="start-logo" />
       </div>
     </header>
 
@@ -185,6 +185,9 @@ import { useRouter } from 'vue-router'
 import { useFaceRecognition } from '../../face-recognition/composables/useFaceRecognition'
 import { simpleFlowController } from '../../../core/application/SimpleFlowController'
 import { useAutoMode } from '../../../shared/composables/useAutoMode'
+
+// Base URL für Assets (aus Vite-Konfiguration)
+const baseUrl = import.meta.env.BASE_URL
 import { useInputManager } from '../../../shared/composables/useInputManager'
 import './StartView.css'
 
