@@ -17,6 +17,17 @@ const preserveAbsolutePathsPlugin = (): Plugin => {
       if (id.startsWith('/ratatosk.2.0/')) {
         return { id, external: true }
       }
+      // SVG-Dateien sollen nicht als Module behandelt werden
+      if (id.endsWith('.svg') && !id.startsWith('.')) {
+        return null // Lass Vite SVG-Dateien als Assets behandeln
+      }
+      return null
+    },
+    load(id) {
+      // Verhindere, dass SVG-Dateien als JavaScript-Module geladen werden
+      if (id.endsWith('.svg')) {
+        return null // Lass Vite SVG-Dateien als Assets behandeln
+      }
       return null
     },
   }
