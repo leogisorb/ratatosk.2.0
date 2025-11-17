@@ -1,8 +1,7 @@
 // Ich Dialog Data - Refactored Version
-// ✅ Fixed Emojis - Alle Emojis als Unicode-Escape-Sequenzen für Encoding-Sicherheit
-// ✅ Readonly Types - as const für unveränderliche Daten
-// ✅ Typed Constants - REGION_IDS und SUB_REGION_TYPES als Konstanten
-// ✅ Better Organization - Klare Struktur mit Kommentaren
+// Emojis als Unicode-Escape-Sequenzen für Encoding-Sicherheit
+// Readonly Types mit as const für unveränderliche Daten
+// Typed Constants: REGION_IDS und SUB_REGION_TYPES als Konstanten
 
 export interface IchRegion {
   readonly id: string
@@ -56,32 +55,32 @@ export const mainRegions: readonly IchRegion[] = [
   {
     id: REGION_IDS.ERNAEHRUNG,
     title: 'ERNÄHRUNG',
-    icon: '/ratatosk.2.0/burger.svg'
+    icon: '/ratatosk.2.0/images/burger.svg'
   },
   {
     id: REGION_IDS.GEFUEHLE,
     title: 'GEFÜHLE',
-    icon: '/ratatosk.2.0/face-smile-upside-down 1.svg'
+    icon: '/ratatosk.2.0/images/face-smile-upside-down 1.svg'
   },
   {
     id: REGION_IDS.KLEIDUNG,
     title: 'KLEIDUNG',
-    icon: '/ratatosk.2.0/clothes.svg'
+    icon: '/ratatosk.2.0/images/clothes.svg'
   },
   {
     id: REGION_IDS.HYGIENE,
     title: 'HYGIENE',
-    icon: '/ratatosk.2.0/bath.svg'
+    icon: '/ratatosk.2.0/images/bath.svg'
   },
   {
     id: REGION_IDS.BEWEGUNG,
     title: 'BEWEGUNG',
-    icon: '/ratatosk.2.0/barefoot 1.svg'
+    icon: '/ratatosk.2.0/images/barefoot 1.svg'
   },
   {
     id: REGION_IDS.ZURUECK,
     title: 'ZURÜCK',
-    icon: '/ratatosk.2.0/zurueck.svg'
+    icon: '/ratatosk.2.0/images/zurueck.svg'
   }
 ] as const
 

@@ -1,5 +1,5 @@
-// useEnvironmentDialogMachine.ts - Central State Machine for Environment Dialog
-// ✅ MIT CANCELLATION TOKEN - Verhindert Race Conditions und laufende Promises nach Navigation
+// State Machine für den Environment Dialog
+// Verwendet Cancellation Token um Race Conditions zu vermeiden
 
 import { ref, computed, nextTick } from 'vue'
 import { useRouter } from 'vue-router'
@@ -40,7 +40,7 @@ export function useEnvironmentDialogMachine() {
     }
   }
 
-  // ✅ TTS mit Cancellation Support
+  // TTS mit Unterstützung für Abbruch
   const tts = useTTSWithCancellation(() => isCancelled.value)
 
   // State
@@ -111,13 +111,10 @@ export function useEnvironmentDialogMachine() {
   })
 
   // ===== HELPER: START AUTO MODE =====
-  /**
-   * Startet AutoMode nach Delay mit allen Checks
-   * ✅ ATOMIC: Alle Checks erfolgen direkt vor autoMode.start()
-   * ✅ WICHTIG: Setzt Index explizit auf 0, damit Karussell bei Index 0 startet
-   */
+  // Startet AutoMode nach einer Verzögerung
+  // Wichtig: Setzt den Index auf 0, damit das Karussell bei 0 startet
   function scheduleAutoModeStart(expectedState: UmgebungDialogState, delay: number = TIMER_DELAYS.AUTO_MODE_START) {
-    // ✅ Index explizit auf 0 setzen, damit Karussell bei Index 0 startet
+    // Index auf 0 setzen
     autoMode.index.value = 0
     
     scheduleTimer(async () => {
@@ -127,9 +124,9 @@ export function useEnvironmentDialogMachine() {
         await nextTick()
         checkCancelled()
         
-        // ✅ Check EINMAL, direkt vor Nutzung
+        // Nochmal prüfen ob alles passt
         if (items.value.length > 0 && state.value === expectedState) {
-          // ✅ Index nochmal auf 0 setzen, um sicherzustellen, dass Karussell bei 0 startet
+          // Index nochmal auf 0 setzen für Sicherheit
           autoMode.index.value = 0
           autoMode.start(true)
         }
@@ -267,32 +264,26 @@ export function useEnvironmentDialogMachine() {
     }
   }
 
-  /**
-   * Stoppt alle Timer und verhindert weitere AutoMode-Starts
-   * ✅ MIT CANCELLATION TOKEN - setzt isCancelled = true
-   * ✅ cleanupTimers() stoppt bereits autoMode durch onCleanup
-   */
+  // Stoppt alle Timer und verhindert weitere AutoMode-Starts
+  // Setzt das Cancellation Flag und räumt alle Ressourcen auf
   function cleanup() {
     console.log('EnvironmentDialog: Cleaning up')
     
-    // ✅ ZUERST: Cancellation Flag setzen
+    // Erst das Cancellation Flag setzen
     isCancelled.value = true
     
-    // ✅ DANN: Alle Ressourcen freigeben
+    // Dann alle Ressourcen freigeben
     cleanupTimers() // Stoppt autoMode durch onCleanup
     tts.cancel() // TTS muss explizit gestoppt werden
   }
 
-  /**
-   * Zurück zur Haupt-App navigieren
-   * ✅ cleanup() macht bereits alles nötige
-   */
+  // Zurück zur Haupt-App navigieren
   function goBack() {
     console.log('UmgebungDialog: goBack() - Cleanup und Navigation')
     
-    cleanup() // Macht: isCancelled = true, cleanupTimers (autoMode.stop über onCleanup)
+    cleanup() // Räumt lokale Ressourcen auf
     
-    // ✅ Globale Services stoppen (cleanup() stoppt nur lokale)
+    // Globale Services auch stoppen
     simpleFlowController.stopTTS()
     simpleFlowController.stopAutoMode()
     simpleFlowController.setActiveView('')

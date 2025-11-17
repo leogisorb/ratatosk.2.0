@@ -61,7 +61,7 @@ export function useWarningViewLogic() {
   // ===== TTS IMPLEMENTATION MIT CANCELLATION =====
   const speakText = (text: string, onStart?: () => void, onEnd?: () => void): Promise<void> => {
     return new Promise((resolve, reject) => {
-      // ✅ Prüfe vor Start ob cancelled
+      // Prüfen ob bereits abgebrochen wurde
       if (isCancelled.value) {
         reject(new Error('TTS cancelled before start'))
         return
@@ -98,7 +98,7 @@ export function useWarningViewLogic() {
       }
 
       utterance.onstart = () => {
-        // ✅ Prüfe während TTS ob cancelled
+        // Prüfen ob während TTS abgebrochen wurde
         if (isCancelled.value) {
           speechSynthesis.cancel()
           finish(true)
@@ -121,7 +121,7 @@ export function useWarningViewLogic() {
         finish(true)
       }
 
-      // ✅ Sicherheitsfallback mit Cancellation-Check
+      // Sicherheitsfallback mit Abbruch-Prüfung
       timeoutId = window.setTimeout(() => {
         if (!resolved) {
           console.warn('TTS: Timeout reached')
@@ -129,7 +129,7 @@ export function useWarningViewLogic() {
         }
       }, 10000)
 
-      // ✅ Watch für Cancellation
+      // Regelmäßig prüfen ob TTS abgebrochen wurde
       intervalId = window.setInterval(() => {
         if (isCancelled.value && !resolved) {
           speechSynthesis.cancel()
@@ -143,7 +143,7 @@ export function useWarningViewLogic() {
 
   const delay = (ms: number): Promise<void> => {
     return new Promise((resolve, reject) => {
-      // ✅ Prüfe vor Start ob cancelled
+      // Prüfen ob bereits abgebrochen wurde
       if (isCancelled.value) {
         reject(new Error('Delay cancelled'))
         return
@@ -157,7 +157,7 @@ export function useWarningViewLogic() {
         }
       }, ms)
       
-      // ✅ Cleanup bei Cancellation
+      // Cleanup bei Abbruch
       const intervalId = window.setInterval(() => {
         if (isCancelled.value) {
           clearTimeout(timeoutId)
@@ -178,14 +178,14 @@ export function useWarningViewLogic() {
   }
   
   const setTimer = (callback: () => void, delay: number): void => {
-    // ✅ Setze Timer nur wenn nicht cancelled
+    // Timer nur setzen wenn nicht abgebrochen
     if (isCancelled.value) {
       console.log('WarningView: Timer nicht gesetzt - cancelled')
       return
     }
     
     const id = window.setTimeout(() => {
-      // ✅ Prüfe vor Ausführung ob cancelled
+      // Prüfen vor Ausführung ob abgebrochen
       if (!isCancelled.value) {
         callback()
       }
@@ -262,7 +262,7 @@ export function useWarningViewLogic() {
   
   const transitionTo = async (newState: WarningState) => {
     try {
-      checkCancelled() // ✅ Prüfe vor Transition
+      checkCancelled() // Prüfen vor Transition
       
       console.log(`Transitioning from ${currentState.value} to ${newState}`)
       clearTimers()
@@ -313,7 +313,7 @@ export function useWarningViewLogic() {
       
       await speakText(statusText.value)
       
-      checkCancelled() // ✅ Prüfe nach TTS
+      checkCancelled() // Prüfen nach TTS
       
       endIntroduction()
       await transitionTo(WarningState.BELL_IDLE)
@@ -338,11 +338,11 @@ export function useWarningViewLogic() {
       
       await speakText(statusText.value)
       
-      checkCancelled() // ✅ Prüfe nach TTS
+      checkCancelled() // Prüfen nach TTS
       
       if (!isAlarmActive.value) {
         setTimer(() => {
-          // ✅ Double-check vor Auto-Transition
+          // Nochmal prüfen vor Auto-Transition
           if (currentState.value === WarningState.BELL_IDLE && !isAlarmActive.value && !isCancelled.value) {
             transitionTo(WarningState.BACK_ACTIVE)
           }
@@ -381,11 +381,11 @@ export function useWarningViewLogic() {
       
       await speakText(statusText.value)
       
-      checkCancelled() // ✅ Prüfe nach TTS
+      checkCancelled() // Prüfen nach TTS
       
       if (!isAlarmActive.value) {
         setTimer(() => {
-          // ✅ Double-check vor Auto-Transition
+          // Nochmal prüfen vor Auto-Transition
           if (currentState.value === WarningState.BACK_ACTIVE && !isAlarmActive.value && !isCancelled.value) {
             transitionTo(WarningState.BELL_IDLE)
           }
@@ -449,10 +449,10 @@ export function useWarningViewLogic() {
   const cleanup = () => {
     console.log('WarningView: Cleaning up')
     
-    // ✅ ZUERST: Cancellation Flag setzen
+    // Erst das Cancellation Flag setzen
     isCancelled.value = true
     
-    // ✅ DANN: Alle Ressourcen freigeben
+    // Dann alle Ressourcen freigeben
     clearTimers()
     speechSynthesis.cancel()
     stopContinuousAlarm()
@@ -501,7 +501,7 @@ export function useWarningViewLogic() {
   const setupWarningSystem = async () => {
     console.log('WarningView: Setting up warning system')
     
-    // ✅ Cleanup SOFORT verfügbar machen (BEVOR start() aufgerufen wird)
+    // Cleanup sofort verfügbar machen (bevor start() aufgerufen wird)
     ;(window as any).__warningCleanup = cleanup
     
     const cleanupEventListeners = setupEventListeners(handleUserInput)
@@ -509,7 +509,7 @@ export function useWarningViewLogic() {
     document.addEventListener('touchstart', handleTouchStart, { passive: false })
     document.addEventListener('touchend', handleTouchEnd, { passive: false })
     
-    // ✅ Start nach Cleanup-Registrierung
+    // Start nach Cleanup-Registrierung
     await start()
     
     return () => {

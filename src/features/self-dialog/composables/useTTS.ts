@@ -1,14 +1,4 @@
-/**
- * ✅ useTTS.ts - Refactored Version
- * 
- * Fixes:
- * ✅ Proper Mute Handling - cancel() statt volume 0
- * ✅ Error Types - Spezifische Error-Klassen
- * ✅ Retry Logic - speakWithRetry() für robuste TTS
- * ✅ Sequence Support - speakSequence() für mehrere Texte
- * ✅ Mock Support - createMockTTS() für Tests
- * ✅ Validation - Prüft alle Voraussetzungen vor TTS-Start
- */
+// TTS Composable für Sprachausgabe - Refactored Version
 
 import { ref, computed } from 'vue'
 import { useSettingsStore } from '../../settings/stores/settings'
@@ -65,7 +55,7 @@ export function useTTS() {
   const isSpeaking = ref(false)
   const currentUtterance = ref<SpeechSynthesisUtterance | null>(null)
   
-  // ✅ Enabled basiert auf Settings
+  // Enabled basiert auf Settings
   const enabled = computed(() => settingsStore.settings.voiceEnabled ?? true)
 
   /**
@@ -105,23 +95,23 @@ export function useTTS() {
 
   /**
    * Spricht einen Text mit Sprachsynthese
-   * ✅ Proper Mute Handling: cancel() statt volume 0
+   * Mute Handling: cancel() statt volume 0
    */
   function speak(text: string): Promise<void> {
     return new Promise((resolve, reject) => {
       try {
-        // ✅ Validation
+        // Validation
         validate(text)
       } catch (error) {
         if (error instanceof TTSMutedError) {
-          // ✅ Muted → sofort auflösen ohne TTS zu starten
+          // Muted - sofort auflösen ohne TTS zu starten
           debug.log('TTS', 'Muted - cancelling speak', { text })
           resolve()
           return
         }
         
         if (error instanceof TTSError) {
-          // ✅ Andere TTS-Fehler → Fallback-Delay
+          // Andere TTS-Fehler - Fallback-Delay
           debug.warn('TTS', 'Validation failed', { text, error: error.code })
           setTimeout(() => resolve(), TTS_CONFIG.FALLBACK_DELAY)
           return
@@ -133,11 +123,11 @@ export function useTTS() {
 
       const synth = window.speechSynthesis!
       
-      // ✅ Bereits am Sprechen → abbrechen und neu starten
+      // Bereits am Sprechen - abbrechen und neu starten
       synth.cancel()
       isSpeaking.value = false
       
-      // ✅ Timeout-Fallback für hängende TTS
+      // Timeout-Fallback für hängende TTS
       let timeoutId: number | null = null
       timeoutId = window.setTimeout(() => {
         synth.cancel()
@@ -150,7 +140,7 @@ export function useTTS() {
       const utterance = new SpeechSynthesisUtterance(text.trim())
       utterance.lang = 'de-DE'
       utterance.rate = 1.0
-      utterance.volume = 1.0 // ✅ Immer 1.0 - Mute wird durch cancel() gehandhabt
+      utterance.volume = 1.0 // Immer 1.0 - Mute wird durch cancel() gehandhabt
       
       currentUtterance.value = utterance
       isSpeaking.value = true

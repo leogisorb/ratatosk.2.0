@@ -1,7 +1,4 @@
-/**
- * Einfacher, funktionierender FlowController
- * Basiert auf der bewährten alten Architektur, aber zentralisiert
- */
+// FlowController für die zentrale Steuerung von TTS und AutoMode
 
 // Named Constants für Magic Numbers
 const TTS_CONFIG = {
@@ -60,14 +57,13 @@ export class SimpleFlowController {
   private isProcessingQueue: boolean = false
   private ttsEndListeners: (() => void)[] = []
   
-  // ✅ Async Queue statt Busy-Wait: Promise-basierte Queue
-  // Jeder neue TTS-Request wird an die Queue angehängt
+  // Promise-basierte Queue für TTS-Requests, verhindert Race Conditions
   private ttsQueuePromise: Promise<void> = Promise.resolve()
 
   private constructor() {
     this.speechSynthesis = window.speechSynthesis
     this.setupVoiceHandling()
-    // ✅ Lade Mute-State aus localStorage beim Initialisieren
+    // Mute-State aus localStorage laden
     this.loadMuteState()
   }
 
@@ -81,7 +77,7 @@ export class SimpleFlowController {
   public setActiveView(viewName: string): void {
     console.log('SimpleFlowController: Setting active view to:', viewName)
     
-    // ✅ Stoppe alle laufenden Prozesse
+    // Alle laufenden Prozesse stoppen
     this.stopAutoMode()
     this.stopTTSOnly() // Nur TTS stoppen, Queue nicht leeren
     
@@ -110,7 +106,7 @@ export class SimpleFlowController {
   ): boolean {
     console.warn('SimpleFlowController.startAutoMode() is deprecated. Use useAutoMode() from shared/composables/useAutoMode.ts instead.')
     
-    // ✅ Stoppe zuerst alle laufenden Auto-Modes
+    // Erst alle laufenden Auto-Modes stoppen
     if (this.autoModeInterval || this.isAutoModeActive) {
       console.warn('SimpleFlowController: Auto-mode already running - stopping previous instance')
       this.stopAutoMode()
@@ -131,7 +127,7 @@ export class SimpleFlowController {
 
     // Starte Auto-Mode nach initialer Verzögerung
     setTimeout(() => {
-      // ✅ Prüfe nochmal, ob Auto-Mode noch aktiv sein soll
+      // Nochmal prüfen ob Auto-Mode noch aktiv sein soll
       if (this.isAutoModeActive) {
         this.executeCycle(cycleDelay)
       }
@@ -157,7 +153,7 @@ export class SimpleFlowController {
    * Führt einen Auto-Mode-Zyklus aus
    */
   private executeCycle(cycleDelay: number): void {
-    // ✅ Prüfe ob Auto-Mode noch aktiv sein soll
+    // Prüfen ob Auto-Mode noch aktiv sein soll
     if (!this.isAutoModeActive || !this.onCycleCallback || this.currentItems.length === 0) {
       console.log('SimpleFlowController: Auto-mode cycle stopped - conditions not met')
       return
@@ -243,11 +239,8 @@ export class SimpleFlowController {
     await this.queueAndSpeak(text)
   }
 
-  /**
-   * TTS in Queue einreihen und verarbeiten
-   * ✅ Fix: Async Queue statt Busy-Wait (Promise-basiert)
-   * Verhindert Race Conditions durch sequentielle Promise-Kette
-   */
+  // TTS in Queue einreihen und verarbeiten
+  // Promise-basierte Queue verhindert Race Conditions durch sequentielle Verarbeitung
   private async queueAndSpeak(text: string): Promise<void> {
     // Prüfe auf Duplikate in der Queue
     if (this.ttsQueue.includes(text)) {
@@ -259,8 +252,8 @@ export class SimpleFlowController {
     this.ttsQueue.push(text)
     console.log('SimpleFlowController: Added to TTS queue:', text, 'Queue length:', this.ttsQueue.length)
     
-    // ✅ Async Queue: Jeder neue Request wird an die Promise-Kette angehängt
-    // Dies verhindert Race Conditions, da alle Requests sequentiell verarbeitet werden
+    // Jeder neue Request wird an die Promise-Kette angehängt
+    // Das verhindert Race Conditions, da alle Requests sequentiell verarbeitet werden
     this.ttsQueuePromise = this.ttsQueuePromise.then(async () => {
       // Verarbeite alle Items in der Queue sequentiell
       while (this.ttsQueue.length > 0) {
@@ -358,7 +351,7 @@ export class SimpleFlowController {
         console.log('SimpleFlowController: Finished speaking:', text)
         this.isSpeaking = false
         
-        // ✅ Fix: Race Condition bei TTS + Auto-Mode
+        // Race Condition bei TTS + Auto-Mode vermeiden
         // Atomare Prüfung und Update von pendingCycle
         const wasPending = this.pendingCycle
         const isAutoModeStillActive = this.isAutoModeActive
@@ -549,23 +542,21 @@ export class SimpleFlowController {
     }
   }
 
-  /**
-   * Schaltet TTS global stumm/an (durch sanftes Ausfaden)
-   * ✅ NUR vom Header-Button aufrufbar - Views dürfen dies NICHT tun!
-   */
+  // Schaltet TTS global stumm/an (durch sanftes Ausfaden)
+  // Nur vom Header-Button aufrufbar - Views dürfen dies nicht tun!
   public setTTSMuted(muted: boolean): void {
     this.isTTSMuted = muted
     console.log('SimpleFlowController: TTS muted set to:', muted)
     
-    // ✅ Speichere Mute-State persistent
+    // Mute-State persistent speichern
     this.saveMuteState()
     
-    // ✅ Wenn stumm geschaltet wird: Stoppe alle laufenden TTS (auch außerhalb SimpleFlowController)
+    // Wenn stumm geschaltet wird: Alle laufenden TTS stoppen
     if (muted) {
       // Stoppe SimpleFlowController TTS
       this.stopTTSOnly()
       
-      // ✅ Stoppe auch alle anderen TTS (von useTTS Composables und direkten Aufrufen)
+      // Auch alle anderen TTS stoppen (von useTTS Composables und direkten Aufrufen)
       if (window.speechSynthesis) {
         window.speechSynthesis.cancel()
         console.log('SimpleFlowController: All TTS cancelled (muted)')

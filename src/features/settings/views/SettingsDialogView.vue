@@ -275,13 +275,13 @@ const handleItemClick = (item: any, index: number) => {
   // Aktiviere User-Interaktion für TTS
   enableTTSOnInteraction()
 
-  // ✅ Zurück-Button ist IMMER klickbar (auch wenn nicht im AutoMode aktiv)
+  // Zurück-Button ist immer klickbar (auch wenn nicht im AutoMode aktiv)
   if (item.id === dict.ID_BACK) {
     handleBackButton()
     return
   }
 
-  // ✅ Alle anderen Buttons sind NUR klickbar, wenn sie im AutoMode aktiv sind
+  // Alle anderen Buttons sind nur klickbar, wenn sie im AutoMode aktiv sind
   if (autoMode.index.value === index) {
     handleItemSelection(item)
   }
@@ -443,7 +443,7 @@ onMounted(() => {
     })
   }
   
-  // ✅ Cleanup SOFORT verfügbar machen (BEVOR Services starten)
+  // Cleanup sofort verfügbar machen (bevor Services starten)
   ;(window as any).__settingsDialogCleanup = () => {
     debug.log('SettingsDialog', 'Global cleanup called')
     machine.cleanup()

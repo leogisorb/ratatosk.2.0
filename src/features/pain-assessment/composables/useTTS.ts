@@ -1,13 +1,4 @@
-/**
- * ✅ MODUL 1 — useTTS() (bulletproof Speech-System)
- * 
- * Ziele:
- * ✅ Kein Deadlock mehr
- * ✅ Kein Doppel-Speak
- * ✅ Keine Race Conditions
- * ✅ Utterance wird sauber vorbereitet
- * ✅ Events sauber abgehört
- */
+// TTS Composable für Sprachausgabe
 
 import { ref, computed } from 'vue'
 import { useSettingsStore } from '../../settings/stores/settings'
@@ -17,7 +8,7 @@ export function useTTS() {
   const settingsStore = useSettingsStore()
   const isSpeaking = ref(false)
   
-  // ✅ Enabled basiert auf Settings
+  // Enabled basiert auf Settings
   const enabled = computed(() => settingsStore.settings.voiceEnabled ?? true)
 
   /**
@@ -27,26 +18,26 @@ export function useTTS() {
    */
   function speak(text: string): Promise<void> {
     return new Promise((resolve) => {
-      // ✅ Kein Text oder TTS deaktiviert → sofort auflösen
+      // Kein Text oder TTS deaktiviert - sofort auflösen
       if (!enabled.value || !text.trim()) {
         setTimeout(() => resolve(), 500) // Kurze Wartezeit für Timing-Konsistenz
         return
       }
 
-      // ✅ Prüfe ob TTS stumm geschaltet ist → Volume 0 setzen
+      // Prüfen ob TTS stumm geschaltet ist - dann Volume auf 0 setzen
       const isMuted = simpleFlowController.getTTSMuted()
 
-      // ✅ Kein SpeechSynthesis verfügbar → sofort auflösen
+      // Kein SpeechSynthesis verfügbar - sofort auflösen
       const synth = window.speechSynthesis
       if (!synth) {
         setTimeout(() => resolve(), 500)
         return
       }
 
-      // ✅ Bereits am Sprechen → abbrechen und neu starten
+      // Bereits am Sprechen - abbrechen und neu starten
       synth.cancel()
       
-      // ✅ Timeout-Fallback für hängende TTS (10 Sekunden)
+      // Timeout-Fallback für hängende TTS (10 Sekunden)
       let timeoutId: number | null = null
       timeoutId = window.setTimeout(() => {
         synth.cancel()
@@ -57,7 +48,7 @@ export function useTTS() {
       const utterance = new SpeechSynthesisUtterance(text.trim())
       utterance.lang = 'de-DE'
       utterance.rate = 1.0
-      utterance.volume = isMuted ? 0 : 1.0  // ✅ Volume basierend auf Mute-Status
+      utterance.volume = isMuted ? 0 : 1.0  // Volume basierend auf Mute-Status
 
       isSpeaking.value = true
 

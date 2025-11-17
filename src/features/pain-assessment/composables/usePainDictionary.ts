@@ -1,12 +1,12 @@
 /**
- * ✅ MODUL 3 — usePainDictionary()
+ * usePainDictionary()
  * 
  * Alles was Regionen, Grammatik, IDs, Texte, Mapping betrifft, ist ausgelagert.
  * 
- * Damit:
- * ✅ UI ist Layout-Logik
- * ✅ Machine ist Kontroll-Logik
- * ✅ Dictionary ist Daten & Sprache
+ * Trennung der Verantwortlichkeiten:
+ * UI ist Layout-Logik
+ * Machine ist Kontroll-Logik
+ * Dictionary ist Daten & Sprache
  */
 
 import { mainRegions, subRegionMap, getAllSubRegions } from '../data/regions'
@@ -74,7 +74,7 @@ export function usePainDictionary() {
     const region = findMainRegion(mainRegionId)
     if (!region) return 'Wählen Sie einen Bereich aus.'
     
-    // ✅ Korrekte deutsche Grammatik für Singular/Plural
+    // Korrekte deutsche Grammatik für Singular/Plural
     const pluralRegions = ['beine', 'arme'] // Plural-Regionen
     const isPlural = pluralRegions.includes(mainRegionId)
     

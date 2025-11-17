@@ -14,13 +14,13 @@ export function useTTSWithCancellation(getCancelled: () => boolean) {
 
   function speak(text: string): Promise<void> {
     return new Promise((resolve, reject) => {
-      // ✅ Prüfe vor Start ob cancelled
+      // Prüfen ob bereits abgebrochen wurde
       if (getCancelled()) {
         reject(new Error('TTS cancelled before start'))
         return
       }
 
-      // ✅ Kein Text oder TTS deaktiviert
+      // Kein Text oder TTS deaktiviert
       if (!enabled.value || !text.trim()) {
         setTimeout(() => resolve(), 500)
         return
@@ -55,7 +55,7 @@ export function useTTSWithCancellation(getCancelled: () => boolean) {
         }
       }
 
-      // ✅ Timeout mit Cancellation-Check
+      // Timeout mit Abbruch-Prüfung
       timeoutId = window.setTimeout(() => {
         if (!resolved) {
           synth.cancel()
@@ -71,7 +71,7 @@ export function useTTSWithCancellation(getCancelled: () => boolean) {
       isSpeaking.value = true
 
       utterance.onstart = () => {
-        // ✅ Prüfe während TTS ob cancelled
+        // Prüfen ob während TTS abgebrochen wurde
         if (getCancelled()) {
           synth.cancel()
           finish(true)
@@ -87,7 +87,7 @@ export function useTTSWithCancellation(getCancelled: () => boolean) {
         finish(true)
       }
 
-      // ✅ Polling für Cancellation während TTS läuft
+      // Regelmäßig prüfen ob TTS abgebrochen wurde
       pollInterval = window.setInterval(() => {
         if (getCancelled() && !resolved) {
           synth.cancel()

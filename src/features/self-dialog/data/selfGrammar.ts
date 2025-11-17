@@ -1,5 +1,5 @@
 // selfGrammar.ts - Grammar rules for Self Dialog
-// ✅ Verwendet REGION_IDS für Type Safety
+// Verwendet REGION_IDS für Type Safety
 
 import { REGION_IDS } from './selfDialogData'
 

@@ -120,7 +120,7 @@ export function useSingleEyeBlinkHandler(config: SingleEyeBlinkHandlerConfig = {
     }
 
     isActive.value = true
-    console.log('✅ SingleEyeBlinkHandler: Gestartet')
+    console.log('SingleEyeBlinkHandler: Gestartet')
 
     // Event-Listener registrieren
     eventListener = handleSingleEyeBlink as EventListener
@@ -136,7 +136,7 @@ export function useSingleEyeBlinkHandler(config: SingleEyeBlinkHandlerConfig = {
     }
 
     isActive.value = false
-    console.log('✅ SingleEyeBlinkHandler: Gestoppt')
+    console.log('SingleEyeBlinkHandler: Gestoppt')
 
     // Event-Listener entfernen
     if (eventListener) {

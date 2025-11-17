@@ -278,7 +278,7 @@
   padding: 4rem 2rem;
   text-align: center;
   animation: fadeInScale 0.5s ease-out;
-  gap: 0.5rem; /* ✅ Reduzierter Abstand zwischen Elementen */
+  gap: 0.5rem; /* Reduzierter Abstand zwischen Elementen */
 }
 
 .confirmation-icon {
@@ -291,7 +291,7 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  margin-bottom: 1rem; /* ✅ Reduziert von 2rem */
+  margin-bottom: 1rem; /* Reduziert von 2rem */
   box-shadow: 0 10px 40px rgba(102, 126, 234, 0.3);
   animation: pulse 2s ease-in-out infinite;
 }
@@ -301,7 +301,7 @@
   font-size: clamp(2rem, 8vw, 4rem);
   font-weight: 450;
   color: var(--color-text-primary);
-  margin: 0; /* ✅ Kein Margin mehr */
+  margin: 0; /* Kein Margin mehr */
   text-align: center;
 }
 
@@ -310,7 +310,7 @@
   font-size: clamp(1.5rem, 6vw, 3rem);
   font-weight: 450;
   color: #FF6B35;
-  margin: 0; /* ✅ Kein Margin mehr */
+  margin: 0; /* Kein Margin mehr */
   text-align: center;
 }
 
@@ -340,12 +340,12 @@
     width: 80px;
     height: 80px;
     font-size: 2.5rem;
-    margin-bottom: 0.5rem; /* ✅ Noch weniger Abstand auf Mobile */
+    margin-bottom: 0.5rem; /* Noch weniger Abstand auf Mobile */
   }
   
   .confirmation-container {
-    padding: 1rem 1rem; /* ✅ Reduziertes Padding */
-    gap: 0.25rem; /* ✅ Sehr kleiner Abstand zwischen Elementen */
+    padding: 1rem 1rem; /* Reduziertes Padding */
+    gap: 0.25rem; /* Sehr kleiner Abstand zwischen Elementen */
   }
   
   .confirmation-title {
@@ -357,25 +357,25 @@
   }
 }
 
-/* ✅ Portrait-Orientierung: Texte noch näher zusammen */
+/* Portrait-Orientierung: Texte noch näher zusammen */
 @media (orientation: portrait) and (max-width: 1024px) {
   .confirmation-container {
-    padding: 1.5rem 1rem; /* ✅ Weniger Padding in Portrait */
-    gap: 0.5rem; /* ✅ Kleiner Abstand */
-    justify-content: center; /* ✅ Zentriert vertikal */
+    padding: 1.5rem 1rem; /* Weniger Padding in Portrait */
+    gap: 0.5rem; /* Kleiner Abstand */
+    justify-content: center; /* Zentriert vertikal */
   }
   
   .confirmation-icon {
-    margin-bottom: 0.75rem; /* ✅ Reduzierter Abstand */
+    margin-bottom: 0.75rem; /* Reduzierter Abstand */
   }
   
   .confirmation-title {
     margin: 0;
-    font-size: clamp(1.5rem, 6vw, 2.5rem); /* ✅ Etwas kleiner */
+    font-size: clamp(1.5rem, 6vw, 2.5rem); /* Etwas kleiner */
   }
   
   .confirmation-text {
     margin: 0;
-    font-size: clamp(1.2rem, 5vw, 2rem); /* ✅ Etwas kleiner */
+    font-size: clamp(1.2rem, 5vw, 2rem); /* Etwas kleiner */
   }
 }

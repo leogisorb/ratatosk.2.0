@@ -1,4 +1,4 @@
-import { createRouter, createWebHistory } from 'vue-router'
+import { createRouter, createWebHistory, createWebHashHistory } from 'vue-router'
 import StartView from '../features/navigation/views/StartView.vue'
 import HomeView from '../features/navigation/views/HomeView.vue'
 import WarningView from '../features/warning/views/WarningView.vue'
@@ -11,7 +11,9 @@ import { simpleFlowController } from '../core/application/SimpleFlowController'
 // Alte Settings-Views entfernt - werden durch SettingsDialogView ersetzt
 
 const router = createRouter({
-  history: createWebHistory('/ratatosk.2.0/'),
+  // Hash-Mode funktioniert ohne Server-Konfiguration (.htaccess)
+  // URLs sehen dann so aus: /ratatosk.2.0/#/app statt /ratatosk.2.0/app
+  history: createWebHashHistory('/ratatosk.2.0/'),
   routes: [
     {
       path: '/',
@@ -61,8 +63,8 @@ const router = createRouter({
  * Router Guard: Stoppt alle laufenden Services vor jeder Navigation
  * Verhindert, dass Views im Hintergrund weiterlaufen
  * 
- * ✅ Verbesserte Cleanup-Reihenfolge:
- * 1. View-spezifische Cleanups ZUERST (setzt isCancelled = true)
+ * Verbesserte Cleanup-Reihenfolge:
+ * 1. View-spezifische Cleanups zuerst (setzt isCancelled = true)
  * 2. Dann globale Services stoppen
  * 3. Timer löschen
  */
@@ -71,7 +73,7 @@ router.beforeEach((to, from, next) => {
   if (from.name && from.name !== to.name) {
     console.log(`Router: Navigation von ${String(from.name)} zu ${String(to.name)}`)
     
-    // ✅ 1. CLEANUP ZUERST (bevor andere Stops)
+    // 1. Cleanup zuerst (bevor andere Stops)
     // View-spezifische Cleanups setzen isCancelled = true und stoppen alle async-Operationen
     const cleanupFunctions: Record<string, string> = {
       'warning': '__warningCleanup',
@@ -89,11 +91,11 @@ router.beforeEach((to, from, next) => {
       const cleanup = (window as any)[cleanupKey]
       if (cleanup && typeof cleanup === 'function') {
         console.log(`Router: Cleanup für ${fromName}`)
-        cleanup() // ✅ Dies setzt jetzt isCancelled = true!
+        cleanup() // Setzt isCancelled = true
       }
     }
     
-    // ✅ 2. DANN: Globale Services stoppen
+    // 2. Globale Services stoppen
     simpleFlowController.stopTTS()
     if (window.speechSynthesis) {
       window.speechSynthesis.cancel()
@@ -101,7 +103,7 @@ router.beforeEach((to, from, next) => {
     simpleFlowController.stopAutoMode()
     simpleFlowController.setActiveView('')
     
-    // ✅ 3. Timer löschen
+    // 3. Timer löschen
     const globalTimers = (window as any).__globalTimers || []
     globalTimers.forEach((id: number) => {
       clearTimeout(id)

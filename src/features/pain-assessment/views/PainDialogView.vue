@@ -262,13 +262,13 @@ const handleItemClick = (item: any, index: number) => {
   // Aktiviere User-Interaktion für TTS
   enableTTSOnInteraction()
 
-  // ✅ Zurück-Button ist IMMER klickbar (auch wenn nicht im AutoMode aktiv)
+  // Zurück-Button ist immer klickbar (auch wenn nicht im AutoMode aktiv)
   if (item.id === 'zurueck') {
     handleBackButton()
     return
   }
 
-  // ✅ Alle anderen Buttons sind NUR klickbar, wenn sie im AutoMode aktiv sind
+  // Alle anderen Buttons sind nur klickbar, wenn sie im AutoMode aktiv sind
   handleItemSelection(item, index)
 }
 
@@ -297,7 +297,7 @@ const handleBackButton = () => {
 }
 
 const handleItemSelection = (item: any, index: number) => {
-  // ✅ Prüfe, ob das Item im AutoMode aktiv ist
+  // Prüfen ob das Item im AutoMode aktiv ist
   if (index !== autoMode.index.value) {
     debug.log('PainDialog', 'Item not active, ignoring click', { 
       itemId: item.id, 
@@ -377,7 +377,7 @@ onMounted(() => {
   debugComponent.lifecycle('PainDialogView', 'mounted')
   debugComponent.props('PainDialogView', { isMobile: isMobile.value })
   
-  // ✅ Cleanup SOFORT verfügbar machen (BEVOR Services starten)
+  // Cleanup sofort verfügbar machen (bevor Services starten)
   ;(window as any).__painDialogCleanup = () => {
     debug.log('PainDialog', 'Global cleanup called')
     machine.cleanup()
@@ -431,7 +431,7 @@ onUnmounted(() => {
 
 <!-- Spezifische Styles für diese Komponente - scoped -->
 <style scoped>
-/* ✅ Icons im Main Grid 25% größer (nur mainView, nicht subRegionView oder painScaleView) */
+/* Icons im Main Grid 25% größer (nur mainView, nicht subRegionView oder painScaleView) */
 .desktop-grid .tile-icon-container,
 .mobile-carousel .tile-icon-container {
   width: calc(100% * var(--tile-height-ratio) * var(--icon-size-ratio) * 1.25) !important;
@@ -469,7 +469,7 @@ onUnmounted(() => {
   padding: 4rem 2rem;
   text-align: center;
   animation: fadeInScale 0.5s ease-out;
-  gap: 0.5rem; /* ✅ Reduzierter Abstand zwischen Elementen */
+  gap: 0.5rem; /* Reduzierter Abstand zwischen Elementen */
 }
 
 .confirmation-icon {
@@ -482,7 +482,7 @@ onUnmounted(() => {
   display: flex;
   align-items: center;
   justify-content: center;
-  margin-bottom: 1rem; /* ✅ Reduziert von 2rem */
+  margin-bottom: 1rem; /* Reduziert von 2rem */
   box-shadow: 0 10px 40px rgba(102, 126, 234, 0.3);
   animation: pulse 2s ease-in-out infinite;
 }
@@ -510,15 +510,15 @@ onUnmounted(() => {
 /* Mobile Responsiveness */
 @media (max-width: 768px) {
   .confirmation-container {
-    padding: 1rem 1rem; /* ✅ Reduziertes Padding */
-    gap: 0.25rem; /* ✅ Sehr kleiner Abstand zwischen Elementen */
+    padding: 1rem 1rem; /* Reduziertes Padding */
+    gap: 0.25rem; /* Sehr kleiner Abstand zwischen Elementen */
   }
   
   .confirmation-icon {
     width: 80px;
     height: 80px;
     font-size: 2.5rem;
-    margin-bottom: 0.5rem; /* ✅ Noch weniger Abstand auf Mobile */
+    margin-bottom: 0.5rem; /* Noch weniger Abstand auf Mobile */
   }
 
   .tile-emoji {
@@ -526,16 +526,16 @@ onUnmounted(() => {
   }
 }
 
-/* ✅ Portrait-Orientierung: Texte noch näher zusammen */
+/* Portrait-Orientierung: Texte noch näher zusammen */
 @media (orientation: portrait) and (max-width: 1024px) {
   .confirmation-container {
-    padding: 1.5rem 1rem; /* ✅ Weniger Padding in Portrait */
-    gap: 0.5rem; /* ✅ Kleiner Abstand */
-    justify-content: center; /* ✅ Zentriert vertikal */
+    padding: 1.5rem 1rem; /* Weniger Padding in Portrait */
+    gap: 0.5rem; /* Kleiner Abstand */
+    justify-content: center; /* Zentriert vertikal */
   }
   
   .confirmation-icon {
-    margin-bottom: 0.75rem; /* ✅ Reduzierter Abstand */
+    margin-bottom: 0.75rem; /* Reduzierter Abstand */
   }
 }
 </style>

@@ -1,5 +1,5 @@
 /**
- * ✅ InputManager - Zentraler Input-Manager für alle Eingabemedien
+ * InputManager - Zentraler Input-Manager für alle Eingabemedien
  * 
  * Abstrahiert alle Eingabemethoden:
  * - Blink Detection (Face Recognition)
@@ -105,12 +105,12 @@ export class InputManager {
   
   constructor(config: InputManagerConfig) {
     // Dependency Injection für Face Recognition (optional)
-    // ✅ Bevorzugt: faceRecognition über Config injizieren
+    // Bevorzugt: faceRecognition über Config injizieren
     if (config.faceRecognition) {
       this.faceRecognition = config.faceRecognition
     } else {
       // Fallback: Direkter Import (für Rückwärtskompatibilität)
-      // ⚠️ Tight Coupling - sollte durch Dependency Injection ersetzt werden
+      // Tight Coupling - sollte durch Dependency Injection ersetzt werden
       try {
         // Dynamischer Import zur Laufzeit (verhindert Circular Dependencies)
         // Wird asynchron geladen, daher wird faceRecognition erst später verfügbar
@@ -157,7 +157,7 @@ export class InputManager {
 
     this.isActive = true
     this.shouldCleanup = false // Reset Cleanup-Flag
-    console.log('✅ InputManager: Starting with inputs:', this.config.enabledInputs)
+    console.log('InputManager: Starting with inputs:', this.config.enabledInputs)
 
     // Erstelle neuen AbortController für Event Listeners
     this.abortController = new AbortController()
@@ -184,7 +184,7 @@ export class InputManager {
 
     this.shouldCleanup = true // Setze Cleanup-Flag zuerst
     this.isActive = false
-    console.log('✅ InputManager: Stopping')
+    console.log('InputManager: Stopping')
 
     // Cleanup für alle aktivierten Input-Typen über Map
     for (const inputType of this.config.enabledInputs) {
@@ -281,7 +281,7 @@ export class InputManager {
 
   /**
    * Setup Blink Detection
-   * ✅ Fix: Nur eine Methode aktiv (Event-basiert hat Priorität)
+   * Nur eine Methode aktiv (Event-basiert hat Priorität)
    * Verhindert Race Conditions zwischen Event Listener und Polling
    */
   private setupBlinkDetection() {
@@ -291,7 +291,7 @@ export class InputManager {
       return
     }
 
-    // ✅ Methode 1: Event-basiert (faceBlinkDetected Event) - HAT PRIORITÄT
+    // Methode 1: Event-basiert (faceBlinkDetected Event) - hat Priorität
     // Wenn Events verfügbar sind, verwende diese (effizienter)
     this.blinkEventListener = (event: Event) => {
       if (!this.isActive || this.shouldCleanup) return
@@ -310,9 +310,9 @@ export class InputManager {
     })
     
     this.blinkDetectionMode = 'event'
-    console.log('✅ InputManager: Blink detection (event-based) activated')
+    console.log('InputManager: Blink detection (event-based) activated')
 
-    // ✅ Methode 2: Polling-basiert NUR wenn Event-basiert nicht verfügbar
+    // Methode 2: Polling-basiert nur wenn Event-basiert nicht verfügbar
     // Wird nur verwendet, wenn kein Event-System vorhanden ist
     // ODER wenn customBlinkHandler vorhanden ist (benötigt Polling)
     if (this.config.customBlinkHandler || (!this.faceRecognition && !this.blinkEventListener)) {
@@ -323,7 +323,7 @@ export class InputManager {
       }
       
       this.blinkDetectionMode = 'polling'
-      console.log('✅ InputManager: Blink detection (polling-based) activated')
+      console.log('InputManager: Blink detection (polling-based) activated')
       
       if (!this.blinkCheckInterval) {
         const checkBlink = () => {
@@ -384,13 +384,13 @@ export class InputManager {
     this.clickHandler = (event: MouseEvent) => {
       if (!this.isActive) return
       
-      // ✅ Nur normale Clicks, nicht auf interaktive Elemente (z.B. Buttons)
+      // Nur normale Clicks, nicht auf interaktive Elemente (z.B. Buttons)
       const target = event.target as HTMLElement
       if (target.tagName === 'BUTTON' || target.tagName === 'A' || target.closest('button') || target.closest('a')) {
         return // Ignoriere Clicks auf Buttons/Links - die haben ihre eigenen Handler
       }
       
-      // ✅ Rechtsklick überall auf der Seite wird als Input erkannt
+      // Rechtsklick überall auf der Seite wird als Input erkannt
       // Die aktive Kachel wird automatisch über handleBlink() ausgewählt
       event.preventDefault()
       event.stopPropagation()
@@ -402,7 +402,7 @@ export class InputManager {
       })
     }
 
-    // ✅ Rechtsklick (contextmenu) - überall auf der Seite
+    // Rechtsklick (contextmenu) - überall auf der Seite
     document.addEventListener('contextmenu', this.clickHandler, { 
       passive: false,
       signal: this.abortController?.signal

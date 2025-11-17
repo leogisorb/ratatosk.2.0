@@ -17,7 +17,7 @@ const {
 // ===== LIFECYCLE =====
 onMounted(async () => {
   console.log('WarningView mounted - starting warning system')
-  // ✅ setupWarningSystem registriert __warningCleanup bereits BEVOR start() aufgerufen wird
+  // setupWarningSystem registriert __warningCleanup bereits bevor start() aufgerufen wird
   const cleanupEventListeners = await setupWarningSystem()
   
   // Cleanup-Funktion für onUnmounted speichern
@@ -70,7 +70,7 @@ onUnmounted(() => {
           ]"
         >
           <img
-            src="/bell.svg"
+            src="/ratatosk.2.0/images/bell.svg"
             alt="WARNGERÄUSCH"
             class="bell-icon"
           />

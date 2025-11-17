@@ -1,5 +1,5 @@
 /**
- * ✅ Vue Composable für InputManager
+ * Vue Composable für InputManager
  * 
  * Wrapper um InputManager für einfache Verwendung in Vue Components
  * 
@@ -44,7 +44,7 @@ export function useInputManager(config: InputManagerConfig) {
   const status = computed(() => manager.getStatus())
   const enabledInputs = computed(() => manager.getStatus().enabledInputs)
 
-  // ✅ Auto-cleanup beim Unmount
+  // Auto-cleanup beim Unmount
   onUnmounted(() => {
     stop()
   })

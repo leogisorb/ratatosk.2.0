@@ -229,11 +229,11 @@ export function useHomeViewLogic() {
       if (isMobile.value) {
         const timeoutId = window.setTimeout(() => {
           if (typeof speechSynthesis !== 'undefined' && speechSynthesis) {
-            // ✅ Prüfe ob TTS stumm geschaltet ist → Volume 0 setzen
+            // Prüfen ob TTS stumm geschaltet ist - dann Volume auf 0 setzen
             const isMuted = simpleFlowController.getTTSMuted()
             // Teste TTS mit einem kurzen Text
             const testUtterance = new SpeechSynthesisUtterance('Test')
-            testUtterance.volume = isMuted ? 0 : 0.1  // ✅ Volume basierend auf Mute-Status (sehr leise wenn nicht stumm)
+            testUtterance.volume = isMuted ? 0 : 0.1  // Volume basierend auf Mute-Status (sehr leise wenn nicht stumm)
             testUtterance.onerror = (e) => {
               console.warn(`[${instanceId}] Mobile TTS test failed:`, e)
             }

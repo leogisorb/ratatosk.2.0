@@ -1,5 +1,5 @@
 /**
- * ✅ Daten-Modul: Pain Levels
+ * Daten-Modul: Pain Levels
  * Enthält die Schmerzskala (1-10)
  */
 
