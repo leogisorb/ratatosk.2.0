@@ -150,7 +150,10 @@
                     class="tile-icon"
                   />
                 </div>
-                <div class="tile-text">{{ item.title }}</div>
+                <div class="tile-text">
+                  <div class="tile-title">{{ item.title }}</div>
+                  <div v-if="'description' in item && item.description" class="tile-description">{{ item.description }}</div>
+                </div>
               </div>
             </div>
             
@@ -264,17 +267,21 @@ const handleItemClick = (item: any, index: number) => {
   debug.log('SettingsDialog', 'Item clicked', { 
     itemId: item.id, 
     index,
-    state: state.value 
+    state: state.value,
+    isBackButton: item.id === dict.ID_BACK,
+    isActive: index === autoMode.index.value
   })
 
   // Aktiviere User-Interaktion für TTS
   enableTTSOnInteraction()
 
+  // ✅ Zurück-Button ist IMMER klickbar (auch wenn nicht im AutoMode aktiv)
   if (item.id === dict.ID_BACK) {
     handleBackButton()
     return
   }
 
+  // ✅ Alle anderen Buttons sind NUR klickbar, wenn sie im AutoMode aktiv sind
   if (autoMode.index.value === index) {
     handleItemSelection(item)
   }
@@ -436,12 +443,14 @@ onMounted(() => {
     })
   }
   
-  // Global cleanup function
+  // ✅ Cleanup SOFORT verfügbar machen (BEVOR Services starten)
   ;(window as any).__settingsDialogCleanup = () => {
     debug.log('SettingsDialog', 'Global cleanup called')
     machine.cleanup()
     inputManager.stop()
   }
+  
+  // Start Services NACH Cleanup-Registrierung
 })
 
 onUnmounted(() => {
@@ -478,6 +487,25 @@ onUnmounted(() => {
 .tile-emoji {
   font-size: clamp(3rem, 10vw, 6rem);
   line-height: 1;
+}
+
+/* Tile Text Styles für Options mit Beschreibung */
+.tile-text {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.tile-title {
+  font-size: inherit;
+  font-weight: inherit;
+}
+
+.tile-description {
+  font-size: 0.85em;
+  opacity: 0.8;
+  font-weight: 400;
 }
 
 /* Kamera-Interface Styles */

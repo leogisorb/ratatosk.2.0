@@ -60,29 +60,20 @@ const router = createRouter({
 /**
  * Router Guard: Stoppt alle laufenden Services vor jeder Navigation
  * Verhindert, dass Views im Hintergrund weiterlaufen
+ * 
+ * ✅ Verbesserte Cleanup-Reihenfolge:
+ * 1. View-spezifische Cleanups ZUERST (setzt isCancelled = true)
+ * 2. Dann globale Services stoppen
+ * 3. Timer löschen
  */
 router.beforeEach((to, from, next) => {
   // Nur stoppen, wenn wir von einem View zu einem anderen navigieren (nicht beim ersten Laden)
   if (from.name && from.name !== to.name) {
-    console.log(`Router: Navigation von ${String(from.name)} zu ${String(to.name)} - stoppe alle Services`)
+    console.log(`Router: Navigation von ${String(from.name)} zu ${String(to.name)}`)
     
-    // 1. Stoppe TTS komplett (SimpleFlowController)
-    simpleFlowController.stopTTS()
-    
-    // 2. Stoppe alle TTS (auch außerhalb SimpleFlowController)
-    if (window.speechSynthesis) {
-      window.speechSynthesis.cancel()
-    }
-    
-    // 3. Stoppe Auto-Mode komplett
-    simpleFlowController.stopAutoMode()
-    
-    // 4. Setze aktiven View zurück
-    simpleFlowController.setActiveView('')
-    
-    // 5. Spezifische View-Cleanups (falls nötig)
-    // Rufe View-spezifische Cleanup-Funktionen auf
-    const viewCleanups: Record<string, string> = {
+    // ✅ 1. CLEANUP ZUERST (bevor andere Stops)
+    // View-spezifische Cleanups setzen isCancelled = true und stoppen alle async-Operationen
+    const cleanupFunctions: Record<string, string> = {
       'warning': '__warningCleanup',
       'pain-dialog': '__painDialogCleanup',
       'environment-dialog': '__environmentDialogCleanup',
@@ -92,22 +83,29 @@ router.beforeEach((to, from, next) => {
     }
     
     const fromName = String(from.name)
-    const cleanupKey = viewCleanups[fromName]
+    const cleanupKey = cleanupFunctions[fromName]
     
     if (cleanupKey) {
-      console.log(`Router: Rufe Cleanup-Funktion für ${fromName} auf`)
       const cleanup = (window as any)[cleanupKey]
       if (cleanup && typeof cleanup === 'function') {
-        cleanup()
+        console.log(`Router: Cleanup für ${fromName}`)
+        cleanup() // ✅ Dies setzt jetzt isCancelled = true!
       }
     }
     
-    // 6. Stoppe alle globalen Timer (falls vorhanden)
-    // Alle Interval-IDs, die in window gespeichert sind, stoppen
+    // ✅ 2. DANN: Globale Services stoppen
+    simpleFlowController.stopTTS()
+    if (window.speechSynthesis) {
+      window.speechSynthesis.cancel()
+    }
+    simpleFlowController.stopAutoMode()
+    simpleFlowController.setActiveView('')
+    
+    // ✅ 3. Timer löschen
     const globalTimers = (window as any).__globalTimers || []
-    globalTimers.forEach((timerId: number) => {
-      clearTimeout(timerId)
-      clearInterval(timerId)
+    globalTimers.forEach((id: number) => {
+      clearTimeout(id)
+      clearInterval(id)
     })
     ;(window as any).__globalTimers = []
     
@@ -119,3 +117,4 @@ router.beforeEach((to, from, next) => {
 })
 
 export default router
+

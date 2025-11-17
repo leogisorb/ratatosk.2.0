@@ -252,12 +252,6 @@ export function getSubSubRegionsBySubRegion(subRegionId: string): UmgebungSubSub
         { id: ID_BACK, title: 'zurück', emoji: '⬅️', ttsText: 'zurück' }
       ]
     
-    case 'tisch':
-      return [
-        { id: 'benutzen', title: 'benutzen', emoji: '👆', ttsText: 'benutzen' },
-        { id: ID_BACK, title: 'zurück', emoji: '⬅️', ttsText: 'zurück' }
-      ]
-    
     default:
       return []
   }

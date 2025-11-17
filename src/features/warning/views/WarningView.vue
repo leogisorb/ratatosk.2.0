@@ -17,17 +17,11 @@ const {
 // ===== LIFECYCLE =====
 onMounted(async () => {
   console.log('WarningView mounted - starting warning system')
+  // ✅ setupWarningSystem registriert __warningCleanup bereits BEVOR start() aufgerufen wird
   const cleanupEventListeners = await setupWarningSystem()
   
   // Cleanup-Funktion für onUnmounted speichern
   ;(window as any).__cleanupEventListeners = cleanupEventListeners
-  
-  // Cleanup-Funktion global verfügbar machen für Router-Guard
-  ;(window as any).__warningCleanup = () => {
-    console.log('WarningView: Global cleanup aufgerufen (Router-Guard)')
-    cleanupEventListeners()
-    cleanup()
-  }
 })
 
 onUnmounted(() => {
@@ -39,11 +33,12 @@ onUnmounted(() => {
     cleanupEventListeners()
   }
   
-  // System aufräumen
+  // System aufräumen (setzt isCancelled = true)
   cleanup()
   
   // Global cleanup-Funktion entfernen
   delete (window as any).__warningCleanup
+  delete (window as any).__cleanupEventListeners
 })
 </script>
 

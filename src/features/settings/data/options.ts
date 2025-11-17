@@ -40,12 +40,6 @@ export const settingsOptions: SettingsOptionsMap = {
     { id: 'aus', title: 'KAMERA AUS', description: 'Kamera deaktivieren', value: false, emoji: '📷' },
     { id: 'zurueck', title: 'Zurück', description: '', value: null, emoji: '↩️' }
   ],
-  kamerapositionen: [
-    { id: 'oben', title: 'Oben', description: 'Kamera oben positionieren', value: 'top', emoji: '⬆️' },
-    { id: 'mitte', title: 'Mitte', description: 'Kamera mittig positionieren', value: 'center', emoji: '↔️' },
-    { id: 'unten', title: 'Unten', description: 'Kamera unten positionieren', value: 'bottom', emoji: '⬇️' },
-    { id: 'zurueck', title: 'Zurück', description: '', value: null, emoji: '↩️' }
-  ],
   impressum: [
     { id: 'info', title: 'Informationen', description: 'App-Informationen anzeigen', value: 'info', emoji: 'ℹ️' },
     { id: 'version', title: 'Version', description: 'Version anzeigen', value: 'version', emoji: '📋' },

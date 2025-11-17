@@ -1,20 +1,47 @@
 // useEnvironmentDialogMachine.ts - Central State Machine for Environment Dialog
+// ✅ MIT CANCELLATION TOKEN - Verhindert Race Conditions und laufende Promises nach Navigation
 
 import { ref, computed, nextTick } from 'vue'
 import { useRouter } from 'vue-router'
-import { useTTS } from './useTTS'
+import { useTTSWithCancellation } from './useTTSWithCancellation'
 import { useAutoMode, type AutoModeConfig } from '../../../shared/composables/useAutoMode'
 import { useEnvironmentDictionary } from './useEnvironmentDictionary'
+import { useSettingsStore } from '../../settings/stores/settings'
 import type { UmgebungRegion, UmgebungSubRegion, UmgebungSubSubRegion } from '../data/environmentDialogData'
 import { simpleFlowController } from '../../../core/application/SimpleFlowController'
 import { useDialogTimerTracking } from '../../../shared/composables/useDialogTimerTracking'
+
+// ===== CONSTANTS =====
+const TIMER_DELAYS = {
+  AUTO_MODE_START: 3000,
+  CONFIRMATION_RESET: 3000
+} as const
 
 export type UmgebungDialogState = 'mainView' | 'subRegionView' | 'subSubRegionView' | 'confirmation'
 
 export function useEnvironmentDialogMachine() {
   const router = useRouter()
-  const tts = useTTS()
   const dict = useEnvironmentDictionary()
+  const settingsStore = useSettingsStore()
+
+  // ===== CANCELLATION TOKEN =====
+  const isCancelled = ref(false)
+  
+  const cancel = () => {
+    console.log('EnvironmentDialog: Cancellation requested')
+    isCancelled.value = true
+    cleanupTimers()
+    window.speechSynthesis?.cancel()
+  }
+  
+  const checkCancelled = () => {
+    if (isCancelled.value) {
+      throw new Error('Operation cancelled')
+    }
+  }
+
+  // ✅ TTS mit Cancellation Support
+  const tts = useTTSWithCancellation(() => isCancelled.value)
 
   // State
   const state = ref<UmgebungDialogState>('mainView')
@@ -57,213 +84,220 @@ export function useEnvironmentDialogMachine() {
   // Computed: Confirmation Text
   const confirmationText = computed(() => {
     const subRegions = dict.getSubRegions(mainRegionId.value)
-    const subRegion = subRegions.find(r => r.id === subRegionId.value) || null
+    const subRegion = subRegions.find(r => r.id === subRegionId.value)
     const subSubRegions = dict.getSubSubRegions(subRegionId.value)
-    const verb = subSubRegions.find(v => v.id === subSubRegionId.value) || null
+    const verb = subSubRegions.find(v => v.id === subSubRegionId.value)
     
-    return dict.generateConfirmation(subRegion, verb)
+    return dict.generateConfirmation(subRegion || null, verb || null)
   })
 
   // AutoMode Configuration
   const autoModeConfig: AutoModeConfig = {
     speak: tts.speak,
     getItems: () => items.value,
-    getTitle: () => title.value
+    getTitle: () => title.value,
+    initialDelay: settingsStore.settings.leuchtdauer * 1000,
+    cycleDelay: settingsStore.settings.leuchtdauer * 1000
   }
 
   const autoMode = useAutoMode(autoModeConfig)
   
   // Timer-Tracking mit Cleanup-Logik
-  const { isActive, scheduleTimer, cleanup: cleanupTimers } = useDialogTimerTracking({
+  const { scheduleTimer, cleanup: cleanupTimers } = useDialogTimerTracking({
     onCleanup: () => {
       autoMode.stop()
     },
     dialogName: 'UmgebungDialog'
   })
 
-  // Actions
+  // ===== HELPER: START AUTO MODE =====
+  /**
+   * Startet AutoMode nach Delay mit allen Checks
+   * ✅ ATOMIC: Alle Checks erfolgen direkt vor autoMode.start()
+   * ✅ WICHTIG: Setzt Index explizit auf 0, damit Karussell bei Index 0 startet
+   */
+  function scheduleAutoModeStart(expectedState: UmgebungDialogState, delay: number = TIMER_DELAYS.AUTO_MODE_START) {
+    // ✅ Index explizit auf 0 setzen, damit Karussell bei Index 0 startet
+    autoMode.index.value = 0
+    
+    scheduleTimer(async () => {
+      checkCancelled()
+      
+      if (state.value === expectedState) {
+        await nextTick()
+        checkCancelled()
+        
+        // ✅ Check EINMAL, direkt vor Nutzung
+        if (items.value.length > 0 && state.value === expectedState) {
+          // ✅ Index nochmal auf 0 setzen, um sicherzustellen, dass Karussell bei 0 startet
+          autoMode.index.value = 0
+          autoMode.start(true)
+        }
+      }
+    }, delay)
+  }
+
+  /**
+   * Error Handler für Operationen
+   */
+  function handleOperationError(operation: string, error: unknown) {
+    if (error instanceof Error && error.message.includes('cancelled')) {
+      console.log(`EnvironmentDialog: ${operation} cancelled`)
+    } else {
+      console.error(`EnvironmentDialog: ${operation} error:`, error)
+      // TODO: User-Feedback hinzufügen bei kritischen Fehlern
+    }
+  }
+
+  // ===== ACTIONS =====
 
   /**
    * Haupt-Region auswählen
    */
   async function selectMainRegion(id: string) {
-    if (id === dict.ID_BACK) {
-      goBack()
-      return
-    }
-
-    autoMode.stop()
-    mainRegionId.value = id
-    state.value = 'subRegionView'
-    subRegionId.value = null
-    subSubRegionId.value = null
-
-    // Titel sprechen
-    await tts.speak(title.value)
-    
-    // Nach 3 Sekunden AutoMode starten (skipTitle = true, da Titel bereits gesprochen)
-    // Warte auf Vue Reactivity Update mit nextTick, dann prüfe ob Items vorhanden sind
-    scheduleTimer(async () => {
-      await nextTick() // Warte auf Vue Reactivity Update
-      if (items.value.length > 0) {
-        autoMode.start(true)
-      } else {
-        console.warn('❌ useUmgebungDialogMachine: Keine Items verfügbar für AutoMode start (SubRegionView)')
+    try {
+      checkCancelled()
+      
+      if (id === dict.ID_BACK) {
+        goBack()
+        return
       }
-    }, 3000)
+
+      autoMode.stop()
+      mainRegionId.value = id
+      state.value = 'subRegionView'
+      subRegionId.value = null
+      subSubRegionId.value = null
+
+      await tts.speak(title.value)
+      scheduleAutoModeStart('subRegionView')
+      
+    } catch (error) {
+      handleOperationError('selectMainRegion', error)
+    }
   }
 
   /**
    * Sub-Region auswählen
    */
   async function selectSubRegion(id: string) {
-    if (id === dict.ID_BACK) {
-      // Zurück zu Haupt-Regionen
+    try {
+      checkCancelled()
+      
+      if (id === dict.ID_BACK) {
+        autoMode.stop()
+        state.value = 'mainView'
+        mainRegionId.value = null
+        subRegionId.value = null
+        subSubRegionId.value = null
+
+        await tts.speak(title.value)
+        scheduleAutoModeStart('mainView')
+        return
+      }
+
       autoMode.stop()
-      state.value = 'mainView'
-      mainRegionId.value = null
-      subRegionId.value = null
+      subRegionId.value = id
+      state.value = 'subSubRegionView'
       subSubRegionId.value = null
 
-      // Titel sprechen
       await tts.speak(title.value)
+      scheduleAutoModeStart('subSubRegionView')
       
-      // Nach 3 Sekunden AutoMode starten (skipTitle = true, da Titel bereits gesprochen)
-      // Warte auf Vue Reactivity Update mit nextTick, dann prüfe ob Items vorhanden sind
-      scheduleTimer(async () => {
-        await nextTick() // Warte auf Vue Reactivity Update
-        if (items.value.length > 0) {
-          autoMode.start(true)
-        } else {
-          console.warn('❌ useUmgebungDialogMachine: Keine Items verfügbar für AutoMode start (Zurück zu MainView)')
-        }
-      }, 3000)
-      return
+    } catch (error) {
+      handleOperationError('selectSubRegion', error)
     }
-
-    autoMode.stop()
-    subRegionId.value = id
-    state.value = 'subSubRegionView'
-    subSubRegionId.value = null
-
-    // Titel sprechen
-    await tts.speak(title.value)
-    
-    // Nach 3 Sekunden AutoMode starten (skipTitle = true, da Titel bereits gesprochen)
-    // Warte auf Vue Reactivity Update mit nextTick, dann prüfe ob Items vorhanden sind
-    scheduleTimer(async () => {
-      await nextTick() // Warte auf Vue Reactivity Update
-      if (items.value.length > 0) {
-        autoMode.start(true)
-      } else {
-        console.warn('❌ useUmgebungDialogMachine: Keine Items verfügbar für AutoMode start (SubSubRegion)')
-      }
-    }, 3000)
   }
 
   /**
    * Sub-Sub-Region (Verb) auswählen
    */
   async function selectSubSubRegion(id: string) {
-    if (id === dict.ID_BACK) {
-      // Zurück zu Sub-Regionen
-      autoMode.stop()
-      state.value = 'subRegionView'
-      subRegionId.value = null
-      subSubRegionId.value = null
-
-      // Titel sprechen
-      await tts.speak(title.value)
+    try {
+      checkCancelled()
       
-      // Nach 3 Sekunden AutoMode starten (skipTitle = true, da Titel bereits gesprochen)
-      // Warte auf Vue Reactivity Update mit nextTick, dann prüfe ob Items vorhanden sind
-      scheduleTimer(async () => {
-        await nextTick() // Warte auf Vue Reactivity Update
-        if (items.value.length > 0) {
-          autoMode.start(true)
-        } else {
-          console.warn('❌ useUmgebungDialogMachine: Keine Items verfügbar für AutoMode start (Zurück zu SubRegionView)')
+      if (id === dict.ID_BACK) {
+        autoMode.stop()
+        state.value = 'subRegionView'
+        subRegionId.value = null
+        subSubRegionId.value = null
+
+        await tts.speak(title.value)
+        scheduleAutoModeStart('subRegionView')
+        return
+      }
+
+      autoMode.stop()
+      subSubRegionId.value = id
+      state.value = 'confirmation'
+
+      await tts.speak(confirmationText.value)
+      
+      scheduleTimer(() => {
+        checkCancelled()
+        if (state.value === 'confirmation') {
+          resetToMainView()
         }
-      }, 3000)
-      return
+      }, TIMER_DELAYS.CONFIRMATION_RESET)
+      
+    } catch (error) {
+      handleOperationError('selectSubSubRegion', error)
     }
-
-    autoMode.stop()
-    subSubRegionId.value = id
-    state.value = 'confirmation'
-
-    // Confirmation Text sprechen
-    await tts.speak(confirmationText.value)
-
-    // Nach 3 Sekunden zurück zu Haupt-View
-    scheduleTimer(() => {
-      resetToMainView()
-    }, 3000)
   }
 
   /**
    * Zurück zur Haupt-View
    */
   async function resetToMainView() {
-    autoMode.stop()
-    
-    state.value = 'mainView'
-    mainRegionId.value = null
-    subRegionId.value = null
-    subSubRegionId.value = null
+    try {
+      checkCancelled()
+      
+      autoMode.stop()
+      
+      state.value = 'mainView'
+      mainRegionId.value = null
+      subRegionId.value = null
+      subSubRegionId.value = null
 
-    // Titel sprechen
-    await tts.speak(title.value)
-    
-    // Nach 3 Sekunden AutoMode starten (skipTitle = true, da Titel bereits gesprochen)
-    // Warte auf Vue Reactivity Update mit nextTick, dann prüfe ob Items vorhanden sind
-    scheduleTimer(async () => {
-      await nextTick() // Warte auf Vue Reactivity Update
-      if (items.value.length > 0) {
-        autoMode.start(true)
-      } else {
-        console.warn('❌ useUmgebungDialogMachine: Keine Items verfügbar für AutoMode start (SubSubRegion)')
-      }
-    }, 3000)
+      await tts.speak(title.value)
+      scheduleAutoModeStart('mainView')
+      
+    } catch (error) {
+      handleOperationError('resetToMainView', error)
+    }
   }
 
   /**
    * Stoppt alle Timer und verhindert weitere AutoMode-Starts
+   * ✅ MIT CANCELLATION TOKEN - setzt isCancelled = true
+   * ✅ cleanupTimers() stoppt bereits autoMode durch onCleanup
    */
   function cleanup() {
-    cleanupTimers()
+    console.log('EnvironmentDialog: Cleaning up')
+    
+    // ✅ ZUERST: Cancellation Flag setzen
+    isCancelled.value = true
+    
+    // ✅ DANN: Alle Ressourcen freigeben
+    cleanupTimers() // Stoppt autoMode durch onCleanup
+    tts.cancel() // TTS muss explizit gestoppt werden
   }
 
   /**
    * Zurück zur Haupt-App navigieren
+   * ✅ cleanup() macht bereits alles nötige
    */
   function goBack() {
-    console.log('UmgebungDialog: goBack() - Stoppe alle Services und navigiere zu /app')
+    console.log('UmgebungDialog: goBack() - Cleanup und Navigation')
     
-    // Cleanup: Stoppe alle Timer und verhindere weitere AutoMode-Starts
-    cleanup()
+    cleanup() // Macht: isCancelled = true, cleanupTimers (autoMode.stop über onCleanup)
     
-    // Stoppe TTS (lokal)
-    tts.cancel()
-    
-    // Stoppe alle TTS (SimpleFlowController)
+    // ✅ Globale Services stoppen (cleanup() stoppt nur lokale)
     simpleFlowController.stopTTS()
-    
-    // Stoppe alle TTS (auch außerhalb SimpleFlowController)
-    if (window.speechSynthesis) {
-      window.speechSynthesis.cancel()
-    }
-    
-    // Stoppe Auto-Mode komplett (SimpleFlowController)
     simpleFlowController.stopAutoMode()
-    
-    // Setze aktiven View zurück
     simpleFlowController.setActiveView('')
     
-    // Navigiere zu /app (Home-View)
-    router.push('/app').then(() => {
-      console.log('UmgebungDialog: Navigation zu /app erfolgreich - alle Services gestoppt')
-    }).catch((error) => {
+    router.push('/app').catch((error) => {
       console.error('UmgebungDialog: Navigation zu /app fehlgeschlagen:', error)
     })
   }
@@ -316,22 +350,6 @@ export function useEnvironmentDialogMachine() {
     }
   }
 
-  /**
-   * Index zu einem bestimmten Item springen (für Carousel Indicators)
-   */
-  function goToIndex(index: number) {
-    const currentItems = items.value
-    if (index >= 0 && index < currentItems.length) {
-      autoMode.stop()
-      // Index direkt setzen
-      autoMode.index.value = index
-      // AutoMode neu starten mit skipTitle
-      scheduleTimer(() => {
-        autoMode.start(true)
-      }, 100)
-    }
-  }
-
   return {
     // State
     state,
@@ -352,7 +370,6 @@ export function useEnvironmentDialogMachine() {
     resetToMainView,
     goBack,
     handleBlink,
-    goToIndex,
     cleanup
   }
 }

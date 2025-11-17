@@ -42,8 +42,6 @@ function isCurrentSetting(categoryId: string, value: any, settingsStore: ReturnT
       return settingsStore.isDarkMode === value
     case 'kamera':
       return settingsStore.settings.kamera === (value ? 'back' : 'off')
-    case 'kamerapositionen':
-      return settingsStore.settings.kamera === value
     default:
       return false
   }
@@ -85,9 +83,6 @@ export function getCurrentValue(categoryId: string | null): string {
       return settingsStore.isDarkMode ? 'Dunkel' : 'Hell'
     case 'kamera':
       return settingsStore.settings.kamera === 'back' ? 'Ein' : 'Aus'
-    case 'kamerapositionen':
-      return settingsStore.settings.kamera === 'top' ? 'Oben' : 
-             settingsStore.settings.kamera === 'center' ? 'Mitte' : 'Unten'
     default:
       return ''
   }

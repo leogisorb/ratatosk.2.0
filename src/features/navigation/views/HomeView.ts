@@ -143,8 +143,8 @@ export function useHomeViewLogic() {
       // Navigiere zu Index, damit die aktive Kachel korrekt ist
       navigateToIndex(currentIndex)
     },
-    initialDelay: settingsStore.settings.autoModeSpeed,
-    cycleDelay: settingsStore.settings.autoModeSpeed
+    initialDelay: settingsStore.settings.leuchtdauer * 1000,
+    cycleDelay: settingsStore.settings.leuchtdauer * 1000
   })
 
   // Computed für aktuellen Tile-Index - verwende autoMode.index wenn Auto-Mode läuft

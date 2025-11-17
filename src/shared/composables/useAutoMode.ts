@@ -226,9 +226,11 @@ export function useAutoMode(config: AutoModeConfig) {
         await delay(initialDelay)
         
         if (running.value && !abortController?.signal.aborted) {
-          // Sicherstellen, dass Index bei 0 startet
+          // ✅ Sicherstellen, dass Index bei 0 startet (wichtig für visuelles Karussell)
           index.value = 0
           console.log(`✅ useAutoMode.start() - Starte sequenziellen Loop: Index ${index.value} → ${index.value + 1} → ...`)
+          
+          // ✅ Starte Loop - spricht Item bei Index 0 und bleibt dort bis cycleDelay abgelaufen ist
           await loop()
         } else {
           console.warn('❌ useAutoMode.start() - Nicht mehr laufend beim Start des Loops')

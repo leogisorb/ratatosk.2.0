@@ -1,36 +1,46 @@
-/**
- * ✅ MODUL 4 — usePainDialogMachine() (Zentrale State-Machine)
- * 
- * Die gesamte Logik wird zu einem klaren Automaten:
- * 
- * mainView
- *   ↓ selectMainRegion
- * subRegionView
- *   ↓ selectSubRegion
- * painScaleView
- *   ↓ selectPainLevel
- * confirmation
- *   ↓ 5s Timeout
- * mainView
- */
+// usePainDialogMachine.ts - Central State Machine for Pain Dialog
+// ✅ MIT CANCELLATION TOKEN - Verhindert Race Conditions und laufende Promises nach Navigation
 
-import { ref, computed, watch } from 'vue'
+import { ref, computed, nextTick } from 'vue'
 import { useRouter } from 'vue-router'
-import { useTTS } from './useTTS'
-import { useAutoMode } from '../../../shared/composables/useAutoMode'
+import { useTTSWithCancellation } from './useTTSWithCancellation'
+import { useAutoMode, type AutoModeConfig } from '../../../shared/composables/useAutoMode'
 import { usePainDictionary } from './usePainDictionary'
-import { useFaceRecognition } from '../../face-recognition/composables/useFaceRecognition'
+import { useSettingsStore } from '../../settings/stores/settings'
 import { simpleFlowController } from '../../../core/application/SimpleFlowController'
 import { useDialogTimerTracking } from '../../../shared/composables/useDialogTimerTracking'
-import { debug, debugAutoMode, debugTTS } from '../../../shared/utils/debug'
+
+// ===== CONSTANTS =====
+const TIMER_DELAYS = {
+  AUTO_MODE_START: 3000,
+  CONFIRMATION_RESET: 5000
+} as const
 
 export type PainDialogState = 'mainView' | 'subRegionView' | 'painScaleView' | 'confirmation'
 
 export function usePainDialogMachine() {
   const router = useRouter()
-  const tts = useTTS()
   const dict = usePainDictionary()
-  const faceRecognition = useFaceRecognition()
+  const settingsStore = useSettingsStore()
+
+  // ===== CANCELLATION TOKEN =====
+  const isCancelled = ref(false)
+  
+  const cancel = () => {
+    console.log('PainDialog: Cancellation requested')
+    isCancelled.value = true
+    cleanupTimers()
+    window.speechSynthesis?.cancel()
+  }
+  
+  const checkCancelled = () => {
+    if (isCancelled.value) {
+      throw new Error('Operation cancelled')
+    }
+  }
+
+  // ✅ TTS mit Cancellation Support
+  const tts = useTTSWithCancellation(() => isCancelled.value)
 
   // ✅ State
   const state = ref<PainDialogState>('mainView')
@@ -38,15 +48,21 @@ export function usePainDialogMachine() {
   const subRegionId = ref<string | null>(null)
   const painLevel = ref<number | null>(null)
 
-  // ✅ Computed: Aktuelle Items basierend auf State
+  // Computed: Aktuelle Items basierend auf State
   const items = computed(() => {
-    if (state.value === 'mainView') return dict.mainRegions as unknown as any[]
-    if (state.value === 'subRegionView') return dict.getSubRegions(mainRegionId.value) as unknown as any[]
-    if (state.value === 'painScaleView') return dict.painLevels as unknown as any[]
-    return [] as any[]
+    switch (state.value) {
+      case 'mainView':
+        return dict.mainRegions as unknown as any[]
+      case 'subRegionView':
+        return dict.getSubRegions(mainRegionId.value) as unknown as any[]
+      case 'painScaleView':
+        return dict.painLevels as unknown as any[]
+      default:
+        return [] as any[]
+    }
   })
 
-  // ✅ Computed: Aktueller Titel basierend auf State
+  // Computed: Aktueller Titel basierend auf State
   const title = computed(() => {
     switch (state.value) {
       case 'mainView':
@@ -62,249 +78,228 @@ export function usePainDialogMachine() {
     }
   })
 
-  // ✅ Computed: Bestätigungstext
+  // Computed: Confirmation Text
   const confirmationText = computed(() => {
     return dict.generateConfirmation(subRegionId.value, painLevel.value)
   })
 
-  // ✅ AutoMode konfigurieren
-  const autoMode = useAutoMode({
+  // AutoMode Configuration
+  const autoModeConfig: AutoModeConfig = {
     speak: tts.speak,
     getItems: () => items.value,
     getTitle: () => title.value,
-  })
+    initialDelay: settingsStore.settings.leuchtdauer * 1000,
+    cycleDelay: settingsStore.settings.leuchtdauer * 1000
+  }
+
+  const autoMode = useAutoMode(autoModeConfig)
   
   // Timer-Tracking mit Cleanup-Logik
-  const { isActive, scheduleTimer, cleanup: cleanupTimers } = useDialogTimerTracking({
+  const { scheduleTimer, cleanup: cleanupTimers } = useDialogTimerTracking({
     onCleanup: () => {
-      debug.log('PainDialogMachine', 'Timer Cleanup - stoppe AutoMode')
       autoMode.stop()
     },
     dialogName: 'PainDialog'
   })
 
-  // Watch State changes
-  watch(() => state.value, (newState, oldState) => {
-    if (oldState !== undefined) {
-      debug.log('PainDialogMachine', 'State-Wechsel', {
-        from: oldState,
-        to: newState,
-        mainRegionId: mainRegionId.value,
-        subRegionId: subRegionId.value,
-        painLevel: painLevel.value
-      })
-    }
-  })
-
-  // ✅ Hauptregion auswählen
-  async function selectMainRegion(id: string) {
-    debug.log('PainDialogMachine', 'selectMainRegion', { id, currentState: state.value })
-    
-    // ✅ Blockiere "zurueck" in mainView
-    if (id === 'zurueck') return
-    
-    // Stoppe AutoMode
-    debugAutoMode.stop()
-    autoMode.stop()
-    
-    // Setze State
-    mainRegionId.value = id
-    state.value = 'subRegionView'
-    
-    // ✅ Index explizit auf 0 setzen, damit immer bei 0 beginnt (nicht aus Cache)
+  // ===== HELPER: START AUTO MODE =====
+  /**
+   * Startet AutoMode nach Delay mit allen Checks
+   * ✅ ATOMIC: Alle Checks erfolgen direkt vor autoMode.start()
+   * ✅ WICHTIG: Setzt Index explizit auf 0, damit Karussell bei Index 0 startet
+   */
+  function scheduleAutoModeStart(expectedState: PainDialogState, delay: number = TIMER_DELAYS.AUTO_MODE_START) {
+    // ✅ Index explizit auf 0 setzen, damit Karussell bei Index 0 startet
     autoMode.index.value = 0
     
-    // ✅ Spreche neuen Titel (skipTitle = true, da Titel hier schon gesprochen wird)
-    debugTTS.speak(title.value, simpleFlowController.getTTSMuted())
-    await tts.speak(title.value)
-    
-    // Starte AutoMode nach 3 Sekunden (skipTitle = true, Titel wurde bereits gesprochen)
-    scheduleTimer(() => {
-      if (state.value === 'subRegionView') {
-        // ✅ Stelle sicher, dass Index noch bei 0 ist (falls State zwischenzeitlich geändert wurde)
-        autoMode.index.value = 0
-        debugAutoMode.start(true)
-        autoMode.start(true) // ✅ skipTitle = true, da Titel bereits gesprochen
-      }
-    }, 3000)
-  }
-
-  // ✅ Unterregion auswählen
-  async function selectSubRegion(id: string) {
-    debug.log('PainDialogMachine', 'selectSubRegion', { id, currentState: state.value })
-    
-    // Stoppe AutoMode
-    debugAutoMode.stop()
-    autoMode.stop()
-    
-    // ✅ Robustes zurueck-Handling
-    if (id === 'zurueck') {
-      mainRegionId.value = null
-      state.value = 'mainView'
+    scheduleTimer(async () => {
+      checkCancelled()
       
-      // ✅ Index explizit auf 0 setzen, damit immer bei 0 beginnt (nicht aus Cache)
-      autoMode.index.value = 0
-      
-      debugTTS.speak(title.value, simpleFlowController.getTTSMuted())
-      await tts.speak(title.value)
-      
-      // Starte AutoMode nach 3 Sekunden (skipTitle = true, Titel wurde bereits gesprochen)
-      scheduleTimer(() => {
-        if (state.value === 'mainView') {
-          // ✅ Stelle sicher, dass Index noch bei 0 ist (falls State zwischenzeitlich geändert wurde)
+      if (state.value === expectedState) {
+        await nextTick()
+        checkCancelled()
+        
+        // ✅ Check EINMAL, direkt vor Nutzung
+        if (items.value.length > 0 && state.value === expectedState) {
+          // ✅ Index nochmal auf 0 setzen, um sicherzustellen, dass Karussell bei 0 startet
           autoMode.index.value = 0
-          debugAutoMode.start(true)
-          autoMode.start(true) // ✅ skipTitle = true
+          autoMode.start(true)
         }
-      }, 3000)
-      return
-    }
-    
-    // Setze State
-    subRegionId.value = id
-    state.value = 'painScaleView'
-    
-    // ✅ Index explizit auf 0 setzen, damit Schmerzskala immer bei 0 beginnt (nicht aus Cache)
-    autoMode.index.value = 0
-    
-    // ✅ Spreche neuen Titel (skipTitle = true, da Titel hier schon gesprochen wird)
-    debugTTS.speak(title.value, simpleFlowController.getTTSMuted())
-    await tts.speak(title.value)
-    
-    // Starte AutoMode nach 3 Sekunden (skipTitle = true, Titel wurde bereits gesprochen)
-    scheduleTimer(() => {
-      if (state.value === 'painScaleView') {
-        // ✅ Stelle sicher, dass Index noch bei 0 ist (falls State zwischenzeitlich geändert wurde)
-        autoMode.index.value = 0
-        debugAutoMode.start(true)
-        autoMode.start(true) // ✅ skipTitle = true, da Titel bereits gesprochen
       }
-    }, 3000)
+    }, delay)
   }
 
-  // ✅ Schmerzlevel auswählen
+  /**
+   * Error Handler für Operationen
+   */
+  function handleOperationError(operation: string, error: unknown) {
+    if (error instanceof Error && error.message.includes('cancelled')) {
+      console.log(`PainDialog: ${operation} cancelled`)
+    } else {
+      console.error(`PainDialog: ${operation} error:`, error)
+      // TODO: User-Feedback hinzufügen bei kritischen Fehlern
+    }
+  }
+
+  // ===== ACTIONS =====
+
+  /**
+   * Haupt-Region auswählen
+   */
+  async function selectMainRegion(id: string) {
+    try {
+      checkCancelled()
+      
+      // ✅ Blockiere "zurueck" in mainView
+      if (id === 'zurueck') return
+      
+      autoMode.stop()
+      mainRegionId.value = id
+      state.value = 'subRegionView'
+      subRegionId.value = null
+      painLevel.value = null
+
+      await tts.speak(title.value)
+      scheduleAutoModeStart('subRegionView')
+      
+    } catch (error) {
+      handleOperationError('selectMainRegion', error)
+    }
+  }
+
+  /**
+   * Sub-Region auswählen
+   */
+  async function selectSubRegion(id: string) {
+    try {
+      checkCancelled()
+      
+      if (id === 'zurueck') {
+        autoMode.stop()
+        mainRegionId.value = null
+        state.value = 'mainView'
+        subRegionId.value = null
+        painLevel.value = null
+
+        await tts.speak(title.value)
+        scheduleAutoModeStart('mainView')
+        return
+      }
+
+      autoMode.stop()
+      subRegionId.value = id
+      state.value = 'painScaleView'
+      painLevel.value = null
+
+      await tts.speak(title.value)
+      scheduleAutoModeStart('painScaleView')
+      
+    } catch (error) {
+      handleOperationError('selectSubRegion', error)
+    }
+  }
+
+  /**
+   * Schmerzlevel auswählen
+   */
   async function selectPainLevel(level: number) {
-    debug.log('PainDialogMachine', 'selectPainLevel', { level, currentState: state.value })
-    
-    // Stoppe AutoMode
-    debugAutoMode.stop()
-    autoMode.stop()
-    
-    // Setze State
-    painLevel.value = level
-    state.value = 'confirmation'
-    
-    // Spreche Bestätigungstext
-    const textToSpeak = confirmationText.value || 'Ihre Angabe wurde gespeichert.'
-    debugTTS.speak(textToSpeak, simpleFlowController.getTTSMuted())
-    await tts.speak(textToSpeak)
-    
-    // Nach 5 Sekunden zurück zum Start
-    scheduleTimer(() => {
-      // Reset State
+    try {
+      checkCancelled()
+      
+      autoMode.stop()
+      painLevel.value = level
+      state.value = 'confirmation'
+
+      const textToSpeak = confirmationText.value || 'Ihre Angabe wurde gespeichert.'
+      await tts.speak(textToSpeak)
+      
+      scheduleTimer(() => {
+        checkCancelled()
+        if (state.value === 'confirmation') {
+          resetToMainView()
+        }
+      }, TIMER_DELAYS.CONFIRMATION_RESET)
+      
+    } catch (error) {
+      handleOperationError('selectPainLevel', error)
+    }
+  }
+
+  /**
+   * Zurück zur Haupt-View
+   */
+  async function resetToMainView() {
+    try {
+      checkCancelled()
+      
+      autoMode.stop()
+      
       state.value = 'mainView'
       mainRegionId.value = null
       subRegionId.value = null
       painLevel.value = null
+
+      await tts.speak(title.value)
+      scheduleAutoModeStart('mainView')
       
-      // ✅ Index explizit auf 0 setzen, damit immer bei 0 beginnt (nicht aus Cache)
-      autoMode.index.value = 0
-      
-      // Spreche Titel
-      debugTTS.speak(title.value, simpleFlowController.getTTSMuted())
-      tts.speak(title.value)
-      
-      // Starte AutoMode nach 3 Sekunden (skipTitle = true, Titel wurde bereits gesprochen)
-      scheduleTimer(() => {
-        if (state.value === 'mainView') {
-          // ✅ Stelle sicher, dass Index noch bei 0 ist (falls State zwischenzeitlich geändert wurde)
-          autoMode.index.value = 0
-          debugAutoMode.start(true)
-          autoMode.start(true) // ✅ skipTitle = true, da Titel bereits gesprochen
-        }
-      }, 3000)
-    }, 5000)
+    } catch (error) {
+      handleOperationError('resetToMainView', error)
+    }
   }
 
   /**
    * Stoppt alle Timer und verhindert weitere AutoMode-Starts
+   * ✅ MIT CANCELLATION TOKEN - setzt isCancelled = true
+   * ✅ cleanupTimers() stoppt bereits autoMode durch onCleanup
    */
   function cleanup() {
-    console.log('PainDialog: cleanup() - Stoppe alle Timer und AutoMode')
+    console.log('PainDialog: Cleaning up')
     
-    // Stoppe AutoMode explizit (wichtig: vor cleanupTimers, damit onCleanup nicht nochmal stoppt)
-    autoMode.stop()
+    // ✅ ZUERST: Cancellation Flag setzen
+    isCancelled.value = true
     
-    // Stoppe alle Timer (dies ruft auch onCleanup auf, aber AutoMode ist bereits gestoppt)
-    cleanupTimers()
-    
-    // Stoppe TTS (lokal)
-    tts.cancel()
-    
-    console.log('PainDialog: cleanup() abgeschlossen')
+    // ✅ DANN: Alle Ressourcen freigeben
+    cleanupTimers() // Stoppt autoMode durch onCleanup
+    tts.cancel() // TTS muss explizit gestoppt werden
   }
 
   /**
    * Zurück zur Haupt-App navigieren
+   * ✅ cleanup() macht bereits alles nötige
    */
   function goBack() {
-    console.log('PainDialog: goBack() - Stoppe alle Services und navigiere zu /app')
+    console.log('PainDialog: goBack() - Cleanup und Navigation')
     
-    // Cleanup: Stoppe alle Timer und verhindere weitere AutoMode-Starts
-    cleanup()
+    cleanup() // Macht: isCancelled = true, cleanupTimers (autoMode.stop über onCleanup)
     
-    // Stoppe TTS (lokal)
-    tts.cancel()
-    
-    // Stoppe alle TTS (SimpleFlowController)
+    // ✅ Globale Services stoppen (cleanup() stoppt nur lokale)
     simpleFlowController.stopTTS()
-    
-    // Stoppe alle TTS (auch außerhalb SimpleFlowController)
-    if (window.speechSynthesis) {
-      window.speechSynthesis.cancel()
-    }
-    
-    // Stoppe Auto-Mode komplett (SimpleFlowController)
     simpleFlowController.stopAutoMode()
-    
-    // Setze aktiven View zurück
     simpleFlowController.setActiveView('')
     
-    // Navigiere zu /app (Home-View)
-    router.push('/app').then(() => {
-      console.log('PainDialog: Navigation zu /app erfolgreich - alle Services gestoppt')
-    }).catch((error) => {
+    router.push('/app').catch((error) => {
       console.error('PainDialog: Navigation zu /app fehlgeschlagen:', error)
     })
   }
 
-  // ✅ Blink-Handler
+  /**
+   * Blink-Handler: Wählt aktive Kachel aus
+   */
   function handleBlink() {
-    debug.log('PainDialogMachine', 'handleBlink', {
-      state: state.value,
-      itemsCount: items.value.length,
-      currentIndex: autoMode.index.value
-    })
-    
     const currentItems = items.value
-    if (!currentItems || !currentItems.length) {
-      debug.warn('PainDialogMachine', 'handleBlink - Keine Items verfügbar')
-      return
-    }
-    
     const currentIndex = autoMode.index.value
-    const currentItem = currentItems[currentIndex]
-    
-    if (!currentItem) {
-      debug.warn('PainDialogMachine', 'handleBlink - Kein Item für Index', { currentIndex })
+
+    if (currentIndex < 0 || currentIndex >= currentItems.length) {
       return
     }
-    
-    debug.log('PainDialogMachine', 'handleBlink - Aktuelles Item', currentItem)
-    
-    // ✅ Robustes zurueck-Handling
+
+    const currentItem = currentItems[currentIndex]
+    if (!currentItem) {
+      return
+    }
+
+    // Handle "zurück" Button
     if (currentItem.id === 'zurueck') {
-      debug.log('PainDialogMachine', 'handleBlink - Zurück-Button erkannt', { state: state.value })
       switch (state.value) {
         case 'subRegionView':
           selectSubRegion('zurueck')
@@ -315,67 +310,54 @@ export function usePainDialogMachine() {
       }
       return
     }
-    
-    // State-spezifische Auswahl
-    if (state.value === 'mainView') {
-      if (typeof currentItem.id === 'string') {
-        debug.log('PainDialogMachine', 'handleBlink - Wähle Hauptregion', { id: currentItem.id })
-        selectMainRegion(currentItem.id)
+
+    // Auswahl basierend auf State
+    switch (state.value) {
+      case 'mainView':
+        if (typeof currentItem.id === 'string') {
+          selectMainRegion(currentItem.id)
+        }
+        break
+      case 'subRegionView':
+        if (typeof currentItem.id === 'string') {
+          selectSubRegion(currentItem.id)
+        }
+        break
+      case 'painScaleView': {
+        const item = currentItem as any
+        if ('level' in item && typeof item.level === 'number') {
+          selectPainLevel(item.level)
+        } else if ('id' in item && typeof item.id === 'number') {
+          selectPainLevel(item.id)
+        }
+        break
       }
-    } else if (state.value === 'subRegionView') {
-      if (typeof currentItem.id === 'string') {
-        debug.log('PainDialogMachine', 'handleBlink - Wähle Unterregion', { id: currentItem.id })
-        selectSubRegion(currentItem.id)
-      }
-    } else if (state.value === 'painScaleView') {
-      // Pain levels haben level property
-      const item = currentItem as any
-      if ('level' in item && typeof item.level === 'number') {
-        debug.log('PainDialogMachine', 'handleBlink - Wähle Schmerzlevel', { level: item.level })
-        selectPainLevel(item.level)
-      } else if ('id' in item && typeof item.id === 'number') {
-        // Fallback: falls id als number verwendet wird
-        debug.log('PainDialogMachine', 'handleBlink - Wähle Schmerzlevel (Fallback)', { id: item.id })
-        selectPainLevel(item.id)
-      } else {
-        debug.warn('PainDialogMachine', 'handleBlink - Kein gültiges Level gefunden', { item })
-      }
-    } else {
-      debug.warn('PainDialogMachine', 'handleBlink - Unbekannter State', { state: state.value })
+      default:
+        break
     }
   }
 
   return {
     // State
-    state: computed(() => state.value),
-    mainRegionId: computed(() => mainRegionId.value),
-    subRegionId: computed(() => subRegionId.value),
-    painLevel: computed(() => painLevel.value),
+    state,
+    mainRegionId,
+    subRegionId,
+    painLevel,
     
     // Computed
     items,
     title,
     confirmationText,
-    
-    // AutoMode
     autoMode,
     
     // Actions
     selectMainRegion,
     selectSubRegion,
     selectPainLevel,
+    resetToMainView,
     goBack,
     handleBlink,
-    cleanup,
-    
-    // TTS
-    speak: tts.speak,
-    isSpeaking: tts.isSpeaking,
-    
-    // Dictionary Helpers
-    findMainRegion: dict.findMainRegion,
-    findSubRegion: dict.findSubRegion,
-    findPainLevel: dict.findPainLevel,
+    cleanup
   }
 }
 

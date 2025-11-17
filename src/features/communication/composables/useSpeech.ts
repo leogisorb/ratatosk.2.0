@@ -21,9 +21,6 @@ export function useSpeech() {
       
       // ✅ Prüfe ob TTS stumm geschaltet ist → Volume 0 setzen
       const isMuted = simpleFlowController.getTTSMuted()
-      if (isMuted) {
-        console.log('useSpeech: TTS is muted - setting volume to 0')
-      }
       
       const utterance = new SpeechSynthesisUtterance(text)
       utterance.lang = 'de-DE'

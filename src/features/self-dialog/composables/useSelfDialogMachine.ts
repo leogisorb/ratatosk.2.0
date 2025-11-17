@@ -1,146 +1,65 @@
-// useSelfDialogMachine.ts - Refactored Version
-// ✅ Fixes: Memory Leaks, Race Conditions, Type Safety
+// useSelfDialogMachine.ts - Central State Machine for Self Dialog
+// ✅ MIT CANCELLATION TOKEN - Verhindert Race Conditions und laufende Promises nach Navigation
 
-import { ref, computed, watch } from 'vue'
+import { ref, computed, nextTick } from 'vue'
 import { useRouter } from 'vue-router'
-import type { IchRegion, IchSubRegion } from '../data/selfDialogData'
+import { useTTSWithCancellation } from './useTTSWithCancellation'
+import { useAutoMode, type AutoModeConfig } from '../../../shared/composables/useAutoMode'
 import { useSelfDictionary } from './useSelfDictionary'
-import { useTTS } from './useTTS'
-import { useAutoMode } from '../../../shared/composables/useAutoMode'
+import { useSettingsStore } from '../../settings/stores/settings'
 import { simpleFlowController } from '../../../core/application/SimpleFlowController'
-import { debug } from '../../../shared/utils/debug'
+import { useDialogTimerTracking } from '../../../shared/composables/useDialogTimerTracking'
 
-// ==========================================
-// CONSTANTS - No more magic numbers
-// ==========================================
-const DELAYS = {
+// ===== CONSTANTS =====
+const TIMER_DELAYS = {
   AUTO_MODE_START: 3000,
-  CONFIRMATION_DISPLAY: 3000,
-  STATE_TRANSITION: 100
+  CONFIRMATION_RESET: 3000
 } as const
 
-const TTS_CONFIG = {
-  TIMEOUT: 10000,
-  FALLBACK_DELAY: 500
-} as const
-
-// ==========================================
-// TYPES
-// ==========================================
 export type IchDialogState = 'mainView' | 'subRegionView' | 'confirmation'
-export type IchDialogItem = IchRegion | IchSubRegion
 
-interface TTSProvider {
-  speak: (text: string) => Promise<void>
-  cancel: () => void
-  isSpeaking: boolean | { value: boolean }
-}
-
-interface AutoModeProvider {
-  start: (skipTitle?: boolean) => void
-  stop: () => void
-  index: { value: number }
-  running: { value: boolean }
-}
-
-interface IchDialogMachineDeps {
-  tts?: TTSProvider
-  autoMode?: AutoModeProvider
-  createAutoMode?: (config: any) => AutoModeProvider
-}
-
-// ==========================================
-// TIMER MANAGER - Centralized timer handling
-// ==========================================
-class TimerManager {
-  private timers = new Set<number>()
-  private isCleanedUp = false
-
-  schedule(callback: () => void, delay: number): number {
-    if (this.isCleanedUp) {
-      debug.warn('TimerManager', 'Attempted to schedule after cleanup')
-      return -1
-    }
-
-    const timerId = window.setTimeout(() => {
-      this.timers.delete(timerId)
-      if (!this.isCleanedUp) {
-        callback()
-      }
-    }, delay)
-
-    this.timers.add(timerId)
-    return timerId
-  }
-
-  cancel(timerId: number): void {
-    clearTimeout(timerId)
-    this.timers.delete(timerId)
-  }
-
-  cleanup(): void {
-    this.isCleanedUp = true
-    this.timers.forEach(id => clearTimeout(id))
-    this.timers.clear()
-    debug.log('TimerManager', `Cleaned up ${this.timers.size} timers`)
-  }
-
-  get hasActiveTimers(): boolean {
-    return this.timers.size > 0
-  }
-}
-
-// ==========================================
-// TRANSACTION MANAGER - Prevents race conditions
-// ==========================================
-class TransactionManager {
-  private currentTransaction: symbol | null = null
-
-  start(): symbol {
-    const transaction = Symbol('transaction')
-    this.currentTransaction = transaction
-    debug.log('TransactionManager', 'Started new transaction')
-    return transaction
-  }
-
-  isValid(transaction: symbol): boolean {
-    return this.currentTransaction === transaction
-  }
-
-  cancel(): void {
-    this.currentTransaction = null
-    debug.log('TransactionManager', 'Cancelled current transaction')
-  }
-}
-
-// ==========================================
-// MAIN COMPOSABLE
-// ==========================================
-export function useSelfDialogMachine(deps?: Partial<IchDialogMachineDeps>) {
+export function useSelfDialogMachine() {
   const router = useRouter()
   const dict = useSelfDictionary()
+  const settingsStore = useSettingsStore()
+
+  // ===== CANCELLATION TOKEN =====
+  const isCancelled = ref(false)
   
-  // Managers
-  const timerManager = new TimerManager()
-  const transactionManager = new TransactionManager()
+  const cancel = () => {
+    console.log('SelfDialog: Cancellation requested')
+    isCancelled.value = true
+    cleanupTimers()
+    window.speechSynthesis?.cancel()
+  }
+  
+  const checkCancelled = () => {
+    if (isCancelled.value) {
+      throw new Error('Operation cancelled')
+    }
+  }
+
+  // ✅ TTS mit Cancellation Support
+  const tts = useTTSWithCancellation(() => isCancelled.value)
 
   // State
   const state = ref<IchDialogState>('mainView')
   const mainRegionId = ref<string | null>(null)
   const subRegionId = ref<string | null>(null)
 
-  // ✅ Computed items and title (reactive to state changes)
-  const items = computed<IchDialogItem[]>(() => {
+  // Computed: Aktuelle Items basierend auf State
+  const items = computed(() => {
     switch (state.value) {
       case 'mainView':
-        return [...dict.mainRegions] as IchDialogItem[]
+        return [...dict.mainRegions]
       case 'subRegionView':
-        return [...dict.getSubRegions(mainRegionId.value)] as IchDialogItem[]
+        return [...dict.getSubRegions(mainRegionId.value)]
       default:
         return []
     }
   })
 
+  // Computed: Aktueller Titel basierend auf State
   const title = computed(() => {
     switch (state.value) {
       case 'mainView':
@@ -154,258 +73,208 @@ export function useSelfDialogMachine(deps?: Partial<IchDialogMachineDeps>) {
     }
   })
 
+  // Computed: Confirmation Text
   const confirmationText = computed(() => {
     const subRegions = dict.getSubRegions(mainRegionId.value)
     const subRegion = subRegions.find(r => r.id === subRegionId.value) || null
     return dict.generateConfirmation(mainRegionId.value, subRegion)
   })
 
-  // ✅ TTS Provider (with proper type handling)
-  const ttsInstance = deps?.tts ?? (() => {
-    const tts = useTTS()
-    return {
-      speak: tts.speak,
-      cancel: tts.cancel,
-      get isSpeaking() {
-        return typeof tts.isSpeaking === 'object' ? tts.isSpeaking.value : tts.isSpeaking
-      }
-    }
-  })()
-
-  const ttsProvider: TTSProvider = {
-    speak: ttsInstance.speak,
-    cancel: ttsInstance.cancel,
-    get isSpeaking() {
-      return typeof ttsInstance.isSpeaking === 'object' ? ttsInstance.isSpeaking.value : ttsInstance.isSpeaking
-    }
+  // AutoMode Configuration
+  const autoModeConfig: AutoModeConfig = {
+    speak: tts.speak,
+    getItems: () => items.value,
+    getTitle: () => title.value,
+    initialDelay: settingsStore.settings.leuchtdauer * 1000,
+    cycleDelay: settingsStore.settings.leuchtdauer * 1000
   }
 
-  // Normalize isSpeaking to always be a value
-  const isSpeaking = computed(() => {
-    const speaking = ttsProvider.isSpeaking
-    return typeof speaking === 'object' ? speaking.value : speaking
-  })
-
-  // ✅ AutoMode Provider (reactive - getItems/getTitle always read current values)
-  const autoModeProvider: AutoModeProvider = deps?.autoMode ?? useAutoMode({
-    speak: ttsProvider.speak,
-    getItems: () => {
-      // ✅ Always return current items (reactive)
-      return items.value.map(item => ({
-        ...item,
-        title: item.title,
-        id: item.id
-      }))
-    },
-    getTitle: () => title.value, // ✅ Always return current title (reactive)
-    initialDelay: DELAYS.AUTO_MODE_START,
-    cycleDelay: 3000,
-    onCycle: (index: number) => {
-      debug.log('IchDialog', 'AutoMode cycle', { index, itemCount: items.value.length })
-    }
-  })
+  const autoMode = useAutoMode(autoModeConfig)
   
-  const autoMode: AutoModeProvider = autoModeProvider
+  // Timer-Tracking mit Cleanup-Logik
+  const { scheduleTimer, cleanup: cleanupTimers } = useDialogTimerTracking({
+    onCleanup: () => {
+      autoMode.stop()
+    },
+    dialogName: 'SelfDialog'
+  })
 
-
-  // ==========================================
-  // PRIVATE HELPERS
-  // ==========================================
-  async function speakWithTransaction(
-    transaction: symbol,
-    text: string
-  ): Promise<boolean> {
-    if (!transactionManager.isValid(transaction)) {
-      debug.log('IchDialog', 'Transaction cancelled before TTS')
-      return false
-    }
-
-    try {
-      await ttsProvider.speak(text)
-      
-      if (!transactionManager.isValid(transaction)) {
-        debug.log('IchDialog', 'Transaction cancelled after TTS')
-        return false
-      }
-      
-      return true
-    } catch (error) {
-      debug.error('IchDialog', 'TTS error', { text, error })
-      return transactionManager.isValid(transaction)
-    }
-  }
-
-  function startAutoModeWithDelay(transaction: symbol, skipTitle = true): void {
-    timerManager.schedule(() => {
-      if (!transactionManager.isValid(transaction)) {
-        debug.log('IchDialog', 'AutoMode start cancelled - invalid transaction')
-        return
-      }
-
-      if (items.value.length === 0) {
-        debug.warn('IchDialog', 'No items available for AutoMode')
-        return
-      }
-
-      autoMode.start(skipTitle)
-    }, DELAYS.AUTO_MODE_START)
-  }
-
-  // ==========================================
-  // PUBLIC ACTIONS
-  // ==========================================
-  async function selectMainRegion(id: string): Promise<void> {
-    debug.log('IchDialog', 'selectMainRegion', { id })
-
-    if (id === dict.ID_BACK) {
-      goBack()
-      return
-    }
-
-    // Start new transaction
-    const transaction = transactionManager.start()
+  // ===== HELPER: START AUTO MODE =====
+  /**
+   * Startet AutoMode nach Delay mit allen Checks
+   * ✅ ATOMIC: Alle Checks erfolgen direkt vor autoMode.start()
+   * ✅ WICHTIG: Setzt Index explizit auf 0, damit Karussell bei Index 0 startet
+   */
+  function scheduleAutoModeStart(expectedState: IchDialogState, delay: number = TIMER_DELAYS.AUTO_MODE_START) {
+    // ✅ Index explizit auf 0 setzen, damit Karussell bei Index 0 startet
+    autoMode.index.value = 0
     
-    // Stop current auto mode
-    autoMode.stop()
-
-    // Update state
-    mainRegionId.value = id
-    state.value = 'subRegionView'
-    subRegionId.value = null
-
-    // Speak title
-    const success = await speakWithTransaction(transaction, title.value)
-    if (!success) return
-
-    // Start auto mode after delay
-    startAutoModeWithDelay(transaction, true)
-  }
-
-  async function selectSubRegion(id: string): Promise<void> {
-    debug.log('IchDialog', 'selectSubRegion', { id })
-
-    if (id === dict.ID_BACK) {
-      await goBackToMainView()
-      return
-    }
-
-    // Start new transaction
-    const transaction = transactionManager.start()
-
-    // Stop current auto mode
-    autoMode.stop()
-
-    // Update state
-    subRegionId.value = id
-    state.value = 'confirmation'
-
-    // Speak confirmation
-    const success = await speakWithTransaction(transaction, confirmationText.value)
-    if (!success) return
-
-    // Return to main view after delay
-    timerManager.schedule(() => {
-      if (transactionManager.isValid(transaction)) {
-        resetToMainView()
+    scheduleTimer(async () => {
+      checkCancelled()
+      
+      if (state.value === expectedState) {
+        await nextTick()
+        checkCancelled()
+        
+        // ✅ Check EINMAL, direkt vor Nutzung
+        if (items.value.length > 0 && state.value === expectedState) {
+          // ✅ Index nochmal auf 0 setzen, um sicherzustellen, dass Karussell bei 0 startet
+          autoMode.index.value = 0
+          autoMode.start(true)
+        }
       }
-    }, DELAYS.CONFIRMATION_DISPLAY)
+    }, delay)
   }
 
-  async function goBackToMainView(): Promise<void> {
-    debug.log('IchDialog', 'goBackToMainView')
-
-    // Start new transaction
-    const transaction = transactionManager.start()
-
-    // Stop current auto mode
-    autoMode.stop()
-
-    // Update state
-    state.value = 'mainView'
-    mainRegionId.value = null
-    subRegionId.value = null
-
-    // Speak title
-    const success = await speakWithTransaction(transaction, title.value)
-    if (!success) return
-
-    // Start auto mode after delay
-    startAutoModeWithDelay(transaction, true)
-  }
-
-  async function resetToMainView(): Promise<void> {
-    debug.log('IchDialog', 'resetToMainView')
-
-    // Start new transaction
-    const transaction = transactionManager.start()
-
-    // Stop current auto mode
-    autoMode.stop()
-
-    // Update state
-    state.value = 'mainView'
-    mainRegionId.value = null
-    subRegionId.value = null
-
-    // Speak title
-    const success = await speakWithTransaction(transaction, title.value)
-    if (!success) return
-
-    // Start auto mode after delay
-    startAutoModeWithDelay(transaction, true)
-  }
-
-  function goBack(): void {
-    debug.log('IchDialog', 'goBack - Navigating to /app')
-
-    // Cancel all transactions
-    transactionManager.cancel()
-
-    // Cleanup everything
-    cleanup()
-
-    // Stop all TTS
-    ttsProvider.cancel()
-    simpleFlowController.stopTTS()
-    if (window.speechSynthesis) {
-      window.speechSynthesis.cancel()
+  /**
+   * Error Handler für Operationen
+   */
+  function handleOperationError(operation: string, error: unknown) {
+    if (error instanceof Error && error.message.includes('cancelled')) {
+      console.log(`SelfDialog: ${operation} cancelled`)
+    } else {
+      console.error(`SelfDialog: ${operation} error:`, error)
+      // TODO: User-Feedback hinzufügen bei kritischen Fehlern
     }
+  }
 
-    // Stop auto mode
+  // ===== ACTIONS =====
+
+  /**
+   * Haupt-Region auswählen
+   */
+  async function selectMainRegion(id: string) {
+    try {
+      checkCancelled()
+      
+      if (id === dict.ID_BACK) {
+        goBack()
+        return
+      }
+
+      autoMode.stop()
+      mainRegionId.value = id
+      state.value = 'subRegionView'
+      subRegionId.value = null
+
+      await tts.speak(title.value)
+      scheduleAutoModeStart('subRegionView')
+      
+    } catch (error) {
+      handleOperationError('selectMainRegion', error)
+    }
+  }
+
+  /**
+   * Sub-Region auswählen
+   */
+  async function selectSubRegion(id: string) {
+    try {
+      checkCancelled()
+      
+      if (id === dict.ID_BACK) {
+        autoMode.stop()
+        state.value = 'mainView'
+        mainRegionId.value = null
+        subRegionId.value = null
+
+        await tts.speak(title.value)
+        scheduleAutoModeStart('mainView')
+        return
+      }
+
+      autoMode.stop()
+      subRegionId.value = id
+      state.value = 'confirmation'
+
+      await tts.speak(confirmationText.value)
+      
+      scheduleTimer(() => {
+        checkCancelled()
+        if (state.value === 'confirmation') {
+          resetToMainView()
+        }
+      }, TIMER_DELAYS.CONFIRMATION_RESET)
+      
+    } catch (error) {
+      handleOperationError('selectSubRegion', error)
+    }
+  }
+
+  /**
+   * Zurück zur Haupt-View
+   */
+  async function resetToMainView() {
+    try {
+      checkCancelled()
+      
+      autoMode.stop()
+      
+      state.value = 'mainView'
+      mainRegionId.value = null
+      subRegionId.value = null
+
+      await tts.speak(title.value)
+      scheduleAutoModeStart('mainView')
+      
+    } catch (error) {
+      handleOperationError('resetToMainView', error)
+    }
+  }
+
+  /**
+   * Stoppt alle Timer und verhindert weitere AutoMode-Starts
+   * ✅ MIT CANCELLATION TOKEN - setzt isCancelled = true
+   * ✅ cleanupTimers() stoppt bereits autoMode durch onCleanup
+   */
+  function cleanup() {
+    console.log('SelfDialog: Cleaning up')
+    
+    // ✅ ZUERST: Cancellation Flag setzen
+    isCancelled.value = true
+    
+    // ✅ DANN: Alle Ressourcen freigeben
+    cleanupTimers() // Stoppt autoMode durch onCleanup
+    tts.cancel() // TTS muss explizit gestoppt werden
+  }
+
+  /**
+   * Zurück zur Haupt-App navigieren
+   * ✅ cleanup() macht bereits alles nötige
+   */
+  function goBack() {
+    console.log('SelfDialog: goBack() - Cleanup und Navigation')
+    
+    cleanup() // Macht: isCancelled = true, cleanupTimers (autoMode.stop über onCleanup)
+    
+    // ✅ Globale Services stoppen (cleanup() stoppt nur lokale)
+    simpleFlowController.stopTTS()
     simpleFlowController.stopAutoMode()
     simpleFlowController.setActiveView('')
-
-    // Navigate
-    router.push('/app').catch(error => {
-      debug.error('IchDialog', 'Navigation failed', { error })
+    
+    router.push('/app').catch((error) => {
+      console.error('SelfDialog: Navigation zu /app fehlgeschlagen:', error)
     })
   }
 
-  function handleBlink(): void {
+  /**
+   * Blink-Handler: Wählt aktive Kachel aus
+   */
+  function handleBlink() {
     const currentItems = items.value
     const currentIndex = autoMode.index.value
 
-    debug.log('IchDialog', 'handleBlink', {
-      state: state.value,
-      currentIndex,
-      itemsCount: currentItems.length
-    })
-
-    // Validate index
     if (currentIndex < 0 || currentIndex >= currentItems.length) {
-      debug.warn('IchDialog', 'Invalid index', { currentIndex, itemsCount: currentItems.length })
       return
     }
 
     const currentItem = currentItems[currentIndex]
     if (!currentItem) {
-      debug.warn('IchDialog', 'No item found', { currentIndex })
       return
     }
 
-    // Handle back button
+    // Handle "zurück" Button
     if (currentItem.id === dict.ID_BACK) {
-      debug.log('IchDialog', 'Back button detected')
       switch (state.value) {
         case 'subRegionView':
           selectSubRegion(dict.ID_BACK)
@@ -417,7 +286,7 @@ export function useSelfDialogMachine(deps?: Partial<IchDialogMachineDeps>) {
       return
     }
 
-    // Handle selection based on state
+    // Auswahl basierend auf State
     switch (state.value) {
       case 'mainView':
         selectMainRegion(currentItem.id)
@@ -426,59 +295,15 @@ export function useSelfDialogMachine(deps?: Partial<IchDialogMachineDeps>) {
         selectSubRegion(currentItem.id)
         break
       default:
-        debug.warn('IchDialog', 'Blink in unknown state', { state: state.value })
         break
     }
   }
 
-  function goToIndex(index: number): void {
-    const currentItems = items.value
-    if (index >= 0 && index < currentItems.length) {
-      autoMode.stop()
-      autoMode.index.value = index
-      
-      timerManager.schedule(() => {
-        autoMode.start(true)
-      }, DELAYS.STATE_TRANSITION)
-    }
-  }
-
-  function cleanup(): void {
-    debug.log('IchDialog', 'Cleanup started')
-    
-    // Cancel all transactions
-    transactionManager.cancel()
-    
-    // Clear all timers
-    timerManager.cleanup()
-    
-    // Stop auto mode
-    autoMode.stop()
-    
-    debug.log('IchDialog', 'Cleanup completed')
-  }
-
-  // ==========================================
-  // LIFECYCLE WATCHERS
-  // ==========================================
-  watch(() => state.value, (newState, oldState) => {
-    if (oldState !== undefined) {
-      debug.log('IchDialog', 'State changed', {
-        from: oldState,
-        to: newState,
-        itemsCount: items.value.length
-      })
-    }
-  })
-
-  // ==========================================
-  // RETURN PUBLIC API
-  // ==========================================
   return {
-    // State (read-only)
-    state: computed(() => state.value),
-    mainRegionId: computed(() => mainRegionId.value),
-    subRegionId: computed(() => subRegionId.value),
+    // State
+    state,
+    mainRegionId,
+    subRegionId,
     
     // Computed
     items,
@@ -492,19 +317,6 @@ export function useSelfDialogMachine(deps?: Partial<IchDialogMachineDeps>) {
     resetToMainView,
     goBack,
     handleBlink,
-    goToIndex,
-    cleanup,
-    
-    // Debugging
-    _debug: {
-      timers: computed(() => timerManager.hasActiveTimers),
-      state: computed(() => state.value),
-      isSpeaking: isSpeaking
-    }
+    cleanup
   }
 }
-
-// ✅ Keine Default-Implementierungen mehr nötig
-// TTS und AutoMode werden jetzt mit lazy imports direkt in useIchDialogMachine() erstellt
-// Das verhindert Circular Dependencies und stellt sicher, dass getItems/getTitle
-// immer die aktuellen Werte aus den computed properties lesen

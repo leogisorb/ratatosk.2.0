@@ -261,17 +261,21 @@ const handleItemClick = (item: any, index: number) => {
   debug.log('UmgebungDialog', 'Item clicked', { 
     itemId: item.id, 
     index,
-    state: state.value 
+    state: state.value,
+    isBackButton: item.id === dict.ID_BACK,
+    isActive: index === autoMode.index.value
   })
 
   // Aktiviere User-Interaktion für TTS
   enableTTSOnInteraction()
 
+  // ✅ Zurück-Button ist IMMER klickbar (auch wenn nicht im AutoMode aktiv)
   if (item.id === dict.ID_BACK) {
     handleBackButton()
     return
   }
 
+  // ✅ Alle anderen Buttons sind NUR klickbar, wenn sie im AutoMode aktiv sind
   handleItemSelection(item, index)
 }
 
@@ -370,7 +374,14 @@ onMounted(() => {
   debugComponent.lifecycle('EnvironmentDialogView', 'mounted')
   debugComponent.props('EnvironmentDialogView', { isMobile: isMobile.value })
   
-  // Start Face Recognition
+  // ✅ Cleanup SOFORT verfügbar machen (BEVOR Services starten)
+  ;(window as any).__environmentDialogCleanup = () => {
+    debug.log('UmgebungDialog', 'Global cleanup called')
+    machine.cleanup()
+    inputManager.stop()
+  }
+  
+  // Start Services NACH Cleanup-Registrierung
   if (!faceRecognition.isActive.value) {
     debug.log('UmgebungDialog', 'Starting face recognition')
     faceRecognition.start()
@@ -386,13 +397,6 @@ onMounted(() => {
   // Start Input Manager
   debug.log('UmgebungDialog', 'Starting Input Manager')
   inputManager.start()
-  
-  // Global cleanup function
-  ;(window as any).__environmentDialogCleanup = () => {
-    debug.log('UmgebungDialog', 'Global cleanup called')
-    machine.cleanup()
-    inputManager.stop()
-  }
 })
 
 onUnmounted(() => {

@@ -17,8 +17,6 @@ export function getOptionsViewTitle(categoryId: string | null): string {
       return 'FARBMODUS'
     case 'kamera':
       return 'KAMERA'
-    case 'kamerapositionen':
-      return 'KAMERA-POSITIONEN'
     case 'impressum':
       return 'IMPRESSUM'
     default:

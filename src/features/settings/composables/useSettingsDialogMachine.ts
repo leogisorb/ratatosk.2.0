@@ -1,22 +1,47 @@
-// useSettingsDialogMachine.ts - Zentrale State Machine für Settings-Dialog
+// useSettingsDialogMachine.ts - Central State Machine for Settings Dialog
+// ✅ MIT CANCELLATION TOKEN - Verhindert Race Conditions und laufende Promises nach Navigation
 
 import { ref, computed, nextTick } from 'vue'
 import { useRouter } from 'vue-router'
-import { useTTS } from './useTTS'
+import { useTTSWithCancellation } from './useTTSWithCancellation'
 import { useAutoMode, type AutoModeConfig } from '../../../shared/composables/useAutoMode'
 import { useSettingsDictionary } from './useSettingsDictionary'
 import { useSettingsStore } from '../stores/settings'
-import type { SettingsOption } from '../data/options'
 import { simpleFlowController } from '../../../core/application/SimpleFlowController'
 import { useDialogTimerTracking } from '../../../shared/composables/useDialogTimerTracking'
+
+// ===== CONSTANTS =====
+const TIMER_DELAYS = {
+  AUTO_MODE_START: 3000,
+  CONFIRMATION_RESET: 3000,
+  CONFIRMATION_DELAY: 1500
+} as const
 
 export type SettingsDialogState = 'mainView' | 'optionsView' | 'confirmation'
 
 export function useSettingsDialogMachine() {
   const router = useRouter()
-  const tts = useTTS()
   const dict = useSettingsDictionary()
   const settingsStore = useSettingsStore()
+
+  // ===== CANCELLATION TOKEN =====
+  const isCancelled = ref(false)
+  
+  const cancel = () => {
+    console.log('SettingsDialog: Cancellation requested')
+    isCancelled.value = true
+    cleanupTimers()
+    window.speechSynthesis?.cancel()
+  }
+  
+  const checkCancelled = () => {
+    if (isCancelled.value) {
+      throw new Error('Operation cancelled')
+    }
+  }
+
+  // ✅ TTS mit Cancellation Support
+  const tts = useTTSWithCancellation(() => isCancelled.value)
 
   // State
   const state = ref<SettingsDialogState>('mainView')
@@ -61,91 +86,131 @@ export function useSettingsDialogMachine() {
   const autoModeConfig: AutoModeConfig = {
     speak: tts.speak,
     getItems: () => items.value,
-    getTitle: () => title.value
+    getTitle: () => title.value,
+    initialDelay: settingsStore.settings.leuchtdauer * 1000,
+    cycleDelay: settingsStore.settings.leuchtdauer * 1000
   }
 
   const autoMode = useAutoMode(autoModeConfig)
   
   // Timer-Tracking mit Cleanup-Logik
-  const { isActive, scheduleTimer, cleanup: cleanupTimers } = useDialogTimerTracking({
+  const { scheduleTimer, cleanup: cleanupTimers } = useDialogTimerTracking({
     onCleanup: () => {
       autoMode.stop()
     },
     dialogName: 'SettingsDialog'
   })
 
-  // Actions
+  // ===== HELPER: START AUTO MODE =====
+  /**
+   * Startet AutoMode nach Delay mit allen Checks
+   * ✅ ATOMIC: Alle Checks erfolgen direkt vor autoMode.start()
+   * ✅ WICHTIG: Setzt Index explizit auf 0, damit Karussell bei Index 0 startet
+   */
+  function scheduleAutoModeStart(expectedState: SettingsDialogState, delay: number = TIMER_DELAYS.AUTO_MODE_START) {
+    // ✅ Index explizit auf 0 setzen, damit Karussell bei Index 0 startet
+    autoMode.index.value = 0
+    
+    scheduleTimer(async () => {
+      checkCancelled()
+      
+      if (state.value === expectedState) {
+        await nextTick()
+        checkCancelled()
+        
+        // ✅ Check EINMAL, direkt vor Nutzung
+        if (items.value.length > 0 && state.value === expectedState) {
+          // ✅ Index nochmal auf 0 setzen, um sicherzustellen, dass Karussell bei 0 startet
+          autoMode.index.value = 0
+          autoMode.start(true)
+        }
+      }
+    }, delay)
+  }
+
+  /**
+   * Error Handler für Operationen
+   */
+  function handleOperationError(operation: string, error: unknown) {
+    if (error instanceof Error && error.message.includes('cancelled')) {
+      console.log(`SettingsDialog: ${operation} cancelled`)
+    } else {
+      console.error(`SettingsDialog: ${operation} error:`, error)
+      // TODO: User-Feedback hinzufügen bei kritischen Fehlern
+    }
+  }
+
+  // ===== ACTIONS =====
 
   /**
    * Kategorie auswählen
    */
   async function selectCategory(id: string) {
-    if (id === dict.ID_BACK) {
-      goBack()
-      return
-    }
-
-    autoMode.stop()
-    categoryId.value = id
-    state.value = 'optionsView'
-    optionId.value = null
-
-    // Titel sprechen
-    await tts.speak(title.value)
-    
-    // Nach 3 Sekunden AutoMode starten (skipTitle = true, da Titel bereits gesprochen)
-    scheduleTimer(async () => {
-      await nextTick() // Warte auf Vue Reactivity Update
-      if (items.value.length > 0) {
-        autoMode.start(true)
-      } else {
-        console.warn('❌ useSettingsDialogMachine: Keine Items verfügbar für AutoMode start (OptionsView)')
+    try {
+      checkCancelled()
+      
+      if (id === dict.ID_BACK) {
+        goBack()
+        return
       }
-    }, 3000)
+
+      autoMode.stop()
+      categoryId.value = id
+      state.value = 'optionsView'
+      optionId.value = null
+
+      await tts.speak(title.value)
+      scheduleAutoModeStart('optionsView')
+      
+    } catch (error) {
+      handleOperationError('selectCategory', error)
+    }
   }
 
   /**
    * Option auswählen
    */
   async function selectOption(id: string) {
-    if (id === dict.ID_BACK) {
-      // Zurück zu Kategorien
-      autoMode.stop()
-      state.value = 'mainView'
-      categoryId.value = null
-      optionId.value = null
-
-      // Titel sprechen
-      await tts.speak(title.value)
+    try {
+      checkCancelled()
       
-      // Nach 3 Sekunden AutoMode starten (skipTitle = true, da Titel bereits gesprochen)
-      scheduleTimer(async () => {
-        await nextTick() // Warte auf Vue Reactivity Update
-        if (items.value.length > 0) {
-          autoMode.start(true)
-        } else {
-          console.warn('❌ useSettingsDialogMachine: Keine Items verfügbar für AutoMode start (Zurück zu MainView)')
+      if (id === dict.ID_BACK) {
+        autoMode.stop()
+        state.value = 'mainView'
+        categoryId.value = null
+        optionId.value = null
+
+        await tts.speak(title.value)
+        scheduleAutoModeStart('mainView')
+        return
+      }
+
+      autoMode.stop()
+      optionId.value = id
+      state.value = 'confirmation'
+
+      await saveSetting(categoryId.value!, id)
+      checkCancelled()
+
+      await tts.speak('Einstellung gespeichert')
+      checkCancelled()
+      
+      await new Promise(resolve => setTimeout(resolve, TIMER_DELAYS.CONFIRMATION_DELAY))
+      checkCancelled()
+      
+      await tts.speak(confirmationText.value)
+      checkCancelled()
+
+      scheduleTimer(() => {
+        checkCancelled()
+        if (state.value === 'confirmation') {
+          resetToMainView()
         }
-      }, 3000)
-      return
+      }, TIMER_DELAYS.CONFIRMATION_RESET)
+      
+    } catch (error) {
+      handleOperationError('selectOption', error)
     }
-
-    autoMode.stop()
-    optionId.value = id
-    state.value = 'confirmation'
-
-    // Einstellung speichern
-    await saveSetting(categoryId.value!, id)
-
-    // Confirmation Text sprechen
-    await tts.speak('Einstellung gespeichert')
-    await new Promise(resolve => setTimeout(resolve, 1500))
-    await tts.speak(confirmationText.value)
-
-    // Nach 3 Sekunden zurück zu Haupt-View
-    scheduleTimer(() => {
-      resetToMainView()
-    }, 3000)
   }
 
   /**
@@ -173,9 +238,6 @@ export function useSettingsDialogMachine() {
       case 'kamera':
         settingsStore.updateSettings({ kamera: option.value ? 'back' : 'off' })
         break
-      case 'kamerapositionen':
-        settingsStore.updateSettings({ kamera: option.value as string })
-        break
       case 'impressum':
         // Impressum ist nur zur Anzeige, keine Einstellung
         break
@@ -186,63 +248,54 @@ export function useSettingsDialogMachine() {
    * Zurück zur Haupt-View
    */
   async function resetToMainView() {
-    autoMode.stop()
-    
-    state.value = 'mainView'
-    categoryId.value = null
-    optionId.value = null
+    try {
+      checkCancelled()
+      
+      autoMode.stop()
+      
+      state.value = 'mainView'
+      categoryId.value = null
+      optionId.value = null
 
-    // Titel sprechen
-    await tts.speak(title.value)
-    
-    // Nach 3 Sekunden AutoMode starten (skipTitle = true, da Titel bereits gesprochen)
-    scheduleTimer(async () => {
-      await nextTick() // Warte auf Vue Reactivity Update
-      if (items.value.length > 0 && state.value === 'mainView') {
-        autoMode.start(true)
-      } else {
-        console.warn('❌ useSettingsDialogMachine: Keine Items verfügbar für AutoMode start (Reset to MainView)')
-      }
-    }, 3000)
+      await tts.speak(title.value)
+      scheduleAutoModeStart('mainView')
+      
+    } catch (error) {
+      handleOperationError('resetToMainView', error)
+    }
   }
 
   /**
    * Stoppt alle Timer und verhindert weitere AutoMode-Starts
+   * ✅ MIT CANCELLATION TOKEN - setzt isCancelled = true
+   * ✅ cleanupTimers() stoppt bereits autoMode durch onCleanup
    */
   function cleanup() {
-    cleanupTimers()
+    console.log('SettingsDialog: Cleaning up')
+    
+    // ✅ ZUERST: Cancellation Flag setzen
+    isCancelled.value = true
+    
+    // ✅ DANN: Alle Ressourcen freigeben
+    cleanupTimers() // Stoppt autoMode durch onCleanup
+    tts.cancel() // TTS muss explizit gestoppt werden
   }
 
   /**
    * Zurück zur Haupt-App navigieren
+   * ✅ cleanup() macht bereits alles nötige
    */
   function goBack() {
-    console.log('SettingsDialog: goBack() - Stoppe alle Services und navigiere zu /app')
+    console.log('SettingsDialog: goBack() - Cleanup und Navigation')
     
-    // Cleanup: Stoppe alle Timer und verhindere weitere AutoMode-Starts
-    cleanup()
+    cleanup() // Macht: isCancelled = true, cleanupTimers (autoMode.stop über onCleanup)
     
-    // Stoppe TTS (lokal)
-    tts.cancel()
-    
-    // Stoppe alle TTS (SimpleFlowController)
+    // ✅ Globale Services stoppen (cleanup() stoppt nur lokale)
     simpleFlowController.stopTTS()
-    
-    // Stoppe alle TTS (auch außerhalb SimpleFlowController)
-    if (window.speechSynthesis) {
-      window.speechSynthesis.cancel()
-    }
-    
-    // Stoppe Auto-Mode komplett (SimpleFlowController)
     simpleFlowController.stopAutoMode()
-    
-    // Setze aktiven View zurück
     simpleFlowController.setActiveView('')
     
-    // Navigiere zu /app (Home-View)
-    router.push('/app').then(() => {
-      console.log('SettingsDialog: Navigation zu /app erfolgreich - alle Services gestoppt')
-    }).catch((error) => {
+    router.push('/app').catch((error) => {
       console.error('SettingsDialog: Navigation zu /app fehlgeschlagen:', error)
     })
   }
@@ -289,21 +342,6 @@ export function useSettingsDialogMachine() {
     }
   }
 
-  /**
-   * Index zu einem bestimmten Item springen (für Carousel Indicators)
-   */
-  function goToIndex(index: number) {
-    const currentItems = items.value
-    if (index >= 0 && index < currentItems.length) {
-      autoMode.stop()
-      // Index direkt setzen
-      autoMode.index.value = index
-      // AutoMode neu starten mit skipTitle
-      scheduleTimer(() => {
-        autoMode.start(true)
-      }, 100)
-    }
-  }
 
   return {
     // State
@@ -323,7 +361,6 @@ export function useSettingsDialogMachine() {
     resetToMainView,
     goBack,
     handleBlink,
-    goToIndex,
     cleanup
   }
 }

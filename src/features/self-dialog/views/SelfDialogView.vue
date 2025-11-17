@@ -205,18 +205,22 @@ const handleItemClick = (item: any, index: number) => {
   debug.log('IchDialog', 'Item clicked', { 
     itemId: item.id, 
     index,
-    state: state.value 
+    state: state.value,
+    isBackButton: item.id === dict.ID_BACK,
+    isActive: index === autoMode.index.value
   })
 
   // Aktiviere User-Interaktion für TTS
   enableTTSOnInteraction()
 
+  // ✅ Zurück-Button ist IMMER klickbar (auch wenn nicht im AutoMode aktiv)
   if (item.id === dict.ID_BACK) {
     handleBackButton()
     return
   }
 
-  handleItemSelection(item)
+  // ✅ Alle anderen Buttons sind NUR klickbar, wenn sie im AutoMode aktiv sind
+  handleItemSelection(item, index)
 }
 
 const handleContextMenu = (item: any, index: number) => {
@@ -240,7 +244,17 @@ const handleBackButton = () => {
   }
 }
 
-const handleItemSelection = (item: any) => {
+const handleItemSelection = (item: any, index: number) => {
+  // ✅ Prüfe, ob das Item im AutoMode aktiv ist
+  if (index !== autoMode.index.value) {
+    debug.log('IchDialog', 'Item not active, ignoring click', { 
+      itemId: item.id, 
+      index,
+      activeIndex: autoMode.index.value
+    })
+    return
+  }
+
   switch (state.value) {
     case 'mainView':
       selectMainRegion(item.id)
@@ -302,7 +316,14 @@ onMounted(() => {
   debugComponent.lifecycle('SelfDialogView', 'mounted')
   debugComponent.props('SelfDialogView', { isMobile: isMobile.value })
   
-  // Start Face Recognition
+  // ✅ Cleanup SOFORT verfügbar machen (BEVOR Services starten)
+  ;(window as any).__selfDialogCleanup = () => {
+    debug.log('IchDialog', 'Global cleanup called')
+    machine.cleanup()
+    inputManager.stop()
+  }
+  
+  // Start Services NACH Cleanup-Registrierung
   if (!faceRecognition.isActive.value) {
     debug.log('IchDialog', 'Starting face recognition')
     faceRecognition.start()
@@ -318,13 +339,6 @@ onMounted(() => {
   // Start Input Manager
   debug.log('IchDialog', 'Starting Input Manager')
   inputManager.start()
-  
-  // Global cleanup function
-  ;(window as any).__selfDialogCleanup = () => {
-    debug.log('IchDialog', 'Global cleanup called')
-    machine.cleanup()
-    inputManager.stop()
-  }
 })
 
 onUnmounted(() => {

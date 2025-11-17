@@ -1,12 +1,13 @@
 // categories.ts - Settings Kategorien
 
-// Icons from public folder
-const leuchtdauerIcon = '/leuchtdauer.svg'
-const blinzeldauerIcon = '/blinzeldauer.svg'
-const farbmodusIcon = '/farbmodus.svg'
-const kameraIcon = '/kamera.svg'
-const kamerapositionIcon = '/kameraposition.svg'
-const impressumIcon = '/impressum.svg'
+// Icons from public folder - use BASE_URL to support base path
+const baseUrl = import.meta.env.BASE_URL
+const leuchtdauerIcon = `${baseUrl}leuchtdauer.svg`
+const blinzeldauerIcon = `${baseUrl}blinzeldauer.svg`
+const farbmodusIcon = `${baseUrl}farbmodus.svg`
+const kameraIcon = `${baseUrl}kamera.svg`
+const impressumIcon = `${baseUrl}impressum.svg`
+const zurueckIcon = `${baseUrl}zurueck.svg`
 
 export interface SettingsCategory {
   id: string
@@ -41,15 +42,15 @@ export const settingsCategories: SettingsCategory[] = [
     category: 'settings'
   },
   {
-    id: 'kamerapositionen',
-    title: 'KAMERA-POSITIONEN',
-    icon: kamerapositionIcon,
-    category: 'settings'
-  },
-  {
     id: 'impressum',
     title: 'IMPRESSUM',
     icon: impressumIcon,
+    category: 'settings'
+  },
+  {
+    id: 'zurueck',
+    title: 'ZURÜCK',
+    icon: zurueckIcon,
     category: 'settings'
   }
 ]
