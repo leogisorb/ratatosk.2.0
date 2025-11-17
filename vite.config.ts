@@ -13,6 +13,7 @@ const preserveAbsolutePathsPlugin = (): Plugin => {
     enforce: 'pre',
     resolveId(id) {
       // Ignoriere absolute Pfade, die mit /ratatosk.2.0/ beginnen
+      // Diese werden als externe Ressourcen behandelt (nicht als Module)
       if (id.startsWith('/ratatosk.2.0/')) {
         return { id, external: true }
       }
@@ -64,12 +65,21 @@ export default defineConfig({
     host: true,
     port: 5555,
     https: {} as any, // HTTPS wird durch basicSsl() Plugin konfiguriert, {} als Fallback
+    fs: {
+      // Erlaube Zugriff auf Dateien außerhalb des Projektverzeichnisses
+      strict: false,
+    },
+    middlewareMode: false,
+    hmr: {
+      protocol: 'wss',
+    },
   },
   resolve: {
     alias: {
       '@': fileURLToPath(new URL('./src', import.meta.url))
     },
   },
+  assetsInclude: ['**/*.svg'], // Behandle SVG-Dateien als Assets
   define: {
     __VUE_OPTIONS_API__: true,
     __VUE_PROD_DEVTOOLS__: true, // Vue DevTools auch in Production-Builds (für Debugging)
