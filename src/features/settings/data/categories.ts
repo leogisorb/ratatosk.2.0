@@ -1,12 +1,13 @@
 // categories.ts - Settings Kategorien
 
-// Icons from public folder - use absolute paths (treated as external resources by Vite)
-const leuchtdauerIcon = '/ratatosk.2.0/leuchtdauer.svg'
-const blinzeldauerIcon = '/ratatosk.2.0/blinzeldauer.svg'
-const farbmodusIcon = '/ratatosk.2.0/farbmodus.svg'
-const kameraIcon = '/ratatosk.2.0/kamera.svg'
-const impressumIcon = '/ratatosk.2.0/impressum.svg'
-const zurueckIcon = '/ratatosk.2.0/zurueck.svg'
+// Icons from public folder - use BASE_URL to support base path
+const baseUrl = import.meta.env.BASE_URL
+const leuchtdauerIcon = `${baseUrl}leuchtdauer.svg`
+const blinzeldauerIcon = `${baseUrl}blinzeldauer.svg`
+const farbmodusIcon = `${baseUrl}farbmodus.svg`
+const kameraIcon = `${baseUrl}kamera.svg`
+const impressumIcon = `${baseUrl}impressum.svg`
+const zurueckIcon = `${baseUrl}zurueck.svg`
 
 export interface SettingsCategory {
   id: string

@@ -4,7 +4,7 @@
       <!-- Linke Seite - RATATOSK Logo -->
       <div class="header-left" @click="goToApp" style="cursor: pointer;">
         <h1 class="header-title">RATATOSK</h1>
-        <img src="/ratatosk.2.0/rattenkopf.svg" alt="Ratatosk Logo" class="header-logo" />
+        <img src="/rattenkopf.svg" alt="Ratatosk Logo" class="header-logo" />
       </div>
 
       <!-- Rechte Seite - 3 Buttons -->
@@ -72,7 +72,7 @@
           class="header-button header-button-home"
           title="Zurück zum Hauptmenü (Hard Reset)"
         >
-          <img src="/ratatosk.2.0/GoHome.svg" alt="Home" class="header-button-icon" />
+          <img src="/GoHome.svg" alt="Home" class="header-button-icon" />
         </button>
       </div>
     </div>
