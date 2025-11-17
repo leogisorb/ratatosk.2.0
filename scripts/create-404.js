@@ -13,3 +13,4 @@ try {
   console.error('❌ Failed to create 404.html:', error)
   process.exit(1)
 }
+
