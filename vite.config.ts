@@ -20,6 +20,11 @@ export default defineConfig({
     sourcemap: true, // Sourcemaps für besseres Debugging aktivieren
     minify: 'esbuild',
     rollupOptions: {
+      // Markiere absolute Pfade als externe Ressourcen (werden nicht als Imports behandelt)
+      external: (id) => {
+        // Pfade, die mit /ratatosk.2.0/ beginnen, sind externe Ressourcen
+        return id.startsWith('/ratatosk.2.0/')
+      },
       output: {
         manualChunks: undefined,
         assetFileNames: 'assets/[name]-[hash][extname]',
