@@ -3,6 +3,14 @@
 import { useHomeViewLogic } from './HomeView.ts'
 import AppHeader from '../../../shared/components/AppHeader.vue'
 
+// Import Assets
+import bellIcon from '@/assets/icons/bell.svg'
+import commentDotsIcon from '@/assets/icons/comment-dots.svg'
+import userIcon from '@/assets/icons/user.svg'
+import headacheIcon from '@/assets/icons/headache.svg'
+import houseChimneyIcon from '@/assets/icons/house-chimney.svg'
+import settingsSlidersIcon from '@/assets/icons/settings-sliders.svg'
+
 // Use the composable function
 const {
   currentMenu,
@@ -63,7 +71,7 @@ const {
           >
             <div class="tile-icon-container">
               <img 
-                src="/ratatosk.2.0/bell.svg" 
+                :src="bellIcon" 
                 alt="WARNGERÄUSCH" 
                 class="tile-icon"
                 :class="currentTileIndex === 0 ? 'icon-inverted' : ''"
@@ -83,7 +91,7 @@ const {
           >
             <div class="tile-icon-container">
               <img 
-                src="/ratatosk.2.0/comment-dots.svg" 
+                :src="commentDotsIcon" 
                 alt="UNTERHALTEN" 
                 class="tile-icon"
                 :class="currentTileIndex === 1 ? 'icon-inverted' : ''"
@@ -103,7 +111,7 @@ const {
           >
             <div class="tile-icon-container">
               <img 
-                src="/ratatosk.2.0/user.svg" 
+                :src="userIcon" 
                 alt="ICH" 
                 class="tile-icon"
                 :class="currentTileIndex === 2 ? 'icon-inverted' : ''"
@@ -123,7 +131,7 @@ const {
           >
             <div class="tile-icon-container">
               <img 
-                src="/ratatosk.2.0/headache.svg" 
+                :src="headacheIcon" 
                 alt="SCHMERZEN" 
                 class="tile-icon"
                 :class="currentTileIndex === 3 ? 'icon-inverted' : ''"
@@ -143,7 +151,7 @@ const {
           >
             <div class="tile-icon-container">
               <img 
-                src="/ratatosk.2.0/house-chimney.svg" 
+                :src="houseChimneyIcon" 
                 alt="UMGEBUNG" 
                 class="tile-icon"
                 :class="currentTileIndex === 4 ? 'icon-inverted' : ''"
@@ -163,7 +171,7 @@ const {
           >
             <div class="tile-icon-container">
               <img 
-                src="/ratatosk.2.0/settings-sliders.svg" 
+                :src="settingsSlidersIcon" 
                 alt="EINSTELLUNGEN" 
                 class="tile-icon"
                 :class="currentTileIndex === 5 ? 'icon-inverted' : ''"
@@ -197,7 +205,7 @@ const {
             >
               <div class="tile-icon-container">
                 <img 
-                  src="/ratatosk.2.0/bell.svg" 
+                  :src="bellIcon" 
                   alt="WARNGERÄUSCH" 
                   class="tile-icon"
                   :class="currentTileIndex === 0 ? 'icon-inverted' : ''"
@@ -218,7 +226,7 @@ const {
             >
               <div class="tile-icon-container">
                 <img 
-                  src="/ratatosk.2.0/comment-dots.svg" 
+                  :src="commentDotsIcon" 
                   alt="UNTERHALTEN" 
                   class="tile-icon"
                   :class="currentTileIndex === 1 ? 'icon-inverted' : ''"
@@ -239,7 +247,7 @@ const {
             >
               <div class="tile-icon-container">
                 <img 
-                  src="/ratatosk.2.0/user.svg" 
+                  :src="userIcon" 
                   alt="ICH" 
                   class="tile-icon"
                   :class="currentTileIndex === 2 ? 'icon-inverted' : ''"
@@ -260,7 +268,7 @@ const {
             >
               <div class="tile-icon-container">
                 <img 
-                  src="/ratatosk.2.0/headache.svg" 
+                  :src="headacheIcon" 
                   alt="SCHMERZEN" 
                   class="tile-icon"
                   :class="currentTileIndex === 3 ? 'icon-inverted' : ''"
@@ -281,7 +289,7 @@ const {
             >
               <div class="tile-icon-container">
                 <img 
-                  src="/ratatosk.2.0/house-chimney.svg" 
+                  :src="houseChimneyIcon" 
                   alt="UMGEBUNG" 
                   class="tile-icon"
                   :class="currentTileIndex === 4 ? 'icon-inverted' : ''"
@@ -302,7 +310,7 @@ const {
             >
               <div class="tile-icon-container">
                 <img 
-                  src="/ratatosk.2.0/settings-sliders.svg" 
+                  :src="settingsSlidersIcon" 
                   alt="EINSTELLUNGEN" 
                   class="tile-icon"
                   :class="currentTileIndex === 5 ? 'icon-inverted' : ''"

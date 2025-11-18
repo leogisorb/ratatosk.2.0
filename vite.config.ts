@@ -26,45 +26,25 @@ export default defineConfig({
 
   ],
 
+
+
   base: '/ratatosk.2.0/',
 
-  build: {
 
-    outDir: 'dist',
 
-    assetsDir: 'assets',
+  resolve: {
 
-    sourcemap: true,
+    alias: {
 
-    minify: 'esbuild',
-
-    rollupOptions: {
-
-      // Markiere absolute Pfade als externe Ressourcen (werden nicht als Imports behandelt)
-
-      external: (id) => {
-
-        // Alle Pfade, die mit /ratatosk.2.0/ beginnen, sind externe Ressourcen aus public/
-
-        return id.startsWith('/ratatosk.2.0/')
-
-      },
-
-      output: {
-
-        manualChunks: undefined,
-
-        assetFileNames: 'assets/[name]-[hash][extname]',
-
-        chunkFileNames: 'assets/[name]-[hash].js',
-
-        entryFileNames: 'assets/[name]-[hash].js',
-
-      },
+      '@': fileURLToPath(new URL('./src', import.meta.url))
 
     },
 
+    extensions: ['.mjs', '.js', '.mts', '.ts', '.jsx', '.tsx', '.json', '.vue']
+
   },
+
+
 
   server: {
 
@@ -90,17 +70,35 @@ export default defineConfig({
 
   },
 
-  resolve: {
 
-    alias: {
 
-      '@': fileURLToPath(new URL('./src', import.meta.url))
+  build: {
+
+    outDir: 'dist',
+
+    assetsDir: 'assets',
+
+    sourcemap: true,
+
+    minify: 'esbuild',
+
+    rollupOptions: {
+
+      output: {
+
+        assetFileNames: 'assets/[name]-[hash][extname]',
+
+        chunkFileNames: 'assets/[name]-[hash].js',
+
+        entryFileNames: 'assets/[name]-[hash].js',
+
+      },
 
     },
 
-    extensions: ['.mjs', '.js', '.mts', '.ts', '.jsx', '.tsx', '.json', '.vue']
-
   },
+
+
 
   define: {
 
@@ -110,8 +108,8 @@ export default defineConfig({
 
   },
 
-  // Stelle sicher, dass SVGs als Assets behandelt werden
 
-  assetsInclude: ['**/*.svg', '**/*.png', '**/*.jpg', '**/*.jpeg', '**/*.ico', '**/*.wav'],
+
+  assetsInclude: ['**/*.svg'],
 
 })

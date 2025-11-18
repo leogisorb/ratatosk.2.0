@@ -1,12 +1,12 @@
 // categories.ts - Settings Kategorien
 
-// Icons from public folder - use absolute paths (treated as external resources by Vite)
-const leuchtdauerIcon = '/ratatosk.2.0/leuchtdauer.svg'
-const blinzeldauerIcon = '/ratatosk.2.0/blinzeldauer.svg'
-const farbmodusIcon = '/ratatosk.2.0/farbmodus.svg'
-const kameraIcon = '/ratatosk.2.0/kamera.svg'
-const impressumIcon = '/ratatosk.2.0/impressum.svg'
-const zurueckIcon = '/ratatosk.2.0/zurueck.svg'
+// Icons from assets folder - use new URL() for Vite processing
+const leuchtdauerIcon = new URL('../../../assets/icons/leuchtdauer.svg', import.meta.url).href
+const blinzeldauerIcon = new URL('../../../assets/icons/blinzeldauer.svg', import.meta.url).href
+const farbmodusIcon = new URL('../../../assets/icons/farbmodus.svg', import.meta.url).href
+const kameraIcon = new URL('../../../assets/icons/kamera.svg', import.meta.url).href
+const impressumIcon = new URL('../../../assets/icons/impressum.svg', import.meta.url).href
+const zurueckIcon = new URL('../../../assets/icons/zurueck.svg', import.meta.url).href
 
 export interface SettingsCategory {
   id: string
@@ -55,4 +55,3 @@ export const settingsCategories: SettingsCategory[] = [
 ]
 
 export const ID_BACK = 'zurueck'
-

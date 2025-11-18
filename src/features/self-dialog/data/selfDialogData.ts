@@ -55,32 +55,32 @@ export const mainRegions: readonly IchRegion[] = [
   {
     id: REGION_IDS.ERNAEHRUNG,
     title: 'ERNÄHRUNG',
-    icon: '/ratatosk.2.0/burger.svg'
+    icon: new URL('../../../assets/icons/burger.svg', import.meta.url).href
   },
   {
     id: REGION_IDS.GEFUEHLE,
     title: 'GEFÜHLE',
-    icon: '/ratatosk.2.0/face-smile-upside-down 1.svg'
+    icon: new URL('../../../assets/icons/face-smile-upside-down 1.svg', import.meta.url).href
   },
   {
     id: REGION_IDS.KLEIDUNG,
     title: 'KLEIDUNG',
-    icon: '/ratatosk.2.0/clothes.svg'
+    icon: new URL('../../../assets/icons/clothes.svg', import.meta.url).href
   },
   {
     id: REGION_IDS.HYGIENE,
     title: 'HYGIENE',
-    icon: '/ratatosk.2.0/bath.svg'
+    icon: new URL('../../../assets/icons/bath.svg', import.meta.url).href
   },
   {
     id: REGION_IDS.BEWEGUNG,
     title: 'BEWEGUNG',
-    icon: '/ratatosk.2.0/barefoot 1.svg'
+    icon: new URL('../../../assets/icons/barefoot 1.svg', import.meta.url).href
   },
   {
     id: REGION_IDS.ZURUECK,
     title: 'ZURÜCK',
-    icon: '/ratatosk.2.0/zurueck.svg'
+    icon: new URL('../../../assets/icons/zurueck.svg', import.meta.url).href
   }
 ] as const
 

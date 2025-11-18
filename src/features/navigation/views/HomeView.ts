@@ -69,42 +69,42 @@ export function useHomeViewLogic() {
     {
       id: 'warning',
       title: 'WARNGERÄUSCH',
-      icon: '/ratatosk.2.0/bell.svg',
+      icon: new URL('../../../assets/icons/bell.svg', import.meta.url).href,
       route: '/warning',
       category: 'main'
     },
     {
       id: 'communication',
       title: 'UNTERHALTEN',
-      icon: '/ratatosk.2.0/comment-dots.svg',
+      icon: new URL('../../../assets/icons/comment-dots.svg', import.meta.url).href,
       route: '/communication',
       category: 'communication'
     },
     {
       id: 'ich',
       title: 'ICH',
-      icon: '/ratatosk.2.0/user.svg',
+      icon: new URL('../../../assets/icons/user.svg', import.meta.url).href,
       route: '/self-dialog',
       category: 'main'
     },
     {
       id: 'pain',
       title: 'SCHMERZEN',
-      icon: '/ratatosk.2.0/headache.svg',
+      icon: new URL('../../../assets/icons/headache.svg', import.meta.url).href,
       route: '/pain-dialog',
       category: 'pain'
     },
     {
       id: 'environment',
       title: 'UMGEBUNG',
-      icon: '/ratatosk.2.0/house-chimney.svg',
+      icon: new URL('../../../assets/icons/house-chimney.svg', import.meta.url).href,
       route: '/environment-dialog',
       category: 'main'
     },
     {
       id: 'settings',
       title: 'EINSTELLUNGEN',
-      icon: '/ratatosk.2.0/settings-sliders.svg',
+      icon: new URL('../../../assets/icons/settings-sliders.svg', import.meta.url).href,
       route: '/settings',
       category: 'settings'
     }

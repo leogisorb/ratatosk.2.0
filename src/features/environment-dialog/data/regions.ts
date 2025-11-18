@@ -21,22 +21,21 @@ export const mainRegions: UmgebungRegion[] = [
   {
     id: ID_BETT,
     title: 'BETT',
-    icon: '/ratatosk.2.0/bett.svg'
+    icon: new URL('../../../assets/icons/bett.svg', import.meta.url).href
   },
   {
     id: ID_ZIMMER,
     title: 'ZIMMER',
-    icon: '/ratatosk.2.0/zimmer.svg'
+    icon: new URL('../../../assets/icons/zimmer.svg', import.meta.url).href
   },
   {
     id: ID_GEGENSTAENDE,
     title: 'GEGENSTÄNDE',
-    icon: '/ratatosk.2.0/gegenstaende.svg'
+    icon: new URL('../../../assets/icons/gegenstaende.svg', import.meta.url).href
   },
   {
     id: ID_BACK,
     title: 'ZURÜCK',
-    icon: '/ratatosk.2.0/zurueck.svg'
+    icon: new URL('../../../assets/icons/zurueck.svg', import.meta.url).href
   }
 ]
-

@@ -2,6 +2,7 @@
 import AppHeader from '../../../shared/components/AppHeader.vue'
 import { onMounted, onUnmounted } from 'vue'
 import { useWarningViewLogic } from './WarningView'
+import bellIcon from '@/assets/icons/bell.svg'
 
 // ===== WARNING VIEW LOGIC =====
 const {
@@ -70,7 +71,7 @@ onUnmounted(() => {
           ]"
         >
           <img
-            src="/ratatosk.2.0/bell.svg"
+            :src="bellIcon"
             alt="WARNGERÄUSCH"
             class="bell-icon"
           />
