@@ -15,6 +15,7 @@ const preserveAbsolutePathsPlugin = (): Plugin => {
       // Ignoriere absolute Pfade, die mit /ratatosk.2.0/ beginnen
       // Diese werden als externe Ressourcen behandelt (nicht als Module)
       if (id.startsWith('/ratatosk.2.0/')) {
+        // Markiere als extern, damit Vite sie nicht als Module behandelt
         return { id, external: true }
       }
       return null
@@ -68,6 +69,8 @@ export default defineConfig({
     alias: {
       '@': fileURLToPath(new URL('./src', import.meta.url))
     },
+    // Verhindere, dass SVG-Dateien als Module aufgelöst werden
+    extensions: ['.mjs', '.js', '.mts', '.ts', '.jsx', '.tsx', '.json', '.vue']
   },
   assetsInclude: ['**/*.svg'], // Behandle SVG-Dateien als Assets
   define: {
