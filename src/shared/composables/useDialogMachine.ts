@@ -55,6 +55,7 @@ export interface DialogMachine<TState extends string, TItem> {
   
   // Actions
   selectItem: (id: string) => Promise<void>
+  resetToInitialState: () => Promise<void>
   goBack: () => void
   handleBlink: () => void
   cleanup: () => void
@@ -109,7 +110,7 @@ export function useDialogMachine<TState extends string, TItem>(
   // ===== AUTO MODE =====
   const autoModeConfig: AutoModeConfig = {
     speak: tts.speak,
-    getItems: () => items.value,
+    getItems: () => [...items.value], // Convert readonly array to mutable array
     getTitle: () => title.value,
     initialDelay: settingsStore.settings.leuchtdauer * 1000,
     cycleDelay: settingsStore.settings.leuchtdauer * 1000
