@@ -188,6 +188,7 @@ import { useFaceRecognition } from '../../face-recognition/composables/useFaceRe
 import { useMobileDetection } from '../../../shared/composables/useMobileDetection'
 import AppHeader from '../../../shared/components/AppHeader.vue'
 import { debug, debugComponent, debugAutoMode } from '../../../shared/utils/debug'
+import { cleanupRegistry } from '../../../shared/utils/cleanupRegistry'
 
 // ===== COMPOSABLES =====
 const machine = usePainDialogMachine()
@@ -377,12 +378,12 @@ onMounted(() => {
   debugComponent.lifecycle('PainDialogView', 'mounted')
   debugComponent.props('PainDialogView', { isMobile: isMobile.value })
   
-  // Cleanup sofort verfügbar machen (bevor Services starten)
-  ;(window as any).__painDialogCleanup = () => {
-    debug.log('PainDialog', 'Global cleanup called')
+  // Register cleanup in registry (replaces window globals)
+  cleanupRegistry.register('pain-dialog', async () => {
+    debug.log('PainDialog', 'Cleanup called via registry')
     machine.cleanup()
     inputManager.stop()
-  }
+  })
   
   // Start Services NACH Cleanup-Registrierung
   if (!faceRecognition.isActive.value) {
@@ -419,8 +420,8 @@ onUnmounted(() => {
     faceRecognition.stop()
   }
   
-  // Remove global cleanup
-  delete (window as any).__painDialogCleanup
+  // Unregister cleanup from registry
+  cleanupRegistry.unregister('pain-dialog')
 })
 </script>
 

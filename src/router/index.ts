@@ -8,6 +8,7 @@ import SelfDialogView from '../features/self-dialog/views/SelfDialogView.vue'
 import EnvironmentDialogView from '../features/environment-dialog/views/EnvironmentDialogView.vue'
 import SettingsDialogView from '../features/settings/views/SettingsDialogView.vue'
 import { simpleFlowController } from '../core/application/SimpleFlowController'
+import { cleanupRegistry } from '../shared/utils/cleanupRegistry'
 // Alte Settings-Views entfernt - werden durch SettingsDialogView ersetzt
 
 const router = createRouter({
@@ -64,59 +65,47 @@ const router = createRouter({
  * Router Guard: Stoppt alle laufenden Services vor jeder Navigation
  * Verhindert, dass Views im Hintergrund weiterlaufen
  * 
- * Verbesserte Cleanup-Reihenfolge:
+ * Verbesserte Cleanup-Reihenfolge mit async/await:
  * 1. View-spezifische Cleanups zuerst (setzt isCancelled = true)
  * 2. Dann globale Services stoppen
- * 3. Timer löschen
+ * 3. Kleine Pause für Race Condition Prevention
+ * 4. Navigation
  */
-router.beforeEach((to, from, next) => {
+router.beforeEach(async (to, from, next) => {
   // Nur stoppen, wenn wir von einem View zu einem anderen navigieren (nicht beim ersten Laden)
   if (from.name && from.name !== to.name) {
     console.log(`Router: Navigation von ${String(from.name)} zu ${String(to.name)}`)
     
-    // 1. Cleanup zuerst (bevor andere Stops)
-    // View-spezifische Cleanups setzen isCancelled = true und stoppen alle async-Operationen
-    const cleanupFunctions: Record<string, string> = {
-      'warning': '__warningCleanup',
-      'pain-dialog': '__painDialogCleanup',
-      'environment-dialog': '__environmentDialogCleanup',
-      'self-dialog': '__selfDialogCleanup',
-      'settings': '__settingsDialogCleanup',
-      'communication': '__communicationViewCleanup'
-    }
-    
-    const fromName = String(from.name)
-    const cleanupKey = cleanupFunctions[fromName]
-    
-    if (cleanupKey) {
-      const cleanup = (window as any)[cleanupKey]
-      if (cleanup && typeof cleanup === 'function') {
-        console.log(`Router: Cleanup für ${fromName}`)
-        cleanup() // Setzt isCancelled = true
+    try {
+      // 1. View-spezifische Cleanups mit Timeout
+      const fromName = String(from.name)
+      await cleanupRegistry.cleanup(fromName, 1000)
+      
+      // 2. Globale Services stoppen
+      simpleFlowController.stopTTS()
+      if (window.speechSynthesis) {
+        window.speechSynthesis.cancel()
       }
+      simpleFlowController.stopAutoMode()
+      simpleFlowController.setActiveView('')
+      
+      // 3. Kleine Pause für Race Condition Prevention
+      await new Promise(resolve => setTimeout(resolve, 50))
+      
+      console.log('Router: Alle Services gestoppt - Navigation wird fortgesetzt')
+      
+      // 4. Navigation
+      next()
+      
+    } catch (error) {
+      console.error('Router: Navigation error:', error)
+      // Continue navigation even if cleanup fails
+      next()
     }
-    
-    // 2. Globale Services stoppen
-    simpleFlowController.stopTTS()
-    if (window.speechSynthesis) {
-      window.speechSynthesis.cancel()
-    }
-    simpleFlowController.stopAutoMode()
-    simpleFlowController.setActiveView('')
-    
-    // 3. Timer löschen
-    const globalTimers = (window as any).__globalTimers || []
-    globalTimers.forEach((id: number) => {
-      clearTimeout(id)
-      clearInterval(id)
-    })
-    ;(window as any).__globalTimers = []
-    
-    console.log('Router: Alle Services gestoppt - Navigation wird fortgesetzt')
+  } else {
+    // Navigation fortführen
+    next()
   }
-  
-  // Navigation fortführen
-  next()
 })
 
 export default router

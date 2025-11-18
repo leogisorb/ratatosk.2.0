@@ -4,6 +4,7 @@ import { onMounted, onUnmounted } from 'vue'
 import { useKeyboardDesignStore } from '../stores/keyboardDesign'
 import { useVirtualKeyboard } from '../composables/useVirtualKeyboard'
 import { useBlinkInput } from '../composables/useBlinkInput'
+import { cleanupRegistry } from '../../../shared/utils/cleanupRegistry'
 
 // ===== STORES =====
 const keyboardDesignStore = useKeyboardDesignStore()
@@ -39,27 +40,18 @@ onMounted(() => {
   // Keyboard starten
   start()
   
-  // Cleanup-Funktion für onUnmounted speichern
-  ;(window as any).__cleanupEventListeners = cleanupEventListeners
-  
-  // Cleanup-Funktion global verfügbar machen für Router-Guard
-  ;(window as any).__communicationViewCleanup = () => {
-    console.log('UnterhaltenView: Global cleanup aufgerufen (Router-Guard)')
+  // Register cleanup in registry (replaces window globals)
+  cleanupRegistry.register('communication', async () => {
+    console.log('UnterhaltenView: Cleanup called via registry')
     if (cleanupEventListeners) {
       cleanupEventListeners()
     }
     cleanup()
-  }
+  })
 })
 
 onUnmounted(() => {
   console.log('UnterhaltenView unmounted - cleaning up')
-  
-  // Event Listener entfernen
-  const cleanupEventListeners = (window as any).__cleanupEventListeners
-  if (cleanupEventListeners) {
-    cleanupEventListeners()
-  }
   
   // Keyboard aufräumen
   cleanup()
@@ -67,8 +59,8 @@ onUnmounted(() => {
   // Face Recognition nicht stoppen (läuft seitenübergreifend)
   console.log('Face Recognition continues running for other views')
   
-  // Global cleanup-Funktion entfernen
-  delete (window as any).__communicationViewCleanup
+  // Unregister cleanup from registry
+  cleanupRegistry.unregister('communication')
 })
 </script>
 

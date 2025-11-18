@@ -4,6 +4,7 @@ import { useRouter } from 'vue-router'
 import { useSettingsStore } from './features/settings/stores/settings'
 import { useSingleEyeBlinkHandler } from './shared/composables/useSingleEyeBlinkHandler'
 import { simpleFlowController } from './core/application/SimpleFlowController'
+import { cleanupRegistry } from './shared/utils/cleanupRegistry'
 
 // App.vue serves as the main router container
 // TTSActivator removed
@@ -20,7 +21,7 @@ const appClasses = computed(() => ({
 }))
 
 // Zentrale Funktion: Beendet alle laufenden Services und Algorithmen
-function stopAllServices() {
+async function stopAllServices() {
   console.log('App: Stoppe alle laufenden Services und Algorithmen...')
   
   // 1. Stoppe TTS komplett (SimpleFlowController)
@@ -37,31 +38,19 @@ function stopAllServices() {
   // 4. Setze aktiven View zurück
   simpleFlowController.setActiveView('')
   
-  // 5. Rufe alle View-spezifischen Cleanup-Funktionen auf
+  // 5. Rufe alle View-spezifischen Cleanup-Funktionen auf via Cleanup Registry
   // Diese stoppen lokale Auto-Mode Instanzen und Timer in den Views
-  const viewCleanups: Record<string, string> = {
-    'warning': '__warningCleanup',
-    'pain-dialog': '__painDialogCleanup',
-    'environment-dialog': '__environmentDialogCleanup',
-    'self-dialog': '__selfDialogCleanup',
-    'settings': '__settingsDialogCleanup',
-    'communication': '__communicationViewCleanup',
-    'app': '__homeViewCleanup' // HomeView hat möglicherweise auch Cleanup
-  }
+  const viewNames = [
+    'warning',
+    'pain-dialog',
+    'environment-dialog',
+    'self-dialog',
+    'settings',
+    'communication'
+  ]
   
-  // Rufe alle Cleanup-Funktionen auf (auch wenn sie nicht für den aktuellen View sind)
-  // Dies stellt sicher, dass alle Services gestoppt werden
-  Object.values(viewCleanups).forEach((cleanupKey) => {
-    const cleanup = (window as any)[cleanupKey]
-    if (cleanup && typeof cleanup === 'function') {
-      console.log(`App: Rufe Cleanup-Funktion ${cleanupKey} auf`)
-      try {
-        cleanup()
-      } catch (error) {
-        console.warn(`App: Fehler beim Aufrufen von ${cleanupKey}:`, error)
-      }
-    }
-  })
+  // Cleanup all registered views
+  await cleanupRegistry.cleanupAll(1000)
   
   // 6. Stoppe alle globalen Timer (falls vorhanden)
   const globalTimers = (window as any).__globalTimers || []
@@ -75,11 +64,11 @@ function stopAllServices() {
 }
 
 // Navigation zum Home-View mit sauberem Reset (ohne Hard Reload)
-function navigateToHome() {
+async function navigateToHome() {
   console.log('App: Navigiere zu /app mit sauberem Reset')
   
   // Stoppe alle Services vor Navigation
-  stopAllServices()
+  await stopAllServices()
   
   // Navigiere zu /app
   router.push('/app').then(() => {
@@ -90,11 +79,11 @@ function navigateToHome() {
 }
 
 // Navigation zum Warngeräusch mit sauberem Reset (ohne Hard Reload)
-function navigateToWarning() {
+async function navigateToWarning() {
   console.log('App: Navigiere zu /warning mit sauberem Reset')
   
   // Stoppe alle Services vor Navigation
-  stopAllServices()
+  await stopAllServices()
   
   // Navigiere zu /warning
   router.push('/warning').then(() => {

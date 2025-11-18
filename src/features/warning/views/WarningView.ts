@@ -501,15 +501,12 @@ export function useWarningViewLogic() {
   const setupWarningSystem = async () => {
     console.log('WarningView: Setting up warning system')
     
-    // Cleanup sofort verfügbar machen (bevor start() aufgerufen wird)
-    ;(window as any).__warningCleanup = cleanup
-    
     const cleanupEventListeners = setupEventListeners(handleUserInput)
     
     document.addEventListener('touchstart', handleTouchStart, { passive: false })
     document.addEventListener('touchend', handleTouchEnd, { passive: false })
     
-    // Start nach Cleanup-Registrierung
+    // Start nach Event Listener Setup
     await start()
     
     return () => {

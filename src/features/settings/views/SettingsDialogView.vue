@@ -197,6 +197,7 @@ import { useFaceRecognition } from '../../face-recognition/composables/useFaceRe
 import { useMobileDetection } from '../../../shared/composables/useMobileDetection'
 import AppHeader from '../../../shared/components/AppHeader.vue'
 import { debug, debugComponent, debugAutoMode } from '../../../shared/utils/debug'
+import { cleanupRegistry } from '../../../shared/utils/cleanupRegistry'
 
 // ===== COMPOSABLES =====
 const machine = useSettingsDialogMachine()
@@ -443,12 +444,12 @@ onMounted(() => {
     })
   }
   
-  // Cleanup sofort verfügbar machen (bevor Services starten)
-  ;(window as any).__settingsDialogCleanup = () => {
-    debug.log('SettingsDialog', 'Global cleanup called')
+  // Register cleanup in registry (replaces window globals)
+  cleanupRegistry.register('settings', async () => {
+    debug.log('SettingsDialog', 'Cleanup called via registry')
     machine.cleanup()
     inputManager.stop()
-  }
+  })
   
   // Start Services NACH Cleanup-Registrierung
 })
@@ -471,8 +472,8 @@ onUnmounted(() => {
   //   faceRecognition.stop()
   // }
   
-  // Remove global cleanup
-  delete (window as any).__settingsDialogCleanup
+  // Unregister cleanup from registry
+  cleanupRegistry.unregister('settings')
 })
 </script>
 

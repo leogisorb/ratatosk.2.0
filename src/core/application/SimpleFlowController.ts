@@ -57,8 +57,8 @@ export class SimpleFlowController {
   private isProcessingQueue: boolean = false
   private ttsEndListeners: (() => void)[] = []
   
-  // Promise-basierte Queue für TTS-Requests, verhindert Race Conditions
-  private ttsQueuePromise: Promise<void> = Promise.resolve()
+  // Cancellation Token für TTS Queue - verhindert Race Conditions
+  private ttsQueueCancellation: AbortController | null = null
 
   private constructor() {
     this.speechSynthesis = window.speechSynthesis
@@ -240,7 +240,7 @@ export class SimpleFlowController {
   }
 
   // TTS in Queue einreihen und verarbeiten
-  // Promise-basierte Queue verhindert Race Conditions durch sequentielle Verarbeitung
+  // Cancellation Token Pattern verhindert Race Conditions
   private async queueAndSpeak(text: string): Promise<void> {
     // Prüfe auf Duplikate in der Queue
     if (this.ttsQueue.includes(text)) {
@@ -252,51 +252,98 @@ export class SimpleFlowController {
     this.ttsQueue.push(text)
     console.log('SimpleFlowController: Added to TTS queue:', text, 'Queue length:', this.ttsQueue.length)
     
-    // Jeder neue Request wird an die Promise-Kette angehängt
-    // Das verhindert Race Conditions, da alle Requests sequentiell verarbeitet werden
-    this.ttsQueuePromise = this.ttsQueuePromise.then(async () => {
-      // Verarbeite alle Items in der Queue sequentiell
-      while (this.ttsQueue.length > 0) {
-        // Warte bis vorherige TTS fertig ist
-        while (this.isSpeaking) {
-          await new Promise(resolve => setTimeout(resolve, TTS_CONFIG.CHECK_INTERVAL_MS))
-        }
-        
-        // Verarbeite nächsten Queue-Item
-        const text = this.ttsQueue.shift()!
-        console.log('SimpleFlowController: Processing queue item:', text)
-        await this.performSpeak(text)
-        
-        // Pause zwischen TTS-Items um Browser-Abbrüche zu vermeiden
-        if (this.ttsQueue.length > 0) {
-          await new Promise(resolve => setTimeout(resolve, TTS_CONFIG.PAUSE_BETWEEN_ITEMS_MS))
-        }
-      }
-      
-      // Triggere TTS-Ende-Listener wenn Queue komplett abgearbeitet ist
-      if (this.ttsQueue.length === 0 && this.ttsEndListeners.length > 0) {
-        this.triggerTTSEndListeners()
-      }
-    }).catch(error => {
-      console.error('SimpleFlowController: Error in TTS queue:', error)
-    })
-    
-    return this.ttsQueuePromise
+    // Starte Queue-Processing wenn nicht bereits aktiv
+    if (!this.isProcessingQueue) {
+      this.processQueue()
+    }
   }
 
   /**
-   * @deprecated TTS-Queue wird jetzt über async Promise-Kette verwaltet
-   * Diese Methode wird nicht mehr verwendet, bleibt für Rückwärtskompatibilität
+   * Process TTS queue with cancellation support
    */
   private async processQueue(): Promise<void> {
-    // Wird nicht mehr verwendet - Queue wird über queueAndSpeak() verwaltet
-    console.warn('SimpleFlowController: processQueue() is deprecated, queue is managed via async Promise chain')
+    if (this.isProcessingQueue) return
+
+    this.isProcessingQueue = true
+    
+    // Create new cancellation token for this queue session
+    this.ttsQueueCancellation = new AbortController()
+    const signal = this.ttsQueueCancellation.signal
+
+    try {
+      // Process all items in queue sequentially
+      while (this.ttsQueue.length > 0 && !signal.aborted) {
+        // Wait until previous TTS is finished
+        while (this.isSpeaking && !signal.aborted) {
+          await this.delayWithCancellation(TTS_CONFIG.CHECK_INTERVAL_MS, signal)
+        }
+
+        if (signal.aborted) break
+
+        // Process next queue item
+        const text = this.ttsQueue.shift()!
+        console.log('SimpleFlowController: Processing queue item:', text)
+        
+        try {
+          await this.performSpeak(text, signal)
+        } catch (error) {
+          if (error instanceof Error && error.name === 'AbortError') {
+            console.log('SimpleFlowController: TTS aborted during speak')
+            break
+          }
+          console.error('SimpleFlowController: TTS error:', error)
+          // Continue with next item even on error
+        }
+
+        if (signal.aborted) break
+
+        // Pause between TTS items
+        if (this.ttsQueue.length > 0) {
+          await this.delayWithCancellation(TTS_CONFIG.PAUSE_BETWEEN_ITEMS_MS, signal)
+        }
+      }
+
+      // Trigger TTS end listeners if queue is completely processed
+      if (this.ttsQueue.length === 0 && this.ttsEndListeners.length > 0 && !signal.aborted) {
+        this.triggerTTSEndListeners()
+      }
+    } catch (error) {
+      if (error instanceof Error && error.name === 'AbortError') {
+        console.log('SimpleFlowController: Queue processing aborted')
+      } else {
+        console.error('SimpleFlowController: Error in TTS queue:', error)
+      }
+    } finally {
+      this.isProcessingQueue = false
+      this.ttsQueueCancellation = null
+    }
   }
+
+  /**
+   * Delay with cancellation support
+   */
+  private delayWithCancellation(ms: number, signal: AbortSignal): Promise<void> {
+    return new Promise((resolve, reject) => {
+      if (signal.aborted) {
+        reject(new DOMException('Aborted', 'AbortError'))
+        return
+      }
+
+      const timeout = setTimeout(resolve, ms)
+
+      signal.addEventListener('abort', () => {
+        clearTimeout(timeout)
+        reject(new DOMException('Aborted', 'AbortError'))
+      }, { once: true })
+    })
+  }
+
 
   /**
    * TTS ausführen (Promise-basiert statt Callbacks)
+   * Can be cancelled via AbortController in queue processing
    */
-  private async performSpeak(text: string): Promise<void> {
+  private async performSpeak(text: string, signal?: AbortSignal): Promise<void> {
     console.log('SimpleFlowController: Speaking:', text)
     
     // Stoppe nur die aktuelle TTS, aber leere nicht die Queue
@@ -344,6 +391,16 @@ export class SimpleFlowController {
       if (!this.currentUtterance) {
         reject(new Error('Utterance not created'))
         return
+      }
+
+      // Abort handler if signal provided
+      if (signal) {
+        const abortHandler = () => {
+          this.speechSynthesis.cancel()
+          this.isSpeaking = false
+          reject(new DOMException('Aborted', 'AbortError'))
+        }
+        signal.addEventListener('abort', abortHandler, { once: true })
       }
 
       // Event-Handler
@@ -432,10 +489,15 @@ export class SimpleFlowController {
       console.log('SimpleFlowController: TTS stopped')
     }
     
-    // Leere auch die TTS-Queue nur bei explizitem Stoppen
+    // Cancel queue processing with cancellation token
+    if (this.ttsQueueCancellation) {
+      this.ttsQueueCancellation.abort()
+      this.ttsQueueCancellation = null
+    }
+    
+    // Clear queue
     this.ttsQueue = []
-    // Reset Promise-Kette für neue Queue
-    this.ttsQueuePromise = Promise.resolve()
+    this.isProcessingQueue = false
     console.log('SimpleFlowController: TTS queue cleared (explicit stop)')
     
     // Entferne alle Listener bei explizitem Stoppen
