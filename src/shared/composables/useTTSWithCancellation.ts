@@ -92,6 +92,14 @@ export function useTTSWithCancellation(getCancelled: () => boolean) {
       }
 
       utterance.onerror = (event) => {
+        // "canceled" ist kein echter Fehler - TTS wurde absichtlich abgebrochen (z.B. bei Navigation)
+        if (event.error === 'canceled') {
+          console.log('[TTS] Utterance canceled')
+          finish(false) // Resolve statt reject - canceled ist kein Fehler
+          return
+        }
+        
+        // Echte Fehler behandeln
         if (event.error) {
           handleError('[TTS] Utterance error', event.error, { logLevel: 'warn' })
         }

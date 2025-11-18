@@ -291,7 +291,11 @@ export class SimpleFlowController {
             console.log('SimpleFlowController: TTS aborted during speak')
             break
           }
-          console.error('SimpleFlowController: TTS error:', error)
+          // "canceled" Fehler werden bereits in performSpeak als resolve behandelt
+          // Hier nur echte Fehler loggen
+          if (error instanceof Error && !error.message.includes('canceled')) {
+            console.error('SimpleFlowController: TTS error:', error)
+          }
           // Continue with next item even on error
         }
 
@@ -439,9 +443,25 @@ export class SimpleFlowController {
       }
 
       this.currentUtterance.onerror = (event) => {
+        this.isSpeaking = false
+        
+        // "canceled" ist kein echter Fehler - TTS wurde absichtlich abgebrochen (z.B. bei Navigation)
+        if (event.error === 'canceled') {
+          console.log('SimpleFlowController: TTS canceled by browser')
+          
+          // Prüfe ob TTS-Queue leer ist und triggere Listener
+          if (this.ttsQueue.length === 0 && this.ttsEndListeners.length > 0) {
+            this.triggerTTSEndListeners()
+          }
+          
+          // Resolve statt reject - canceled ist kein Fehler
+          resolve()
+          return
+        }
+        
+        // Echte Fehler behandeln
         const errorMessage = this.TTS_ERROR_MESSAGES[event.error] || `Unknown TTS error: ${event.error}`
         console.warn('SimpleFlowController:', errorMessage, 'for text:', text)
-        this.isSpeaking = false
         
         // Spezielle Behandlung für not-allowed
         if (event.error === 'not-allowed') {

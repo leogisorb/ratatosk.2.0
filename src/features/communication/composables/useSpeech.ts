@@ -42,6 +42,15 @@ export function useSpeech() {
       }
 
       utterance.onerror = (e) => {
+        // "canceled" ist kein echter Fehler - TTS wurde absichtlich abgebrochen (z.B. bei Navigation)
+        if (e.error === 'canceled') {
+          console.log('TTS canceled')
+          isTTSActive.value = false
+          resolve() // Resolve statt reject - canceled ist kein Fehler
+          return
+        }
+        
+        // Echte Fehler behandeln
         console.error('TTS Error:', e)
         isTTSActive.value = false
         reject(e)
