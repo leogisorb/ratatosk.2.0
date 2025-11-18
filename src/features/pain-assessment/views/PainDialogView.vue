@@ -28,7 +28,7 @@
               >
                 <div class="tile-icon-container">
                   <img
-                    v-if="item.icon"
+                    v-if="'icon' in item && item.icon"
                     :src="item.icon"
                     :alt="item.title"
                     class="tile-icon"
@@ -62,7 +62,7 @@
               >
                 <div class="tile-icon-container">
                   <img
-                    v-if="item.icon"
+                    v-if="'icon' in item && item.icon"
                     :src="item.icon"
                     :alt="item.title"
                     class="tile-icon"
@@ -94,12 +94,12 @@
               >
                 <div class="tile-icon-container">
                   <img
-                    v-if="item.icon"
+                    v-if="'icon' in item && item.icon"
                     :src="item.icon"
                     :alt="item.title"
                     class="tile-icon"
                   />
-                  <div v-else-if="item.emoji" class="tile-emoji">{{ item.emoji }}</div>
+                  <div v-else-if="'emoji' in item && item.emoji" class="tile-emoji">{{ item.emoji }}</div>
                 </div>
                 <div class="tile-text">{{ item.title }}</div>
               </div>
@@ -143,10 +143,10 @@
                 @click="handleItemClick(item, index)"
               >
                 <div class="tile-icon-container">
-                  <div class="tile-emoji">{{ item.level }}</div>
+                  <div class="tile-emoji">{{ 'level' in item ? (item as any).level : item.id }}</div>
                 </div>
                 <div class="tile-text">{{ item.title }}</div>
-                <div class="tile-description">{{ item.description }}</div>
+                <div v-if="'description' in item" class="tile-description">{{ (item as any).description }}</div>
               </div>
             </div>
             
@@ -317,11 +317,11 @@ const handleItemSelection = (item: any, index: number) => {
       break
     case 'painScaleView':
       // Pain levels haben level property
-      if ('level' in item && typeof item.level === 'number') {
-        selectPainLevel(item.level)
-      } else if ('id' in item && typeof item.id === 'number') {
+      if ('level' in item && typeof (item as any).level === 'number') {
+        selectPainLevel((item as any).level)
+      } else if ('id' in item && typeof (item as any).id === 'number') {
         // Fallback: falls id als number verwendet wird
-        selectPainLevel(item.id)
+        selectPainLevel((item as any).id)
       }
       break
     default:
