@@ -14,11 +14,11 @@ export class KeyboardDesignService {
   private static readonly STORAGE_KEY = 'keyboard-design-settings'
   
   /**
-   * Lädt die gespeicherten Tastendesign-Einstellungen
+   * Lädt die gespeicherten Tastendesign-Einstellungen (gerätespezifisch)
    */
   static loadSettings(): KeyboardDesignSettings {
     try {
-      const stored = localStorage.getItem(this.STORAGE_KEY)
+      const stored = sessionStorage.getItem(this.STORAGE_KEY)
       if (stored) {
         return JSON.parse(stored)
       }
@@ -36,11 +36,11 @@ export class KeyboardDesignService {
   }
   
   /**
-   * Speichert die Tastendesign-Einstellungen
+   * Speichert die Tastendesign-Einstellungen (gerätespezifisch)
    */
   static saveSettings(settings: KeyboardDesignSettings): void {
     try {
-      localStorage.setItem(this.STORAGE_KEY, JSON.stringify(settings))
+      sessionStorage.setItem(this.STORAGE_KEY, JSON.stringify(settings))
     } catch (error) {
       console.error('Failed to save keyboard design settings:', error)
     }

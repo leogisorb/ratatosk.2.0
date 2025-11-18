@@ -3,32 +3,31 @@ import { DEFAULT_SETTINGS, STORAGE_KEY } from '../constants/defaults'
 
 /**
  * Settings Storage Service
- * Kapselt alle localStorage-Operationen für Settings
+ * Kapselt alle sessionStorage-Operationen für Settings (gerätespezifisch)
  * Separation of Concerns: Store-Logik getrennt von Storage-Logik
  */
 export class SettingsStorage {
   private static readonly KEY = STORAGE_KEY
 
   /**
-   * Speichert Settings in localStorage
+   * Speichert Settings in sessionStorage (gerätespezifisch, nicht zwischen Geräten geteilt)
    * @param settings Die zu speichernden Settings
    */
   static save(settings: UserSettings): void {
     try {
-      localStorage.setItem(this.KEY, JSON.stringify(settings))
+      sessionStorage.setItem(this.KEY, JSON.stringify(settings))
     } catch (error) {
       console.error('Failed to save settings:', error)
-      // Optional: Fallback zu sessionStorage oder anderen Storage-Mechanismen
     }
   }
 
   /**
-   * Lädt Settings aus localStorage
+   * Lädt Settings aus sessionStorage (gerätespezifisch, nicht zwischen Geräten geteilt)
    * @returns Die geladenen Settings oder null wenn keine vorhanden
    */
   static load(): UserSettings | null {
     try {
-      const saved = localStorage.getItem(this.KEY)
+      const saved = sessionStorage.getItem(this.KEY)
       if (!saved) {
         return null
       }
@@ -99,7 +98,7 @@ export class SettingsStorage {
    */
   static clear(): void {
     try {
-      localStorage.removeItem(this.KEY)
+      sessionStorage.removeItem(this.KEY)
     } catch (error) {
       console.error('Failed to clear settings:', error)
     }

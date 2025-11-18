@@ -143,11 +143,13 @@ export const useCommunicationStore = defineStore('communication', () => {
   }
 
   function saveMessages() {
-    localStorage.setItem('ratatosk-messages', JSON.stringify(messages.value))
+    // sessionStorage statt localStorage: Messages sind gerätespezifisch
+    sessionStorage.setItem('ratatosk-messages', JSON.stringify(messages.value))
   }
 
   function loadMessages() {
-    const saved = localStorage.getItem('ratatosk-messages')
+    // sessionStorage statt localStorage: Messages sind gerätespezifisch
+    const saved = sessionStorage.getItem('ratatosk-messages')
     if (saved) {
       try {
         const parsed = JSON.parse(saved)

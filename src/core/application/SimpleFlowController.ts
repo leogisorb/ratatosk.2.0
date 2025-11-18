@@ -561,15 +561,15 @@ export class SimpleFlowController {
   }
 
   /**
-   * Lädt Mute-State aus localStorage
+   * Lädt Mute-State aus sessionStorage (gerätespezifisch, nicht zwischen Geräten geteilt)
    * Mit besserer Fehlerbehandlung für Safari Private Mode etc.
    */
   private loadMuteState(): void {
     try {
-      const savedMuted = localStorage.getItem(STORAGE_CONFIG.MUTE_STATE_KEY)
+      const savedMuted = sessionStorage.getItem(STORAGE_CONFIG.MUTE_STATE_KEY)
       if (savedMuted !== null) {
         this.isTTSMuted = savedMuted === 'true'
-        console.log('SimpleFlowController: Mute state loaded from localStorage:', this.isTTSMuted)
+        console.log('SimpleFlowController: Mute state loaded from sessionStorage:', this.isTTSMuted)
       } else {
         // Default: nicht stumm
         this.isTTSMuted = false
@@ -578,7 +578,7 @@ export class SimpleFlowController {
     } catch (error) {
       // Safari Private Mode wirft DOMException
       if (error instanceof DOMException && error.name === 'QuotaExceededError') {
-        console.warn('SimpleFlowController: localStorage quota exceeded')
+        console.warn('SimpleFlowController: sessionStorage quota exceeded')
       } else {
         console.error('SimpleFlowController: Failed to load mute state:', error)
       }
@@ -587,17 +587,17 @@ export class SimpleFlowController {
   }
 
   /**
-   * Speichert Mute-State in localStorage
+   * Speichert Mute-State in sessionStorage (gerätespezifisch, nicht zwischen Geräten geteilt)
    * Mit besserer Fehlerbehandlung für Safari Private Mode etc.
    */
   private saveMuteState(): void {
     try {
-      localStorage.setItem(STORAGE_CONFIG.MUTE_STATE_KEY, String(this.isTTSMuted))
-      console.log('SimpleFlowController: Mute state saved to localStorage:', this.isTTSMuted)
+      sessionStorage.setItem(STORAGE_CONFIG.MUTE_STATE_KEY, String(this.isTTSMuted))
+      console.log('SimpleFlowController: Mute state saved to sessionStorage:', this.isTTSMuted)
     } catch (error) {
       // Safari Private Mode wirft DOMException
       if (error instanceof DOMException && error.name === 'QuotaExceededError') {
-        console.warn('SimpleFlowController: localStorage quota exceeded')
+        console.warn('SimpleFlowController: sessionStorage quota exceeded')
       } else {
         console.error('SimpleFlowController: Failed to save mute state:', error)
       }
