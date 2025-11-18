@@ -16,11 +16,13 @@ import { useAutoMode, type AutoModeConfig } from './useAutoMode'
 import { useSettingsStore } from '../../features/settings/stores/settings'
 import { simpleFlowController } from '../../core/application/SimpleFlowController'
 import { useDialogTimerTracking } from './useDialogTimerTracking'
+import { TIMING } from '../constants/timing'
+import { handleError, isCancellationError } from '../utils/errorHandling'
 
 // ===== CONSTANTS =====
 const TIMER_DELAYS = {
-  AUTO_MODE_START: 3000,
-  CONFIRMATION_RESET: 3000
+  AUTO_MODE_START: TIMING.DIALOG.AUTO_MODE_START_DELAY,
+  CONFIRMATION_RESET: TIMING.DIALOG.CONFIRMATION_RESET_DELAY
 } as const
 
 // ===== TYPES =====
@@ -63,11 +65,7 @@ export interface DialogMachine<TState extends string, TItem> {
 
 // ===== SHARED HELPERS =====
 function handleOperationError(dialogName: string, operation: string, error: unknown) {
-  if (error instanceof Error && error.message.includes('cancelled')) {
-    console.log(`${dialogName}: ${operation} cancelled`)
-  } else {
-    console.error(`${dialogName}: ${operation} error:`, error)
-  }
+  handleError(`${dialogName}: ${operation}`, error, { logLevel: 'error' })
 }
 
 // ===== MAIN FACTORY =====
@@ -149,7 +147,15 @@ export function useDialogMachine<TState extends string, TItem>(
       state.value = config.states[0]
       stateIds.value = []
       
-      await tts.speak(title.value)
+      try {
+        await tts.speak(title.value)
+      } catch (error) {
+        if (!isCancellationError(error)) {
+          handleError(`${config.dialogName}: TTS error in resetToInitialState`, error, { logLevel: 'warn' })
+        }
+        // Continue even if TTS fails
+      }
+      
       scheduleAutoModeStart(state.value)
       
     } catch (error) {
@@ -189,16 +195,29 @@ export function useDialogMachine<TState extends string, TItem>(
       stateIds.value.push(id)
       state.value = nextState
       
-      // Speak title
-      await tts.speak(title.value)
+      // Speak title with error handling
+      try {
+        await tts.speak(title.value)
+      } catch (error) {
+        if (!isCancellationError(error)) {
+          handleError(`${config.dialogName}: TTS error in selectItem`, error, { logLevel: 'warn' })
+        }
+        // Continue even if TTS fails
+      }
       
       // Check if confirmation state
       if (config.shouldConfirm(nextState)) {
         // Confirmation - schedule reset
         scheduleTimer(() => {
-          checkCancelled()
-          if (config.shouldConfirm(state.value)) {
-            resetToInitialState()
+          try {
+            checkCancelled()
+            if (config.shouldConfirm(state.value)) {
+              resetToInitialState().catch(error => {
+                handleError(`${config.dialogName}: resetToInitialState error`, error)
+              })
+            }
+          } catch (error) {
+            handleError(`${config.dialogName}: Confirmation timer error`, error)
           }
         }, TIMER_DELAYS.CONFIRMATION_RESET)
       } else {

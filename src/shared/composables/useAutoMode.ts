@@ -1,9 +1,7 @@
-import { ref, computed } from 'vue'
+import { ref, computed, onUnmounted } from 'vue'
+import { TIMING } from '../constants/timing'
+import { handleError, isAbortError } from '../utils/errorHandling'
 
-// Konstanten für Timing
-const AUTO_MODE_RETRY_DELAY = 100 // ms
-const DEFAULT_INITIAL_DELAY = 3000 // ms
-const DEFAULT_CYCLE_DELAY = 3000 // ms
 const DEBUG = false // Debug-Logging ein/aus
 
 export interface AutoModeConfig {
@@ -15,8 +13,49 @@ export interface AutoModeConfig {
   cycleDelay?: number
 }
 
-// Globale Variable, damit immer nur eine AutoMode-Instanz gleichzeitig läuft
-let activeInstance: { id: symbol; stop: () => void } | null = null
+/**
+ * AutoMode Registry - Singleton Pattern
+ * Manages active AutoMode instances to prevent memory leaks
+ */
+class AutoModeRegistry {
+  private static instance: AutoModeRegistry
+  private activeInstance: { id: symbol; stop: () => void } | null = null
+
+  private constructor() {}
+
+  static getInstance(): AutoModeRegistry {
+    if (!AutoModeRegistry.instance) {
+      AutoModeRegistry.instance = new AutoModeRegistry()
+    }
+    return AutoModeRegistry.instance
+  }
+
+  register(id: symbol, stop: () => void): boolean {
+    if (this.activeInstance && this.activeInstance.id !== id) {
+      this.activeInstance.stop()
+      return false
+    }
+    this.activeInstance = { id, stop }
+    return true
+  }
+
+  unregister(id: symbol): void {
+    if (this.activeInstance?.id === id) {
+      this.activeInstance = null
+    }
+  }
+
+  stopActive(): void {
+    this.activeInstance?.stop()
+    this.activeInstance = null
+  }
+
+  getActiveId(): symbol | null {
+    return this.activeInstance?.id || null
+  }
+}
+
+const registry = AutoModeRegistry.getInstance()
 
 // Extrahiert Text aus einem Item, probiert verschiedene Felder durch
 function extractItemText(item: any): string {
@@ -45,8 +84,8 @@ export function useAutoMode(config: AutoModeConfig) {
     getItems, 
     getTitle, 
     onCycle, 
-    initialDelay = DEFAULT_INITIAL_DELAY, 
-    cycleDelay = DEFAULT_CYCLE_DELAY 
+    initialDelay = TIMING.AUTO_MODE.INITIAL_DELAY, 
+    cycleDelay = TIMING.AUTO_MODE.CYCLE_DELAY 
   } = config
 
   const running = ref(false)
@@ -83,11 +122,15 @@ export function useAutoMode(config: AutoModeConfig) {
       abortController = null
     }
     
-    // Wenn wir die aktive Instanz sind, entfernen wir uns aus der globalen Variable
-    if (activeInstance?.id === instanceId) {
-      activeInstance = null
-    }
+    // Unregister from registry to prevent memory leaks
+    registry.unregister(instanceId)
   }
+
+  // Cleanup on component unmount to prevent memory leaks
+  onUnmounted(() => {
+    debug('Component unmounted - cleaning up AutoMode')
+    stop()
+  })
 
   // Hauptschleife, die durch alle Items geht und sie vorliest
   async function loop() {
@@ -120,11 +163,10 @@ export function useAutoMode(config: AutoModeConfig) {
           await speak(itemTitle)
         } catch (error) {
           // TTS-Fehler sind nicht kritisch, einfach weitermachen
-          if (error instanceof Error && error.message !== 'Aborted') {
-            console.error('[AutoMode] TTS error:', error)
-          } else {
+          if (isAbortError(error)) {
             throw error // Aborted weiterwerfen
           }
+          handleError('[AutoMode] TTS error', error, { logLevel: 'warn' })
         }
 
         // Prüfen ob noch aktiv
@@ -148,8 +190,8 @@ export function useAutoMode(config: AutoModeConfig) {
         }
       }
     } catch (error) {
-      if (error instanceof Error && error.message !== 'Aborted') {
-        console.error('[AutoMode] Loop error:', error)
+      if (!isAbortError(error)) {
+        handleError('[AutoMode] Loop error', error)
       }
     } finally {
       debug('Loop finished')
@@ -162,11 +204,12 @@ export function useAutoMode(config: AutoModeConfig) {
     debug('Starting', { skipTitle })
     
     // Falls schon eine andere Instanz läuft, die erst stoppen
-    if (activeInstance && activeInstance.id !== instanceId) {
+    const activeId = registry.getActiveId()
+    if (activeId && activeId !== instanceId) {
       debug('Stopping previous instance')
-      activeInstance.stop()
+      registry.stopActive()
       // Kurz warten damit die alte Instanz aufräumen kann
-      await new Promise(resolve => setTimeout(resolve, AUTO_MODE_RETRY_DELAY))
+      await new Promise(resolve => setTimeout(resolve, TIMING.AUTO_MODE.RETRY_DELAY))
     }
 
     // Eigenen vorherigen State aufräumen
@@ -177,7 +220,7 @@ export function useAutoMode(config: AutoModeConfig) {
     }
 
     // Als aktive Instanz registrieren
-    activeInstance = { id: instanceId, stop }
+    registry.register(instanceId, stop)
     
     // Neue Session initialisieren
     abortController = new AbortController()
@@ -203,8 +246,8 @@ export function useAutoMode(config: AutoModeConfig) {
         try {
           await speak(title)
         } catch (error) {
-          if (error instanceof Error && error.message !== 'Aborted') {
-            console.error('[AutoMode] Title TTS error:', error)
+          if (!isAbortError(error)) {
+            handleError('[AutoMode] Title TTS error', error)
           }
           throw error
         }
@@ -231,8 +274,8 @@ export function useAutoMode(config: AutoModeConfig) {
       await loop()
       
     } catch (error) {
-      if (error instanceof Error && error.message !== 'Aborted') {
-        console.error('[AutoMode] Start error:', error)
+      if (!isAbortError(error)) {
+        handleError('[AutoMode] Start error', error)
       }
     } finally {
       debug('Start finished')

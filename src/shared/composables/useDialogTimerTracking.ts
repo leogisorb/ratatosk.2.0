@@ -59,24 +59,41 @@ export function useDialogTimerTracking(config: DialogTimerTrackingConfig = {}) {
   /**
    * Erstellt einen Timer mit automatischer Prüfung auf isActive
    * Timer wird automatisch getrackt und kann beim Cleanup gestoppt werden
+   * Atomic: Prüft isActive BEVOR Timer registriert wird
    */
   function scheduleTimer(callback: () => void, delay: number): number {
+    // Atomic check: Wenn nicht aktiv, Timer gar nicht erstellen
+    if (!isActive.value) {
+      console.log(`${dialogName}: Dialog nicht aktiv - Timer wird nicht erstellt`)
+      return -1 // Invalid timer ID
+    }
+    
     const timerId = window.setTimeout(() => {
       // Timer aus Set entfernen
       pendingTimers.delete(timerId)
       
-      // Prüfe ob Dialog noch aktiv ist
+      // Prüfe ob Dialog noch aktiv ist (double-check für Race Conditions)
       if (!isActive.value) {
         console.log(`${dialogName}: Dialog verlassen - Timer-Callback wird nicht ausgeführt`)
         return
       }
       
-      // Callback ausführen
-      callback()
+      // Callback ausführen mit Error Handling
+      try {
+        callback()
+      } catch (error) {
+        console.error(`${dialogName}: Timer callback error:`, error)
+      }
     }, delay)
     
-    // Timer zum Set hinzufügen
-    pendingTimers.add(timerId)
+    // Timer zum Set hinzufügen (nur wenn noch aktiv)
+    if (isActive.value) {
+      pendingTimers.add(timerId)
+    } else {
+      // Race condition: cleanup wurde zwischen Check und Add aufgerufen
+      clearTimeout(timerId)
+      return -1
+    }
     
     return timerId
   }
@@ -111,35 +128,57 @@ export function useDialogTimerTracking(config: DialogTimerTrackingConfig = {}) {
   
   /**
    * Stoppt alle Timer und verhindert weitere AutoMode-Starts
+   * Atomic cleanup to prevent race conditions
    */
   function cleanup() {
+    // Atomic: Erst Flag prüfen, dann setzen
+    if (!isActive.value) {
+      console.warn(`${dialogName}: Cleanup bereits aufgerufen`)
+      return
+    }
+    
     console.log(`${dialogName}: Cleanup - Stoppe alle Timer und verhindere weitere AutoMode-Starts`)
     
-    // Flag setzen: Dialog ist nicht mehr aktiv
+    // Flag setzen: Dialog ist nicht mehr aktiv (atomic)
     isActive.value = false
     
-    // Stoppe alle pending Timer
-    pendingTimers.forEach((timerId) => {
-      clearTimeout(timerId)
-    })
+    // Copy timer IDs to avoid iteration during modification
+    const timersCopy = Array.from(pendingTimers)
     pendingTimers.clear()
     
-    // Führe alle registrierten Cleanup-Funktionen aus
-    cleanupFunctions.forEach(fn => {
+    // Stoppe alle pending Timer
+    timersCopy.forEach((timerId) => {
+      clearTimeout(timerId)
+    })
+    
+    // Führe alle registrierten Cleanup-Funktionen aus mit Error Handling
+    const cleanupErrors: Error[] = []
+    cleanupFunctions.forEach((fn, index) => {
       try {
         fn()
       } catch (error) {
-        console.error(`${dialogName}: Cleanup error:`, error)
+        console.error(`${dialogName}: Cleanup function ${index} failed:`, error)
+        cleanupErrors.push(error as Error)
       }
     })
     cleanupFunctions.length = 0
     
-    // Callback aufrufen (z.B. um AutoMode zu stoppen)
+    // Callback aufrufen (z.B. um AutoMode zu stoppen) mit Error Handling
     if (onCleanup) {
-      onCleanup()
+      try {
+        onCleanup()
+      } catch (error) {
+        console.error(`${dialogName}: onCleanup callback failed:`, error)
+        cleanupErrors.push(error as Error)
+      }
     }
     
-    console.log(`${dialogName}: Cleanup abgeschlossen - alle Timer gestoppt`)
+    // Log aggregated errors if any
+    if (cleanupErrors.length > 0) {
+      console.error(`${dialogName}: Cleanup completed with ${cleanupErrors.length} errors`)
+    } else {
+      console.log(`${dialogName}: Cleanup abgeschlossen - alle Timer gestoppt`)
+    }
   }
   
   /**

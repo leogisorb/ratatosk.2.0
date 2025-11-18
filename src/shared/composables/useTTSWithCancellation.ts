@@ -5,6 +5,8 @@
 import { ref, computed } from 'vue'
 import { useSettingsStore } from '../../features/settings/stores/settings'
 import { simpleFlowController } from '../../core/application/SimpleFlowController'
+import { TIMING } from '../constants/timing'
+import { handleError, isAbortError } from '../utils/errorHandling'
 
 export function useTTSWithCancellation(getCancelled: () => boolean) {
   const settingsStore = useSettingsStore()
@@ -22,7 +24,7 @@ export function useTTSWithCancellation(getCancelled: () => boolean) {
 
       // Kein Text oder TTS deaktiviert
       if (!enabled.value || !text.trim()) {
-        setTimeout(() => resolve(), 500)
+        setTimeout(() => resolve(), TIMING.TTS.EMPTY_TEXT_DELAY)
         return
       }
 
@@ -35,7 +37,7 @@ export function useTTSWithCancellation(getCancelled: () => boolean) {
 
       const synth = window.speechSynthesis
       if (!synth) {
-        setTimeout(() => resolve(), 500)
+        setTimeout(() => resolve(), TIMING.TTS.EMPTY_TEXT_DELAY)
         return
       }
 
@@ -67,7 +69,7 @@ export function useTTSWithCancellation(getCancelled: () => boolean) {
           synth.cancel()
           finish(getCancelled())
         }
-      }, 10000)
+      }, TIMING.TTS.DEFAULT_TIMEOUT)
 
       const utterance = new SpeechSynthesisUtterance(text.trim())
       utterance.lang = 'de-DE'
@@ -89,7 +91,10 @@ export function useTTSWithCancellation(getCancelled: () => boolean) {
         finish()
       }
 
-      utterance.onerror = () => {
+      utterance.onerror = (event) => {
+        if (event.error) {
+          handleError('[TTS] Utterance error', event.error, { logLevel: 'warn' })
+        }
         finish(true)
       }
 
