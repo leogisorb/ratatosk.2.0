@@ -56,7 +56,7 @@ export function usePainDialogMachine() {
       const painLevelId = ids[2]
       let painLevel: number | null = null
       if (painLevelId) {
-        const painLevelItem = dict.painLevels.find(p => String(p.id) === painLevelId)
+        const painLevelItem = dict.painLevels.find(p => String(p.id) === String(painLevelId))
         painLevel = painLevelItem ? painLevelItem.level : null
       }
       return dict.generateConfirmation(subRegionId, painLevel)

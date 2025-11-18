@@ -7,8 +7,8 @@
     <main class="main-content">
       <div class="content-wrapper">
         
-        <!-- Main Title - IMMER sichtbar (wie HomeView) -->
-        <h1 class="main-title">{{ title }}</h1>
+        <!-- Main Title - IMMER sichtbar (wie HomeView), außer bei Confirmation -->
+        <h1 v-if="state !== 'confirmation'" class="main-title">{{ title }}</h1>
         
         <!-- ===== MAIN VIEW ===== -->
         <template v-if="state === 'mainView'">
@@ -132,21 +132,22 @@
               <div
                 v-for="(item, index) in items"
                 :key="item.id"
-                class="carousel-item menu-tile"
+                class="carousel-item menu-tile pain-level-tile"
                 :class="{
                   'tile-active': index === autoMode.index.value,
                   'tile-inactive': index !== autoMode.index.value
                 }"
                 :style="{
-                  '--offset': index - autoMode.index.value
+                  '--offset': index - autoMode.index.value,
+                  '--pain-color': 'color' in item ? (item as any).color : '#f3f4f6'
                 }"
                 @click="handleItemClick(item, index)"
               >
-                <div class="tile-icon-container">
-                  <div class="tile-emoji">{{ 'level' in item ? (item as any).level : item.id }}</div>
+                <div v-if="'description' in item" class="tile-description">
+                  <span class="pain-level-number">{{ 'level' in item ? (item as any).level : (item as any).id }}</span>
+                  <span class="pain-level-comma">,</span>
+                  <span class="pain-level-desc">{{ (item as any).description }}</span>
                 </div>
-                <div class="tile-text">{{ item.title }}</div>
-                <div v-if="'description' in item" class="tile-description">{{ (item as any).description }}</div>
               </div>
             </div>
             
@@ -432,15 +433,11 @@ onUnmounted(() => {
 
 <!-- Spezifische Styles für diese Komponente - scoped -->
 <style scoped>
-/* Icons im Main Grid 25% größer (nur mainView, nicht subRegionView oder painScaleView) */
-.desktop-grid .tile-icon-container,
-.mobile-carousel .tile-icon-container {
-  width: calc(100% * var(--tile-height-ratio) * var(--icon-size-ratio) * 1.25) !important;
-  height: calc(100% * var(--tile-height-ratio) * var(--icon-size-ratio) * 1.25) !important;
-  min-width: calc(100% * var(--tile-height-ratio) * var(--icon-size-ratio) * 1.25) !important;
-  min-height: calc(100% * var(--tile-height-ratio) * var(--icon-size-ratio) * 1.25) !important;
-  max-width: calc(100% * var(--tile-height-ratio) * var(--icon-size-ratio) * 1.25) !important;
-  max-height: calc(100% * var(--tile-height-ratio) * var(--icon-size-ratio) * 1.25) !important;
+/* Icons im Main Grid 20% größer (nur mainView, nicht subRegionView oder painScaleView) */
+/* Nur die Icons selbst vergrößern, nicht den Container oder die Kacheln */
+.desktop-grid .tile-icon,
+.mobile-carousel .tile-icon {
+  transform: scale(1.2) !important;
 }
 
 /* Emoji Styles für Sub-Regions */
@@ -449,16 +446,76 @@ onUnmounted(() => {
   line-height: 1;
 }
 
-/* Pain Scale Description */
-.tile-description {
-  font-size: clamp(0.9rem, 2vw, 1.2rem);
-  color: var(--text-secondary, #666);
-  margin-top: 0.5rem;
+/* Pain Scale: Nur Level-Nummer und Beschreibung in einer Zeile - so groß wie h1 - immer weiß */
+.pain-level-tile .tile-description {
+  font-size: clamp(1.95rem, 5.2vw, 3.25rem) !important; /* Gleiche Größe wie .main-title */
+  font-weight: 600 !important;
+  color: #ffffff !important; /* Immer weiß */
+  margin: 0;
+  padding: 0;
   text-align: center;
+  line-height: 1.2;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.25rem;
+  width: 100%;
+  height: 100%;
 }
 
-.dark-mode .tile-description {
-  color: var(--text-secondary-dark, #aaa);
+.pain-level-tile .pain-level-number {
+  font-weight: 700;
+}
+
+.pain-level-tile .pain-level-comma {
+  font-weight: 600;
+}
+
+.pain-level-tile .pain-level-desc {
+  font-weight: 600;
+}
+
+/* Alle anderen Elemente verstecken */
+.pain-level-tile .tile-icon-container,
+.pain-level-tile .tile-emoji,
+.pain-level-tile .tile-text {
+  display: none !important;
+}
+
+/* Pain Level Tiles: Individuelle Farben pro Kachel */
+.pain-level-tile {
+  background-color: var(--pain-color, #f3f4f6) !important;
+  border-color: var(--pain-color, #e5e7eb) !important;
+}
+
+.pain-level-tile.tile-active {
+  background-color: var(--pain-color, #667eea) !important;
+  border-color: var(--pain-color, #667eea) !important;
+  box-shadow: 0 0 20px rgba(0, 0, 0, 0.3), 0 0 40px var(--pain-color, #667eea) !important;
+}
+
+.pain-level-tile.tile-inactive {
+  background-color: var(--pain-color, #f3f4f6) !important;
+  border-color: var(--pain-color, #e5e7eb) !important;
+  opacity: 0.8;
+}
+
+/* Dark Mode: Pain Level Tiles */
+.dark .pain-level-tile {
+  background-color: var(--pain-color, #374151) !important;
+  border-color: var(--pain-color, #4b5563) !important;
+}
+
+.dark .pain-level-tile.tile-active {
+  background-color: var(--pain-color, #667eea) !important;
+  border-color: var(--pain-color, #667eea) !important;
+  box-shadow: 0 0 20px rgba(0, 0, 0, 0.5), 0 0 40px var(--pain-color, #667eea) !important;
+}
+
+.dark .pain-level-tile.tile-inactive {
+  background-color: var(--pain-color, #374151) !important;
+  border-color: var(--pain-color, #4b5563) !important;
+  opacity: 0.7;
 }
 
 /* Confirmation View Styles */
@@ -471,6 +528,20 @@ onUnmounted(() => {
   text-align: center;
   animation: fadeInScale 0.5s ease-out;
   gap: 0.5rem; /* Reduzierter Abstand zwischen Elementen */
+  width: 100%;
+  height: 100%;
+  min-height: 50vh;
+}
+
+.confirmation-text {
+  font-size: clamp(1.5rem, 4vw, 2.5rem);
+  font-weight: 600;
+  line-height: 1.4;
+  margin: 0;
+  padding: 0;
+  text-align: center;
+  width: 100%;
+  max-width: 90%;
 }
 
 .confirmation-icon {

@@ -123,7 +123,10 @@ export function useDialogMachine<TState extends string, TItem>(
   })
   
   // ===== HELPERS =====
-  function scheduleAutoModeStart(expectedState: TState, delay = TIMER_DELAYS.AUTO_MODE_START) {
+  function scheduleAutoModeStart(expectedState: TState, delay: number = TIMER_DELAYS.AUTO_MODE_START) {
+    // Index sofort auf 0 setzen, damit UI nicht alten Wert zeigt
+    autoMode.index.value = 0
+    
     scheduleTimer(async () => {
       checkCancelled()
       
@@ -132,7 +135,9 @@ export function useDialogMachine<TState extends string, TItem>(
         checkCancelled()
         
         if (items.value.length > 0 && state.value === expectedState) {
+          // Index nochmal sicherstellen (falls er zwischenzeitlich geändert wurde)
           autoMode.index.value = 0
+          await nextTick() // UI Zeit geben, Index 0 anzuzeigen
           autoMode.start(true)
         }
       }
@@ -147,16 +152,22 @@ export function useDialogMachine<TState extends string, TItem>(
       state.value = config.states[0]
       stateIds.value = []
       
-      try {
-        await tts.speak(title.value)
-      } catch (error) {
-        if (!isCancellationError(error)) {
-          handleError(`${config.dialogName}: TTS error in resetToInitialState`, error, { logLevel: 'warn' })
+      // Wenn TTS muted ist, nicht warten
+      const isTTSMuted = simpleFlowController.getTTSMuted()
+      if (!isTTSMuted) {
+        try {
+          await tts.speak(title.value)
+        } catch (error) {
+          if (!isCancellationError(error)) {
+            handleError(`${config.dialogName}: TTS error in resetToInitialState`, error, { logLevel: 'warn' })
+          }
+          // Continue even if TTS fails
         }
-        // Continue even if TTS fails
       }
       
-      scheduleAutoModeStart(state.value)
+      // Wenn TTS muted ist, kürzeren Delay verwenden
+      const delay = isTTSMuted ? 500 : TIMER_DELAYS.AUTO_MODE_START
+      scheduleAutoModeStart(state.value, delay)
       
     } catch (error) {
       handleOperationError(config.dialogName, 'resetToInitialState', error)
@@ -195,14 +206,19 @@ export function useDialogMachine<TState extends string, TItem>(
       stateIds.value.push(id)
       state.value = nextState
       
-      // Speak title with error handling
-      try {
-        await tts.speak(title.value)
-      } catch (error) {
-        if (!isCancellationError(error)) {
-          handleError(`${config.dialogName}: TTS error in selectItem`, error, { logLevel: 'warn' })
+      // Speak text with error handling
+      // Bei Confirmation den confirmationText sprechen, sonst den title
+      const isTTSMuted = simpleFlowController.getTTSMuted()
+      if (!isTTSMuted) {
+        try {
+          const textToSpeak = config.shouldConfirm(nextState) ? confirmationText.value : title.value
+          await tts.speak(textToSpeak)
+        } catch (error) {
+          if (!isCancellationError(error)) {
+            handleError(`${config.dialogName}: TTS error in selectItem`, error, { logLevel: 'warn' })
+          }
+          // Continue even if TTS fails
         }
-        // Continue even if TTS fails
       }
       
       // Check if confirmation state
@@ -222,7 +238,9 @@ export function useDialogMachine<TState extends string, TItem>(
         }, TIMER_DELAYS.CONFIRMATION_RESET)
       } else {
         // Normal state - schedule auto mode
-        scheduleAutoModeStart(nextState)
+        // Wenn TTS muted ist, kürzeren Delay verwenden
+        const delay = isTTSMuted ? 500 : TIMER_DELAYS.AUTO_MODE_START
+        scheduleAutoModeStart(nextState, delay)
       }
       
     } catch (error) {

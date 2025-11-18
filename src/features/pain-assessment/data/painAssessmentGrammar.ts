@@ -77,6 +77,7 @@ export function getGrammarRule(subRegionId: string): GrammarRule | null {
 
 /**
  * Generate confirmation text with proper German grammar
+ * Format: "Der Patient hat Schmerzen im/am [Region], SchmerzLevel X"
  */
 export function generatePainConfirmationText(
   subRegionId: string,
@@ -88,19 +89,12 @@ export function generatePainConfirmationText(
   
   if (!rule) {
     // Fallback: Use simple form if no rule exists
-    return `Der Patient hat ${subRegionTitle}schmerzen Level ${painLevel}, ${painDescription}.`
+    return `Der Patient hat Schmerzen im/am ${subRegionTitle}, SchmerzLevel ${painLevel}.`
   }
   
-  let painDescriptionText: string
+  // Immer Form 1 verwenden: "Schmerzen im/am/an der [Region]"
+  const painDescriptionText = `Schmerzen ${rule.preposition} ${subRegionTitle}`
   
-  if (rule.useForm === 'form1') {
-    // Form 1: "Schmerzen am/an der/im X"
-    painDescriptionText = `Schmerzen ${rule.preposition} ${subRegionTitle}`
-  } else {
-    // Form 2: "Xschmerzen"
-    painDescriptionText = `${subRegionTitle}schmerzen`
-  }
-  
-  return `Der Patient hat ${painDescriptionText} Level ${painLevel}, ${painDescription}.`
+  return `Der Patient hat ${painDescriptionText}, SchmerzLevel ${painLevel}.`
 }
 

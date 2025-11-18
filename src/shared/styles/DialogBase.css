@@ -208,6 +208,22 @@
   flex: 1; /* Nimmt verfügbaren Platz */
 }
 
+/* Sicherstellen, dass main-title bei SubViews (inkl. Pain Scale) im main-content bleibt */
+.pain-dialog .content-wrapper:has(.carousel-wrapper) .main-title {
+  position: relative !important;
+  z-index: 1 !important; /* Unter Header, aber über Karussell */
+  margin-top: 0 !important;
+  padding-top: var(--space-sm) !important; /* Minimales Padding für Abstand zum Header */
+  margin-bottom: var(--space-sm) !important; /* Abstand zum Karussell */
+}
+
+/* Sicherstellen, dass content-wrapper bei Pain Scale View korrekt positioniert ist */
+.pain-dialog .content-wrapper:has(.carousel-wrapper) {
+  padding-top: 0 !important;
+  margin-top: 0 !important;
+  overflow: visible !important;
+}
+
 .carousel-wrapper .carousel-container {
   position: relative;
   width: 90vw;

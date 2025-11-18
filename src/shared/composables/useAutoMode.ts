@@ -1,6 +1,7 @@
-import { ref, computed, onUnmounted } from 'vue'
+import { ref, computed, onUnmounted, nextTick } from 'vue'
 import { TIMING } from '../constants/timing'
 import { handleError, isAbortError } from '../utils/errorHandling'
+import { simpleFlowController } from '../../core/application/SimpleFlowController'
 
 const DEBUG = false // Debug-Logging ein/aus
 
@@ -116,6 +117,7 @@ export function useAutoMode(config: AutoModeConfig) {
   function stop() {
     debug('Stopping')
     running.value = false
+    index.value = 0 // Index zurücksetzen, damit UI nicht alten Wert zeigt
     
     if (abortController) {
       abortController.abort()
@@ -157,6 +159,9 @@ export function useAutoMode(config: AutoModeConfig) {
         
         // Callback aufrufen falls vorhanden
         onCycle?.(index.value, item)
+        
+        // Sicherstellen, dass UI Zeit hat, den aktuellen Index anzuzeigen
+        await nextTick()
         
         // Item vorlesen
         try {
@@ -259,13 +264,24 @@ export function useAutoMode(config: AutoModeConfig) {
         }
       }
 
-      // Initiale Wartezeit
-      debug(`Waiting ${initialDelay}ms before starting loop`)
-      await delay(initialDelay)
+      // Initiale Wartezeit - kürzer wenn TTS muted ist
+      const isTTSMuted = simpleFlowController.getTTSMuted()
+      const effectiveInitialDelay = isTTSMuted ? Math.min(initialDelay, 500) : initialDelay
+      debug(`Waiting ${effectiveInitialDelay}ms before starting loop (TTS muted: ${isTTSMuted})`)
+      await delay(effectiveInitialDelay)
       
       // Nochmal prüfen ob noch aktiv
       if (!running.value || abortController?.signal.aborted) {
         debug('Stopped during initial delay')
+        return
+      }
+
+      // Sicherstellen, dass UI Zeit hat, Index 0 anzuzeigen
+      await nextTick()
+      
+      // Nochmal prüfen ob noch aktiv
+      if (!running.value || abortController?.signal.aborted) {
+        debug('Stopped after nextTick')
         return
       }
 

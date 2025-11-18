@@ -48,14 +48,26 @@ export function usePainDictionary() {
 
   /**
    * Generiert Bestätigungstext mit korrekter Grammatik
+   * Format: "Der Patient hat Schmerzen im/am [Region], SchmerzLevel X"
    */
   function generateConfirmation(subRegionId: string | null, painLevel: number | null): string {
-    if (!subRegionId || painLevel === null) return 'Ihre Angabe wurde gespeichert.'
+    // Wenn Daten fehlen, generiere trotzdem einen Text
+    if (!subRegionId || painLevel === null) {
+      if (painLevel !== null) {
+        return `Der Patient hat Schmerzen, SchmerzLevel ${painLevel}.`
+      }
+      return 'Der Patient hat Schmerzen, SchmerzLevel unbekannt.'
+    }
     
     const subRegion = findSubRegion(subRegionId)
     const painLevelObj = findPainLevel(painLevel)
     
-    if (!subRegion || !painLevelObj) return 'Ihre Angabe wurde gespeichert.'
+    if (!subRegion || !painLevelObj) {
+      if (painLevel !== null) {
+        return `Der Patient hat Schmerzen, SchmerzLevel ${painLevel}.`
+      }
+      return 'Der Patient hat Schmerzen, SchmerzLevel unbekannt.'
+    }
     
     return generatePainConfirmationText(
       subRegionId,
