@@ -18,33 +18,33 @@ export function useEnvironmentDialogMachine() {
     // Data providers
     getItems: (state, ...ids) => {
       switch (state) {
-        case 'mainView':
-          return dict.mainRegions
-        case 'subRegionView':
+      case 'mainView':
+        return dict.mainRegions
+      case 'subRegionView':
           return dict.getSubRegions(ids[0] || null)
-        case 'subSubRegionView':
+      case 'subSubRegionView':
           return dict.getSubSubRegions(ids[1] || null)
-        default:
-          return []
-      }
+      default:
+        return []
+    }
     },
-    
+
     getTitle: (state, ...ids) => {
       switch (state) {
-        case 'mainView':
-          return 'Was möchten Sie an ihrer Umgebung verändern?'
-        case 'subRegionView':
+      case 'mainView':
+        return 'Was möchten Sie an ihrer Umgebung verändern?'
+      case 'subRegionView':
           return dict.getSubRegionViewTitle(ids[0] || null)
-        case 'subSubRegionView': {
+      case 'subSubRegionView': {
           const subRegions = dict.getSubRegions(ids[0] || null)
           const subRegion = subRegions.find((item: any) => item.id === ids[1]) as UmgebungSubRegion | undefined
-          return dict.getSubSubRegionViewTitle(subRegion || null)
-        }
-        case 'confirmation':
-          return 'Auswahl erfasst'
-        default:
-          return ''
+        return dict.getSubSubRegionViewTitle(subRegion || null)
       }
+      case 'confirmation':
+        return 'Auswahl erfasst'
+      default:
+        return ''
+    }
     },
     
     getConfirmationText: (...ids) => {

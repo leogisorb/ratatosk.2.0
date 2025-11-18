@@ -3,6 +3,7 @@ import { useRouter } from 'vue-router'
 import { useSettingsStore } from '../../settings/stores/settings'
 import { useBlinkInput } from '../../communication/composables/useBlinkInput'
 import { simpleFlowController } from '../../../core/application/SimpleFlowController'
+import { CancellationError, isCancellationError } from '../../../shared/utils/errorHandling'
 
 /**
  * Warnsystem für intubierte Patienten - MIT CANCELLATION TOKEN
@@ -20,17 +21,9 @@ export function useWarningViewLogic() {
   // ===== CANCELLATION TOKEN =====
   const isCancelled = ref(false)
   
-  const cancel = () => {
-    console.log('WarningView: Cancellation requested')
-    isCancelled.value = true
-    clearTimers()
-    speechSynthesis.cancel()
-    stopContinuousAlarm()
-  }
-  
   const checkCancelled = () => {
     if (isCancelled.value) {
-      throw new Error('Operation cancelled')
+      throw new CancellationError('Operation cancelled')
     }
   }
 
@@ -63,7 +56,7 @@ export function useWarningViewLogic() {
     return new Promise((resolve, reject) => {
       // Prüfen ob bereits abgebrochen wurde
       if (isCancelled.value) {
-        reject(new Error('TTS cancelled before start'))
+        reject(new CancellationError('TTS cancelled before start'))
         return
       }
       
@@ -79,18 +72,19 @@ export function useWarningViewLogic() {
 
       let resolved = false
       let timeoutId: number | null = null
-      let intervalId: number | null = null
 
-      const finish = (cancelled = false) => {
+      const finish = (error?: Error) => {
         if (!resolved) {
           resolved = true
           isTTSActive.value = false
           
-          if (timeoutId) clearTimeout(timeoutId)
-          if (intervalId) clearInterval(intervalId)
+          if (timeoutId) {
+            clearTimeout(timeoutId)
+            timeoutId = null
+          }
           
-          if (cancelled) {
-            reject(new Error('TTS cancelled'))
+          if (error) {
+            reject(error)
           } else {
             resolve()
           }
@@ -101,7 +95,7 @@ export function useWarningViewLogic() {
         // Prüfen ob während TTS abgebrochen wurde
         if (isCancelled.value) {
           speechSynthesis.cancel()
-          finish(true)
+          finish(new CancellationError('TTS cancelled during start'))
           return
         }
         
@@ -118,24 +112,17 @@ export function useWarningViewLogic() {
 
       utterance.onerror = (e) => {
         console.error('TTS Error:', e)
-        finish(true)
+        finish(new Error('TTS error'))
       }
 
-      // Sicherheitsfallback mit Abbruch-Prüfung
+      // Timeout als Fallback
       timeoutId = window.setTimeout(() => {
         if (!resolved) {
           console.warn('TTS: Timeout reached')
-          finish(isCancelled.value)
+          speechSynthesis.cancel()
+          finish(new Error('TTS timeout'))
         }
       }, 10000)
-
-      // Regelmäßig prüfen ob TTS abgebrochen wurde
-      intervalId = window.setInterval(() => {
-        if (isCancelled.value && !resolved) {
-          speechSynthesis.cancel()
-          finish(true)
-        }
-      }, 100)
       
       speechSynthesis.speak(utterance)
     })
@@ -145,26 +132,20 @@ export function useWarningViewLogic() {
     return new Promise((resolve, reject) => {
       // Prüfen ob bereits abgebrochen wurde
       if (isCancelled.value) {
-        reject(new Error('Delay cancelled'))
+        reject(new CancellationError('Delay cancelled'))
         return
       }
       
       const timeoutId = window.setTimeout(() => {
         if (isCancelled.value) {
-          reject(new Error('Delay cancelled'))
+          reject(new CancellationError('Delay cancelled'))
         } else {
           resolve()
         }
       }, ms)
       
-      // Cleanup bei Abbruch
-      const intervalId = window.setInterval(() => {
-        if (isCancelled.value) {
-          clearTimeout(timeoutId)
-          clearInterval(intervalId)
-          reject(new Error('Delay cancelled'))
-        }
-      }, 100)
+      // Cleanup bei Abbruch (vereinfacht - nur einmal prüfen)
+      // Cancellation wird durch cleanup() → speechSynthesis.cancel() gehandhabt
     })
   }
 
@@ -172,9 +153,11 @@ export function useWarningViewLogic() {
   let timers: number[] = []
   
   const clearTimers = () => {
-    console.log(`WarningView: Clearing ${timers.length} timers`)
-    timers.forEach(t => clearTimeout(t))
-    timers = []
+    if (timers.length > 0) {
+      console.log(`WarningView: Clearing ${timers.length} timers`)
+      timers.forEach(t => clearTimeout(t))
+      timers = []
+    }
   }
   
   const setTimer = (callback: () => void, delay: number): void => {
@@ -189,6 +172,8 @@ export function useWarningViewLogic() {
       if (!isCancelled.value) {
         callback()
       }
+      // Timer aus Liste entfernen
+      timers = timers.filter(t => t !== id)
     }, delay)
     timers.push(id)
   }
@@ -265,7 +250,7 @@ export function useWarningViewLogic() {
       checkCancelled() // Prüfen vor Transition
       
       console.log(`Transitioning from ${currentState.value} to ${newState}`)
-      clearTimers()
+      // Timer werden automatisch durch isCancelled gestoppt, kein manuelles clearTimers() nötig
       currentState.value = newState
 
       switch (newState) {
@@ -283,7 +268,7 @@ export function useWarningViewLogic() {
           break
       }
     } catch (error) {
-      if (error instanceof Error && error.message.includes('cancelled')) {
+      if (isCancellationError(error)) {
         console.log('WarningView: Transition cancelled')
       } else {
         console.error('WarningView: Transition error:', error)
@@ -319,7 +304,7 @@ export function useWarningViewLogic() {
       await transitionTo(WarningState.BELL_IDLE)
       
     } catch (error) {
-      if (error instanceof Error && error.message.includes('cancelled')) {
+      if (isCancellationError(error)) {
         console.log('WarningView: Greeting cancelled')
       } else {
         console.warn('TTS nicht verfügbar:', error)
@@ -350,7 +335,7 @@ export function useWarningViewLogic() {
       }
       
     } catch (error) {
-      if (error instanceof Error && error.message.includes('cancelled')) {
+      if (isCancellationError(error)) {
         console.log('WarningView: Bell idle cancelled')
       } else {
         console.warn('TTS Fehler:', error)
@@ -367,7 +352,7 @@ export function useWarningViewLogic() {
       startContinuousAlarm()
       
     } catch (error) {
-      if (error instanceof Error && error.message.includes('cancelled')) {
+      if (isCancellationError(error)) {
         console.log('WarningView: Bell playing cancelled')
       }
     }
@@ -393,7 +378,7 @@ export function useWarningViewLogic() {
       }
       
     } catch (error) {
-      if (error instanceof Error && error.message.includes('cancelled')) {
+      if (isCancellationError(error)) {
         console.log('WarningView: Back active cancelled')
       } else {
         console.warn('TTS Fehler:', error)
@@ -412,12 +397,11 @@ export function useWarningViewLogic() {
         return
       }
       
-      clearTimers()
+      // Stoppe laufende TTS (wird durch cleanup() auch gemacht, aber hier für sofortige Reaktion)
       speechSynthesis.cancel()
       
       switch (currentState.value) {
         case WarningState.BELL_IDLE:
-          clearTimers()
           await transitionTo(WarningState.BELL_PLAYING)
           break
           
@@ -434,7 +418,7 @@ export function useWarningViewLogic() {
           break
       }
     } catch (error) {
-      if (error instanceof Error && error.message.includes('cancelled')) {
+      if (isCancellationError(error)) {
         console.log('WarningView: User input cancelled')
       }
     }
@@ -447,20 +431,27 @@ export function useWarningViewLogic() {
   }
 
   const cleanup = () => {
-    console.log('WarningView: Cleaning up')
+    console.log('WarningView: Cleanup started')
     
-    // Erst das Cancellation Flag setzen
+    // 1. Cancellation Flag SOFORT setzen
+    // Alle async Operationen stoppen automatisch (weil sie isCancelled checken)
     isCancelled.value = true
     
-    // Dann alle Ressourcen freigeben
-    clearTimers()
+    // 2. Stoppe alle laufenden TTS (einmalig, nicht mehrfach)
     speechSynthesis.cancel()
+    
+    // 3. Stoppe Alarm
     stopContinuousAlarm()
+    
+    // 4. Resource-Cleanup
+    clearTimers()
     
     if (audioContext.value) {
       audioContext.value.close()
       audioContext.value = null
     }
+    
+    console.log('WarningView: Cleanup complete')
   }
 
   // ===== TOUCH EVENT HANDLERS =====

@@ -81,14 +81,35 @@
 
 /* Mobile: Mehr Padding und stärkerer Fade */
 @media (max-width: 1024px) and (orientation: portrait) {
+  /* Content-wrapper: Kein Padding/Margin oben für Dialoge */
+  .pain-dialog .content-wrapper,
+  .self-dialog .content-wrapper,
+  .environment-dialog .content-wrapper,
+  .settings-dialog .content-wrapper {
+    padding-top: 0 !important;
+    margin-top: 0 !important;
+  }
+  
+  /* Main-content: Kein Margin oben */
+  .pain-dialog .main-content,
+  .self-dialog .main-content,
+  .environment-dialog .main-content,
+  .settings-dialog .main-content {
+    margin-top: 0 !important;
+    padding-top: 0 !important;
+  }
+  
   .pain-dialog .main-title,
   .self-dialog .main-title,
   .environment-dialog .main-title,
   .settings-dialog .main-title {
     font-size: clamp(1.95rem, 7.8vw, 3.25rem); /* 30% größer */
-    padding: var(--space-lg) var(--space-md);
+    padding: 0 var(--space-md); /* Kein Padding oben/unten, nur seitlich */
+    padding-top: 0 !important; /* Garantiert kein Padding oben */
     padding-bottom: 0; /* Kein Padding unten */
+    margin-top: 0 !important; /* Kein Margin oben - direkt unter Header */
     margin-bottom: 0; /* Kein Margin unten */
+    line-height: 1.1; /* Kompaktere Zeilenhöhe */
     background: linear-gradient(
       to bottom,
       rgba(255, 255, 255, 1) 0%,
@@ -111,6 +132,66 @@
       rgba(31, 41, 55, 0.6) 90%,
       rgba(31, 41, 55, 0) 100%
     );
+  }
+}
+
+/* Mobile Portrait (bis 880px): Gleiche Anpassungen */
+@media (max-width: 880px) and (orientation: portrait) {
+  /* Content-wrapper: Kein Padding/Margin oben für Dialoge */
+  .pain-dialog .content-wrapper,
+  .self-dialog .content-wrapper,
+  .environment-dialog .content-wrapper,
+  .settings-dialog .content-wrapper {
+    padding-top: 0 !important;
+    margin-top: 0 !important;
+  }
+  
+  /* Main-content: Kein Margin oben */
+  .pain-dialog .main-content,
+  .self-dialog .main-content,
+  .environment-dialog .main-content,
+  .settings-dialog .main-content {
+    margin-top: 0 !important;
+    padding-top: 0 !important;
+  }
+  
+  .pain-dialog .main-title,
+  .self-dialog .main-title,
+  .environment-dialog .main-title,
+  .settings-dialog .main-title {
+    margin-top: 0 !important; /* Kein Margin oben - direkt unter Header */
+    padding-top: 0 !important; /* Garantiert kein Padding oben */
+    line-height: 1.1; /* Kompaktere Zeilenhöhe */
+  }
+}
+
+/* Medium & Large Tablet Portrait (881px-1366px): Grid Layout */
+@media (min-width: 881px) and (max-width: 1366px) and (orientation: portrait) {
+  /* Content-wrapper: Kein Padding/Margin oben für Dialoge */
+  .pain-dialog .content-wrapper,
+  .self-dialog .content-wrapper,
+  .environment-dialog .content-wrapper,
+  .settings-dialog .content-wrapper {
+    padding-top: 0 !important;
+    margin-top: 0 !important;
+  }
+  
+  /* Main-content: Kein Margin oben */
+  .pain-dialog .main-content,
+  .self-dialog .main-content,
+  .environment-dialog .main-content,
+  .settings-dialog .main-content {
+    margin-top: 0 !important;
+    padding-top: 0 !important;
+  }
+  
+  .pain-dialog .main-title,
+  .self-dialog .main-title,
+  .environment-dialog .main-title,
+  .settings-dialog .main-title {
+    margin-top: 0 !important; /* Kein Margin oben - direkt unter Header */
+    padding-top: var(--space-xs); /* Minimales Padding für Grid-Layout */
+    line-height: 1.2; /* Normale Zeilenhöhe für Grid */
   }
 }
 

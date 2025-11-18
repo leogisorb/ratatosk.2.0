@@ -402,15 +402,18 @@ html, body {
   display: none;
 }
 
-/* Mobile & Tablet Portrait: Carousel aktivieren */
-/* iPad Pro 12.9": 1024px, iPad Pro 11": 834px */
-@media (max-width: 1366px) and (orientation: portrait) {
+/* Mobile & Small Tablet Portrait: Carousel aktivieren */
+/* Kleine Tablets und Mobile: bis 880px */
+@media (max-width: 880px) and (orientation: portrait) {
   .desktop-grid {
     display: none;
   }
   
   .mobile-carousel {
-    display: block;
+    display: flex;
+    flex: 1;
+    align-items: center;
+    justify-content: center;
   }
   
   .main-content {
@@ -435,13 +438,6 @@ html, body {
     font-size: clamp(1.5rem, 6vw, 2.5rem);
   }
   
-  .mobile-carousel {
-    flex: 1;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-  }
-  
   .mobile-carousel .menu-tile {
     width: 95%;
     height: 55%;
@@ -451,6 +447,42 @@ html, body {
   
   .mobile-carousel .menu-tile .tile-text {
     font-size: clamp(1rem, 5vw, 1.8rem);
+  }
+}
+
+/* Medium & Large Tablet Portrait: Desktop Grid aktivieren */
+/* Tablets von 881px bis 1366px - Grid statt Carousel */
+@media (min-width: 881px) and (max-width: 1366px) and (orientation: portrait) {
+  .desktop-grid {
+    display: grid !important;
+  }
+  
+  .mobile-carousel {
+    display: none !important;
+  }
+  
+  .main-content {
+    padding: 0;
+    margin-top: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  
+  .content-wrapper {
+    height: 100%;
+    justify-content: center;
+    padding: 0;
+  }
+  
+  .main-title {
+    margin-top: 0;
+    margin-bottom: var(--space-md);
+    font-size: clamp(1.5rem, 4vw, 2.5rem);
+  }
+  
+  .grid-container {
+    padding: var(--space-md);
   }
 }
 
@@ -594,6 +626,8 @@ html, body {
   width: 100%;
   border-bottom: 1px solid var(--color-border-primary);
   transition: background-color var(--transition-fast), border-color var(--transition-fast);
+  margin: 0;
+  padding: 0;
 }
 
 .header-content {

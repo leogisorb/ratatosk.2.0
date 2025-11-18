@@ -62,14 +62,12 @@ const router = createRouter({
 })
 
 /**
- * Router Guard: Stoppt alle laufenden Services vor jeder Navigation
- * Verhindert, dass Views im Hintergrund weiterlaufen
+ * Router Guard: Koordiniert Navigation und Cleanup
  * 
- * Verbesserte Cleanup-Reihenfolge mit async/await:
- * 1. View-spezifische Cleanups zuerst (setzt isCancelled = true)
- * 2. Dann globale Services stoppen
- * 3. Kleine Pause für Race Condition Prevention
- * 4. Navigation
+ * Prinzip: Router koordiniert nur, Views räumen sich selbst auf
+ * - View-Cleanup via cleanupRegistry
+ * - Global State zurücksetzen
+ * - Keine View-internen Details (TTS, Timer, etc.) im Router
  */
 router.beforeEach(async (to, from, next) => {
   // Nur stoppen, wenn wir von einem View zu einem anderen navigieren (nicht beim ersten Laden)
@@ -77,24 +75,16 @@ router.beforeEach(async (to, from, next) => {
     console.log(`Router: Navigation von ${String(from.name)} zu ${String(to.name)}`)
     
     try {
-      // 1. View-spezifische Cleanups mit Timeout
+      // View räumt sich selbst auf via Registry
       const fromName = String(from.name)
       await cleanupRegistry.cleanup(fromName, 1000)
       
-      // 2. Globale Services stoppen
-      simpleFlowController.stopTTS()
-      if (window.speechSynthesis) {
-        window.speechSynthesis.cancel()
-      }
-      simpleFlowController.stopAutoMode()
+      // Global State zurücksetzen (nur Koordination, keine Business Logic)
       simpleFlowController.setActiveView('')
       
-      // 3. Kleine Pause für Race Condition Prevention
-      await new Promise(resolve => setTimeout(resolve, 50))
+      console.log('Router: Navigation vorbereitet')
       
-      console.log('Router: Alle Services gestoppt - Navigation wird fortgesetzt')
-      
-      // 4. Navigation
+      // Navigation
       next()
       
     } catch (error) {

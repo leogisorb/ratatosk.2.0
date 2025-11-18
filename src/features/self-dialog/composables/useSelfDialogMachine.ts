@@ -18,26 +18,26 @@ export function useSelfDialogMachine() {
     // Data providers
     getItems: (state, ...ids) => {
       switch (state) {
-        case 'mainView':
+      case 'mainView':
           return dict.mainRegions
-        case 'subRegionView':
+      case 'subRegionView':
           return dict.getSubRegions(ids[0] || null)
-        default:
-          return []
-      }
+      default:
+        return []
+    }
     },
-    
+
     getTitle: (state, ...ids) => {
       switch (state) {
-        case 'mainView':
-          return 'Was möchten Sie machen?'
-        case 'subRegionView':
+      case 'mainView':
+        return 'Was möchten Sie machen?'
+      case 'subRegionView':
           return dict.getSubRegionViewTitle(ids[0] || null)
-        case 'confirmation':
-          return 'Auswahl erfasst'
-        default:
-          return ''
-      }
+      case 'confirmation':
+        return 'Auswahl erfasst'
+      default:
+        return ''
+    }
     },
     
     getConfirmationText: (...ids) => {

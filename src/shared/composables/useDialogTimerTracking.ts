@@ -80,7 +80,7 @@ export function useDialogTimerTracking(config: DialogTimerTrackingConfig = {}) {
       
       // Callback ausführen mit Error Handling
       try {
-        callback()
+      callback()
       } catch (error) {
         console.error(`${dialogName}: Timer callback error:`, error)
       }
@@ -88,7 +88,7 @@ export function useDialogTimerTracking(config: DialogTimerTrackingConfig = {}) {
     
     // Timer zum Set hinzufügen (nur wenn noch aktiv)
     if (isActive.value) {
-      pendingTimers.add(timerId)
+    pendingTimers.add(timerId)
     } else {
       // Race condition: cleanup wurde zwischen Check und Add aufgerufen
       clearTimeout(timerId)
@@ -166,7 +166,7 @@ export function useDialogTimerTracking(config: DialogTimerTrackingConfig = {}) {
     // Callback aufrufen (z.B. um AutoMode zu stoppen) mit Error Handling
     if (onCleanup) {
       try {
-        onCleanup()
+      onCleanup()
       } catch (error) {
         console.error(`${dialogName}: onCleanup callback failed:`, error)
         cleanupErrors.push(error as Error)
@@ -177,7 +177,7 @@ export function useDialogTimerTracking(config: DialogTimerTrackingConfig = {}) {
     if (cleanupErrors.length > 0) {
       console.error(`${dialogName}: Cleanup completed with ${cleanupErrors.length} errors`)
     } else {
-      console.log(`${dialogName}: Cleanup abgeschlossen - alle Timer gestoppt`)
+    console.log(`${dialogName}: Cleanup abgeschlossen - alle Timer gestoppt`)
     }
   }
   

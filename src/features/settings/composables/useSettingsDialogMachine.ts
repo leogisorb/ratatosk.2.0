@@ -21,29 +21,29 @@ export function useSettingsDialogMachine() {
     // Data providers
     getItems: (state, ...ids) => {
       switch (state) {
-        case 'mainView':
-          return dict.settingsCategories
-        case 'optionsView':
+      case 'mainView':
+        return dict.settingsCategories
+      case 'optionsView':
           return dict.getOptions(ids[0] || null)
-        default:
-          return []
-      }
+      default:
+        return []
+    }
     },
-    
+
     getTitle: (state, ...ids) => {
       switch (state) {
-        case 'mainView':
-          return 'Welche Einstellung möchten Sie ändern?'
-        case 'optionsView': {
+      case 'mainView':
+        return 'Welche Einstellung möchten Sie ändern?'
+      case 'optionsView': {
           const categoryTitle = dict.getCategoryTitle(ids[0] || null)
           const currentValue = dict.getCurrentValue(ids[0] || null)
-          return `${categoryTitle} - Aktuell: ${currentValue}`
-        }
-        case 'confirmation':
-          return 'Einstellung gespeichert'
-        default:
-          return ''
+        return `${categoryTitle} - Aktuell: ${currentValue}`
       }
+      case 'confirmation':
+        return 'Einstellung gespeichert'
+      default:
+        return ''
+    }
     },
     
     getConfirmationText: (...ids) => {
@@ -80,7 +80,7 @@ export function useSettingsDialogMachine() {
   // Override selectItem to save settings when option is selected
   const originalSelectItem = machine.selectItem
   const selectItemWithSave = async (id: string) => {
-    if (id === dict.ID_BACK) {
+      if (id === dict.ID_BACK) {
       if (machine.state.value === 'optionsView') {
         // Go back to mainView
         await machine.resetToInitialState()

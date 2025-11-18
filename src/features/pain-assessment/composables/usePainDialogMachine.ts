@@ -24,30 +24,30 @@ export function usePainDialogMachine() {
     // Data providers
     getItems: (state, ...ids) => {
       switch (state) {
-        case 'mainView':
+      case 'mainView':
           return dict.mainRegions
-        case 'subRegionView':
+      case 'subRegionView':
           return dict.getSubRegions(ids[0] || null)
-        case 'painScaleView':
+      case 'painScaleView':
           return dict.painLevels
-        default:
+      default:
           return []
-      }
+    }
     },
-    
+
     getTitle: (state, ...ids) => {
       switch (state) {
-        case 'mainView':
-          return 'Wo haben Sie Schmerzen?'
-        case 'subRegionView':
+      case 'mainView':
+        return 'Wo haben Sie Schmerzen?'
+      case 'subRegionView':
           return dict.getSubRegionViewTitle(ids[0] || null)
-        case 'painScaleView':
-          return 'Wie stark sind Ihre Schmerzen?'
-        case 'confirmation':
-          return 'Bestätigung'
-        default:
-          return ''
-      }
+      case 'painScaleView':
+        return 'Wie stark sind Ihre Schmerzen?'
+      case 'confirmation':
+        return 'Bestätigung'
+      default:
+        return ''
+    }
     },
     
     getConfirmationText: (...ids) => {

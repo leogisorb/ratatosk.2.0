@@ -277,7 +277,7 @@ export class SimpleFlowController {
         while (this.isSpeaking && !signal.aborted) {
           await this.delayWithCancellation(TTS_CONFIG.CHECK_INTERVAL_MS, signal)
         }
-
+        
         if (signal.aborted) break
 
         // Process next queue item
@@ -296,13 +296,13 @@ export class SimpleFlowController {
         }
 
         if (signal.aborted) break
-
+        
         // Pause between TTS items
         if (this.ttsQueue.length > 0) {
           await this.delayWithCancellation(TTS_CONFIG.PAUSE_BETWEEN_ITEMS_MS, signal)
         }
       }
-
+      
       // Trigger TTS end listeners if queue is completely processed
       if (this.ttsQueue.length === 0 && this.ttsEndListeners.length > 0 && !signal.aborted) {
         this.triggerTTSEndListeners()
@@ -311,7 +311,7 @@ export class SimpleFlowController {
       if (error instanceof Error && error.name === 'AbortError') {
         console.log('SimpleFlowController: Queue processing aborted')
       } else {
-        console.error('SimpleFlowController: Error in TTS queue:', error)
+      console.error('SimpleFlowController: Error in TTS queue:', error)
       }
     } finally {
       this.isProcessingQueue = false
