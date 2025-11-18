@@ -11,9 +11,10 @@ import { simpleFlowController } from '../core/application/SimpleFlowController'
 // Alte Settings-Views entfernt - werden durch SettingsDialogView ersetzt
 
 const router = createRouter({
-  // Hash-Mode funktioniert ohne Server-Konfiguration (.htaccess)
-  // URLs sehen dann so aus: /ratatosk.2.0/#/app statt /ratatosk.2.0/app
-  history: createWebHashHistory('/ratatosk.2.0/'),
+  // History-Mode für saubere URLs ohne Hash
+  // URLs sehen dann so aus: /ratatosk.2.0/app statt /ratatosk.2.0/#/app
+  // Benötigt Server-Konfiguration (.htaccess für Apache oder 404.html für GitHub Pages)
+  history: createWebHistory('/ratatosk.2.0/'),
   routes: [
     {
       path: '/',

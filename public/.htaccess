@@ -1,0 +1,12 @@
+<IfModule mod_rewrite.c>
+  RewriteEngine On
+  RewriteBase /ratatosk.2.0/
+  
+  # Wenn die angeforderte Datei oder das Verzeichnis nicht existiert
+  RewriteCond %{REQUEST_FILENAME} !-f
+  RewriteCond %{REQUEST_FILENAME} !-d
+  
+  # Leite alle Anfragen an index.html weiter (für Vue Router)
+  RewriteRule . /ratatosk.2.0/index.html [L]
+</IfModule>
+
