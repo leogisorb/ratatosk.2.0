@@ -231,6 +231,50 @@
   color: #6b7280;
 }
 
+/* TTS Button (Mit Sprachausgabe) - Grün/Türkis */
+.btn-option-tts.btn-option-active {
+  background-color: #00B098;
+  border-color: #00B098;
+}
+
+.btn-option-tts.btn-option-inactive {
+  background-color: white;
+  border-color: #00B098;
+}
+
+.btn-option-tts.btn-option-inactive .btn-title {
+  color: #00796B;
+}
+
+.btn-option-tts.btn-option-inactive .btn-subtitle {
+  color: #00B098;
+}
+
+/* Muted Button (Ohne Sprachausgabe) - Grau */
+.btn-option-muted.btn-option-active-muted {
+  background-color: #6b7280;
+  border-color: #6b7280;
+  box-shadow: 0 4px 12px rgba(107, 114, 128, 0.3);
+}
+
+.btn-option-muted.btn-option-active-muted .btn-title,
+.btn-option-muted.btn-option-active-muted .btn-subtitle {
+  color: white;
+}
+
+.btn-option-muted.btn-option-inactive-muted {
+  background-color: #f9fafb;
+  border-color: #d1d5db;
+}
+
+.btn-option-muted.btn-option-inactive-muted .btn-title {
+  color: #4b5563;
+}
+
+.btn-option-muted.btn-option-inactive-muted .btn-subtitle {
+  color: #9ca3af;
+}
+
 .btn-icon {
   font-size: 2rem;
   flex-shrink: 0;

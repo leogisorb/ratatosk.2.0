@@ -81,6 +81,7 @@
               @click="handleButtonClick(0)"
               :class="[
                 'btn-option',
+                'btn-option-tts',
                 autoMode.index.value === 0 ? 'btn-option-active' : 'btn-option-inactive'
               ]"
             >
@@ -96,7 +97,8 @@
               @click="handleButtonClick(1)"
               :class="[
                 'btn-option',
-                autoMode.index.value === 1 ? 'btn-option-active' : 'btn-option-inactive'
+                'btn-option-muted',
+                autoMode.index.value === 1 ? 'btn-option-active-muted' : 'btn-option-inactive-muted'
               ]"
             >
               <div class="btn-icon">🔇</div>
