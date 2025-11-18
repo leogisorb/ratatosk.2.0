@@ -1,367 +1,127 @@
 // State Machine für den Environment Dialog
-// Verwendet Cancellation Token um Race Conditions zu vermeiden
+// Nutzt die Shared Dialog Machine für gemeinsame Logik
 
-import { ref, computed, nextTick } from 'vue'
-import { useRouter } from 'vue-router'
-import { useTTSWithCancellation } from './useTTSWithCancellation'
-import { useAutoMode, type AutoModeConfig } from '../../../shared/composables/useAutoMode'
+import { computed } from 'vue'
+import { useDialogMachine } from '../../../shared/composables/useDialogMachine'
 import { useEnvironmentDictionary } from './useEnvironmentDictionary'
-import { useSettingsStore } from '../../settings/stores/settings'
 import type { UmgebungRegion, UmgebungSubRegion, UmgebungSubSubRegion } from '../data/environmentDialogData'
-import { simpleFlowController } from '../../../core/application/SimpleFlowController'
-import { useDialogTimerTracking } from '../../../shared/composables/useDialogTimerTracking'
-
-// ===== CONSTANTS =====
-const TIMER_DELAYS = {
-  AUTO_MODE_START: 3000,
-  CONFIRMATION_RESET: 3000
-} as const
 
 export type UmgebungDialogState = 'mainView' | 'subRegionView' | 'subSubRegionView' | 'confirmation'
 
 export function useEnvironmentDialogMachine() {
-  const router = useRouter()
   const dict = useEnvironmentDictionary()
-  const settingsStore = useSettingsStore()
 
-  // ===== CANCELLATION TOKEN =====
-  const isCancelled = ref(false)
-  
-  const cancel = () => {
-    console.log('EnvironmentDialog: Cancellation requested')
-    isCancelled.value = true
-    cleanupTimers()
-    window.speechSynthesis?.cancel()
-  }
-  
-  const checkCancelled = () => {
-    if (isCancelled.value) {
-      throw new Error('Operation cancelled')
-    }
-  }
-
-  // TTS mit Unterstützung für Abbruch
-  const tts = useTTSWithCancellation(() => isCancelled.value)
-
-  // State
-  const state = ref<UmgebungDialogState>('mainView')
-  const mainRegionId = ref<string | null>(null)
-  const subRegionId = ref<string | null>(null)
-  const subSubRegionId = ref<string | null>(null)
-
-  // Computed: Aktuelle Items basierend auf State
-  const items = computed(() => {
-    switch (state.value) {
-      case 'mainView':
-        return dict.mainRegions
-      case 'subRegionView':
-        return dict.getSubRegions(mainRegionId.value)
-      case 'subSubRegionView':
-        return dict.getSubSubRegions(subRegionId.value)
-      default:
-        return []
-    }
-  })
-
-  // Computed: Aktueller Titel basierend auf State
-  const title = computed(() => {
-    switch (state.value) {
-      case 'mainView':
-        return 'Was möchten Sie an ihrer Umgebung verändern?'
-      case 'subRegionView':
-        return dict.getSubRegionViewTitle(mainRegionId.value)
-      case 'subSubRegionView': {
-        const subRegion = items.value.find((item: any) => item.id === subRegionId.value) as UmgebungSubRegion | undefined
-        return dict.getSubSubRegionViewTitle(subRegion || null)
-      }
-      case 'confirmation':
-        return 'Auswahl erfasst'
-      default:
-        return ''
-    }
-  })
-
-  // Computed: Confirmation Text
-  const confirmationText = computed(() => {
-    const subRegions = dict.getSubRegions(mainRegionId.value)
-    const subRegion = subRegions.find(r => r.id === subRegionId.value)
-    const subSubRegions = dict.getSubSubRegions(subRegionId.value)
-    const verb = subSubRegions.find(v => v.id === subSubRegionId.value)
+  const machine = useDialogMachine<UmgebungDialogState, UmgebungRegion | UmgebungSubRegion | UmgebungSubSubRegion>({
+    dialogName: 'EnvironmentDialog',
+    states: ['mainView', 'subRegionView', 'subSubRegionView', 'confirmation'] as const,
     
-    return dict.generateConfirmation(subRegion || null, verb || null)
-  })
-
-  // AutoMode Configuration
-  const autoModeConfig: AutoModeConfig = {
-    speak: tts.speak,
-    getItems: () => items.value,
-    getTitle: () => title.value,
-    initialDelay: settingsStore.settings.leuchtdauer * 1000,
-    cycleDelay: settingsStore.settings.leuchtdauer * 1000
-  }
-
-  const autoMode = useAutoMode(autoModeConfig)
-  
-  // Timer-Tracking mit Cleanup-Logik
-  const { scheduleTimer, cleanup: cleanupTimers } = useDialogTimerTracking({
-    onCleanup: () => {
-      autoMode.stop()
-    },
-    dialogName: 'UmgebungDialog'
-  })
-
-  // ===== HELPER: START AUTO MODE =====
-  // Startet AutoMode nach einer Verzögerung
-  // Wichtig: Setzt den Index auf 0, damit das Karussell bei 0 startet
-  function scheduleAutoModeStart(expectedState: UmgebungDialogState, delay: number = TIMER_DELAYS.AUTO_MODE_START) {
-    // Index auf 0 setzen
-    autoMode.index.value = 0
-    
-    scheduleTimer(async () => {
-      checkCancelled()
-      
-      if (state.value === expectedState) {
-        await nextTick()
-        checkCancelled()
-        
-        // Nochmal prüfen ob alles passt
-        if (items.value.length > 0 && state.value === expectedState) {
-          // Index nochmal auf 0 setzen für Sicherheit
-          autoMode.index.value = 0
-          autoMode.start(true)
-        }
-      }
-    }, delay)
-  }
-
-  /**
-   * Error Handler für Operationen
-   */
-  function handleOperationError(operation: string, error: unknown) {
-    if (error instanceof Error && error.message.includes('cancelled')) {
-      console.log(`EnvironmentDialog: ${operation} cancelled`)
-    } else {
-      console.error(`EnvironmentDialog: ${operation} error:`, error)
-      // TODO: User-Feedback hinzufügen bei kritischen Fehlern
-    }
-  }
-
-  // ===== ACTIONS =====
-
-  /**
-   * Haupt-Region auswählen
-   */
-  async function selectMainRegion(id: string) {
-    try {
-      checkCancelled()
-      
-      if (id === dict.ID_BACK) {
-        goBack()
-        return
-      }
-
-      autoMode.stop()
-      mainRegionId.value = id
-      state.value = 'subRegionView'
-      subRegionId.value = null
-      subSubRegionId.value = null
-
-      await tts.speak(title.value)
-      scheduleAutoModeStart('subRegionView')
-      
-    } catch (error) {
-      handleOperationError('selectMainRegion', error)
-    }
-  }
-
-  /**
-   * Sub-Region auswählen
-   */
-  async function selectSubRegion(id: string) {
-    try {
-      checkCancelled()
-      
-      if (id === dict.ID_BACK) {
-        autoMode.stop()
-        state.value = 'mainView'
-        mainRegionId.value = null
-        subRegionId.value = null
-        subSubRegionId.value = null
-
-        await tts.speak(title.value)
-        scheduleAutoModeStart('mainView')
-        return
-      }
-
-      autoMode.stop()
-      subRegionId.value = id
-      state.value = 'subSubRegionView'
-      subSubRegionId.value = null
-
-      await tts.speak(title.value)
-      scheduleAutoModeStart('subSubRegionView')
-      
-    } catch (error) {
-      handleOperationError('selectSubRegion', error)
-    }
-  }
-
-  /**
-   * Sub-Sub-Region (Verb) auswählen
-   */
-  async function selectSubSubRegion(id: string) {
-    try {
-      checkCancelled()
-      
-      if (id === dict.ID_BACK) {
-        autoMode.stop()
-        state.value = 'subRegionView'
-        subRegionId.value = null
-        subSubRegionId.value = null
-
-        await tts.speak(title.value)
-        scheduleAutoModeStart('subRegionView')
-        return
-      }
-
-      autoMode.stop()
-      subSubRegionId.value = id
-      state.value = 'confirmation'
-
-      await tts.speak(confirmationText.value)
-      
-      scheduleTimer(() => {
-        checkCancelled()
-        if (state.value === 'confirmation') {
-          resetToMainView()
-        }
-      }, TIMER_DELAYS.CONFIRMATION_RESET)
-      
-    } catch (error) {
-      handleOperationError('selectSubSubRegion', error)
-    }
-  }
-
-  /**
-   * Zurück zur Haupt-View
-   */
-  async function resetToMainView() {
-    try {
-      checkCancelled()
-      
-      autoMode.stop()
-      
-      state.value = 'mainView'
-      mainRegionId.value = null
-      subRegionId.value = null
-      subSubRegionId.value = null
-
-      await tts.speak(title.value)
-      scheduleAutoModeStart('mainView')
-      
-    } catch (error) {
-      handleOperationError('resetToMainView', error)
-    }
-  }
-
-  // Stoppt alle Timer und verhindert weitere AutoMode-Starts
-  // Setzt das Cancellation Flag und räumt alle Ressourcen auf
-  function cleanup() {
-    console.log('EnvironmentDialog: Cleaning up')
-    
-    // Erst das Cancellation Flag setzen
-    isCancelled.value = true
-    
-    // Dann alle Ressourcen freigeben
-    cleanupTimers() // Stoppt autoMode durch onCleanup
-    tts.cancel() // TTS muss explizit gestoppt werden
-  }
-
-  // Zurück zur Haupt-App navigieren
-  function goBack() {
-    console.log('UmgebungDialog: goBack() - Cleanup und Navigation')
-    
-    cleanup() // Räumt lokale Ressourcen auf
-    
-    // Globale Services auch stoppen
-    simpleFlowController.stopTTS()
-    simpleFlowController.stopAutoMode()
-    simpleFlowController.setActiveView('')
-    
-    router.push('/app').catch((error) => {
-      console.error('UmgebungDialog: Navigation zu /app fehlgeschlagen:', error)
-    })
-  }
-
-  /**
-   * Blink-Handler: Wählt aktive Kachel aus
-   */
-  function handleBlink() {
-    const currentItems = items.value
-    const currentIndex = autoMode.index.value
-
-    if (currentIndex < 0 || currentIndex >= currentItems.length) {
-      return
-    }
-
-    const currentItem = currentItems[currentIndex]
-    if (!currentItem) {
-      return
-    }
-
-    // Handle "zurück" Button
-    if (currentItem.id === dict.ID_BACK) {
-      switch (state.value) {
+    // Data providers
+    getItems: (state, ...ids) => {
+      switch (state) {
+        case 'mainView':
+          return dict.mainRegions
         case 'subRegionView':
-          selectSubRegion(dict.ID_BACK)
-          break
+          return dict.getSubRegions(ids[0] || null)
         case 'subSubRegionView':
-          selectSubSubRegion(dict.ID_BACK)
-          break
+          return dict.getSubSubRegions(ids[1] || null)
         default:
-          goBack()
-          break
+          return []
       }
-      return
-    }
+    },
+    
+    getTitle: (state, ...ids) => {
+      switch (state) {
+        case 'mainView':
+          return 'Was möchten Sie an ihrer Umgebung verändern?'
+        case 'subRegionView':
+          return dict.getSubRegionViewTitle(ids[0] || null)
+        case 'subSubRegionView': {
+          const subRegions = dict.getSubRegions(ids[0] || null)
+          const subRegion = subRegions.find((item: any) => item.id === ids[1]) as UmgebungSubRegion | undefined
+          return dict.getSubSubRegionViewTitle(subRegion || null)
+        }
+        case 'confirmation':
+          return 'Auswahl erfasst'
+        default:
+          return ''
+      }
+    },
+    
+    getConfirmationText: (...ids) => {
+      const subRegions = dict.getSubRegions(ids[0] || null)
+      const subRegion = subRegions.find(r => r.id === ids[1]) || null
+      const subSubRegions = dict.getSubSubRegions(ids[1] || null)
+      const verb = subSubRegions.find(v => v.id === ids[2]) || null
+      return dict.generateConfirmation(subRegion, verb)
+    },
+    
+    // Navigation
+    backButtonId: dict.ID_BACK,
+    homeRoute: '/app',
+    
+    // State transitions
+    getNextState: (currentState, itemId) => {
+      if (itemId === dict.ID_BACK) {
+        return null // Handled separately
+      }
+      
+      switch (currentState) {
+        case 'mainView':
+          return 'subRegionView'
+        case 'subRegionView':
+          return 'subSubRegionView'
+        case 'subSubRegionView':
+          return 'confirmation'
+        default:
+          return null
+      }
+    },
+    
+    shouldConfirm: (state) => state === 'confirmation'
+  })
 
-    // Auswahl basierend auf State
-    switch (state.value) {
-      case 'mainView':
-        selectMainRegion(currentItem.id)
-        break
-      case 'subRegionView':
-        selectSubRegion(currentItem.id)
-        break
-      case 'subSubRegionView':
-        selectSubSubRegion(currentItem.id)
-        break
-      default:
-        break
-    }
+  // Expose state IDs as separate refs for backward compatibility
+  const mainRegionId = computed(() => machine.stateIds.value[0] || null)
+  const subRegionId = computed(() => machine.stateIds.value[1] || null)
+  const subSubRegionId = computed(() => machine.stateIds.value[2] || null)
+
+  // Legacy methods for backward compatibility with views
+  const selectMainRegion = async (id: string) => {
+    await machine.selectItem(id)
+  }
+
+  const selectSubRegion = async (id: string) => {
+    await machine.selectItem(id)
+  }
+
+  const selectSubSubRegion = async (id: string) => {
+    await machine.selectItem(id)
+  }
+
+  const resetToMainView = async () => {
+    await machine.resetToInitialState()
   }
 
   return {
     // State
-    state,
+    state: machine.state,
     mainRegionId,
     subRegionId,
     subSubRegionId,
     
     // Computed
-    items,
-    title,
-    confirmationText,
-    autoMode,
+    items: machine.items,
+    title: machine.title,
+    confirmationText: machine.confirmationText,
+    autoMode: machine.autoMode,
     
     // Actions
     selectMainRegion,
     selectSubRegion,
     selectSubSubRegion,
     resetToMainView,
-    goBack,
-    handleBlink,
-    cleanup
+    goBack: machine.goBack,
+    handleBlink: machine.handleBlink,
+    cleanup: machine.cleanup
   }
 }
-

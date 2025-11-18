@@ -3,8 +3,8 @@
  * Ermöglicht das Abbrechen von TTS-Operationen durch externes Cancellation-Flag
  */
 import { ref, computed } from 'vue'
-import { useSettingsStore } from '../stores/settings'
-import { simpleFlowController } from '../../../core/application/SimpleFlowController'
+import { useSettingsStore } from '../../features/settings/stores/settings'
+import { simpleFlowController } from '../../core/application/SimpleFlowController'
 
 export function useTTSWithCancellation(getCancelled: () => boolean) {
   const settingsStore = useSettingsStore()
@@ -26,7 +26,13 @@ export function useTTSWithCancellation(getCancelled: () => boolean) {
         return
       }
 
+      // Prüfen ob TTS stumm geschaltet ist - dann sofort auflösen ohne TTS
       const isMuted = simpleFlowController.getTTSMuted()
+      if (isMuted) {
+        resolve()
+        return
+      }
+
       const synth = window.speechSynthesis
       if (!synth) {
         setTimeout(() => resolve(), 500)
@@ -66,7 +72,7 @@ export function useTTSWithCancellation(getCancelled: () => boolean) {
       const utterance = new SpeechSynthesisUtterance(text.trim())
       utterance.lang = 'de-DE'
       utterance.rate = 1.0
-      utterance.volume = isMuted ? 0 : 1.0
+      utterance.volume = 1.0
 
       isSpeaking.value = true
 

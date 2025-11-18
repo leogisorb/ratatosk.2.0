@@ -8,13 +8,11 @@ import {
   hygieneSubRegions,
   bewegungSubRegions,
   getSubRegionsByMainRegion,
+  generateConfirmationSentence,
+  REGION_IDS,
   type IchRegion,
   type IchSubRegion
 } from '../data/selfDialogData'
-import {
-  getSubRegionViewTitle as getSubRegionViewTitleFromGrammar,
-  generateConfirmationText
-} from '../data/selfGrammar'
 
 /**
  * Alle Sub-Regionen in einem Mapping für schnellen Zugriff
@@ -44,7 +42,24 @@ export function getSubRegions(mainRegionId: string | null): readonly IchSubRegio
  * Helper: Titel für Sub-Region View generieren
  */
 export function getSubRegionViewTitle(mainRegionId: string | null): string {
-  return getSubRegionViewTitleFromGrammar(mainRegionId)
+  if (!mainRegionId) {
+    return 'Was möchten Sie machen?'
+  }
+  
+  switch (mainRegionId) {
+    case REGION_IDS.ERNAEHRUNG:
+      return 'Was wollen Sie zu sich nehmen?'
+    case REGION_IDS.GEFUEHLE:
+      return 'Wie fühlen Sie sich?'
+    case REGION_IDS.KLEIDUNG:
+      return 'Was möchten Sie anziehen?'
+    case REGION_IDS.HYGIENE:
+      return 'Was möchten Sie machen?'
+    case REGION_IDS.BEWEGUNG:
+      return 'Was möchten Sie machen?'
+    default:
+      return 'Was möchten Sie machen?'
+  }
 }
 
 /**
@@ -58,8 +73,7 @@ export function generateConfirmation(
     return 'Auswahl erfasst'
   }
   
-  const ttsText = subRegion.ttsText || subRegion.title
-  return generateConfirmationText(mainRegionId, ttsText)
+  return generateConfirmationSentence(mainRegionId, subRegion)
 }
 
 /**

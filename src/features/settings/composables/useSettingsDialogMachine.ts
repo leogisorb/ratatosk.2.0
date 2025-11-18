@@ -3,7 +3,7 @@
 
 import { ref, computed, nextTick } from 'vue'
 import { useRouter } from 'vue-router'
-import { useTTSWithCancellation } from './useTTSWithCancellation'
+import { useTTSWithCancellation } from '../../../shared/composables/useTTSWithCancellation'
 import { useAutoMode, type AutoModeConfig } from '../../../shared/composables/useAutoMode'
 import { useSettingsDictionary } from './useSettingsDictionary'
 import { useSettingsStore } from '../stores/settings'

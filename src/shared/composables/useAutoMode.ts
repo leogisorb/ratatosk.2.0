@@ -4,7 +4,7 @@ import { ref, computed } from 'vue'
 const AUTO_MODE_RETRY_DELAY = 100 // ms
 const DEFAULT_INITIAL_DELAY = 3000 // ms
 const DEFAULT_CYCLE_DELAY = 3000 // ms
-const DEBUG = true // Debug-Logging ein/aus
+const DEBUG = false // Debug-Logging ein/aus
 
 export interface AutoModeConfig {
   speak: (text: string) => Promise<void>
@@ -58,6 +58,12 @@ export function useAutoMode(config: AutoModeConfig) {
   // Wartet eine bestimmte Zeit, kann aber abgebrochen werden
   function delay(ms: number): Promise<void> {
     return new Promise((resolve, reject) => {
+      // Prüfe sofort ob bereits aborted
+      if (abortController?.signal.aborted) {
+        reject(new Error('Aborted'))
+        return
+      }
+      
       const timeoutId = setTimeout(resolve, ms)
       
       abortController?.signal.addEventListener('abort', () => {

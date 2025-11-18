@@ -3,9 +3,24 @@
  * Verwendet new URL() für dynamische Imports, die von Vite verarbeitet werden
  */
 
-// Helper für Data-Dateien (verwendet relativen Pfad von shared/utils/)
-export function getIconUrl(filename: string): string {
-  return new URL(`../../assets/icons/${filename}`, import.meta.url).href
+/**
+ * Konvertiert einen Icon-Pfad (z.B. 'icons/burger.svg') zu einer vollständigen URL
+ * Verwendet in Vue-Komponenten, um Icons aus Data-Dateien zu laden
+ */
+export function getIconUrl(iconPath: string | undefined): string {
+  if (!iconPath) return ''
+  
+  // Entferne führenden Slash falls vorhanden
+  const cleanPath = iconPath.startsWith('/') ? iconPath.substring(1) : iconPath
+  
+  try {
+    // Pfad sollte sein: 'icons/filename.svg' oder 'assets/icons/filename.svg'
+    const assetPath = cleanPath.startsWith('assets/') ? cleanPath : `assets/${cleanPath}`
+    return new URL(`../../${assetPath}`, import.meta.url).href
+  } catch (error) {
+    console.error('Failed to load icon:', iconPath, error)
+    return ''
+  }
 }
 
 export function getImageUrl(filename: string): string {
@@ -15,10 +30,3 @@ export function getImageUrl(filename: string): string {
 export function getSoundUrl(filename: string): string {
   return new URL(`../../assets/sounds/${filename}`, import.meta.url).href
 }
-
-// Legacy-Funktionen für Kompatibilität
-export function getAssetUrl(path: string): string {
-  const cleanPath = path.replace(/^\/ratatosk\.2\.0\//, '').replace(/^\//, '')
-  return new URL(`../../assets/icons/${cleanPath}`, import.meta.url).href
-}
-
