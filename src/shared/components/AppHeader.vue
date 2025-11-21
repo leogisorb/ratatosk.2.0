@@ -85,7 +85,7 @@ import { useRouter } from 'vue-router'
 import { useSettingsStore } from '../../features/settings/stores/settings'
 import { simpleFlowController } from '../../core/application/SimpleFlowController'
 
-// Import Assets
+// Importiere Assets
 import rattenkopfIcon from '@/assets/icons/rattenkopf.svg'
 import goHomeIcon from '@/assets/icons/GoHome.svg'
 
@@ -139,7 +139,7 @@ const toggleVolume = () => {
   console.log('Header: Mute state changed to', newMuted, '- isVolumeEnabled:', !newMuted)
 }
 
-// Lifecycle - Initialen State laden und auf Events hören
+// Lebenszyklus - Initialen Zustand laden und auf Ereignisse hören
 onMounted(() => {
   // Lade initialen State aus SimpleFlowController
   updateVolumeState()

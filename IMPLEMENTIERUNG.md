@@ -20,7 +20,7 @@ Die gesamte Anwendung wurde mit TypeScript implementiert, was eine vollständige
 
 Die Anwendung nutzt Vue 3 mit der Composition API, was eine deutlich bessere Code-Organisation und Wiederverwendbarkeit ermöglicht. Die Composition API erlaubt es, logisch zusammengehörige Funktionalitäten in Composables zu gruppieren, die dann in verschiedenen Komponenten wiederverwendet werden können.
 
-Composables wie `useTTS`, `useAutoMode`, `useInputManager`, `useFaceRecognition`, `useSingleEyeBlinkHandler` und `useDialogTimerTracking` kapseln komplexe Logik und bieten eine saubere, testbare Schnittstelle. Diese Composables können in verschiedenen Features verwendet werden, ohne Code zu duplizieren.
+Composables wie `useAutoMode`, `useInputManager`, `useFaceRecognition`, `useSingleEyeBlinkHandler` und `useDialogTimerTracking` kapseln komplexe Logik und bieten eine saubere, testbare Schnittstelle. Zusätzlich wurden zentrale Services (`TTSService`, `TimerManager`) und Utilities (`UnifiedCleanup`, `EVENTS`) implementiert, die Code-Duplikation eliminieren und eine konsistente Architektur gewährleisten.
 
 ### 6.1.4 Clean Code Prinzipien
 
@@ -36,45 +36,97 @@ Das DRY-Prinzip (Don't Repeat Yourself) wurde konsequent angewendet. Gemeinsame 
 
 ## 6.2 Text-to-Speech Integration
 
-### 6.2.1 Robuste TTS-Architektur
+### 6.2.1 Zentrale TTS-Architektur mit TTSService
 
-Die Text-to-Speech-Integration wurde als zentraler Service implementiert, der in allen Dialogen verwendet wird. Das TTS-System bietet eine vollständige Abstraktionsebene über die Browser-native SpeechSynthesis API und ermöglicht es, das TTS-System einfach auszutauschen oder zu erweitern.
+Die Text-to-Speech-Integration wurde als zentraler Service (`TTSService`) implementiert, der alle TTS-Funktionalität kapselt und Code-Duplikation eliminiert. Der Service bietet eine vollständige Abstraktionsebene über die Browser-native **SpeechSynthesis API** (Teil der Web Speech API) und ermöglicht es, das TTS-System einfach auszutauschen oder zu erweitern.
 
-Das TTS-System wurde als Composable (`useTTS`) implementiert, das in jedem Feature verwendet werden kann. Es bietet Methoden zum Vorlesen von Text mit optionalen Parametern für Sprache, Geschwindigkeit und Tonhöhe. Die TTS-Funktion gibt ein Promise zurück, das resolved wird, wenn die Sprachausgabe abgeschlossen ist, was eine präzise Synchronisation mit anderen Systemen ermöglicht.
+**Wichtig:** Die Implementierung nutzt die **SpeechSynthesis API** (nicht die gesamte Web Speech API), die von Chrome 33+, Edge 14+, Firefox 49+ und Safari 7+ unterstützt wird. Die Synchronisation erfolgt über **Promise-basierte Callbacks** mit Event-Handlern (`onEnd`, `onStart`), nicht ausschließlich über Events.
+
+Der `TTSService` wurde als Singleton implementiert und wird von allen Komponenten verwendet, die TTS benötigen. Er bietet eine Promise-basierte API mit `AbortController`-Unterstützung für Cancellation und umfassende Fehlerbehandlung.
 
 **Konkrete Implementierung:**
 
-Das `useTTS` Composable (`src/features/pain-assessment/composables/useTTS.ts`) implementiert eine Promise-basierte TTS-Funktion:
+Der `TTSService` (`src/shared/services/TTSService.ts`) implementiert eine zentrale, Promise-basierte TTS-Funktion:
 
 ```typescript
-function speak(text: string): Promise<void> {
-  return new Promise((resolve) => {
-    // Prüfe ob TTS stumm geschaltet ist
-    const isMuted = simpleFlowController.getTTSMuted()
-    
-    // Erstelle SpeechSynthesisUtterance
-    const utterance = new SpeechSynthesisUtterance(text.trim())
-    utterance.lang = 'de-DE'
-    utterance.rate = 1.0
-    utterance.volume = isMuted ? 0 : 1.0  // Volume basierend auf Mute-Status
-    
-    // Promise wird resolved wenn TTS fertig ist
-    utterance.onend = () => {
-      isSpeaking.value = false
-      resolve()
+export class TTSService {
+  private speechSynthesis: SpeechSynthesis
+  private currentUtterance: SpeechSynthesisUtterance | null = null
+  private isSpeaking = false
+
+  /**
+   * Spricht Text mit Promise-basierter API
+   */
+  async speak(
+    text: string,
+    config: Partial<TTSConfig> = {},
+    options: TTSOptions = {}
+  ): Promise<void> {
+    if (!this.isAvailable()) {
+      throw new Error('TTS not available')
     }
-    
-    utterance.onerror = () => {
-      isSpeaking.value = false
-      resolve()  // Auch bei Fehlern resolve, um Deadlocks zu vermeiden
+
+    // Stoppe vorherige TTS
+    this.cancel()
+
+    // Warte kurz bevor neue TTS startet
+    await timerManager.delay(200)
+
+    return new Promise((resolve, reject) => {
+      const utterance = new SpeechSynthesisUtterance(text.trim())
+      
+      // Konfiguration anwenden
+      utterance.lang = config.lang ?? this.defaultConfig.lang
+      utterance.rate = config.rate ?? this.defaultConfig.rate
+      utterance.pitch = config.pitch ?? this.defaultConfig.pitch
+      utterance.volume = config.volume ?? this.defaultConfig.volume
+
+      // AbortController-Unterstützung
+      if (options.signal?.aborted) {
+        reject(new Error('TTS canceled'))
+        return
+      }
+
+      // Event-Handler
+      utterance.onend = () => {
+        this.isSpeaking = false
+        this.currentUtterance = null
+        options.onEnd?.()
+        resolve()
+      }
+
+      utterance.onerror = (event) => {
+        this.isSpeaking = false
+        this.currentUtterance = null
+        const error = new Error(TTS_ERROR_MESSAGES[event.error] || 'TTS error')
+        options.onError?.(error)
+        reject(error)
+      }
+
+      this.currentUtterance = utterance
+      this.isSpeaking = true
+      options.onStart?.()
+      this.speechSynthesis.speak(utterance)
+    })
+  }
+
+  /**
+   * Stoppt aktuelle TTS-Ausgabe
+   */
+  cancel(): void {
+    if (this.currentUtterance) {
+      this.speechSynthesis.cancel()
+      this.currentUtterance = null
+      this.isSpeaking = false
     }
-    
-    window.speechSynthesis.speak(utterance)
-  })
+  }
 }
+
+// Singleton-Instanz
+export const ttsService = new TTSService()
 ```
 
-Diese Promise-basierte Implementierung ermöglicht es, dass AutoMode präzise auf das Ende der TTS-Ausgabe wartet, bevor es zum nächsten Item wechselt.
+Diese zentrale Implementierung eliminiert Code-Duplikation zwischen `SimpleFlowController` und `useTTSWithCancellation` und gewährleistet konsistente TTS-Behandlung im gesamten Codebase.
 
 ### 6.2.2 TTS-Synchronisation mit AutoMode
 
@@ -131,80 +183,103 @@ Eine globale Mute-Funktionalität wurde implementiert, die es ermöglicht, TTS s
 
 Der Mute-Status wird im SimpleFlowController zentral verwaltet und kann über den AppHeader global gesteuert werden. Der Status wird in localStorage persistiert, sodass die Einstellung zwischen Sitzungen erhalten bleibt.
 
-### 6.2.5 SimpleFlowController TTS-Integration
+### 6.2.5 SimpleFlowController als zentrales Flow-Management-System
 
-Der SimpleFlowController bietet eine zentrale TTS-Verwaltung mit Queue-System. Alle TTS-Anfragen werden über den SimpleFlowController geleitet, was eine konsistente Behandlung gewährleistet. Der Controller verwaltet die TTS-Queue, verhindert Duplikate und stellt sicher, dass TTS-Ausgaben korrekt abgearbeitet werden.
+Der `SimpleFlowController` ist ein **zentrales System** für die Verwaltung von TTS-Queues, AutoMode-Zyklen und View-Transitions. Er bietet eine zentrale TTS-Verwaltung mit Queue-System für die HomeView-Navigation. Alle TTS-Anfragen für die Hauptnavigation werden über den SimpleFlowController geleitet, was eine konsistente Behandlung gewährleistet.
+
+**Wichtig:** Der SimpleFlowController nutzt intern den `TTSService` für die eigentliche TTS-Ausgabe. Die Queue-Logik bleibt im SimpleFlowController, da sie spezifisch für die HomeView-Navigation ist. Der SimpleFlowController ist ein **Singleton** und wird systemweit verwendet, um den Flow zwischen verschiedenen Views zu koordinieren.
 
 **Konkrete Implementierung:**
 
-Der `SimpleFlowController` (`src/core/application/SimpleFlowController.ts`) implementiert ein Singleton-Pattern mit zentraler TTS-Queue:
+Der `SimpleFlowController` (`src/core/application/SimpleFlowController.ts`) verwendet `TTSService` für TTS-Operationen:
 
 ```typescript
+import { ttsService } from '../../shared/services/TTSService'
+import { timerManager } from '../../shared/utils/TimerManager'
+
 export class SimpleFlowController {
-  private static instance: SimpleFlowController | null = null
   private ttsQueue: string[] = []
   private isProcessingQueue: boolean = false
-  private isSpeaking: boolean = false
-  
-  // Singleton-Pattern
-  public static getInstance(): SimpleFlowController {
-    if (!SimpleFlowController.instance) {
-      SimpleFlowController.instance = new SimpleFlowController()
-    }
-    return SimpleFlowController.instance
-  }
-  
-  // TTS in Queue einreihen
+  private ttsQueueCancellation: AbortController | null = null
+
+  /**
+   * Fügt Text zur TTS-Queue hinzu
+   */
   private async queueAndSpeak(text: string): Promise<void> {
-    // Prüfe auf Duplikate in der Queue
+    // Prüfe auf Duplikate
     if (this.ttsQueue.includes(text)) {
       console.log('Duplicate TTS text skipped:', text)
       return
     }
     
-    // Füge Text zur Queue hinzu
     this.ttsQueue.push(text)
     
-    // Starte Queue-Verarbeitung, falls nicht bereits aktiv
     if (!this.isProcessingQueue) {
       this.processQueue()
     }
   }
   
-  // TTS-Queue verarbeiten
+  /**
+   * Verarbeitet TTS-Queue mit TTSService
+   */
   private async processQueue(): Promise<void> {
     this.isProcessingQueue = true
+    this.ttsQueueCancellation = new AbortController()
     
     while (this.ttsQueue.length > 0) {
       const text = this.ttsQueue.shift()!
-      await this.performSpeak(text)
       
-      // Warte bis TTS fertig ist
-      while (this.isSpeaking) {
-        await new Promise(resolve => setTimeout(resolve, 100))
+      try {
+        // Nutze TTSService für TTS-Ausgabe
+        await ttsService.speak(text, {}, {
+          signal: this.ttsQueueCancellation.signal
+        })
+      } catch (error) {
+        // Fehlerbehandlung
       }
       
-      // Pause zwischen TTS-Items um Browser-Abbrüche zu vermeiden
-      await new Promise(resolve => setTimeout(resolve, 500))
+      // Pause zwischen Items
+      await timerManager.delay(500)
     }
     
     this.isProcessingQueue = false
+  }
+
+  /**
+   * Stoppt TTS (nutzt TTSService)
+   */
+  stopTTS(): void {
+    ttsService.cancel()
+    // ... Queue-Logik
   }
 }
 ```
 
 Diese Implementierung stellt sicher, dass:
-1. Mehrere TTS-Anfragen nacheinander abgearbeitet werden (keine Überlappung)
-2. Duplikate automatisch erkannt und übersprungen werden
-3. Die Queue korrekt verwaltet wird, auch wenn TTS-Anfragen während der Verarbeitung eintreffen
+1. TTS-Logik zentralisiert ist (TTSService)
+2. Queue-Logik im SimpleFlowController bleibt (spezifisch für HomeView)
+3. Keine Code-Duplikation zwischen verschiedenen TTS-Implementierungen
+4. Konsistente Fehlerbehandlung und Cancellation
 
 ## 6.3 Input Management System
 
-### 6.3.1 Zentrale Input-Abstraktion
+### 6.3.1 Zentrale Input-Abstraktion als Kernarchitektur
 
-Ein zentraler InputManager wurde implementiert, der alle Eingabemethoden (Blinzeln, Mausklick, Touch) abstrahiert und vereinheitlicht. Der InputManager bietet eine einheitliche Schnittstelle für alle Eingabetypen und ermöglicht es, Eingaben unabhängig von ihrer Quelle zu behandeln.
+Ein zentraler `InputManager` wurde implementiert, der **alle Eingabemethoden** (Blinzeln, Mausklick, Touch, alternative Sensoren) abstrahiert und vereinheitlicht. Der InputManager ist das **zentrale Input-System** der gesamten Anwendung und wird **in allen Views** verwendet. Er bietet eine einheitliche Schnittstelle für alle Eingabetypen und ermöglicht es, Eingaben unabhängig von ihrer Quelle zu behandeln.
+
+**Alle Views nutzen InputManager:**
+- ✅ **EnvironmentDialogView** - `['blink', 'click']`
+- ✅ **SelfDialogView** - `['blink', 'click']`
+- ✅ **PainDialogView** - `['blink', 'click']`
+- ✅ **SettingsDialogView** - `['blink', 'click']`
+- ✅ **StartView** - `['blink', 'click']`
+- ✅ **WarningView** - `['blink', 'click']` (umgestellt von `useBlinkInput()`)
+- ✅ **CommunicationView** - `['blink', 'click']` (umgestellt von `useBlinkInput()`)
 
 Der InputManager verwendet das Event-basierte Pattern und hört auf das `faceBlinkDetected` Event, das von der Face Recognition ausgelöst wird. Zusätzlich bietet er eine Polling-basierte Fallback-Methode für Fälle, in denen Events nicht funktionieren.
+
+**Alternative Sensoren (Balldrucksensor):**
+Der InputManager unterstützt alternative Eingabegeräte über den `'click'` Input-Typ, der Rechtsklick-Events (`contextmenu`) erfasst. Dies ermöglicht es, Hardware-Sensoren (wie einen Balldrucksensor) symbolisch durch Rechtsklick zu simulieren. Die Architektur ist so konzipiert, dass echte Hardware-Sensoren später ohne strukturellen Umbau durch einfachen Austausch des Event-Handlers integriert werden können.
 
 **Konkrete Implementierung:**
 
@@ -289,7 +364,15 @@ Ein Cooldown-Mechanismus wurde implementiert, der verhindert, dass zu häufige I
 
 Alle Eingabemethoden werden über denselben Callback behandelt, was eine konsistente Benutzererfahrung gewährleistet. Ob ein Benutzer blinzelt, klickt oder tippt, die Reaktion der Anwendung ist identisch. Dies vereinfacht die Code-Logik erheblich und macht die Anwendung robuster.
 
-### 6.3.4 Blinzel-Shortcuts: Einzelne Augen-Blinzeln
+### 6.3.4 Alternative Sensoren und Hardware-Integration
+
+**Balldrucksensor-Simulation:**
+Der InputManager unterstützt alternative Eingabegeräte über den `'click'` Input-Typ, der Rechtsklick-Events (`contextmenu`) erfasst. Dies ermöglicht es, Hardware-Sensoren (wie einen Balldrucksensor) symbolisch durch Rechtsklick zu simulieren. Die Architektur ist so konzipiert, dass echte Hardware-Sensoren später ohne strukturellen Umbau durch einfachen Austausch des Event-Handlers integriert werden können.
+
+**Erweiterbarkeit:**
+Der InputManager ist erweiterbar für zukünftige Input-Typen wie `'voice'` und `'gesture'`. Die Map-basierte Input-Setup-Struktur ermöglicht es, neue Input-Typen einfach hinzuzufügen, ohne die bestehende Architektur zu ändern.
+
+### 6.3.5 Blinzel-Shortcuts: Einzelne Augen-Blinzeln
 
 Eine innovative Funktionalität ist die Unterstützung für einzelne Augen-Blinzeln als Shortcuts. Das System erkennt separat, ob das linke oder rechte Auge zwinkert, und kann verschiedene Aktionen auslösen.
 
@@ -301,11 +384,21 @@ Die Erkennung einzelner Augen-Blinzeln basiert auf der separaten Berechnung des 
 
 Das `useSingleEyeBlinkHandler` Composable bietet eine saubere Schnittstelle für die Verwendung einzelner Augen-Blinzeln als Shortcuts. Es unterstützt konfigurierbare Callbacks für linkes und rechtes Auge sowie einen Cooldown-Mechanismus, um zu häufige Auslösungen zu verhindern.
 
-### 6.3.5 Event-basierte Blinzel-Erkennung
+### 6.3.6 Event-basierte Blinzel-Erkennung
 
 Die Blinzel-Erkennung verwendet ein Event-basiertes System. Wenn ein Blinzeln erkannt wird, wird ein `faceBlinkDetected` Event ausgelöst, das von allen interessierten Komponenten gehört werden kann. Dies ermöglicht eine lose Kopplung zwischen der Face Recognition und den Komponenten, die auf Blinzeln reagieren.
 
 Für einzelne Augen-Blinzeln wird ein separates `faceSingleEyeBlinkDetected` Event ausgelöst, das Informationen über das blinzelnde Auge enthält. Dies ermöglicht es Komponenten, gezielt auf einzelne Augen-Blinzeln zu reagieren.
+
+### 6.3.7 Migration von useBlinkInput() zu InputManager
+
+Alle Views wurden von der alten `useBlinkInput()` Implementierung auf den zentralen `InputManager` umgestellt. Dies gewährleistet:
+- **Konsistente Input-Behandlung** über alle Views hinweg
+- **Einheitliche API** für alle Eingabemethoden
+- **Einfachere Wartbarkeit** durch zentrale Verwaltung
+- **Erweiterbarkeit** für neue Input-Typen
+
+Die alte `useBlinkInput()` Implementierung wird nur noch in `useVirtualKeyboard` für die Introduction-Phase verwendet und ist nicht mehr das primäre Input-System.
 
 ## 6.4 Face Recognition Service
 
@@ -404,25 +497,106 @@ Spezielle Unterstützung für iPhone-Kameras wurde implementiert, um sicherzuste
 
 Die Implementierung erkennt automatisch Safari-Browser und passt die Kamera-Initialisierung entsprechend an. Es werden mehrere Fallback-Strategien verwendet, um sicherzustellen, dass die Kamera auch auf verschiedenen iOS-Versionen funktioniert.
 
-## 6.5 AutoMode System
+## 6.5 Timer Management und AutoMode System
 
-### 6.5.1 Wiederverwendbares AutoMode-System
+### 6.5.1 Unified Timer Management (TimerManager)
 
-Ein vollständig wiederverwendbares AutoMode-System wurde implementiert, das in allen Dialogen verwendet werden kann. Das System verwendet eine flache, zyklische Schleife, die deutlich wartbarer und vorhersagbarer ist als tief verschachtelte Rekursionen.
-
-Das AutoMode-System wurde als Composable (`useAutoMode`) implementiert, das konfigurierbare Parameter für Timing, Items und Callbacks akzeptiert. Es kann in jedem Dialog verwendet werden, ohne Code zu duplizieren.
+Ein zentraler `TimerManager` wurde implementiert, der alle Timer-Operationen (`setTimeout`, `setInterval`, `requestAnimationFrame`) vereinheitlicht und automatisch trackt. Dies eliminiert Timer-Duplikate, verhindert Memory Leaks und Race Conditions.
 
 **Konkrete Implementierung:**
 
-Das `useAutoMode` Composable (`src/features/pain-assessment/composables/useAutoMode.ts`) verwendet eine flache, zyklische Schleife statt Rekursion:
+Der `TimerManager` (`src/shared/utils/TimerManager.ts`) bietet eine typisierte API für alle Timer-Operationen:
 
 ```typescript
+export interface TimerHandle {
+  readonly id: TimerId
+  cancel(): void
+  readonly cancelled: boolean
+}
+
+export class TimerManager {
+  private timers = new Map<TimerId, TimerEntry>()
+
+  /**
+   * Erstellt einen Timeout-Timer
+   */
+  setTimeout(callback: () => void, delay: number): TimerHandle {
+    const id = this.createId()
+    const handle = setTimeout(() => {
+      const entry = this.timers.get(id)
+      if (entry && !entry.cancelled) {
+        this.timers.delete(id)
+        callback()
+      }
+    }, delay)
+
+    this.timers.set(id, {
+      id,
+      handle,
+      type: 'timeout',
+      cancelled: false
+    })
+
+    return this.createHandle(id)
+  }
+
+  /**
+   * Erstellt einen Promise-basierten Delay
+   */
+  delay(ms: number): Promise<void> {
+    return new Promise(resolve => {
+      this.setTimeout(() => resolve(), ms)
+    })
+  }
+
+  /**
+   * Stoppt alle Timer
+   */
+  cancelAll(): void {
+    this.timers.forEach(entry => {
+      if (entry.type === 'timeout') {
+        clearTimeout(entry.handle as ReturnType<typeof setTimeout>)
+      } else if (entry.type === 'interval') {
+        clearInterval(entry.handle as ReturnType<typeof setInterval>)
+      } else if (entry.type === 'animationFrame') {
+        cancelAnimationFrame(entry.handle as ReturnType<typeof requestAnimationFrame>)
+      }
+    })
+    this.timers.clear()
+  }
+}
+
+// Singleton-Instanz
+export const timerManager = new TimerManager()
+```
+
+**Vorteile:**
+1. **Automatisches Tracking**: Alle Timer werden automatisch getrackt
+2. **Typisierte Handles**: `TimerHandle` statt `number` für bessere Typsicherheit
+3. **Einfache Cancellation**: `handle.cancel()` statt `clearTimeout(id)`
+4. **Memory Leak Prevention**: Automatische Bereinigung beim Cleanup
+5. **Race Condition Prevention**: Timer können nicht mehrfach ausgelöst werden
+
+### 6.5.2 Wiederverwendbares AutoMode-System
+
+Ein vollständig wiederverwendbares AutoMode-System wurde implementiert, das in allen Dialogen verwendet werden kann. Das System verwendet eine flache, zyklische Schleife, die deutlich wartbarer und vorhersagbarer ist als tief verschachtelte Rekursionen.
+
+Das AutoMode-System wurde als Composable (`useAutoMode`) implementiert, das konfigurierbare Parameter für Timing, Items und Callbacks akzeptiert. Es nutzt den `TimerManager` für alle Timer-Operationen.
+
+**Konkrete Implementierung:**
+
+Das `useAutoMode` Composable (`src/shared/composables/useAutoMode.ts`) verwendet `TimerManager`:
+
+```typescript
+import { timerManager } from '../utils/TimerManager'
+import type { TimerHandle } from '../utils/TimerManager'
+
 export function useAutoMode(config: AutoModeConfig) {
   const { speak, getItems, getTitle } = config
   const running = ref(false)
   const index = ref(0)
-  let timer: number | null = null
-  let initialTimer: number | null = null
+  let timer: TimerHandle | null = null
+  let initialTimer: TimerHandle | null = null
   
   // Startet den AutoMode
   async function start(skipTitle = false) {
@@ -434,23 +608,21 @@ export function useAutoMode(config: AutoModeConfig) {
     running.value = true
     index.value = 0
     
-    // Titel wird NUR gesprochen wenn skipTitle = false
     if (!skipTitle) {
       const title = getTitle()
       await speak(title)
       
-      if (!running.value) return  // Prüfe ob noch laufend
+      if (!running.value) return
       
-      // Warte 3 Sekunden, dann starte Loop
-      initialTimer = window.setTimeout(() => {
+      // Nutze TimerManager für Timer
+      initialTimer = timerManager.setTimeout(() => {
         if (running.value) {
           index.value = 0
-          loop()  // Starte zyklische Schleife
+          loop()
         }
       }, 3000)
     } else {
-      // Titel wurde bereits gesprochen, warte nur 3 Sekunden
-      initialTimer = window.setTimeout(() => {
+      initialTimer = timerManager.setTimeout(() => {
         if (running.value) {
           index.value = 0
           loop()
@@ -469,11 +641,6 @@ export function useAutoMode(config: AutoModeConfig) {
       return
     }
     
-    // Sicherstellen, dass Index gültig ist
-    if (index.value >= items.length || index.value < 0) {
-      index.value = 0
-    }
-    
     const item = items[index.value]
     const itemTitle = item.title || item.name || String(item)
     
@@ -481,16 +648,14 @@ export function useAutoMode(config: AutoModeConfig) {
     speak(itemTitle).then(() => {
       if (!running.value) return
       
-      // Warte 3 Sekunden, DANN erst Index aktualisieren
-      timer = window.setTimeout(() => {
+      // Nutze TimerManager für Timer
+      timer = timerManager.setTimeout(() => {
         if (!running.value) return
         
-        // Index aktualisieren (zyklisch)
         index.value = (index.value + 1) % items.length
         
-        // Starte nächsten Cycle
         if (running.value) {
-          loop()  // Rekursiver Aufruf, aber kontrolliert durch running-Flag
+          loop()
         }
       }, 3000)
     })
@@ -501,12 +666,12 @@ export function useAutoMode(config: AutoModeConfig) {
     running.value = false
     
     if (timer) {
-      clearTimeout(timer)
+      timer.cancel()  // Nutze TimerHandle.cancel()
       timer = null
     }
     
     if (initialTimer) {
-      clearTimeout(initialTimer)
+      initialTimer.cancel()
       initialTimer = null
     }
   }
@@ -516,16 +681,11 @@ export function useAutoMode(config: AutoModeConfig) {
 ```
 
 Diese Implementierung stellt sicher, dass:
-1. Die Schleife flach und wartbar ist (keine tiefe Rekursion)
-2. Alle Timer korrekt getrackt und gestoppt werden können
-3. Der Index nur aktualisiert wird, wenn AutoMode noch läuft
-4. TTS und AutoMode präzise synchronisiert sind
-
-### 6.5.2 Robuste Timer-Verwaltung
-
-Das AutoMode-System verwendet eine robuste Timer-Verwaltung mit `clearTimeout`, um sicherzustellen, dass Timer korrekt bereinigt werden. Wenn AutoMode gestoppt wird, werden alle laufenden Timer sofort beendet, was Memory Leaks verhindert.
-
-Die Timer-Verwaltung ist vollständig in das Lifecycle-Management von Vue integriert. Wenn eine Komponente unmounted wird, werden alle Timer automatisch bereinigt.
+1. Alle Timer über `TimerManager` verwaltet werden
+2. Timer-Handles typisiert sind (`TimerHandle` statt `number`)
+3. Timer automatisch getrackt und bereinigt werden können
+4. Keine Memory Leaks durch vergessene Timer
+5. Race Conditions durch automatische Cancellation verhindert werden
 
 ### 6.5.3 Race Condition Guards
 
@@ -539,116 +699,94 @@ Das AutoMode-System synchronisiert sich präzise mit TTS. Es wartet, bis die Spr
 
 Die Synchronisation erfolgt über Promise-basierte Callbacks. Wenn AutoMode ein Item spricht, wartet es auf das TTS-Promise, bevor es eine Wartezeit einlegt und dann zum nächsten Item wechselt.
 
-### 6.5.5 Dialog Timer Tracking
+### 6.5.5 Dialog Timer Tracking mit UnifiedCleanup
 
-Ein innovatives `useDialogTimerTracking` Composable wurde implementiert, das Timer-Tracking und Cleanup-Logik für Dialoge verwaltet. Dies verhindert, dass AutoMode oder andere Funktionen gestartet werden, wenn der Dialog bereits verlassen wurde.
-
-Das Timer-Tracking-System trackt alle Timer, die AutoMode starten könnten, und stoppt sie automatisch beim Cleanup. Dies verhindert Memory Leaks und gewährleistet, dass keine Timer im Hintergrund weiterlaufen, wenn ein Dialog verlassen wird.
+Das `useDialogTimerTracking` Composable wurde refactored, um `TimerManager` und `UnifiedCleanup` zu nutzen. Dies vereinfacht die Implementierung erheblich und eliminiert Code-Duplikation.
 
 **Konkrete Implementierung:**
 
-Das `useDialogTimerTracking` Composable (`src/shared/composables/useDialogTimerTracking.ts`) trackt alle Timer und verhindert Race Conditions:
+Das `useDialogTimerTracking` Composable (`src/shared/composables/useDialogTimerTracking.ts`) nutzt jetzt `TimerManager` und `useCleanup`:
 
 ```typescript
+import { timerManager } from '../utils/TimerManager'
+import type { TimerHandle } from '../utils/TimerManager'
+import { useCleanup } from '../utils/UnifiedCleanup'
+
 export function useDialogTimerTracking(config: DialogTimerTrackingConfig = {}) {
   const { onCleanup, dialogName = 'Dialog' } = config
   
   // Flag: Verhindert, dass AutoMode gestartet wird, wenn der Dialog verlassen wurde
   const isActive = ref(true)
   
-  // Timer-Tracking: Alle Timer, die AutoMode starten könnten
-  const pendingTimers: number[] = []
+  // Unified Cleanup für automatisches Timer-Management
+  const cleanup = useCleanup(dialogName)
   
-  /**
-   * Erstellt einen Timer mit automatischer Prüfung auf isActive
-   * Timer wird automatisch getrackt und kann beim Cleanup gestoppt werden
-   */
-  function scheduleTimer(callback: () => void, delay: number): number {
-    const timerId = window.setTimeout(() => {
-      // Timer aus Liste entfernen
-      const index = pendingTimers.indexOf(timerId)
-      if (index > -1) {
-        pendingTimers.splice(index, 1)
-      }
-      
-      // ✅ Prüfe ob Dialog noch aktiv ist
-      if (!isActive.value) {
-        console.log(`${dialogName}: Dialog verlassen - Timer-Callback wird nicht ausgeführt`)
-        return
-      }
-      
-      // Callback ausführen
-      callback()
-    }, delay)
-    
-    // Timer zur Liste hinzufügen
-    pendingTimers.push(timerId)
-    
-    return timerId
+  // Registriere onCleanup callback
+  if (onCleanup) {
+    cleanup.register(onCleanup, 'onCleanup')
   }
   
   /**
-   * Stoppt alle Timer und verhindert weitere AutoMode-Starts
+   * Erstellt Timer mit automatischer Registrierung
    */
-  function cleanup() {
-    console.log(`${dialogName}: Cleanup - Stoppe alle Timer und verhindere weitere AutoMode-Starts`)
-    
-    // Flag setzen: Dialog ist nicht mehr aktiv
-    isActive.value = false
-    
-    // Stoppe alle pending Timer
-    pendingTimers.forEach((timerId) => {
-      clearTimeout(timerId)
-    })
-    pendingTimers.length = 0
-    
-    // Callback aufrufen (z.B. um AutoMode zu stoppen)
-    if (onCleanup) {
-      onCleanup()
+  function scheduleTimer(callback: () => void, delay: number): TimerHandle | null {
+    // Atomic check
+    if (!isActive.value) {
+      console.log(`${dialogName}: Inactive - timer not created`)
+      return null
     }
     
-    console.log(`${dialogName}: Cleanup abgeschlossen - alle Timer gestoppt`)
+    // Nutze TimerManager für Timer
+    const handle = timerManager.setTimeout(() => {
+      // Double-check für Race Conditions
+      if (!isActive.value) {
+        console.log(`${dialogName}: Dialog left - callback not executed`)
+        return
+      }
+      
+      try {
+        callback()
+      } catch (error) {
+        console.error(`${dialogName}: Timer callback error:`, error)
+      }
+    }, delay)
+    
+    // Registriere für automatisches Cleanup
+    cleanup.registerTimer(handle, `timer_${delay}ms`)
+    
+    return handle
+  }
+  
+  /**
+   * Stoppt alle Timer und führt Cleanup aus
+   */
+  async function executeCleanup(): Promise<void> {
+    if (!isActive.value) {
+      console.warn(`${dialogName}: Cleanup already called`)
+      return
+    }
+    
+    console.log(`${dialogName}: Cleanup - stopping all timers`)
+    isActive.value = false
+    
+    await cleanup.execute()
   }
   
   return {
     isActive,
     scheduleTimer,
-    cleanup,
+    cleanup: executeCleanup,
     checkIsActive: () => isActive.value
   }
 }
 ```
 
-**Verwendung im Pain Dialog:**
-
-```typescript
-// Timer-Tracking mit Cleanup-Logik
-const { isActive, scheduleTimer, cleanup: cleanupTimers } = useDialogTimerTracking({
-  onCleanup: () => {
-    autoMode.stop()
-  },
-  dialogName: 'PainDialog'
-})
-
-// Timer mit Prüfung erstellen
-scheduleTimer(() => {
-  if (state.value === 'subRegionView') {
-    autoMode.index.value = 0
-    autoMode.start(true)
-  }
-}, 3000)
-
-// Cleanup beim Verlassen des Dialogs
-onUnmounted(() => {
-  cleanupTimers()
-})
-```
-
-Diese Implementierung stellt sicher, dass:
-1. Alle Timer automatisch getrackt werden
-2. Timer-Callbacks nur ausgeführt werden, wenn der Dialog noch aktiv ist
-3. Alle Timer beim Cleanup gestoppt werden, um Memory Leaks zu vermeiden
-4. AutoMode nicht gestartet wird, wenn der Dialog bereits verlassen wurde
+**Vorteile der neuen Implementierung:**
+1. **Automatisches Timer-Tracking**: `useCleanup` trackt alle Timer automatisch
+2. **Vereinfachte API**: Keine manuelle Timer-Liste mehr nötig
+3. **Automatisches Cleanup**: Timer werden automatisch beim Component-Unmount bereinigt
+4. **Konsistente Patterns**: Nutzt die gleichen Utilities wie der Rest der Anwendung
+5. **Weniger Code**: ~50 Zeilen Code reduziert
 
 ## 6.6 Router-basierte Navigation
 
@@ -657,6 +795,16 @@ Diese Implementierung stellt sicher, dass:
 Die Navigation wurde vollständig auf Vue Router umgestellt, was eine saubere, deklarative Navigation ermöglicht. Jeder Dialog hat seine eigene Route, was die Navigation vorhersagbar und testbar macht.
 
 Der Router verwendet History Mode für saubere URLs ohne Hash. Die Routen sind klar strukturiert und folgen einem konsistenten Namensschema.
+
+**Aktuelle Routes:**
+- `/` - StartView (Startseite)
+- `/app` - HomeView (Hauptmenü)
+- `/warning` - WarningView (Warngeräusch)
+- `/communication` - CommunicationView (Virtuelles Keyboard)
+- `/pain-dialog` - PainDialogView (Schmerz-Assessment)
+- `/self-dialog` - SelfDialogView (Ich-Ausdrücke)
+- `/environment-dialog` - EnvironmentDialogView (Umgebungs-Ausdrücke)
+- `/settings` - SettingsDialogView (Einstellungen)
 
 ### 6.6.2 Navigation Guards mit Cleanup
 
@@ -685,16 +833,16 @@ Die Funktion stoppt:
 Die Anwendung unterscheidet zwischen **Dialog-Systemen** (mit hierarchischer Satzbildung) und **anderen Views** (ohne Dialog-Struktur):
 
 **Dialog-Systeme** (mit State Machines und hierarchischer Satzbildung):
-- **PainDialogView** (`/schmerz`, `/pain-dialog`) - Schmerz-Assessment mit hierarchischer Navigation
-- **IchDialogView** (`/ich-dialog`) - Ich-Ausdrücke mit Kategorien und Unterkategorien
-- **UmgebungDialogView** (`/umgebung-dialog`) - Umgebungs-Ausdrücke mit Objekten und Verben
-- **SettingsDialogView** (`/einstellungen`) - Einstellungen mit konsolidiertem Dialog-System
+- **PainDialogView** (`/pain-dialog`) - Schmerz-Assessment mit hierarchischer Navigation
+- **SelfDialogView** (`/self-dialog`) - Ich-Ausdrücke mit Kategorien und Unterkategorien
+- **EnvironmentDialogView** (`/environment-dialog`) - Umgebungs-Ausdrücke mit Objekten und Verben
+- **SettingsDialogView** (`/settings`) - Einstellungen mit konsolidiertem Dialog-System
 
 **Andere Views** (ohne Dialog-Struktur):
 - **StartView** (`/`) - Startseite der Anwendung
 - **HomeView** (`/app`) - Hauptmenü/Navigation (kein Dialog-System)
 - **WarningView** (`/warning`) - Warngeräusch-Funktionalität
-- **UnterhaltenView** (`/unterhalten`) - Virtuelles Keyboard für freie Kommunikation
+- **CommunicationView** (`/communication`) - Virtuelles Keyboard für freie Kommunikation
 
 ### 6.7.2 Einheitliche Dialog-Systeme
 
@@ -718,10 +866,24 @@ Jeder Dialog verfügt über eine konsistente Struktur und nutzt das gleiche CSS-
 
 Jeder Dialog verwendet eine State Machine, die den Flow durch die verschiedenen Schritte verwaltet. Die State Machine ist vollständig typisiert und bietet Methoden zum Wechseln zwischen States.
 
-Die State Machine ist als Composable implementiert (z.B. `usePainDialogMachine`, `useIchDialogMachine`, `useUmgebungDialogMachine`), das alle State-Transitions und -Logik kapselt. Dies macht die Dialog-Logik testbar und wartbar.
+Die State Machine ist als Composable implementiert. Es gibt zwei Arten von Dialog-Machines:
+- **Spezifische Dialog-Machines**: `usePainDialogMachine` (für Pain Dialog mit spezieller Pain Scale Logik)
+- **Shared Dialog Machine**: `useDialogMachine` (wiederverwendbare Basis für SelfDialog und EnvironmentDialog)
+- **Spezifische Implementierungen**: `useSelfDialogMachine` und `useEnvironmentDialogMachine` nutzen `useDialogMachine` als Basis
+
+Dies macht die Dialog-Logik testbar und wartbar, während Code-Duplikation durch das shared `useDialogMachine` Composable vermieden wird.
 
 **Konkrete Implementierung:**
 
+**Shared Dialog Machine (`useDialogMachine`):**
+Das shared Composable (`src/shared/composables/useDialogMachine.ts`) wird von SelfDialog und EnvironmentDialog verwendet und bietet eine wiederverwendbare Basis für Dialog-State-Machines. Es kapselt:
+- Cancellation Token Support
+- AutoMode-Koordination
+- Navigation-Handling
+- Confirmation-Flow
+- Timer-Tracking
+
+**Spezifische Dialog Machines:**
 Die Pain Dialog State Machine (`src/features/pain-assessment/composables/usePainDialogMachine.ts`) implementiert einen klaren State-Flow:
 
 ```typescript
@@ -1114,19 +1276,108 @@ Eine innovative Funktionalität ist die Unterstützung für einzelne Augen-Blinz
 
 Die Implementierung verwendet eine separate Dauer von 1,5 Sekunden für einzelne Augen-Blinzeln, um versehentliche Auslösungen zu vermeiden. Das `useSingleEyeBlinkHandler` Composable bietet eine saubere Schnittstelle für die Verwendung dieser Funktionalität.
 
-### 6.14.2 Dialog Timer Tracking
+### 6.14.2 Event-Konstanten (EVENTS) und Timing-Konstanten (TIMING)
 
-Ein innovatives Timer-Tracking-System wurde implementiert, das verhindert, dass Timer im Hintergrund weiterlaufen, wenn ein Dialog verlassen wird. Das `useDialogTimerTracking` Composable trackt alle Timer und stoppt sie automatisch beim Cleanup.
+Ein zentrales Event-Konstanten-System wurde implementiert, das alle Magic Strings im Codebase eliminiert. Statt String-Literale wie `'faceBlinkDetected'` werden jetzt typisierte Konstanten verwendet.
 
-Dies verhindert Memory Leaks und gewährleistet, dass keine Timer im Hintergrund weiterlaufen, wenn ein Dialog verlassen wird. Dies ist besonders wichtig für AutoMode-Timer, die sonst im Hintergrund weiterlaufen könnten.
+Zusätzlich wurden Timing-Konstanten implementiert, die alle Magic Numbers für Delays, Timeouts und Intervalle zentralisieren.
 
-### 6.14.3 Router Guards mit automatischem Cleanup
+**Konkrete Implementierung:**
+
+Die `EVENTS` Konstanten (`src/shared/constants/events.ts`) definieren alle Event-Namen:
+
+```typescript
+export const EVENTS = {
+  /**
+   * Face Recognition Events
+   */
+  FACE_BLINK_DETECTED: 'faceBlinkDetected',
+  FACE_SINGLE_EYE_BLINK_DETECTED: 'faceSingleEyeBlinkDetected',
+  
+  /**
+   * Input Events
+   */
+  INPUT_SELECT: 'inputSelect',
+  INPUT_CANCEL: 'inputCancel',
+  
+  /**
+   * TTS Events
+   */
+  TTS_START: 'ttsStart',
+  TTS_END: 'ttsEnd',
+  TTS_ERROR: 'ttsError',
+  
+  /**
+   * AutoMode Events
+   */
+  AUTO_MODE_START: 'autoModeStart',
+  AUTO_MODE_STOP: 'autoModeStop',
+} as const
+
+// Typisierte Event-Namen
+export type EventName = typeof EVENTS[keyof typeof EVENTS]
+```
+
+**Verwendung:**
+
+```typescript
+// Statt Magic String
+window.addEventListener('faceBlinkDetected', handler)
+
+// Jetzt mit Konstanten
+import { EVENTS } from '../shared/constants/events'
+window.addEventListener(EVENTS.FACE_BLINK_DETECTED, handler)
+```
+
+**Timing-Konstanten:**
+
+Die `TIMING` Konstanten (`src/shared/constants/timing.ts`) definieren alle Timing-Werte:
+
+```typescript
+export const TIMING = {
+  TTS: {
+    DEFAULT_TIMEOUT: 10000,
+    RETRY_DELAY: 1000,
+    MAX_RETRIES: 3,
+    EMPTY_TEXT_DELAY: 500
+  },
+  AUTO_MODE: {
+    INITIAL_DELAY: 3000,
+    CYCLE_DELAY: 3000,
+    RETRY_DELAY: 100
+  },
+  INPUT: {
+    BLINK_COOLDOWN: 300,
+    SINGLE_EYE_COOLDOWN: 500,
+    TOUCH_SWIPE_THRESHOLD: 50,
+    TOUCH_DURATION_MAX: 500
+  },
+  DIALOG: {
+    CONFIRMATION_RESET_DELAY: 3000,
+    AUTO_MODE_START_DELAY: 3000,
+    TRANSITION_DELAY: 300
+  }
+} as const
+```
+
+**Vorteile:**
+1. **Typsicherheit**: TypeScript kann Event-Namen und Timing-Werte validieren
+2. **Refactoring-sicher**: Umbenennungen werden automatisch überall aktualisiert
+3. **Keine Tippfehler**: Compiler fängt falsche Event-Namen und Magic Numbers ab
+4. **Zentrale Verwaltung**: Alle Event-Namen und Timing-Werte an einem Ort
+5. **Konsistenz**: Einheitliche Timing-Werte im gesamten Codebase
+
+### 6.14.3 Dialog Timer Tracking mit TimerManager
+
+Das Dialog Timer Tracking System nutzt jetzt `TimerManager` und `UnifiedCleanup` für vereinfachte Implementierung und automatisches Cleanup. Dies verhindert Memory Leaks und gewährleistet, dass keine Timer im Hintergrund weiterlaufen, wenn ein Dialog verlassen wird.
+
+### 6.14.4 Router Guards mit automatischem Cleanup
 
 Navigation Guards wurden implementiert, die automatisch alle laufenden Services stoppen, wenn zwischen Routen navigiert wird. Dies verhindert, dass Views im Hintergrund weiterlaufen und stellt sicher, dass alle Ressourcen korrekt bereinigt werden.
 
 Die Guards rufen auch View-spezifische Cleanup-Funktionen auf, die in `window` gespeichert sind. Dies ermöglicht es jedem View, seine eigenen Ressourcen zu bereinigen.
 
-### 6.14.4 Zentrale Service-Verwaltung
+### 6.14.5 Zentrale Service-Verwaltung
 
 Die `App.vue` Komponente bietet eine zentrale `stopAllServices()` Funktion, die alle laufenden Services stoppt. Diese Funktion wird vor jeder Navigation aufgerufen und stellt sicher, dass keine Services im Hintergrund weiterlaufen.
 
@@ -1136,87 +1387,266 @@ Die Funktion stoppt:
 - Alle Timer
 - Alle View-spezifischen Cleanup-Funktionen
 
-### 6.14.5 Präzise TTS-AutoMode-Synchronisation
+### 6.14.6 Präzise TTS-AutoMode-Synchronisation
 
 Die präzise Synchronisation zwischen TTS und AutoMode ist ein Alleinstellungsmerkmal. Das System wartet, bis die Sprachausgabe vollständig abgeschlossen ist, bevor es zum nächsten Item wechselt, was eine flüssige, vorhersagbare Benutzererfahrung gewährleistet.
 
-### 6.14.6 Einheitliche Dialog-Architektur
+### 6.14.7 Einheitliche Dialog-Architektur
 
 Die einheitliche Dialog-Architektur mit State Machines ist ein Alleinstellungsmerkmal. Alle Dialoge verwenden die gleiche Struktur und Logik, was eine konsistente Benutzererfahrung und einfache Wartbarkeit gewährleistet.
 
-### 6.14.7 Modulares Composable-System
+### 6.14.8 Modulares Service- und Composable-System
 
-Das modulare Composable-System ermöglicht es, komplexe Funktionalitäten einfach zu kombinieren und wiederzuverwenden. Composables wie `useTTS`, `useAutoMode`, `useInputManager`, `useSingleEyeBlinkHandler` und `useDialogTimerTracking` können in jedem Feature verwendet werden, ohne Code zu duplizieren.
+Das modulare System besteht aus zentralen Services und wiederverwendbaren Composables:
 
-### 6.14.8 3D-Karussell für Mobile
+**Zentrale Services:**
+- **TTSService**: Zentrale TTS-Logik für alle Komponenten (SpeechSynthesis API)
+- **TimerManager**: Vereinheitlichtes Timer-Management
+- **SimpleFlowController**: Zentrale Flow-Verwaltung für HomeView-Navigation
+- **InputManager**: Zentrale Input-Abstraktion für alle Eingabemethoden
+- **ViewCleanupRegistry**: View-scoped Cleanup für Navigation
+
+**Composables:**
+- **useAutoMode**: Wiederverwendbares AutoMode-System
+- **useInputManager**: Vue Composable für InputManager (wird in allen Views verwendet)
+- **useFaceRecognition**: Gesichtserkennung
+- **useSingleEyeBlinkHandler**: Einzelne Augen-Blinzeln
+- **useDialogTimerTracking**: Dialog Timer Tracking
+- **useCleanup**: Component-scoped Cleanup
+
+Diese Services und Composables können in jedem Feature verwendet werden, ohne Code zu duplizieren. Die zentralen Services eliminieren Duplikation, während die Composables wiederverwendbare Logik kapseln.
+
+### 6.14.9 3D-Karussell für Mobile
 
 Das innovative 3D-Karussell-System für mobile Geräte bietet eine moderne, ansprechende Benutzererfahrung. Das Karussell verwendet CSS 3D-Transforms für realistische 3D-Effekte und unterstützt Touch-Gesten für intuitive Navigation.
 
-### 6.14.9 Zentrale Input-Abstraktion
+### 6.14.10 Zentrale Input-Abstraktion mit InputManager
 
-Die zentrale Input-Abstraktion ermöglicht es, alle Eingabemethoden (Blinzeln, Mausklick, Touch) über eine einheitliche Schnittstelle zu behandeln. Dies vereinfacht die Code-Logik erheblich und macht die Anwendung robuster.
+Die zentrale Input-Abstraktion über den **InputManager** ermöglicht es, alle Eingabemethoden (Blinzeln, Mausklick, Touch, alternative Sensoren) über eine einheitliche Schnittstelle zu behandeln. **Alle Views** nutzen den InputManager, was eine konsistente Input-Behandlung gewährleistet. Dies vereinfacht die Code-Logik erheblich und macht die Anwendung robuster.
 
-### 6.14.10 Dictionary-System für dynamische Texte
+**Alternative Sensoren:**
+Der InputManager unterstützt alternative Eingabegeräte (wie Balldrucksensor) über den Rechtsklick-Mechanismus. Die Architektur ermöglicht es, Hardware-Sensoren später ohne strukturellen Umbau zu integrieren.
+
+### 6.14.11 Dictionary-System für dynamische Texte
 
 Das Dictionary-System ermöglicht es, alle Texte und Grammatik-Regeln zentral zu verwalten. Jeder Dialog hat sein eigenes Dictionary, das Methoden zum Generieren von Titeln, Bestätigungstexten und anderen dynamischen Texten bietet.
 
-### 6.14.11 Theme-System mit CSS Custom Properties
+### 6.14.12 Theme-System mit CSS Custom Properties
 
 Das umfassende Theme-System mit CSS Custom Properties ermöglicht es, das gesamte Design einfach anzupassen. Alle Farben, Abstände und Schriftgrößen werden als CSS-Variablen definiert, die einfach geändert werden können.
 
-### 6.14.12 SimpleFlowController für zentrale Service-Verwaltung
+### 6.14.13 Zentrale Service-Architektur
 
-Der SimpleFlowController bietet eine zentrale Verwaltung für TTS, AutoMode und andere Services. Dies gewährleistet eine konsistente Behandlung aller Services und verhindert Konflikte zwischen verschiedenen Komponenten.
+Die Anwendung nutzt eine zentrale Service-Architektur mit mehreren Ebenen:
 
-## 6.15 Stop Handler und Cleanup-System
+**Core Services:**
+- **TTSService**: Zentrale TTS-Logik (SpeechSynthesis API, ersetzt duplizierte TTS-Implementierungen)
+- **TimerManager**: Vereinheitlichtes Timer-Management (ersetzt `setTimeout`/`setInterval` überall)
+- **SimpleFlowController**: Zentrale Queue-Verwaltung für HomeView-Navigation (Singleton)
+- **InputManager**: Zentrale Input-Abstraktion (wird in allen Views verwendet, unterstützt alternative Sensoren)
 
-### 6.15.1 Umfassendes Stop-Handler-System
+**Utilities:**
+- **UnifiedCleanup**: Vereinheitlichtes Cleanup-System (CleanupCoordinator + ViewCleanupRegistry)
+- **EVENTS**: Event-Konstanten (eliminiert Magic Strings)
+- **TIMING**: Timing-Konstanten (eliminiert Magic Numbers)
 
-Ein umfassendes Stop-Handler-System wurde implementiert, das sicherstellt, dass alle laufenden Prozesse korrekt gestoppt werden, wenn eine Komponente unmounted wird oder der Benutzer zu einer anderen Route navigiert.
+Diese Architektur gewährleistet:
+1. **Keine Code-Duplikation**: TTS, Timer, Cleanup sind zentralisiert
+2. **Konsistente Patterns**: Alle Komponenten nutzen die gleichen Utilities
+3. **Typsicherheit**: Alle Services sind vollständig typisiert
+4. **Einfache Wartbarkeit**: Änderungen an einem zentralen Ort wirken sich überall aus
+5. **Memory Leak Prevention**: Automatisches Tracking und Cleanup
 
-Das System stoppt automatisch:
-- **TTS (Text-to-Speech)**: Alle laufenden Sprachausgaben werden sofort beendet
-- **AutoMode**: Alle laufenden AutoMode-Zyklen werden gestoppt
-- **Timer**: Alle laufenden Timer werden bereinigt
-- **Event Listener**: Alle Event Listener werden entfernt
-- **Face Recognition**: Wird nur gestoppt, wenn explizit gewünscht (normalerweise läuft sie seitenübergreifend)
+## 6.15 Unified Cleanup System
 
-### 6.15.2 SimpleFlowController Stop-Methoden
+### 6.15.1 Zentrale Cleanup-Architektur
 
-Der SimpleFlowController bietet mehrere Stop-Methoden für verschiedene Szenarien:
+Ein umfassendes `UnifiedCleanup` System wurde implementiert, das alle Cleanup-Patterns vereinheitlicht. Das System besteht aus:
 
-**`stopTTS()`**: Stoppt TTS komplett und leert die TTS-Queue. Wird verwendet, wenn explizit alle TTS-Ausgaben beendet werden sollen.
+1. **CleanupCoordinator**: Basis-Implementierung für scoped Cleanup
+2. **ViewCleanupRegistry**: View-scoped Cleanup für Navigation
+3. **useCleanup**: Vue Composable für Component-scoped Cleanup
 
-**`stopTTSOnly()`**: Stoppt nur die aktuelle TTS-Ausgabe, behält aber die Queue bei. Wird verwendet für sanfte Übergänge zwischen States.
+**Konkrete Implementierung:**
 
-**`stopAutoMode()`**: Stoppt AutoMode komplett und bereinigt alle Timer. Wird verwendet, wenn AutoMode explizit beendet werden soll.
+Das `UnifiedCleanup` System (`src/shared/utils/UnifiedCleanup.ts`) bietet drei Ebenen:
 
-**`setActiveView()`**: Setzt den aktiven View und stoppt automatisch alle laufenden Prozesse. Wird verwendet, wenn zu einer neuen Route navigiert wird.
+```typescript
+/**
+ * CleanupCoordinator - Basis für alle Cleanup-Operationen
+ */
+export class CleanupCoordinator implements CleanupScope {
+  private cleanups = new Map<string, CleanupFunction>()
+  private cleanedUp = false
 
-### 6.15.3 Lifecycle-basiertes Cleanup
+  /**
+   * Registriert Cleanup-Funktion
+   */
+  register(cleanup: CleanupFunction, name?: string): void {
+    if (this.cleanedUp) {
+      console.warn(`${this.context}: Already cleaned up, ignoring registration`)
+      return
+    }
+    const cleanupName = name ?? `cleanup_${++this.cleanupCount}`
+    this.cleanups.set(cleanupName, cleanup)
+  }
 
-Alle Komponenten implementieren umfassendes Cleanup in den `onUnmounted` Lifecycle Hooks. Wenn eine Komponente unmounted wird, werden automatisch alle Ressourcen bereinigt:
+  /**
+   * Führt alle Cleanups aus
+   */
+  async execute(): Promise<void> {
+    if (this.cleanedUp) return
+    
+    this.cleanedUp = true
+    const errors: Array<{ name: string; error: unknown }> = []
+    
+    // Führe alle Cleanups parallel mit Timeout aus
+    const cleanupPromises = Array.from(this.cleanups.entries()).map(
+      async ([name, cleanup]) => {
+        try {
+          await this.executeWithTimeout(cleanup, name, 1000)
+        } catch (error) {
+          errors.push({ name, error })
+        }
+      }
+    )
+    
+    await Promise.allSettled(cleanupPromises)
+    this.cleanups.clear()
+  }
 
-- Event Listener werden entfernt
-- Timer werden gestoppt
-- TTS wird beendet
-- AutoMode wird gestoppt
-- Subscriptions werden gekündigt
+  /**
+   * Shortcuts für häufige Cleanup-Typen
+   */
+  registerTimer(handle: TimerHandle, name?: string): void {
+    this.register(() => handle.cancel(), name ?? 'timer')
+  }
 
-Dies verhindert Memory Leaks und gewährleistet, dass die Anwendung auch bei langen Sitzungen stabil bleibt.
+  registerEventListener(
+    target: EventTarget,
+    event: string,
+    handler: EventListener,
+    name?: string
+  ): void {
+    this.register(
+      () => target.removeEventListener(event, handler),
+      name ?? `event_${event}`
+    )
+  }
+}
 
-### 6.15.4 Navigation Guards
+/**
+ * ViewCleanupRegistry - View-scoped Cleanup für Navigation
+ */
+class ViewCleanup {
+  private coordinators = new Map<string, CleanupCoordinator>()
 
-Navigation Guards wurden implementiert, die sicherstellen, dass alle laufenden Prozesse gestoppt werden, bevor zu einer neuen Route navigiert wird. Der Router bietet eine `beforeEach` Guard, die explizit alle Services stoppt:
+  register(viewName: string, cleanup: CleanupFunction): void {
+    const coordinator = this.getOrCreate(viewName)
+    coordinator.register(cleanup, `${viewName}-cleanup`)
+  }
 
-- Stoppt alle TTS-Ausgaben
-- Stoppt AutoMode
-- Ruft View-spezifische Cleanup-Funktionen auf
-- Stoppt alle globalen Timer
+  async cleanup(viewName: string): Promise<void> {
+    const coordinator = this.coordinators.get(viewName)
+    if (!coordinator) return
+    
+    await coordinator.execute()
+    this.coordinators.delete(viewName)
+  }
+}
 
-### 6.15.5 Dialog-spezifische Stop-Handler
+/**
+ * Vue Composable für Component-scoped Cleanup
+ */
+export function useCleanup(context: string = 'Component'): CleanupScope {
+  const coordinator = new CleanupCoordinator(context)
 
-Jeder Dialog implementiert seine eigenen Stop-Handler, die spezifisch für die Funktionalität des Dialogs sind. Alle Dialoge verwenden das `useDialogTimerTracking` Composable, das automatisch alle Timer trackt und beim Cleanup stoppt.
+  onUnmounted(() => {
+    // onUnmounted kann nicht async sein - führe Cleanup im Hintergrund aus
+    coordinator.execute().catch(error => {
+      console.error(`${context}: Cleanup error in onUnmounted:`, error)
+    })
+  })
+
+  return coordinator
+}
+
+export const ViewCleanupRegistry = new ViewCleanup()
+```
+
+### 6.15.2 Verwendung in Views
+
+Alle Views registrieren ihre Cleanup-Funktionen in `onMounted`:
+
+```typescript
+// WarningView.vue
+onMounted(async () => {
+  const cleanupEventListeners = await setupWarningSystem()
+  
+  // Registriere Cleanup in UnifiedCleanup
+  ViewCleanupRegistry.register('warning', async () => {
+    if (cleanupEventListeners) {
+      cleanupEventListeners()
+    }
+    cleanup()
+  })
+})
+
+onUnmounted(() => {
+  // Fallback-Cleanup (Router-Guard räumt normalerweise auf)
+  if (ViewCleanupRegistry.hasCleanup('warning')) {
+    ViewCleanupRegistry.cleanup('warning').catch(error => {
+      console.error('WarningView: Cleanup error:', error)
+    })
+  }
+})
+```
+
+### 6.15.3 Router Guards mit UnifiedCleanup
+
+Der Router nutzt `ViewCleanupRegistry` für automatisches Cleanup:
+
+```typescript
+router.beforeEach(async (to, from, next) => {
+  if (from.name && from.name !== to.name) {
+    // View räumt sich selbst auf via UnifiedCleanup
+    const fromName = String(from.name)
+    await ViewCleanupRegistry.cleanup(fromName)
+    
+    // Global State zurücksetzen
+    simpleFlowController.setActiveView('')
+    
+    next()
+  } else {
+    next()
+  }
+})
+```
+
+### 6.15.4 Component-scoped Cleanup
+
+Composables nutzen `useCleanup` für automatisches Cleanup:
+
+```typescript
+// useDialogTimerTracking.ts
+export function useDialogTimerTracking(config: DialogTimerTrackingConfig = {}) {
+  const cleanup = useCleanup(dialogName)
+  
+  // Timer automatisch registrieren
+  const handle = timerManager.setTimeout(callback, delay)
+  cleanup.registerTimer(handle, `timer_${delay}ms`)
+  
+  // Event Listener automatisch registrieren
+  cleanup.registerEventListener(window, 'resize', handler, 'resize')
+}
+```
+
+**Vorteile:**
+1. **Einheitliches Pattern**: Alle Cleanup-Operationen nutzen die gleiche API
+2. **Automatisches Tracking**: Timer, Event Listener, etc. werden automatisch getrackt
+3. **Fehlerbehandlung**: Timeouts und Error-Handling sind eingebaut
+4. **Memory Leak Prevention**: Automatische Bereinigung beim Component-Unmount
+5. **View-scoped Cleanup**: Router-Guards können Views automatisch aufräumen
 
 ## 6.16 Stumm-Modus (Mute-Funktionalität)
 
@@ -1337,6 +1767,10 @@ Die Warning View bietet folgende spezifische Features:
 
 **AudioContext Management**: Sauberes Management des Web Audio API AudioContext mit korrektem Cleanup.
 
+**iOS Safari Audio-Entlockung**: Spezielle Implementierung für iOS Safari, die den AudioContext bei der ersten User-Interaktion "entlockt". iOS Safari erfordert eine explizite User-Interaktion, bevor Audio abgespielt werden kann. Die Implementierung wartet aktiv, bis der AudioContext den State "running" erreicht, und spielt einen sehr kurzen, leisen Sound ab, um Audio zu aktivieren.
+
+**InputManager-Integration**: Die Warning View nutzt den zentralen InputManager (umgestellt von `useBlinkInput()`), was eine konsistente Input-Behandlung gewährleistet.
+
 **Auto-Reset**: Nach 2 Sekunden Pause nach Stoppen des Warngeräuschs kehrt AutoMode automatisch zurück.
 
 ### 6.18.6 Communication View Features
@@ -1353,13 +1787,36 @@ Die Communication View bietet folgende spezifische Features:
 
 **Keyboard-Design-Auswahl**: Benutzer können zwischen verschiedenen Keyboard-Layouts wählen.
 
+**InputManager-Integration**: Die Communication View nutzt den zentralen InputManager (umgestellt von `useBlinkInput()`), was eine konsistente Input-Behandlung gewährleistet.
+
 ## 6.19 Zusammenfassung
 
 Die Implementierung von Ratatosk Version 2.0 stellt eine vollständige Neuentwicklung dar, die auf modernen Web-Technologien und Best Practices basiert. Die modulare, feature-basierte Architektur ermöglicht eine saubere Trennung von Concerns und erleichtert die Wartbarkeit und Erweiterbarkeit erheblich.
 
-Die Verwendung von TypeScript, Vue 3 Composition API, Pinia und Vue Router gewährleistet eine robuste, typsichere und wartbare Codebasis. Die umfassende TTS-Integration, das wiederverwendbare AutoMode-System, die zentrale Input-Abstraktion und die innovativen Features wie einzelne Augen-Blinzeln als Shortcuts und Dialog Timer Tracking sind Alleinstellungsmerkmale, die die Benutzererfahrung erheblich verbessern.
+**Zentrale Architektur-Improvements:**
 
-Das responsive Design, das umfassende Accessibility-System und die Browser-Kompatibilität gewährleisten, dass die Anwendung auf allen Geräten und für alle Benutzer optimal funktioniert. Die besonderen Raffinessen wie der globale Service-Stopp, die Router Guards mit automatischem Cleanup, die präzise TTS-AutoMode-Synchronisation und das 3D-Karussell-System machen die Anwendung zu einer modernen, benutzerfreundlichen Lösung für assistive Kommunikation.
+Die Anwendung nutzt eine zentrale Service-Architektur mit:
+- **TTSService**: Eliminiert Code-Duplikation zwischen verschiedenen TTS-Implementierungen (SpeechSynthesis API)
+- **TimerManager**: Vereinheitlichtes Timer-Management verhindert Memory Leaks und Race Conditions
+- **SimpleFlowController**: Zentrale Flow-Verwaltung für HomeView-Navigation (Singleton)
+- **InputManager**: Zentrale Input-Abstraktion für alle Eingabemethoden (wird in allen Views verwendet, unterstützt alternative Sensoren)
+- **UnifiedCleanup**: Einheitliches Cleanup-System für Component- und View-scoped Ressourcen
+- **EVENTS**: Event-Konstanten eliminieren Magic Strings im gesamten Codebase
+- **TIMING**: Timing-Konstanten eliminieren Magic Numbers
 
-Die Implementierung folgt konsequent Clean Code Prinzipien und Best Practices, was eine hohe Code-Qualität und Wartbarkeit gewährleistet. Die umfassende Dokumentation, die TypeScript-Typsicherheit und die testbare Architektur machen die Anwendung zu einer soliden Basis für zukünftige Entwicklungen.
+Die Verwendung von TypeScript, Vue 3 Composition API, Pinia und Vue Router gewährleistet eine robuste, typsichere und wartbare Codebasis. Die zentrale Service-Architektur eliminiert Code-Duplikation und gewährleistet konsistente Patterns im gesamten Codebase.
+
+**Vollständige InputManager-Migration:**
+Alle Views nutzen jetzt den zentralen InputManager (inkl. WarningView und CommunicationView, die von `useBlinkInput()` migriert wurden). Dies gewährleistet eine konsistente Input-Behandlung über die gesamte Anwendung hinweg und ermöglicht die einfache Integration alternativer Sensoren (wie Balldrucksensor) ohne strukturellen Umbau.
+
+Die umfassende TTS-Integration über `TTSService` (SpeechSynthesis API), das wiederverwendbare AutoMode-System mit `TimerManager`, die zentrale Input-Abstraktion über `InputManager` (mit Unterstützung für alternative Sensoren), der `SimpleFlowController` für zentrale Flow-Verwaltung und die innovativen Features wie einzelne Augen-Blinzeln als Shortcuts sind Alleinstellungsmerkmale, die die Benutzererfahrung erheblich verbessern.
+
+**Besondere Implementierungen:**
+- **iOS Safari Audio-Entlockung**: Spezielle Implementierung für iOS Safari im WarningView, die den AudioContext bei der ersten User-Interaktion aktiviert
+- **Vollständige InputManager-Migration**: Alle Views nutzen jetzt den zentralen InputManager (inkl. WarningView und CommunicationView)
+- **Alternative Sensoren**: Rechtsklick-Mechanismus ermöglicht Hardware-Sensor-Integration ohne strukturellen Umbau
+
+Das responsive Design, das umfassende Accessibility-System und die Browser-Kompatibilität gewährleisten, dass die Anwendung auf allen Geräten und für alle Benutzer optimal funktioniert. Die besonderen Raffinessen wie das UnifiedCleanup-System, die Router Guards mit automatischem Cleanup, die präzise TTS-AutoMode-Synchronisation und das 3D-Karussell-System machen die Anwendung zu einer modernen, benutzerfreundlichen Lösung für assistive Kommunikation.
+
+Die Implementierung folgt konsequent Clean Code Prinzipien und Best Practices, was eine hohe Code-Qualität und Wartbarkeit gewährleistet. Die umfassende Dokumentation, die TypeScript-Typsicherheit, die zentrale Service-Architektur und die testbare Struktur machen die Anwendung zu einer soliden Basis für zukünftige Entwicklungen.
 

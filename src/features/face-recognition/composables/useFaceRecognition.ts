@@ -2,12 +2,13 @@ import { ref, onMounted, onUnmounted, readonly } from 'vue'
 import type { FaceRecognitionState, EyeState, FaceLandmarks } from '../../../shared/types/index'
 import { useSettingsStore } from '../../settings/stores/settings'
 import { createConfidence } from '../../../core/domain/types/Branded'
+import { EVENTS } from '../../../shared/constants/events'
 
 export function useFaceRecognition() {
-  // Settings Store
+  // Einstellungen-Store
   const settingsStore = useSettingsStore()
   
-  // State
+  // Zustand
   const isActive = ref(false)
   const isDetected = ref(false)
   const confidence = ref(createConfidence(0))
@@ -21,22 +22,22 @@ export function useFaceRecognition() {
   const error = ref<string | null>(null)
   const isLoading = ref(false)
 
-  // MediaPipe variables
+  // MediaPipe-Variablen
   let faceMesh: any = null
   let camera: any = null
   let videoElement: HTMLVideoElement | null = null
 
-  // Configuration (aus alter Version)
+  // Konfiguration (aus alter Version)
   const config = {
     maxNumFaces: 1,
     refineLandmarks: true,
     minDetectionConfidence: 0.5,
     minTrackingConfidence: 0.5,
-    faceFactor: 55, // Threshold for eye closure detection (aus alter Version)
+    faceFactor: 55, // Schwellenwert für Augenschluss-Erkennung (aus alter Version)
     time_closed: () => settingsStore.settings.blinzeldauer || 0.7 // Dynamische Blinzeldauer aus Settings
   }
   
-  // Alte Version Parameter (mutable)
+  // Alte Versions-Parameter (mutable)
   let closed_frames = 0
   let eyes_closed = false
   
@@ -46,7 +47,7 @@ export function useFaceRecognition() {
   let left_eye_closed = false
   let right_eye_closed = false
 
-  // Eye detection landmarks (MediaPipe Face Mesh)
+  // Augen-Erkennungs-Landmarks (MediaPipe Face Mesh)
   const EYE_LANDMARKS = {
     LEFT_EYE: {
       TOP: 386,
@@ -62,7 +63,7 @@ export function useFaceRecognition() {
     }
   }
 
-  // Initialize MediaPipe
+  // Initialisiere MediaPipe
   async function initializeMediaPipe() {
     try {
       isLoading.value = true
@@ -92,7 +93,7 @@ export function useFaceRecognition() {
       const videoDevices = devices.filter(device => device.kind === 'videoinput')
       console.log('Verfügbare Kameras:', videoDevices.length)
 
-      // Create video element first
+      // Erstelle Video-Element zuerst
       videoElement = document.createElement('video')
       videoElement.style.display = 'none'
       document.body.appendChild(videoElement)
@@ -314,7 +315,7 @@ export function useFaceRecognition() {
         }
       }
 
-      // Try to initialize MediaPipe
+      // Versuche MediaPipe zu initialisieren
       try {
         const { FaceMesh } = await import('@mediapipe/face_mesh')
         const { Camera } = await import('@mediapipe/camera_utils')
@@ -374,7 +375,7 @@ export function useFaceRecognition() {
       // Alte Blinzel-Erkennung implementieren
       detectEyesOpenOldVersion(faceLandmarks)
 
-      // Detect eye state
+      // Erkenne Augen-Zustand
       const newEyeState = detectEyeState(faceLandmarks)
       eyeState.value = newEyeState
 
@@ -407,10 +408,10 @@ export function useFaceRecognition() {
     const right = landmarks[eyeLandmarks.RIGHT]
 
     if (!top || !bottom || !left || !right) {
-      return true // Default to open if landmarks not found
+      return true // Standard: offen wenn Landmarks nicht gefunden
     }
 
-    // Calculate eye height and width
+    // Berechne Augen-Höhe und -Breite
     const eyeHeight = Math.abs(top.y - bottom.y)
     const eyeWidth = Math.abs(left.x - right.x)
 
@@ -494,7 +495,7 @@ export function useFaceRecognition() {
       eyes_closed = true // Verhindert mehrfache Auslösung
       
       // Dispatch Blinzel-Event
-      const blinkEvent = new CustomEvent('faceBlinkDetected', {
+      const blinkEvent = new CustomEvent(EVENTS.FACE_BLINK_DETECTED, {
         detail: {
           timestamp: Date.now(),
           source: 'face-recognition',
@@ -516,7 +517,7 @@ export function useFaceRecognition() {
       left_eye_closed = true // Verhindert mehrfache Auslösung
       
       // Dispatch einseitiges Blinzel-Event (links)
-      const singleEyeBlinkEvent = new CustomEvent('faceSingleEyeBlinkDetected', {
+      const singleEyeBlinkEvent = new CustomEvent(EVENTS.FACE_SINGLE_EYE_BLINK_DETECTED, {
         detail: {
           timestamp: Date.now(),
           source: 'face-recognition',
@@ -535,7 +536,7 @@ export function useFaceRecognition() {
       right_eye_closed = true // Verhindert mehrfache Auslösung
       
       // Dispatch einseitiges Blinzel-Event (rechts)
-      const singleEyeBlinkEvent = new CustomEvent('faceSingleEyeBlinkDetected', {
+      const singleEyeBlinkEvent = new CustomEvent(EVENTS.FACE_SINGLE_EYE_BLINK_DETECTED, {
         detail: {
           timestamp: Date.now(),
           source: 'face-recognition',
@@ -590,7 +591,7 @@ export function useFaceRecognition() {
     Object.assign(config, newConfig)
   }
 
-  // Get current face recognition state
+  // Hole aktuellen Gesichtserkennungs-Zustand
   function getState(): FaceRecognitionState {
     return {
       isActive: isActive.value,
@@ -604,7 +605,7 @@ export function useFaceRecognition() {
     }
   }
 
-  // Check if both eyes are closed (for blink detection)
+  // Prüfe ob beide Augen geschlossen sind (für Blinzel-Erkennung)
   function isBlinking(): boolean {
     // Fallback: Wenn keine Kamera verfügbar ist, simuliere Blinzeln basierend auf Zeit
     if (error.value && error.value.includes('Fallback-Modus')) {
@@ -623,13 +624,13 @@ export function useFaceRecognition() {
     return !eyeState.value.left && !eyeState.value.right
   }
 
-  // Cleanup on unmount
+  // Aufräumen beim Unmount
   onUnmounted(() => {
     stop()
   })
 
   return {
-    // State
+    // Zustand
     isActive,
     isDetected,
     confidence,

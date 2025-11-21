@@ -199,7 +199,7 @@ const router = useRouter()
 // Face Recognition
 const faceRecognition = useFaceRecognition()
 
-// State
+// Zustand
 const cameraStatus = ref<'inactive' | 'loading' | 'active' | 'error'>('inactive')
 const error = ref<string | null>(null)
 const videoElement = ref<HTMLVideoElement | null>(null)
@@ -229,13 +229,13 @@ const autoModeConfig = {
 
 const autoMode = useAutoMode(autoModeConfig)
 
-// Input Manager für Blink-Erkennung
+// Input Manager für Blink-Erkennung und Rechtsklick (Balldrucksensor)
 const inputManager = useInputManager({
   onSelect: (event) => {
-    console.log('StartView: Blink detected - selecting option', autoMode.index.value)
+    console.log('StartView: Input detected - selecting option', autoMode.index.value, event.type)
     handleButtonClick(autoMode.index.value)
   },
-  enabledInputs: ['blink'],
+  enabledInputs: ['blink', 'click'],
   cooldown: 500
 })
 
@@ -250,7 +250,7 @@ const cameraStatusText = computed(() => {
   }
 })
 
-// Computed for error check
+// Berechnet für Fehlerprüfung
 const hasSafariError = computed(() => {
   const errorValue = faceRecognition.error.value
   return errorValue && typeof errorValue === 'string' && errorValue.includes('Safari')
@@ -348,14 +348,14 @@ watch(() => cameraStatus.value, (status) => {
   }
 })
 
-// Lifecycle
+// Lebenszyklus
 onMounted(async () => {
   console.log('StartView: Mounted')
   
-  // Auto-start camera if possible
+  // Starte Kamera automatisch falls möglich
   if (typeof navigator !== 'undefined' && navigator.mediaDevices && typeof navigator.mediaDevices.getUserMedia === 'function') {
     console.log('Kamera verfügbar - starte automatisch')
-    // Auto-start camera after a short delay
+    // Starte Kamera automatisch nach kurzer Verzögerung
     setTimeout(async () => {
       try {
         await startCamera()
@@ -372,10 +372,10 @@ onMounted(async () => {
 })
 
 onUnmounted(() => {
-  // Cleanup
+  // Aufräumen
   autoMode.stop()
   inputManager.stop()
-  // Face Recognition NICHT stoppen - sie soll seitenübergreifend laufen
+  // Gesichtserkennung NICHT stoppen - sie soll seitenübergreifend laufen
   // faceRecognition.stop()
 })
 </script>

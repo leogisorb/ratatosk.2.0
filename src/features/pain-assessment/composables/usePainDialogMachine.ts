@@ -87,7 +87,7 @@ export function usePainDialogMachine() {
     shouldConfirm: (state) => state === 'confirmation'
   })
 
-  // Expose state IDs as separate refs for backward compatibility
+  // Setze Zustands-IDs als separate Refs für Rückwärtskompatibilität
   const mainRegionId = computed(() => machine.stateIds.value[0] || null)
   const subRegionId = computed(() => machine.stateIds.value[1] || null)
   const painLevel = computed(() => {
@@ -98,7 +98,7 @@ export function usePainDialogMachine() {
     return isNaN(level) ? null : level
   })
 
-  // Legacy methods for backward compatibility with views
+  // Legacy-Methoden für Rückwärtskompatibilität mit Views
   const selectMainRegion = async (id: string) => {
     if (id === 'zurueck') return
     await machine.selectItem(id)
@@ -114,10 +114,10 @@ export function usePainDialogMachine() {
   }
 
   const selectPainLevel = async (level: number) => {
-    // Find pain level item by level value
+    // Finde Schmerzlevel-Item nach Level-Wert
     const painLevelItem = dict.painLevels.find(p => p.level === level)
     if (painLevelItem) {
-      // Convert id to string for stateIds
+      // Konvertiere ID zu String für stateIds
       await machine.selectItem(String(painLevelItem.id))
     }
   }

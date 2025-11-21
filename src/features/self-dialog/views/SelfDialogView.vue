@@ -139,7 +139,7 @@ import { useFaceRecognition } from '../../face-recognition/composables/useFaceRe
 import { useMobileDetection } from '../../../shared/composables/useMobileDetection'
 import AppHeader from '../../../shared/components/AppHeader.vue'
 import { debug, debugComponent, debugAutoMode } from '../../../shared/utils/debug'
-import { cleanupRegistry } from '../../../shared/utils/cleanupRegistry'
+import { ViewCleanupRegistry } from '../../../shared/utils/UnifiedCleanup'
 
 // ===== COMPOSABLES =====
 const machine = useSelfDialogMachine()
@@ -230,7 +230,7 @@ const handleContextMenu = (item: any, index: number) => {
     index,
     state: state.value 
   })
-  // Context menu handling if needed
+  // Kontextmenü-Behandlung falls nötig
 }
 
 const handleBackButton = () => {
@@ -317,27 +317,27 @@ onMounted(() => {
   debugComponent.lifecycle('SelfDialogView', 'mounted')
   debugComponent.props('SelfDialogView', { isMobile: isMobile.value })
   
-  // Register cleanup in registry (replaces window globals)
-  cleanupRegistry.register('self-dialog', async () => {
-    debug.log('IchDialog', 'Cleanup called via registry')
+  // Registriere Cleanup in UnifiedCleanup
+  ViewCleanupRegistry.register('self-dialog', async () => {
+    debug.log('IchDialog', 'Cleanup called via UnifiedCleanup')
     machine.cleanup()
     inputManager.stop()
   })
   
-  // Start Services NACH Cleanup-Registrierung
+  // Starte Dienste NACH Cleanup-Registrierung
   if (!faceRecognition.isActive.value) {
     debug.log('IchDialog', 'Starting face recognition')
     faceRecognition.start()
   }
   
-  // Reset index
+  // Setze Index zurück
   autoMode.index.value = 0
   
-  // Start AutoMode
+  // Starte Auto-Modus
   debugAutoMode.start(false)
   autoMode.start()
   
-  // Start Input Manager
+  // Starte Input-Manager
   debug.log('IchDialog', 'Starting Input Manager')
   inputManager.start()
 })
@@ -345,22 +345,27 @@ onMounted(() => {
 onUnmounted(() => {
   debugComponent.lifecycle('SelfDialogView', 'unmounted')
   
-  // Stop AutoMode
+  // Stoppe Auto-Modus
   debugAutoMode.stop()
   autoMode.stop()
   
-  // Stop Input Manager
+  // Stoppe Input-Manager
   debug.log('IchDialog', 'Stopping Input Manager')
   inputManager.stop()
   
-  // Stop Face Recognition
+  // Stoppe Gesichtserkennung
   if (faceRecognition.isActive.value) {
     debug.log('IchDialog', 'Stopping Face Recognition')
     faceRecognition.stop()
   }
   
-  // Unregister cleanup from registry
-  cleanupRegistry.unregister('self-dialog')
+  // Cleanup via UnifiedCleanup (nur wenn noch nicht aufgeräumt)
+  // Router-Guard räumt normalerweise auf, aber als Fallback hier auch
+  if (ViewCleanupRegistry.hasCleanup('self-dialog')) {
+    ViewCleanupRegistry.cleanup('self-dialog').catch(error => {
+      console.error('SelfDialog: Cleanup error:', error)
+    })
+  }
 })
 </script>
 

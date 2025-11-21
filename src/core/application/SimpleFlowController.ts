@@ -1,6 +1,11 @@
 // FlowController für die zentrale Steuerung von TTS und AutoMode
 
-// Named Constants für Magic Numbers
+import { timerManager } from '../../shared/utils/TimerManager'
+import type { TimerHandle } from '../../shared/utils/TimerManager'
+import { EVENTS } from '../../shared/constants/events'
+import { ttsService } from '../../shared/services/TTSService'
+
+// Benannte Konstanten für Magic Numbers
 const TTS_CONFIG = {
   CHECK_INTERVAL_MS: 100,
   PAUSE_BETWEEN_ITEMS_MS: 500,
@@ -21,28 +26,11 @@ const STORAGE_CONFIG = {
 } as const
 
 export class SimpleFlowController {
-  // Singleton mit besserer Typsicherheit (Lazy Initialization ohne null)
+  // Singleton mit besserer Typsicherheit (Verzögerte Initialisierung ohne null)
   private static instance: SimpleFlowController
   
-  // Error-Map statt Switch-Case für TTS Errors
-  private readonly TTS_ERROR_MESSAGES: Record<string, string> = {
-    'not-allowed': 'TTS not allowed - user interaction required',
-    'canceled': 'TTS canceled by browser',
-    'interrupted': 'TTS interrupted',
-    'audio-busy': 'Audio system busy',
-    'audio-hardware': 'Audio hardware error',
-    'network': 'Network error',
-    'synthesis-unavailable': 'Synthesis unavailable',
-    'synthesis-failed': 'Synthesis failed',
-    'language-unavailable': 'Language unavailable',
-    'voice-unavailable': 'Voice unavailable',
-    'text-too-long': 'Text too long',
-    'invalid-argument': 'Invalid argument'
-  }
   
-  private speechSynthesis: SpeechSynthesis
-  private currentUtterance: SpeechSynthesisUtterance | null = null
-  private autoModeInterval: number | null = null
+  private autoModeInterval: TimerHandle | null = null
   private currentView: string | null = null
   private currentItems: unknown[] = []
   private currentIndex: number = 0
@@ -57,12 +45,10 @@ export class SimpleFlowController {
   private isProcessingQueue: boolean = false
   private ttsEndListeners: (() => void)[] = []
   
-  // Cancellation Token für TTS Queue - verhindert Race Conditions
+  // Abbruch-Token für TTS-Warteschlange - verhindert Race Conditions
   private ttsQueueCancellation: AbortController | null = null
 
   private constructor() {
-    this.speechSynthesis = window.speechSynthesis
-    this.setupVoiceHandling()
     // Mute-State aus localStorage laden
     this.loadMuteState()
   }
@@ -126,7 +112,7 @@ export class SimpleFlowController {
     this.currentCycleDelay = cycleDelay
 
     // Starte Auto-Mode nach initialer Verzögerung
-    setTimeout(() => {
+    this.autoModeInterval = timerManager.setTimeout(() => {
       // Nochmal prüfen ob Auto-Mode noch aktiv sein soll
       if (this.isAutoModeActive) {
         this.executeCycle(cycleDelay)
@@ -141,7 +127,7 @@ export class SimpleFlowController {
    */
   public stopAutoMode(): void {
     if (this.autoModeInterval) {
-      clearTimeout(this.autoModeInterval)
+      this.autoModeInterval.cancel()
       this.autoModeInterval = null
     }
     this.isAutoModeActive = false
@@ -162,14 +148,14 @@ export class SimpleFlowController {
     const currentItem = this.currentItems[this.currentIndex]
     if (!currentItem) {
       console.error('SimpleFlowController: Item not found at index:', this.currentIndex)
-      this.currentIndex = 0 // Reset to beginning
-      this.autoModeInterval = window.setTimeout(() => {
+      this.currentIndex = 0 // Zurücksetzen auf Anfang
+      this.autoModeInterval = timerManager.setTimeout(() => {
         this.executeCycle(cycleDelay)
       }, cycleDelay)
       return
     }
 
-    // Type guard for items with title or text property
+    // Typ-Prüfung für Einträge mit title oder text Eigenschaft
     const itemTitle = (currentItem as any)?.title || (currentItem as any)?.text || 'Unknown'
     console.log('SimpleFlowController: Auto-mode cycle:', itemTitle, 'at index:', this.currentIndex)
     
@@ -195,7 +181,7 @@ export class SimpleFlowController {
     }
 
     // TTS ist fertig, plane nächsten Zyklus
-    this.autoModeInterval = window.setTimeout(() => {
+    this.autoModeInterval = timerManager.setTimeout(() => {
       this.executeCycle(cycleDelay)
     }, cycleDelay)
   }
@@ -239,8 +225,8 @@ export class SimpleFlowController {
     await this.queueAndSpeak(text)
   }
 
-  // TTS in Queue einreihen und verarbeiten
-  // Cancellation Token Pattern verhindert Race Conditions
+  // TTS in Warteschlange einreihen und verarbeiten
+  // Abbruch-Token-Pattern verhindert Race Conditions
   private async queueAndSpeak(text: string): Promise<void> {
     // Prüfe auf Duplikate in der Queue
     if (this.ttsQueue.includes(text)) {
@@ -259,55 +245,54 @@ export class SimpleFlowController {
   }
 
   /**
-   * Process TTS queue with cancellation support
+   * Verarbeite TTS-Warteschlange mit Abbruch-Unterstützung
    */
   private async processQueue(): Promise<void> {
     if (this.isProcessingQueue) return
 
     this.isProcessingQueue = true
     
-    // Create new cancellation token for this queue session
+    // Erstelle neues Abbruch-Token für diese Warteschlangen-Session
     this.ttsQueueCancellation = new AbortController()
     const signal = this.ttsQueueCancellation.signal
 
     try {
-      // Process all items in queue sequentially
+      // Verarbeite alle Einträge in der Warteschlange sequenziell
       while (this.ttsQueue.length > 0 && !signal.aborted) {
-        // Wait until previous TTS is finished
+        // Warte bis vorherige TTS fertig ist
         while (this.isSpeaking && !signal.aborted) {
           await this.delayWithCancellation(TTS_CONFIG.CHECK_INTERVAL_MS, signal)
         }
         
         if (signal.aborted) break
 
-        // Process next queue item
+        // Verarbeite nächsten Warteschlangen-Eintrag
         const text = this.ttsQueue.shift()!
         console.log('SimpleFlowController: Processing queue item:', text)
         
         try {
           await this.performSpeak(text, signal)
         } catch (error) {
-          if (error instanceof Error && error.name === 'AbortError') {
+          if (error instanceof DOMException && error.name === 'AbortError') {
             console.log('SimpleFlowController: TTS aborted during speak')
             break
           }
-          // "canceled" Fehler werden bereits in performSpeak als resolve behandelt
-          // Hier nur echte Fehler loggen
-          if (error instanceof Error && !error.message.includes('canceled')) {
+          // Echte Fehler loggen, aber weiter mit nächstem Eintrag
+          if (error instanceof Error && !error.message.includes('cancelled')) {
             console.error('SimpleFlowController: TTS error:', error)
           }
-          // Continue with next item even on error
+          // Weiter mit nächstem Eintrag auch bei Fehler
         }
 
         if (signal.aborted) break
         
-        // Pause between TTS items
+        // Pause zwischen TTS-Einträgen
         if (this.ttsQueue.length > 0) {
           await this.delayWithCancellation(TTS_CONFIG.PAUSE_BETWEEN_ITEMS_MS, signal)
         }
       }
       
-      // Trigger TTS end listeners if queue is completely processed
+      // Triggere TTS-Ende-Listener wenn Warteschlange vollständig verarbeitet ist
       if (this.ttsQueue.length === 0 && this.ttsEndListeners.length > 0 && !signal.aborted) {
         this.triggerTTSEndListeners()
       }
@@ -324,46 +309,27 @@ export class SimpleFlowController {
   }
 
   /**
-   * Delay with cancellation support
+   * Verzögerung mit Abbruch-Unterstützung
    */
   private delayWithCancellation(ms: number, signal: AbortSignal): Promise<void> {
-    return new Promise((resolve, reject) => {
-      if (signal.aborted) {
-        reject(new DOMException('Aborted', 'AbortError'))
-        return
-      }
-
-      const timeout = setTimeout(resolve, ms)
-
-      signal.addEventListener('abort', () => {
-        clearTimeout(timeout)
-        reject(new DOMException('Aborted', 'AbortError'))
-      }, { once: true })
-    })
+    return timerManager.delay(ms, signal)
   }
 
 
   /**
-   * TTS ausführen (Promise-basiert statt Callbacks)
-   * Can be cancelled via AbortController in queue processing
+   * TTS ausführen via TTSService
+   * Kann via AbortController in der Warteschlangen-Verarbeitung abgebrochen werden
    */
   private async performSpeak(text: string, signal?: AbortSignal): Promise<void> {
     console.log('SimpleFlowController: Speaking:', text)
     
     // Stoppe nur die aktuelle TTS, aber leere nicht die Queue
     this.stopTTSOnly()
-    await new Promise(resolve => setTimeout(resolve, TTS_CONFIG.RESTART_DELAY_MS))
+    await timerManager.delay(TTS_CONFIG.RESTART_DELAY_MS)
     
-    // Prüfe ob Speech Synthesis verfügbar ist
-    if (!this.speechSynthesis) {
-      console.warn('SimpleFlowController: Speech synthesis not available')
-      this.isSpeaking = false
-      return
-    }
-
-    // Prüfe Browser-Unterstützung
-    if (!('speechSynthesis' in window)) {
-      console.warn('SimpleFlowController: Speech synthesis not supported by browser')
+    // Prüfe TTS-Verfügbarkeit
+    if (!ttsService.isAvailable()) {
+      console.warn('SimpleFlowController: TTS not available')
       this.isSpeaking = false
       return
     }
@@ -371,151 +337,97 @@ export class SimpleFlowController {
     // Markiere als sprechend
     this.isSpeaking = true
 
-    // Erstelle neue TTS
-    this.currentUtterance = new SpeechSynthesisUtterance(text)
-    this.currentUtterance.lang = 'de-DE'
-    this.currentUtterance.rate = 0.8
-    this.currentUtterance.pitch = 1.0
-    this.currentUtterance.volume = this.isTTSMuted ? 0 : 0.8  // Lautstärke basierend auf Mute-Status
-
-    // Wähle Stimme
-    const voices = this.speechSynthesis.getVoices()
-    if (voices.length > 0) {
-      const germanVoice = voices.find(voice => 
-        voice.lang.startsWith('de') && voice.name.includes('Anna')
-      ) || voices.find(voice => voice.lang.startsWith('de'))
-
-      if (germanVoice) {
-        this.currentUtterance.voice = germanVoice
-      }
-    }
-
-    // Promise-basiertes TTS statt Callbacks
-    return new Promise((resolve, reject) => {
-      if (!this.currentUtterance) {
-        reject(new Error('Utterance not created'))
-        return
-      }
-
-      // Abort handler if signal provided
-      if (signal) {
-        const abortHandler = () => {
-          this.speechSynthesis.cancel()
+    try {
+      await ttsService.speak(text, {
+        lang: 'de-DE',
+        rate: 0.8,
+        pitch: 1.0,
+        volume: this.isTTSMuted ? 0 : 0.8
+      }, {
+        signal,
+        timeout: 10000,
+        onStart: () => {
+          console.log('SimpleFlowController: TTS started')
+        },
+        onEnd: () => {
+          console.log('SimpleFlowController: Finished speaking:', text)
           this.isSpeaking = false
-          reject(new DOMException('Aborted', 'AbortError'))
-        }
-        signal.addEventListener('abort', abortHandler, { once: true })
-      }
-
-      // Event-Handler
-      this.currentUtterance.onend = () => {
-        console.log('SimpleFlowController: Finished speaking:', text)
-        this.isSpeaking = false
-        
-        // Race Condition bei TTS + Auto-Mode vermeiden
-        // Atomare Prüfung und Update von pendingCycle
-        const wasPending = this.pendingCycle
-        const isAutoModeStillActive = this.isAutoModeActive
-        
-        if (wasPending && isAutoModeStillActive) {
-          // Atomare Update: Setze pendingCycle auf false
-          this.pendingCycle = false
-          console.log('SimpleFlowController: TTS finished, starting next cycle...')
           
-          // Starte nächsten Zyklus nach Delay
-          setTimeout(() => {
-            // Prüfe nochmal ob Auto-Mode noch aktiv (Race Condition Prevention)
-            if (this.isAutoModeActive) {
-              // Verwende den aktuellen cycleDelay
-              this.autoModeInterval = window.setTimeout(() => {
-                this.executeCycle(this.currentCycleDelay)
-              }, AUTO_MODE_CONFIG.CYCLE_POST_TTS_DELAY_MS)
-            }
-          }, AUTO_MODE_CONFIG.CYCLE_POST_TTS_DELAY_MS)
-        }
-        
-        // Prüfe ob TTS-Queue leer ist und triggere Listener
-        if (this.ttsQueue.length === 0 && this.ttsEndListeners.length > 0) {
-          this.triggerTTSEndListeners()
-        }
-        
-        resolve()
-      }
-
-      this.currentUtterance.onerror = (event) => {
-        this.isSpeaking = false
-        
-        // "canceled" ist kein echter Fehler - TTS wurde absichtlich abgebrochen (z.B. bei Navigation)
-        if (event.error === 'canceled') {
-          console.log('SimpleFlowController: TTS canceled by browser')
+          // Race Condition bei TTS + Auto-Mode vermeiden
+          // Atomare Prüfung und Update von pendingCycle
+          const wasPending = this.pendingCycle
+          const isAutoModeStillActive = this.isAutoModeActive
+          
+          if (wasPending && isAutoModeStillActive) {
+            // Atomare Update: Setze pendingCycle auf false
+            this.pendingCycle = false
+            console.log('SimpleFlowController: TTS finished, starting next cycle...')
+            
+            // Starte nächsten Zyklus nach Delay
+            timerManager.setTimeout(() => {
+              // Prüfe nochmal ob Auto-Mode noch aktiv (Race Condition Prevention)
+              if (this.isAutoModeActive) {
+                // Verwende den aktuellen cycleDelay
+                this.autoModeInterval = timerManager.setTimeout(() => {
+                  this.executeCycle(this.currentCycleDelay)
+                }, AUTO_MODE_CONFIG.CYCLE_POST_TTS_DELAY_MS)
+              }
+            }, AUTO_MODE_CONFIG.CYCLE_POST_TTS_DELAY_MS)
+          }
           
           // Prüfe ob TTS-Queue leer ist und triggere Listener
           if (this.ttsQueue.length === 0 && this.ttsEndListeners.length > 0) {
             this.triggerTTSEndListeners()
           }
+        },
+        onError: (error) => {
+          this.isSpeaking = false
+          console.warn('SimpleFlowController: TTS error:', error.message, 'for text:', text)
           
-          // Resolve statt reject - canceled ist kein Fehler
-          resolve()
-          return
+          // Spezielle Behandlung für not-allowed
+          if (error.message.includes('not-allowed')) {
+            this.requestUserInteraction()
+          }
+          
+          // Auch bei Fehlern prüfen ob TTS-Queue leer ist und Listener triggern
+          if (this.ttsQueue.length === 0 && this.ttsEndListeners.length > 0) {
+            this.triggerTTSEndListeners()
+          }
         }
-        
-        // Echte Fehler behandeln
-        const errorMessage = this.TTS_ERROR_MESSAGES[event.error] || `Unknown TTS error: ${event.error}`
-        console.warn('SimpleFlowController:', errorMessage, 'for text:', text)
-        
-        // Spezielle Behandlung für not-allowed
-        if (event.error === 'not-allowed') {
-          this.requestUserInteraction()
-        }
-        
-        // Auch bei Fehlern prüfen ob TTS-Queue leer ist und Listener triggern
+      })
+    } catch (error) {
+      this.isSpeaking = false
+      
+      // AbortError ist kein echter Fehler
+      if (error instanceof DOMException && error.name === 'AbortError') {
+        // Prüfe ob TTS-Queue leer ist und triggere Listener
         if (this.ttsQueue.length === 0 && this.ttsEndListeners.length > 0) {
           this.triggerTTSEndListeners()
         }
-        
-        reject(new Error(errorMessage))
+        return // Resolve silently
       }
-
-      // Starte TTS mit Fehlerbehandlung
-      try {
-        this.speechSynthesis.speak(this.currentUtterance)
-        
-        // Fallback: Wenn TTS nach Timeout nicht startet, markiere als fehlgeschlagen
-        setTimeout(() => {
-          if (this.isSpeaking && !this.speechSynthesis.speaking) {
-            console.warn('SimpleFlowController: TTS failed to start, marking as failed')
-            this.isSpeaking = false
-            reject(new Error('TTS failed to start'))
-          }
-        }, TTS_CONFIG.FALLBACK_TIMEOUT_MS)
-        
-      } catch (error) {
-        console.warn('SimpleFlowController: TTS blocked by browser:', error)
-        this.isSpeaking = false
-        reject(error instanceof Error ? error : new Error('TTS blocked by browser'))
-      }
-    })
+      
+      throw error
+    }
   }
 
   /**
    * Stoppt TTS und leert die Queue (nur bei explizitem Stoppen)
    */
   public stopTTS(): void {
-    if (this.speechSynthesis.speaking) {
-      this.speechSynthesis.cancel()
-      this.currentUtterance = null
-      this.isSpeaking = false
-      this.pendingCycle = false
-      console.log('SimpleFlowController: TTS stopped')
-    }
+    // Stoppe TTS via TTSService
+    ttsService.cancel()
+    this.isSpeaking = false
+    this.pendingCycle = false
+    console.log('SimpleFlowController: TTS stopped')
     
-    // Cancel queue processing with cancellation token
+    // Breche Warteschlangen-Verarbeitung mit Abbruch-Token ab
     if (this.ttsQueueCancellation) {
       this.ttsQueueCancellation.abort()
       this.ttsQueueCancellation = null
     }
     
-    // Clear queue
+    // Leere Warteschlange
     this.ttsQueue = []
     this.isProcessingQueue = false
     console.log('SimpleFlowController: TTS queue cleared (explicit stop)')
@@ -528,13 +440,11 @@ export class SimpleFlowController {
    * Stoppt TTS ohne Queue zu leeren (für sanfte Übergänge)
    */
   public stopTTSOnly(): void {
-    if (this.speechSynthesis.speaking) {
-      this.speechSynthesis.cancel()
-      this.currentUtterance = null
-      this.isSpeaking = false
-      this.pendingCycle = false
-      console.log('SimpleFlowController: TTS stopped (queue preserved)')
-    }
+    // Stoppe TTS via TTSService
+    ttsService.cancel()
+    this.isSpeaking = false
+    this.pendingCycle = false
+    console.log('SimpleFlowController: TTS stopped (queue preserved)')
   }
 
   /**
@@ -566,18 +476,18 @@ export class SimpleFlowController {
     }
     
     // Event Listener für User-Interaktion
-    document.addEventListener('click', enableTTS, { once: true })
-    document.addEventListener('touchstart', enableTTS, { once: true })
-    document.addEventListener('keydown', enableTTS, { once: true })
-    window.addEventListener('faceBlinkDetected', enableTTS, { once: true })
-    
-    // Fallback: Entferne Event Listener nach Timeout
-    setTimeout(() => {
-      document.removeEventListener('click', enableTTS)
-      document.removeEventListener('touchstart', enableTTS)
-      document.removeEventListener('keydown', enableTTS)
-      window.removeEventListener('faceBlinkDetected', enableTTS)
-    }, STORAGE_CONFIG.USER_INTERACTION_TIMEOUT_MS)
+      document.addEventListener('click', enableTTS, { once: true })
+      document.addEventListener('touchstart', enableTTS, { once: true })
+      document.addEventListener('keydown', enableTTS, { once: true })
+      window.addEventListener(EVENTS.FACE_BLINK_DETECTED, enableTTS, { once: true })
+      
+      // Fallback: Entferne Event Listener nach Timeout
+      timerManager.setTimeout(() => {
+        document.removeEventListener('click', enableTTS)
+        document.removeEventListener('touchstart', enableTTS)
+        document.removeEventListener('keydown', enableTTS)
+        window.removeEventListener(EVENTS.FACE_BLINK_DETECTED, enableTTS)
+      }, STORAGE_CONFIG.USER_INTERACTION_TIMEOUT_MS)
   }
 
   /**
@@ -638,47 +548,12 @@ export class SimpleFlowController {
       // Stoppe SimpleFlowController TTS
       this.stopTTSOnly()
       
-      // Auch alle anderen TTS stoppen (von useTTS Composables und direkten Aufrufen)
-      if (window.speechSynthesis) {
-        window.speechSynthesis.cancel()
-        console.log('SimpleFlowController: All TTS cancelled (muted)')
-      }
-    }
-    
-    // Sanftes Ausfaden der aktuellen TTS (falls noch aktiv)
-    if (this.currentUtterance) {
-      this.fadeVolume(muted ? 0 : 0.8)
+      // Stoppe alle TTS via TTSService
+      ttsService.cancel()
+      console.log('SimpleFlowController: All TTS cancelled (muted)')
     }
   }
 
-  /**
-   * Sanftes Ausfaden der Lautstärke
-   */
-  private fadeVolume(targetVolume: number): void {
-    if (!this.currentUtterance) return
-    
-    const currentVolume = this.currentUtterance.volume
-    const volumeStep = (targetVolume - currentVolume) / 20 // 20 Schritte für sanftes Fading
-    const fadeInterval = 50 // 50ms pro Schritt = 1 Sekunde total
-    
-    let step = 0
-    const fadeIntervalId = setInterval(() => {
-      step++
-      const newVolume = currentVolume + (volumeStep * step)
-      
-      if (this.currentUtterance) {
-        this.currentUtterance.volume = Math.max(0, Math.min(1, newVolume))
-      }
-      
-      if (step >= 20 || !this.currentUtterance) {
-        clearInterval(fadeIntervalId)
-        if (this.currentUtterance) {
-          this.currentUtterance.volume = targetVolume
-        }
-        console.log('SimpleFlowController: Volume fade completed to:', targetVolume)
-      }
-    }, fadeInterval)
-  }
 
   /**
    * Gibt zurück, ob TTS stumm geschaltet ist
@@ -687,22 +562,12 @@ export class SimpleFlowController {
     return this.isTTSMuted
   }
 
-  /**
-   * Setup für Voice-Handling
-   */
-  private setupVoiceHandling(): void {
-    if (this.speechSynthesis.getVoices().length === 0) {
-      this.speechSynthesis.addEventListener('voiceschanged', () => {
-        console.log('SimpleFlowController: Voices loaded')
-      })
-    }
-  }
 
   /**
    * Prüft TTS-Verfügbarkeit
    */
   public isTTSAvailable(): boolean {
-    return !!(this.speechSynthesis && 'speechSynthesis' in window)
+    return ttsService.isAvailable()
   }
 
   /**

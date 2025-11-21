@@ -194,7 +194,7 @@ import { useFaceRecognition } from '../../face-recognition/composables/useFaceRe
 import { useMobileDetection } from '../../../shared/composables/useMobileDetection'
 import AppHeader from '../../../shared/components/AppHeader.vue'
 import { debug, debugComponent, debugAutoMode } from '../../../shared/utils/debug'
-import { cleanupRegistry } from '../../../shared/utils/cleanupRegistry'
+import { ViewCleanupRegistry } from '../../../shared/utils/UnifiedCleanup'
 
 // ===== COMPOSABLES =====
 const machine = useEnvironmentDialogMachine()
@@ -375,27 +375,27 @@ onMounted(() => {
   debugComponent.lifecycle('EnvironmentDialogView', 'mounted')
   debugComponent.props('EnvironmentDialogView', { isMobile: isMobile.value })
   
-  // Register cleanup in registry (replaces window globals)
-  cleanupRegistry.register('environment-dialog', async () => {
-    debug.log('UmgebungDialog', 'Cleanup called via registry')
+  // Registriere Cleanup in UnifiedCleanup
+  ViewCleanupRegistry.register('environment-dialog', async () => {
+    debug.log('UmgebungDialog', 'Cleanup called via UnifiedCleanup')
     machine.cleanup()
     inputManager.stop()
   })
   
-  // Start Services NACH Cleanup-Registrierung
+  // Starte Dienste NACH Cleanup-Registrierung
   if (!faceRecognition.isActive.value) {
     debug.log('UmgebungDialog', 'Starting face recognition')
     faceRecognition.start()
   }
   
-  // Reset index
+  // Setze Index zurück
   autoMode.index.value = 0
   
-  // Start AutoMode
+  // Starte Auto-Modus
   debugAutoMode.start(false)
   autoMode.start()
   
-  // Start Input Manager
+  // Starte Input-Manager
   debug.log('UmgebungDialog', 'Starting Input Manager')
   inputManager.start()
 })
@@ -403,22 +403,27 @@ onMounted(() => {
 onUnmounted(() => {
   debugComponent.lifecycle('EnvironmentDialogView', 'unmounted')
   
-  // Stop AutoMode
+  // Stoppe Auto-Modus
   debugAutoMode.stop()
   autoMode.stop()
   
-  // Stop Input Manager
+  // Stoppe Input-Manager
   debug.log('UmgebungDialog', 'Stopping Input Manager')
   inputManager.stop()
   
-  // Stop Face Recognition
+  // Stoppe Gesichtserkennung
   if (faceRecognition.isActive.value) {
     debug.log('UmgebungDialog', 'Stopping Face Recognition')
     faceRecognition.stop()
   }
   
-  // Unregister cleanup from registry
-  cleanupRegistry.unregister('environment-dialog')
+  // Cleanup via UnifiedCleanup (nur wenn noch nicht aufgeräumt)
+  // Router-Guard räumt normalerweise auf, aber als Fallback hier auch
+  if (ViewCleanupRegistry.hasCleanup('environment-dialog')) {
+    ViewCleanupRegistry.cleanup('environment-dialog').catch(error => {
+      console.error('EnvironmentDialog: Cleanup error:', error)
+    })
+  }
 })
 </script>
 

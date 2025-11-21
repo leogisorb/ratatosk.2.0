@@ -19,7 +19,11 @@
  * ```
  */
 
-// Named Constants für Magic Numbers
+import { timerManager } from '../../shared/utils/TimerManager'
+import type { TimerHandle } from '../../shared/utils/TimerManager'
+import { EVENTS } from '../../shared/constants/events'
+
+// Benannte Konstanten für Magic Numbers
 const INPUT_CONFIG = {
   DEFAULT_COOLDOWN_MS: 300,
   EVENT_DEBOUNCE_MS: 100,
@@ -83,20 +87,20 @@ export class InputManager {
   private isActive = false
   private shouldCleanup = false // Explizites Cleanup-Flag
   private lastInputTime = 0
-  private blinkCheckInterval: number | null = null
+  private blinkCheckInterval: TimerHandle | null = null
   
-  // Event Listeners
+  // Ereignis-Listener
   private clickHandler: ((event: MouseEvent) => void) | null = null
   private touchHandler: ((event: TouchEvent) => void) | null = null
   private blinkEventListener: EventListener | null = null
   
-  // AbortController für Event Listeners (Memory Leak Prevention)
+  // AbortController für Ereignis-Listener (Verhindert Memory Leaks)
   private abortController: AbortController | null = null
   
   // Map-basiertes Input-Setup zur Reduzierung von Code-Duplikation
   private inputSetup: Map<InputType, InputSetupConfig> = new Map()
   
-  // Event-Deduplication: Verhindert doppelte Events
+  // Ereignis-Deduplizierung: Verhindert doppelte Ereignisse
   private lastEventHash: string | null = null
   private lastEventTime = 0
   
@@ -156,10 +160,10 @@ export class InputManager {
     }
 
     this.isActive = true
-    this.shouldCleanup = false // Reset Cleanup-Flag
+    this.shouldCleanup = false // Setze Cleanup-Flag zurück
     console.log('InputManager: Starting with inputs:', this.config.enabledInputs)
 
-    // Erstelle neuen AbortController für Event Listeners
+    // Erstelle neuen AbortController für Ereignis-Listener
     this.abortController = new AbortController()
 
     // Setup für alle aktivierten Input-Typen über Map
@@ -194,11 +198,11 @@ export class InputManager {
       }
     }
 
-    // AbortController für alle Event Listeners
+    // AbortController für alle Ereignis-Listener
     this.abortController?.abort()
     this.abortController = null
     
-    // Reset Event-Deduplication
+    // Setze Ereignis-Deduplizierung zurück
     this.lastEventHash = null
     this.lastEventTime = 0
   }
@@ -253,7 +257,7 @@ export class InputManager {
       return
     }
 
-    // Event-Deduplication: Verhindert doppelte Events innerhalb kurzer Zeit
+    // Ereignis-Deduplizierung: Verhindert doppelte Ereignisse innerhalb kurzer Zeit
     const now = Date.now()
     const eventHash = `${type}-${source}-${JSON.stringify(data)}`
     
@@ -291,8 +295,8 @@ export class InputManager {
       return
     }
 
-    // Methode 1: Event-basiert (faceBlinkDetected Event) - hat Priorität
-    // Wenn Events verfügbar sind, verwende diese (effizienter)
+    // Methode 1: Ereignis-basiert (faceBlinkDetected Ereignis) - hat Priorität
+    // Wenn Ereignisse verfügbar sind, verwende diese (effizienter)
     this.blinkEventListener = (event: Event) => {
       if (!this.isActive || this.shouldCleanup) return
       
@@ -305,20 +309,20 @@ export class InputManager {
       this.triggerInput('blink', 'face-recognition', customEvent.detail)
     }
 
-    window.addEventListener('faceBlinkDetected', this.blinkEventListener, {
+    window.addEventListener(EVENTS.FACE_BLINK_DETECTED, this.blinkEventListener, {
       signal: this.abortController?.signal
     })
     
     this.blinkDetectionMode = 'event'
     console.log('InputManager: Blink detection (event-based) activated')
 
-    // Methode 2: Polling-basiert nur wenn Event-basiert nicht verfügbar
-    // Wird nur verwendet, wenn kein Event-System vorhanden ist
+    // Methode 2: Polling-basiert nur wenn Ereignis-basiert nicht verfügbar
+    // Wird nur verwendet, wenn kein Ereignis-System vorhanden ist
     // ODER wenn customBlinkHandler vorhanden ist (benötigt Polling)
     if (this.config.customBlinkHandler || (!this.faceRecognition && !this.blinkEventListener)) {
       // Wechsle zu Polling-Modus
       if (this.blinkEventListener) {
-        window.removeEventListener('faceBlinkDetected', this.blinkEventListener)
+        window.removeEventListener(EVENTS.FACE_BLINK_DETECTED, this.blinkEventListener)
         this.blinkEventListener = null
       }
       
@@ -330,7 +334,7 @@ export class InputManager {
           // Explizites Cleanup-Flag prüfen
           if (!this.isActive || this.shouldCleanup) {
             if (this.blinkCheckInterval !== null) {
-              window.cancelAnimationFrame(this.blinkCheckInterval)
+              this.blinkCheckInterval.cancel()
               this.blinkCheckInterval = null
             }
             return
@@ -348,13 +352,13 @@ export class InputManager {
           
           // Nächster Frame, wenn noch aktiv und nicht im Cleanup
           if (this.isActive && !this.shouldCleanup) {
-            this.blinkCheckInterval = window.requestAnimationFrame(checkBlink)
+            this.blinkCheckInterval = timerManager.requestAnimationFrame(checkBlink)
           } else {
             this.blinkCheckInterval = null
           }
         }
         
-        this.blinkCheckInterval = window.requestAnimationFrame(checkBlink)
+        this.blinkCheckInterval = timerManager.requestAnimationFrame(checkBlink)
       }
     }
   }
@@ -366,11 +370,11 @@ export class InputManager {
     this.shouldCleanup = true // Setze Cleanup-Flag
     
     if (this.blinkCheckInterval !== null) {
-      window.cancelAnimationFrame(this.blinkCheckInterval)
+      this.blinkCheckInterval.cancel()
       this.blinkCheckInterval = null
     }
     if (this.blinkEventListener) {
-      window.removeEventListener('faceBlinkDetected', this.blinkEventListener as EventListener)
+      window.removeEventListener(EVENTS.FACE_BLINK_DETECTED, this.blinkEventListener as EventListener)
       this.blinkEventListener = null
     }
     

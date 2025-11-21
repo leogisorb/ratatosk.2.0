@@ -8,14 +8,14 @@ import SelfDialogView from '../features/self-dialog/views/SelfDialogView.vue'
 import EnvironmentDialogView from '../features/environment-dialog/views/EnvironmentDialogView.vue'
 import SettingsDialogView from '../features/settings/views/SettingsDialogView.vue'
 import { simpleFlowController } from '../core/application/SimpleFlowController'
-import { cleanupRegistry } from '../shared/utils/cleanupRegistry'
+import { ViewCleanupRegistry } from '../shared/utils/UnifiedCleanup'
 // Alte Settings-Views entfernt - werden durch SettingsDialogView ersetzt
 
 const router = createRouter({
   // History-Mode für saubere URLs ohne Hash
   // URLs sehen dann so aus: /ratatosk.2.0/app statt /ratatosk.2.0/#/app
   // Benötigt Server-Konfiguration (.htaccess für Apache oder 404.html für GitHub Pages)
-  history: createWebHistory('/ratatosk.2.0/'),
+  history: createWebHistory('/'),
   routes: [
     {
       path: '/',
@@ -65,7 +65,7 @@ const router = createRouter({
  * Router Guard: Koordiniert Navigation und Cleanup
  * 
  * Prinzip: Router koordiniert nur, Views räumen sich selbst auf
- * - View-Cleanup via cleanupRegistry
+ * - View-Cleanup via UnifiedCleanup (ViewCleanupRegistry)
  * - Global State zurücksetzen
  * - Keine View-internen Details (TTS, Timer, etc.) im Router
  */
@@ -75,9 +75,9 @@ router.beforeEach(async (to, from, next) => {
     console.log(`Router: Navigation von ${String(from.name)} zu ${String(to.name)}`)
     
     try {
-      // View räumt sich selbst auf via Registry
+      // View räumt sich selbst auf via UnifiedCleanup
       const fromName = String(from.name)
-      await cleanupRegistry.cleanup(fromName, 1000)
+      await ViewCleanupRegistry.cleanup(fromName)
       
       // Global State zurücksetzen (nur Koordination, keine Business Logic)
       simpleFlowController.setActiveView('')
@@ -89,7 +89,7 @@ router.beforeEach(async (to, from, next) => {
       
     } catch (error) {
       console.error('Router: Navigation error:', error)
-      // Continue navigation even if cleanup fails
+      // Setze Navigation fort auch wenn Cleanup fehlschlägt
       next()
     }
   } else {

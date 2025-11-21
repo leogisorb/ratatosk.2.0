@@ -1,12 +1,16 @@
 /**
  * TTS mit Cancellation Token Support
  * Ermöglicht das Abbrechen von TTS-Operationen durch externes Cancellation-Flag
+ * 
+ * @deprecated Verwende stattdessen TTSService direkt. Diese Funktion wird für Rückwärtskompatibilität bereitgestellt.
  */
 import { ref, computed } from 'vue'
 import { useSettingsStore } from '../../features/settings/stores/settings'
 import { simpleFlowController } from '../../core/application/SimpleFlowController'
 import { TIMING } from '../constants/timing'
 import { handleError, isAbortError } from '../utils/errorHandling'
+import { ttsService } from '../services/TTSService'
+import { timerManager } from '../utils/TimerManager'
 
 export function useTTSWithCancellation(getCancelled: () => boolean) {
   const settingsStore = useSettingsStore()
@@ -14,112 +18,81 @@ export function useTTSWithCancellation(getCancelled: () => boolean) {
   
   const enabled = computed(() => settingsStore.settings.voiceEnabled ?? true)
 
-  function speak(text: string): Promise<void> {
-    return new Promise((resolve, reject) => {
+  async function speak(text: string): Promise<void> {
       // Prüfen ob bereits abgebrochen wurde
       if (getCancelled()) {
-        reject(new Error('TTS cancelled before start'))
-        return
+      throw new Error('TTS cancelled before start')
       }
 
       // Kein Text oder TTS deaktiviert
       if (!enabled.value || !text.trim()) {
-        setTimeout(() => resolve(), TIMING.TTS.EMPTY_TEXT_DELAY)
+      await timerManager.delay(TIMING.TTS.EMPTY_TEXT_DELAY)
         return
       }
 
       // Prüfen ob TTS stumm geschaltet ist - dann sofort auflösen ohne TTS
       const isMuted = simpleFlowController.getTTSMuted()
       if (isMuted) {
-        resolve()
         return
       }
 
-      const synth = window.speechSynthesis
-      if (!synth) {
-        setTimeout(() => resolve(), TIMING.TTS.EMPTY_TEXT_DELAY)
+    // Prüfe TTS-Verfügbarkeit
+    if (!ttsService.isAvailable()) {
+      await timerManager.delay(TIMING.TTS.EMPTY_TEXT_DELAY)
         return
       }
 
-      synth.cancel()
-
-      let resolved = false
-      let timeoutId: number | null = null
-      let pollInterval: number | null = null
-
-      const finish = (cancelled = false) => {
-        if (!resolved) {
-          resolved = true
-          isSpeaking.value = false
-          
-          if (timeoutId) clearTimeout(timeoutId)
-          if (pollInterval) clearInterval(pollInterval)
-          
-          if (cancelled) {
-            reject(new Error('TTS cancelled'))
-          } else {
-            resolve()
-          }
-        }
+    // Erstelle AbortController für Cancellation
+    const abortController = new AbortController()
+    
+    // Polling für Cancellation-Check
+    const pollHandle = timerManager.setInterval(() => {
+      if (getCancelled()) {
+        abortController.abort()
+        pollHandle.cancel()
       }
+    }, 100)
 
-      // Timeout mit Abbruch-Prüfung
-      timeoutId = window.setTimeout(() => {
-        if (!resolved) {
-          synth.cancel()
-          finish(getCancelled())
-        }
-      }, TIMING.TTS.DEFAULT_TIMEOUT)
-
-      const utterance = new SpeechSynthesisUtterance(text.trim())
-      utterance.lang = 'de-DE'
-      utterance.rate = 1.0
-      utterance.volume = 1.0
-
+    try {
       isSpeaking.value = true
 
-      utterance.onstart = () => {
+      await ttsService.speak(text, {
+        rate: 1.0,
+        volume: 1.0
+      }, {
+        signal: abortController.signal,
+        timeout: TIMING.TTS.DEFAULT_TIMEOUT,
+        onStart: () => {
         // Prüfen ob während TTS abgebrochen wurde
         if (getCancelled()) {
-          synth.cancel()
-          finish(true)
-          return
+            abortController.abort()
         }
-      }
-
-      utterance.onend = () => {
-        finish()
-      }
-
-      utterance.onerror = (event) => {
-        // "canceled" ist kein echter Fehler - TTS wurde absichtlich abgebrochen (z.B. bei Navigation)
-        if (event.error === 'canceled') {
-          console.log('[TTS] Utterance canceled')
-          finish(false) // Resolve statt reject - canceled ist kein Fehler
-          return
+        },
+        onEnd: () => {
+          isSpeaking.value = false
+          pollHandle.cancel()
+        },
+        onError: (error) => {
+          isSpeaking.value = false
+          pollHandle.cancel()
+          handleError('[TTS] Utterance error', error, { logLevel: 'warn' })
         }
-        
-        // Echte Fehler behandeln
-        if (event.error) {
-          handleError('[TTS] Utterance error', event.error, { logLevel: 'warn' })
+      })
+    } catch (error) {
+      isSpeaking.value = false
+      pollHandle.cancel()
+      
+      // AbortError ist kein echter Fehler
+      if (error instanceof DOMException && error.name === 'AbortError') {
+        throw new Error('TTS cancelled')
         }
-        finish(true)
-      }
-
-      // Regelmäßig prüfen ob TTS abgebrochen wurde
-      pollInterval = window.setInterval(() => {
-        if (getCancelled() && !resolved) {
-          synth.cancel()
-          finish(true)
-        }
-      }, 100)
-
-      synth.speak(utterance)
-    })
+      
+      throw error
+    }
   }
 
   function cancel() {
-    window.speechSynthesis?.cancel()
+    ttsService.cancel()
     isSpeaking.value = false
   }
 

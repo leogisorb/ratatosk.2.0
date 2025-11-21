@@ -248,6 +248,12 @@
   left: 50%;
   transform-origin: center center;
   
+  /* Flex-Container für zentrierten Inhalt */
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  
   /* Dynamic positioning based on offset - wie vertikales Karussell */
   --offset-value: var(--offset, 0);
   --distance: calc(var(--offset-value) * 35vw); /* Horizontal statt vertikal */
@@ -267,9 +273,11 @@
   z-index: calc(10 - abs(var(--offset-value)) * 2); /* Gleiche z-index Logik */
   
   backface-visibility: hidden;
-  width: clamp(25vw, 30vw, 35vw);
-  height: clamp(30vh, 40vh, 50vh);
+  width: clamp(30vw, 35vw, 40vw);
+  height: clamp(35vh, 45vh, 55vh);
+  padding: clamp(1rem, 3vw, 2rem);
   cursor: pointer;
+  box-sizing: border-box;
 }
 
 /* Zeige mehr Karten für flüssigen Flow (von -2 bis +2) - wie vertikales Karussell */
@@ -288,6 +296,107 @@
   opacity: 1;
   z-index: 10;
   pointer-events: auto;
+}
+
+/* === ICON & TEXT STYLES FÜR HORIZONTALES KARUSSELL (SubViews) === */
+/* Icon-Container in Karussell-Items - größer für bessere Sichtbarkeit */
+.carousel-wrapper .carousel-item .tile-icon-container {
+  width: 70%;
+  height: auto; /* Flexibel für Emojis */
+  min-width: 70%;
+  min-height: 0; /* Keine Mindesthöhe */
+  max-width: 70%;
+  max-height: none; /* Keine Maximalhöhe */
+  margin-bottom: clamp(0.75rem, 2vh, 1.5rem);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  transition: all var(--transition-fast);
+  background-color: transparent;
+  flex-shrink: 1; /* Kann schrumpfen */
+  flex-grow: 1; /* Kann wachsen */
+}
+
+/* Icon in Karussell-Items - Container behält feste Größe für Icons */
+.carousel-wrapper .carousel-item .tile-icon-container:has(.tile-icon) {
+  height: 70%;
+  min-height: 70%;
+  max-height: 70%;
+  flex-shrink: 0;
+  flex-grow: 0;
+}
+
+/* Icon in Karussell-Items */
+.carousel-wrapper .carousel-item .tile-icon {
+  width: 100%;
+  height: 100%;
+  max-width: 100%;
+  max-height: 100%;
+  transition: all var(--transition-fast);
+  object-fit: contain;
+}
+
+/* Text in Karussell-Items - größer für bessere Lesbarkeit */
+.carousel-wrapper .carousel-item .tile-text {
+  text-align: center;
+  font-family: var(--font-family);
+  font-weight: var(--font-weight);
+  color: var(--color-text-primary);
+  line-height: var(--line-height);
+  margin: 0;
+  padding: 0;
+  font-size: clamp(1.5rem, 4vw, 3rem);
+  width: 90%;
+  max-width: 90%;
+  word-wrap: break-word;
+  overflow-wrap: break-word;
+  flex-shrink: 1;
+  min-width: 0;
+}
+
+/* Active state für Text in Karussell */
+.carousel-wrapper .carousel-item.tile-active .tile-text {
+  color: #ffffff;
+  font-weight: 700;
+}
+
+/* Active state für Icon in Karussell */
+.carousel-wrapper .carousel-item.tile-active .tile-icon {
+  filter: brightness(0) invert(1);
+}
+
+/* Responsive Anpassungen für mobile Geräte */
+@media (max-width: 768px) {
+  .carousel-wrapper .carousel-item {
+    width: clamp(60vw, 70vw, 80vw);
+    height: clamp(40vh, 50vh, 60vh); /* Etwas niedriger */
+    --scale: calc(1 - abs(var(--offset-value)) * 0.1); /* Weniger Skalierung auf Mobile */
+  }
+  
+  .carousel-wrapper .carousel-item .tile-icon-container {
+    width: 80%;
+    height: auto; /* Flexibel für Emojis */
+    min-width: 80%;
+    min-height: 0;
+    max-width: 80%;
+    max-height: none;
+    flex-shrink: 1;
+    flex-grow: 1;
+  }
+  
+  /* Container behält feste Größe für Icons auf Mobile */
+  .carousel-wrapper .carousel-item .tile-icon-container:has(.tile-icon) {
+    height: 80%;
+    min-height: 80%;
+    max-height: 80%;
+    flex-shrink: 0;
+    flex-grow: 0;
+  }
+  
+  .carousel-wrapper .carousel-item .tile-text {
+    font-size: clamp(1.8rem, 6vw, 2.5rem);
+  }
 }
 
 /* === CAROUSEL INDICATORS (für horizontales Karussell) === */
@@ -355,14 +464,27 @@
 }
 
 /* === EMOJI STYLES (für SubViews) === */
-.tile-emoji {
-  font-size: clamp(3rem, 10vw, 6rem);
+/* Emoji nutzt Container optimal aus - Container ist flexibel */
+.carousel-wrapper .carousel-item .tile-icon-container .tile-emoji {
+  font-size: clamp(4rem, 10vw, 7rem);
   line-height: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: auto;
+  flex: 1;
 }
 
 @media (max-width: 768px) {
-  .tile-emoji {
-    font-size: clamp(2.5rem, 8vw, 4rem);
+  .carousel-wrapper .carousel-item .tile-icon-container .tile-emoji {
+    font-size: clamp(6rem, 18vw, 10rem); /* Viel größer und proportionaler */
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    height: auto;
+    flex: 1;
   }
 }
 

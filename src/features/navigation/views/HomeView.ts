@@ -7,6 +7,7 @@ import { simpleFlowController, SimpleFlowController } from '../../../core/applic
 import { useCarousel } from '../composables/useCarousel'
 import { type CarouselItem } from '../config/carouselConfig'
 import { useAutoMode } from '../../../shared/composables/useAutoMode'
+import { EVENTS } from '../../../shared/constants/events'
 
 export function useHomeViewLogic() {
   // Router
@@ -407,7 +408,7 @@ export function useHomeViewLogic() {
     startHomeViewTTS()
     
     // Event Listener für Face Blinzel-Erkennung
-    window.addEventListener('faceBlinkDetected', handleFaceBlink)
+    window.addEventListener(EVENTS.FACE_BLINK_DETECTED, handleFaceBlink)
   })
 
   onUnmounted(() => {
@@ -426,7 +427,7 @@ export function useHomeViewLogic() {
     simpleFlowController.stopTTS()
     
     // Clean up Face Recognition Event Listener (aber nicht die Face Recognition selbst)
-    window.removeEventListener('faceBlinkDetected', handleFaceBlink)
+    window.removeEventListener(EVENTS.FACE_BLINK_DETECTED, handleFaceBlink)
     // faceRecognition.stop() - NICHT stoppen, da sie seitenübergreifend laufen soll
     
     // Clean up event listeners

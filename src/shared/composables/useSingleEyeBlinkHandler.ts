@@ -1,4 +1,5 @@
 import { ref, readonly, onMounted, onUnmounted } from 'vue'
+import { EVENTS } from '../constants/events'
 
 /**
  * Typed Event für einseitiges Blinzeln
@@ -124,7 +125,7 @@ export function useSingleEyeBlinkHandler(config: SingleEyeBlinkHandlerConfig = {
 
     // Event-Listener registrieren
     eventListener = handleSingleEyeBlink as EventListener
-    window.addEventListener('faceSingleEyeBlinkDetected', eventListener)
+    window.addEventListener(EVENTS.FACE_SINGLE_EYE_BLINK_DETECTED, eventListener)
   }
 
   /**
@@ -140,12 +141,12 @@ export function useSingleEyeBlinkHandler(config: SingleEyeBlinkHandlerConfig = {
 
     // Event-Listener entfernen
     if (eventListener) {
-      window.removeEventListener('faceSingleEyeBlinkDetected', eventListener)
+      window.removeEventListener(EVENTS.FACE_SINGLE_EYE_BLINK_DETECTED, eventListener)
       eventListener = null
     }
   }
 
-  // Auto-Cleanup on unmount
+  // Automatisches Aufräumen beim Unmount
   onUnmounted(() => {
     stop()
   })

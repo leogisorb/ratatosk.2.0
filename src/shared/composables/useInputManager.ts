@@ -58,7 +58,7 @@ export function useInputManager(config: InputManagerConfig) {
     // Reaktive Status
     status,
     enabledInputs,
-    // Manager für advanced use cases (read-only)
+    // Manager für erweiterte Anwendungsfälle (nur lesend)
     manager: readonly(manager) as Readonly<InputManager>
   }
 }

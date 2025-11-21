@@ -106,7 +106,7 @@ export function usePainDictionary() {
     painLevels,
     subRegionMap,
     
-    // Helper Functions
+    // Hilfsfunktionen
     getSubRegions,
     findSubRegion,
     findPainLevel,

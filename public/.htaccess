@@ -1,12 +1,19 @@
+# .htaccess für Ratatosk 2.0 (Root-Verzeichnis)
+DirectoryIndex index.html
+
 <IfModule mod_rewrite.c>
   RewriteEngine On
-  RewriteBase /ratatosk.2.0/
+  RewriteBase /
+  
+  # Assets explizit ausschließen (JavaScript, CSS, Bilder, etc.)
+  RewriteCond %{REQUEST_URI} \.(js|css|png|jpg|jpeg|gif|svg|ico|woff|woff2|ttf|eot|map)$ [NC]
+  RewriteRule . - [L]
   
   # Wenn die angeforderte Datei oder das Verzeichnis nicht existiert
   RewriteCond %{REQUEST_FILENAME} !-f
   RewriteCond %{REQUEST_FILENAME} !-d
   
-  # Leite alle Anfragen an index.html weiter (für Vue Router)
-  RewriteRule . /ratatosk.2.0/index.html [L]
+  # Leite alle Anfragen an index.html weiter (für Vue Router SPA)
+  RewriteRule . /index.html [L]
 </IfModule>
 

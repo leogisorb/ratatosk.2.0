@@ -2,6 +2,7 @@ import { ref, computed, onUnmounted, nextTick } from 'vue'
 import { TIMING } from '../constants/timing'
 import { handleError, isAbortError } from '../utils/errorHandling'
 import { simpleFlowController } from '../../core/application/SimpleFlowController'
+import { timerManager } from '../utils/TimerManager'
 
 const DEBUG = false // Debug-Logging ein/aus
 
@@ -15,8 +16,8 @@ export interface AutoModeConfig {
 }
 
 /**
- * AutoMode Registry - Singleton Pattern
- * Manages active AutoMode instances to prevent memory leaks
+ * AutoMode-Registry - Singleton-Pattern
+ * Verwaltet aktive AutoMode-Instanzen um Memory Leaks zu verhindern
  */
 class AutoModeRegistry {
   private static instance: AutoModeRegistry
@@ -97,20 +98,7 @@ export function useAutoMode(config: AutoModeConfig) {
 
   // Wartet eine bestimmte Zeit, kann aber abgebrochen werden
   function delay(ms: number): Promise<void> {
-    return new Promise((resolve, reject) => {
-      // Prüfe sofort ob bereits aborted
-      if (abortController?.signal.aborted) {
-        reject(new Error('Aborted'))
-        return
-      }
-      
-      const timeoutId = setTimeout(resolve, ms)
-      
-      abortController?.signal.addEventListener('abort', () => {
-        clearTimeout(timeoutId)
-        reject(new Error('Aborted'))
-      }, { once: true })
-    })
+    return timerManager.delay(ms, abortController?.signal)
   }
 
   // Stoppt den AutoMode und räumt auf
@@ -124,11 +112,11 @@ export function useAutoMode(config: AutoModeConfig) {
       abortController = null
     }
     
-    // Unregister from registry to prevent memory leaks
+    // Abmelden von Registry um Memory Leaks zu verhindern
     registry.unregister(instanceId)
   }
 
-  // Cleanup on component unmount to prevent memory leaks
+  // Aufräumen beim Komponenten-Unmount um Memory Leaks zu verhindern
   onUnmounted(() => {
     debug('Component unmounted - cleaning up AutoMode')
     stop()
@@ -214,7 +202,7 @@ export function useAutoMode(config: AutoModeConfig) {
       debug('Stopping previous instance')
       registry.stopActive()
       // Kurz warten damit die alte Instanz aufräumen kann
-      await new Promise(resolve => setTimeout(resolve, TIMING.AUTO_MODE.RETRY_DELAY))
+      await timerManager.delay(TIMING.AUTO_MODE.RETRY_DELAY)
     }
 
     // Eigenen vorherigen State aufräumen

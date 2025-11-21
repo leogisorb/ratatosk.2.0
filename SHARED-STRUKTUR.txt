@@ -1,0 +1,43 @@
+shared/
+├── services/
+│   └── TTSService.ts            # Zentrale TTS-Logik
+│       ├── Promise-basierte API
+│       ├── AbortController-Support
+│       ├── Fehlerbehandlung
+│       └── Voice-Management
+│
+├── utils/
+│   ├── TimerManager.ts          # Vereinheitlichtes Timer-Management
+│   │   ├── setTimeout() → TimerHandle
+│   │   ├── setInterval() → TimerHandle
+│   │   ├── requestAnimationFrame() → TimerHandle
+│   │   └── delay() → Promise<void>
+│   │
+│   ├── UnifiedCleanup.ts       # Vereinheitlichtes Cleanup-System
+│   │   ├── CleanupCoordinator  # Component-scoped Cleanup
+│   │   ├── ViewCleanupRegistry # View-scoped Cleanup
+│   │   └── useCleanup()        # Vue Composable
+│   │
+│   ├── CleanupCoordinator.ts   # Basis-Cleanup-Implementierung
+│   ├── errorHandling.ts        # Zentrale Fehlerbehandlung
+│   └── debug.ts                # Debug-Utilities
+│
+├── constants/
+│   ├── events.ts                # Event-Konstanten (EVENTS)
+│   │   └── Eliminiert Magic Strings
+│   └── timing.ts                # Timing-Konstanten (TIMING)
+│       └── Eliminiert Magic Numbers
+│
+├── composables/
+│   ├── useAutoMode.ts           # Wiederverwendbares AutoMode
+│   ├── useDialogMachine.ts      # Dialog State Machine
+│   ├── useDialogTimerTracking.ts # Dialog Timer Tracking
+│   ├── useInputManager.ts      # Input-Manager Composable
+│   ├── useSingleEyeBlinkHandler.ts # Einzelne Augen-Blinzeln
+│   └── useTTSWithCancellation.ts # TTS mit Cancellation (deprecated)
+│
+└── components/
+    └── AppHeader.vue            # Globale Header-Komponente
+
+
+

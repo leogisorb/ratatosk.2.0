@@ -189,7 +189,7 @@ import { useFaceRecognition } from '../../face-recognition/composables/useFaceRe
 import { useMobileDetection } from '../../../shared/composables/useMobileDetection'
 import AppHeader from '../../../shared/components/AppHeader.vue'
 import { debug, debugComponent, debugAutoMode } from '../../../shared/utils/debug'
-import { cleanupRegistry } from '../../../shared/utils/cleanupRegistry'
+import { ViewCleanupRegistry } from '../../../shared/utils/UnifiedCleanup'
 
 // ===== COMPOSABLES =====
 const machine = usePainDialogMachine()
@@ -280,7 +280,7 @@ const handleContextMenu = (item: any, index: number) => {
     index,
     state: state.value 
   })
-  // Context menu handling if needed
+  // Kontextmenü-Behandlung falls nötig
 }
 
 const handleBackButton = () => {
@@ -379,27 +379,27 @@ onMounted(() => {
   debugComponent.lifecycle('PainDialogView', 'mounted')
   debugComponent.props('PainDialogView', { isMobile: isMobile.value })
   
-  // Register cleanup in registry (replaces window globals)
-  cleanupRegistry.register('pain-dialog', async () => {
-    debug.log('PainDialog', 'Cleanup called via registry')
+  // Registriere Cleanup in UnifiedCleanup
+  ViewCleanupRegistry.register('pain-dialog', async () => {
+    debug.log('PainDialog', 'Cleanup called via UnifiedCleanup')
     machine.cleanup()
     inputManager.stop()
   })
   
-  // Start Services NACH Cleanup-Registrierung
+  // Starte Dienste NACH Cleanup-Registrierung
   if (!faceRecognition.isActive.value) {
     debug.log('PainDialog', 'Starting face recognition')
     faceRecognition.start()
   }
   
-  // Reset index
+  // Setze Index zurück
   autoMode.index.value = 0
   
-  // Start AutoMode
+  // Starte Auto-Modus
   debugAutoMode.start(false)
   autoMode.start()
   
-  // Start Input Manager
+  // Starte Input-Manager
   debug.log('PainDialog', 'Starting Input Manager')
   inputManager.start()
 })
@@ -407,22 +407,27 @@ onMounted(() => {
 onUnmounted(() => {
   debugComponent.lifecycle('PainDialogView', 'unmounted')
   
-  // Stop AutoMode
+  // Stoppe Auto-Modus
   debugAutoMode.stop()
   autoMode.stop()
   
-  // Stop Input Manager
+  // Stoppe Input-Manager
   debug.log('PainDialog', 'Stopping Input Manager')
   inputManager.stop()
   
-  // Stop Face Recognition
+  // Stoppe Gesichtserkennung
   if (faceRecognition.isActive.value) {
     debug.log('PainDialog', 'Stopping Face Recognition')
     faceRecognition.stop()
   }
   
-  // Unregister cleanup from registry
-  cleanupRegistry.unregister('pain-dialog')
+  // Cleanup via UnifiedCleanup (nur wenn noch nicht aufgeräumt)
+  // Router-Guard räumt normalerweise auf, aber als Fallback hier auch
+  if (ViewCleanupRegistry.hasCleanup('pain-dialog')) {
+    ViewCleanupRegistry.cleanup('pain-dialog').catch(error => {
+      console.error('PainDialog: Cleanup error:', error)
+    })
+  }
 })
 </script>
 

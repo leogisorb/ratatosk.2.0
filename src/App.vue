@@ -4,10 +4,10 @@ import { useRouter } from 'vue-router'
 import { useSettingsStore } from './features/settings/stores/settings'
 import { useSingleEyeBlinkHandler } from './shared/composables/useSingleEyeBlinkHandler'
 import { simpleFlowController } from './core/application/SimpleFlowController'
-import { cleanupRegistry } from './shared/utils/cleanupRegistry'
+import { ViewCleanupRegistry } from './shared/utils/UnifiedCleanup'
 
 // App.vue serves as the main router container
-// TTSActivator removed
+// TTSActivator entfernt
 
 // Router
 const router = useRouter()
@@ -38,19 +38,9 @@ async function stopAllServices() {
   // 4. Setze aktiven View zurück
   simpleFlowController.setActiveView('')
   
-  // 5. Rufe alle View-spezifischen Cleanup-Funktionen auf via Cleanup Registry
+  // 5. Rufe alle View-spezifischen Cleanup-Funktionen auf via UnifiedCleanup
   // Diese stoppen lokale Auto-Mode Instanzen und Timer in den Views
-  const viewNames = [
-    'warning',
-    'pain-dialog',
-    'environment-dialog',
-    'self-dialog',
-    'settings',
-    'communication'
-  ]
-  
-  // Cleanup all registered views
-  await cleanupRegistry.cleanupAll(1000)
+  await ViewCleanupRegistry.cleanupAll()
   
   // 6. Stoppe alle globalen Timer (falls vorhanden)
   const globalTimers = (window as any).__globalTimers || []

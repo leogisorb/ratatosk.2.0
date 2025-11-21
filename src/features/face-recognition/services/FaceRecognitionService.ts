@@ -181,17 +181,17 @@ export class FaceRecognitionService {
     const now = Date.now() // Unix timestamp in milliseconds
 
     if (bothEyesClosed && !this.isBlinking) {
-      // Blink started
+      // Blinzeln gestartet
       this.isBlinking = true
       this.blinkStartTime = now
     } else if (!bothEyesClosed && this.isBlinking) {
-      // Blink ended
+      // Blinzeln beendet
       this.isBlinking = false
       
       if (this.blinkStartTime) {
         const blinkDuration = now - this.blinkStartTime
         
-        // Only count as blink if duration is within reasonable range
+        // Zähle nur als Blinzeln wenn Dauer im vernünftigen Bereich liegt
         if (blinkDuration >= 100 && blinkDuration <= 2000) {
           this.state.blinkCount++
           this.state.lastBlinkTime = now
@@ -205,7 +205,7 @@ export class FaceRecognitionService {
           
           this.blinkEvents.push(blinkEvent)
           
-          // Keep only last 100 blink events
+          // Behalte nur die letzten 100 Blinzel-Ereignisse
           if (this.blinkEvents.length > 100) {
             this.blinkEvents = this.blinkEvents.slice(-100)
           }

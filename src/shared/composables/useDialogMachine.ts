@@ -30,7 +30,7 @@ export interface DialogConfig<TState extends string, TItem> {
   dialogName: string
   states: readonly TState[]
   
-  // Data providers
+  // Datenanbieter
   getItems: (state: TState, ...ids: (string | null)[]) => readonly TItem[]
   getTitle: (state: TState, ...ids: (string | null)[]) => string
   getConfirmationText: (...ids: (string | null)[]) => string
@@ -39,17 +39,17 @@ export interface DialogConfig<TState extends string, TItem> {
   backButtonId: string
   homeRoute: string
   
-  // State transitions
+  // Zustandsübergänge
   getNextState: (currentState: TState, itemId: string) => TState | null
   shouldConfirm: (state: TState) => boolean
 }
 
 export interface DialogMachine<TState extends string, TItem> {
-  // State
+  // Zustand
   state: Ref<TState>
   stateIds: Ref<(string | null)[]>
   
-  // Computed
+  // Berechnet
   items: ComputedRef<readonly TItem[]>
   title: ComputedRef<string>
   confirmationText: ComputedRef<string>
@@ -63,12 +63,12 @@ export interface DialogMachine<TState extends string, TItem> {
   cleanup: () => void
 }
 
-// ===== SHARED HELPERS =====
+// ===== GEMEINSAME HELFER =====
 function handleOperationError(dialogName: string, operation: string, error: unknown) {
   handleError(`${dialogName}: ${operation}`, error, { logLevel: 'error' })
 }
 
-// ===== MAIN FACTORY =====
+// ===== HAUPT-FABRIK =====
 export function useDialogMachine<TState extends string, TItem>(
   config: DialogConfig<TState, TItem>
 ): DialogMachine<TState, TItem> {
@@ -108,7 +108,7 @@ export function useDialogMachine<TState extends string, TItem>(
   // ===== AUTO MODE =====
   const autoModeConfig: AutoModeConfig = {
     speak: tts.speak,
-    getItems: () => [...items.value], // Convert readonly array to mutable array
+    getItems: () => [...items.value], // Konvertiere readonly Array zu mutable Array
     getTitle: () => title.value,
     initialDelay: settingsStore.settings.leuchtdauer * 1000,
     cycleDelay: settingsStore.settings.leuchtdauer * 1000
@@ -161,7 +161,7 @@ export function useDialogMachine<TState extends string, TItem>(
           if (!isCancellationError(error)) {
             handleError(`${config.dialogName}: TTS error in resetToInitialState`, error, { logLevel: 'warn' })
           }
-          // Continue even if TTS fails
+          // Weiter auch wenn TTS fehlschlägt
         }
       }
       
@@ -186,7 +186,7 @@ export function useDialogMachine<TState extends string, TItem>(
         if (isInitialState) {
           goBack()
         } else {
-          // Go to previous state
+          // Gehe zum vorherigen Zustand
           await resetToInitialState()
         }
         return
@@ -194,7 +194,7 @@ export function useDialogMachine<TState extends string, TItem>(
       
       autoMode.stop()
       
-      // Get next state
+      // Hole nächsten Zustand
       const nextState = config.getNextState(state.value, id)
       
       if (!nextState) {
@@ -202,12 +202,12 @@ export function useDialogMachine<TState extends string, TItem>(
         return
       }
       
-      // Update state
+      // Aktualisiere Zustand
       stateIds.value.push(id)
       state.value = nextState
       
-      // Speak text with error handling
-      // Bei Confirmation den confirmationText sprechen, sonst den title
+      // Spreche Text mit Fehlerbehandlung
+      // Bei Bestätigung den confirmationText sprechen, sonst den title
       const isTTSMuted = simpleFlowController.getTTSMuted()
       if (!isTTSMuted) {
         try {
@@ -217,13 +217,13 @@ export function useDialogMachine<TState extends string, TItem>(
           if (!isCancellationError(error)) {
             handleError(`${config.dialogName}: TTS error in selectItem`, error, { logLevel: 'warn' })
           }
-          // Continue even if TTS fails
+          // Weiter auch wenn TTS fehlschlägt
         }
       }
       
-      // Check if confirmation state
+      // Prüfe ob Bestätigungs-Zustand
       if (config.shouldConfirm(nextState)) {
-        // Confirmation - schedule reset
+        // Bestätigung - plane Zurücksetzen
         scheduleTimer(() => {
           try {
             checkCancelled()
@@ -237,7 +237,7 @@ export function useDialogMachine<TState extends string, TItem>(
           }
         }, TIMER_DELAYS.CONFIRMATION_RESET)
       } else {
-        // Normal state - schedule auto mode
+        // Normaler Zustand - plane Auto-Modus
         // Wenn TTS muted ist, kürzeren Delay verwenden
         const delay = isTTSMuted ? 500 : TIMER_DELAYS.AUTO_MODE_START
         scheduleAutoModeStart(nextState, delay)
@@ -260,7 +260,7 @@ export function useDialogMachine<TState extends string, TItem>(
     
     cleanup()
     
-    // Global services
+    // Globale Dienste
     simpleFlowController.stopTTS()
     simpleFlowController.stopAutoMode()
     simpleFlowController.setActiveView('')
@@ -283,7 +283,7 @@ export function useDialogMachine<TState extends string, TItem>(
       return
     }
     
-    // Extract ID from item
+    // Extrahiere ID aus Item
     const itemId = (currentItem as any).id
     if (!itemId) {
       return
@@ -293,11 +293,11 @@ export function useDialogMachine<TState extends string, TItem>(
   }
   
   return {
-    // State
+    // Zustand
     state,
     stateIds,
     
-    // Computed
+    // Berechnet
     items,
     title,
     confirmationText,
