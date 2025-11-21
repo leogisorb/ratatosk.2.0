@@ -15,7 +15,7 @@ const router = createRouter({
   // History-Mode für saubere URLs ohne Hash
   // URLs sehen dann so aus: /ratatosk.2.0/app statt /ratatosk.2.0/#/app
   // Benötigt Server-Konfiguration (.htaccess für Apache oder 404.html für GitHub Pages)
-  history: createWebHistory('/'),
+  history: createWebHistory('/ratatosk.2.0/'),
   routes: [
     {
       path: '/',

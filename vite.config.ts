@@ -28,7 +28,7 @@ export default defineConfig({
 
 
 
-  base: '/',
+  base: '/ratatosk.2.0/',
 
 
 
