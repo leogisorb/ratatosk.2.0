@@ -1,9 +1,14 @@
 import { ref } from 'vue'
 import { useRouter } from 'vue-router'
 import { useSettingsStore } from '../../settings/stores/settings'
-import { useBlinkInput } from '../../communication/composables/useBlinkInput'
+import { useInputManager } from '../../../shared/composables/useInputManager'
+import { useFaceRecognition } from '../../face-recognition/composables/useFaceRecognition'
 import { simpleFlowController } from '../../../core/application/SimpleFlowController'
 import { CancellationError, isCancellationError } from '../../../shared/utils/errorHandling'
+import { timerManager } from '../../../shared/utils/TimerManager'
+import type { TimerHandle } from '../../../shared/utils/TimerManager'
+import { ttsService } from '../../../shared/services/TTSService'
+import { CleanupCoordinator } from '../../../shared/utils/CleanupCoordinator'
 
 /**
  * Warnsystem für intubierte Patienten - MIT CANCELLATION TOKEN
@@ -17,6 +22,7 @@ import { CancellationError, isCancellationError } from '../../../shared/utils/er
 export function useWarningViewLogic() {
   const router = useRouter()
   const settingsStore = useSettingsStore()
+  const faceRecognition = useFaceRecognition()
 
   // ===== CANCELLATION TOKEN =====
   const isCancelled = ref(false)
@@ -27,8 +33,16 @@ export function useWarningViewLogic() {
     }
   }
 
-  // ===== BLINK INPUT =====
-  const { setupEventListeners, startIntroduction, endIntroduction } = useBlinkInput()
+  // ===== INTRODUCTION STATE =====
+  const isIntroductionActive = ref(false)
+  
+  const startIntroduction = () => {
+    isIntroductionActive.value = true
+  }
+  
+  const endIntroduction = () => {
+    isIntroductionActive.value = false
+  }
 
   // ===== STATE MACHINE =====
   enum WarningState {
@@ -52,119 +66,95 @@ export function useWarningViewLogic() {
   }
 
   // ===== TTS IMPLEMENTATION MIT CANCELLATION =====
-  const speakText = (text: string, onStart?: () => void, onEnd?: () => void): Promise<void> => {
-    return new Promise((resolve, reject) => {
+  const speakText = async (text: string, onStart?: () => void, onEnd?: () => void): Promise<void> => {
       // Prüfen ob bereits abgebrochen wurde
       if (isCancelled.value) {
-        reject(new CancellationError('TTS cancelled before start'))
-        return
+      throw new CancellationError('TTS cancelled before start')
       }
       
       console.log('TTS: Speaking:', text)
       
       const isMuted = simpleFlowController.getTTSMuted()
       
-      const utterance = new SpeechSynthesisUtterance(text)
-      utterance.lang = 'de-DE'
-      utterance.rate = 0.8
-      utterance.pitch = 1.0
-      utterance.volume = isMuted ? 0 : 0.8
-
-      let resolved = false
-      let timeoutId: number | null = null
-
-      const finish = (error?: Error) => {
-        if (!resolved) {
-          resolved = true
-          isTTSActive.value = false
-          
-          if (timeoutId) {
-            clearTimeout(timeoutId)
-            timeoutId = null
-          }
-          
-          if (error) {
-            reject(error)
-          } else {
-            resolve()
-          }
-        }
-      }
-
-      utterance.onstart = () => {
+    // Erstelle AbortController für Cancellation
+    const abortController = new AbortController()
+    
+    try {
+      isTTSActive.value = true
+      
+      await ttsService.speak(text, {
+        lang: 'de-DE',
+        rate: 0.8,
+        pitch: 1.0,
+        volume: isMuted ? 0 : 0.8
+      }, {
+        signal: abortController.signal,
+        timeout: 10000,
+        onStart: () => {
         // Prüfen ob während TTS abgebrochen wurde
         if (isCancelled.value) {
-          speechSynthesis.cancel()
-          finish(new CancellationError('TTS cancelled during start'))
+            abortController.abort()
           return
         }
         
         console.log('TTS: Started speaking')
-        isTTSActive.value = true
         if (onStart) onStart()
-      }
-
-      utterance.onend = () => {
+        },
+        onEnd: () => {
         console.log('TTS: Finished speaking')
+          isTTSActive.value = false
         if (onEnd) onEnd()
-        finish()
-      }
-
-      utterance.onerror = (e) => {
-        // "canceled" ist kein echter Fehler - TTS wurde absichtlich abgebrochen (z.B. bei Navigation)
-        if (e.error === 'canceled') {
-          console.log('WarningView: TTS canceled')
-          finish() // Resolve statt reject - canceled ist kein Fehler
-          return
+        },
+        onError: (error) => {
+          console.error('TTS Error:', error)
+          isTTSActive.value = false
         }
-        
-        // Echte Fehler behandeln
-        console.error('TTS Error:', e)
-        finish(new Error('TTS error'))
-      }
-
-      // Timeout als Fallback
-      timeoutId = window.setTimeout(() => {
-        if (!resolved) {
-          console.warn('TTS: Timeout reached')
-          speechSynthesis.cancel()
-          finish(new Error('TTS timeout'))
-        }
-      }, 10000)
+      })
+    } catch (error) {
+      isTTSActive.value = false
       
-      speechSynthesis.speak(utterance)
-    })
+      // AbortError ist kein echter Fehler
+      if (error instanceof DOMException && error.name === 'AbortError') {
+        throw new CancellationError('TTS cancelled')
+      }
+      
+      throw error
+    }
   }
 
-  const delay = (ms: number): Promise<void> => {
-    return new Promise((resolve, reject) => {
-      // Prüfen ob bereits abgebrochen wurde
+  const delay = async (ms: number): Promise<void> => {
+    // Erstelle AbortController für Cancellation
+    const abortController = new AbortController()
+    
+    // Prüfe Cancellation regelmäßig
+    const checkHandle = timerManager.setInterval(() => {
       if (isCancelled.value) {
-        reject(new CancellationError('Delay cancelled'))
-        return
+        abortController.abort()
+        checkHandle.cancel()
       }
-      
-      const timeoutId = window.setTimeout(() => {
-        if (isCancelled.value) {
-          reject(new CancellationError('Delay cancelled'))
-        } else {
-          resolve()
-        }
-      }, ms)
-      
-      // Cleanup bei Abbruch (vereinfacht - nur einmal prüfen)
-      // Cancellation wird durch cleanup() → speechSynthesis.cancel() gehandhabt
-    })
+    }, 100)
+    
+    try {
+      await timerManager.delay(ms, abortController.signal)
+      checkHandle.cancel()
+    } catch (error) {
+      checkHandle.cancel()
+      if (error instanceof DOMException && error.name === 'AbortError') {
+        throw new CancellationError('Delay cancelled')
+      }
+      throw error
+    }
   }
 
   // ===== TIMER MANAGEMENT MIT CANCELLATION =====
-  let timers: number[] = []
+  const cleanupCoordinator = new CleanupCoordinator('WarningView')
+  const timers: TimerHandle[] = []
   
   const clearTimers = () => {
     if (timers.length > 0) {
       console.log(`WarningView: Clearing ${timers.length} timers`)
-      timers.forEach(t => clearTimeout(t))
-      timers = []
+      timers.forEach(t => t.cancel())
+      timers.length = 0
     }
   }
   
@@ -175,29 +165,122 @@ export function useWarningViewLogic() {
       return
     }
     
-    const id = window.setTimeout(() => {
+    const handle = timerManager.setTimeout(() => {
       // Prüfen vor Ausführung ob abgebrochen
       if (!isCancelled.value) {
         callback()
       }
       // Timer aus Liste entfernen
-      timers = timers.filter(t => t !== id)
+      const index = timers.indexOf(handle)
+      if (index > -1) {
+        timers.splice(index, 1)
+      }
     }, delay)
-    timers.push(id)
+    
+    timers.push(handle)
+    cleanupCoordinator.registerTimer(handle, `warning-timer-${timers.length}`)
   }
 
   // ===== AUDIO SYSTEM =====
   const audioContext = ref<AudioContext | null>(null)
   const isAlarmActive = ref(false)
-  const alarmInterval = ref<number | null>(null)
+  const alarmInterval = ref<TimerHandle | null>(null)
+  const audioUnlocked = ref(false) // Track if audio has been unlocked via user interaction
 
-  const playAlarmSound = () => {
+  // Initialize and unlock AudioContext (required for iOS Safari)
+  const unlockAudioContext = async () => {
+    if (audioUnlocked.value && audioContext.value) {
+      // Already unlocked, just resume if suspended
+      if (audioContext.value.state === 'suspended') {
+        await audioContext.value.resume()
+        // Wait for context to be running
+        if (audioContext.value.state !== 'running') {
+          await new Promise(resolve => {
+            const checkState = () => {
+              if (audioContext.value?.state === 'running') {
+                resolve(undefined)
+              } else {
+                setTimeout(checkState, 10)
+              }
+            }
+            checkState()
+          })
+        }
+      }
+      return
+    }
+
     try {
+      // Create AudioContext if it doesn't exist
       if (!audioContext.value) {
         audioContext.value = new (window.AudioContext || (window as any).webkitAudioContext)()
       }
-      
+
       const ctx = audioContext.value
+
+      // Resume if suspended (iOS Safari starts in suspended state)
+      if (ctx.state === 'suspended') {
+        await ctx.resume()
+      }
+
+      // Wait for context to be running (iOS Safari needs this)
+      if (ctx.state !== 'running') {
+        await new Promise<void>((resolve) => {
+          const checkState = () => {
+            if (ctx.state === 'running') {
+              resolve()
+            } else {
+              setTimeout(checkState, 10)
+            }
+          }
+          checkState()
+        })
+      }
+
+      // Play a very short, silent sound to "unlock" audio on iOS
+      // This must happen in response to a user interaction
+      const oscillator = ctx.createOscillator()
+      const gainNode = ctx.createGain()
+      
+      oscillator.connect(gainNode)
+      gainNode.connect(ctx.destination)
+      
+      // Silent sound (gain = 0) - but we need to actually play something
+      // iOS Safari requires a real audio event, even if silent
+      gainNode.gain.setValueAtTime(0.001, ctx.currentTime) // Very quiet but not silent
+      oscillator.frequency.setValueAtTime(1, ctx.currentTime) // Very low frequency
+      oscillator.type = 'sine'
+      
+      oscillator.start(ctx.currentTime)
+      oscillator.stop(ctx.currentTime + 0.01) // Slightly longer to ensure it's processed
+      
+      // Wait a bit to ensure the unlock sound is processed
+      await new Promise(resolve => setTimeout(resolve, 20))
+      
+      audioUnlocked.value = true
+      console.log('AudioContext unlocked for iOS Safari, state:', ctx.state)
+    } catch (error) {
+      console.error('Error unlocking audio context:', error)
+    }
+  }
+
+  const playAlarmSound = async () => {
+    try {
+      // Ensure audio is unlocked before playing
+      await unlockAudioContext()
+      
+      if (!audioContext.value) {
+        console.warn('AudioContext not available')
+        return
+      }
+
+      const ctx = audioContext.value
+
+      // Ensure context is running
+      if (ctx.state === 'suspended') {
+        await ctx.resume()
+      }
+      
       const oscillator1 = ctx.createOscillator()
       const oscillator2 = ctx.createOscillator()
       const gainNode = ctx.createGain()
@@ -224,19 +307,28 @@ export function useWarningViewLogic() {
     }
   }
 
-  const startContinuousAlarm = () => {
+  const startContinuousAlarm = async () => {
     if (isAlarmActive.value) return
     
     isAlarmActive.value = true
     console.log('Starting continuous alarm')
     
-    playAlarmSound()
+    // Ensure audio is unlocked before starting alarm
+    await unlockAudioContext()
+    await playAlarmSound()
     
-    alarmInterval.value = window.setInterval(() => {
+    alarmInterval.value = timerManager.setInterval(async () => {
       if (isAlarmActive.value && !isCancelled.value) {
-        playAlarmSound()
+        await playAlarmSound()
+      } else if (isCancelled.value && alarmInterval.value) {
+        alarmInterval.value.cancel()
+        alarmInterval.value = null
       }
     }, 500)
+    
+    if (alarmInterval.value) {
+      cleanupCoordinator.registerTimer(alarmInterval.value, 'alarm-interval')
+    }
   }
 
   const stopContinuousAlarm = () => {
@@ -246,7 +338,7 @@ export function useWarningViewLogic() {
     console.log('Stopping continuous alarm')
     
     if (alarmInterval.value) {
-      clearInterval(alarmInterval.value)
+      alarmInterval.value.cancel()
       alarmInterval.value = null
     }
   }
@@ -357,7 +449,7 @@ export function useWarningViewLogic() {
       checkCancelled()
       console.log('State: BELL_PLAYING - Alarm playing')
       statusText.value = "Warngeräusch läuft..."
-      startContinuousAlarm()
+      await startContinuousAlarm()
       
     } catch (error) {
       if (isCancellationError(error)) {
@@ -399,7 +491,17 @@ export function useWarningViewLogic() {
   const handleUserInput = async () => {
     try {
       checkCancelled()
+      
+      // Ignoriere Input während der Einführung
+      if (isIntroductionActive.value) {
+        console.log('WarningView: Input ignored during introduction phase')
+        return
+      }
+      
       console.log('User input detected in state:', currentState.value)
+      
+      // Unlock audio on first user interaction (required for iOS Safari)
+      await unlockAudioContext()
       
       if (currentState.value === WarningState.GREETING) {
         return
@@ -438,21 +540,27 @@ export function useWarningViewLogic() {
     await startGreeting()
   }
 
-  const cleanup = () => {
+  const cleanup = async () => {
     console.log('WarningView: Cleanup started')
     
     // 1. Cancellation Flag SOFORT setzen
     // Alle async Operationen stoppen automatisch (weil sie isCancelled checken)
     isCancelled.value = true
     
-    // 2. Stoppe alle laufenden TTS (einmalig, nicht mehrfach)
-    speechSynthesis.cancel()
+    // 2. Stoppe Input Manager
+    inputManager.stop()
     
-    // 3. Stoppe Alarm
+    // 3. Stoppe alle laufenden TTS
+    ttsService.cancel()
+    
+    // 4. Stoppe Alarm
     stopContinuousAlarm()
     
-    // 4. Resource-Cleanup
+    // 5. Resource-Cleanup
     clearTimers()
+    
+    // 6. CleanupCoordinator führt alle registrierten Cleanups aus
+    await cleanupCoordinator.execute()
     
     if (audioContext.value) {
       audioContext.value.close()
@@ -463,8 +571,11 @@ export function useWarningViewLogic() {
   }
 
   // ===== TOUCH EVENT HANDLERS =====
-  const handleTouchStart = (event: TouchEvent) => {
+  const handleTouchStart = async (event: TouchEvent) => {
     if (isCancelled.value) return
+    
+    // Unlock audio on first touch (required for iOS Safari)
+    await unlockAudioContext()
     
     const target = event.target as HTMLElement
     const bellButton = target.closest('.bell-button')
@@ -480,8 +591,11 @@ export function useWarningViewLogic() {
     }
   }
 
-  const handleTouchEnd = (event: TouchEvent) => {
+  const handleTouchEnd = async (event: TouchEvent) => {
     if (isCancelled.value) return
+    
+    // Unlock audio on first touch (required for iOS Safari)
+    await unlockAudioContext()
     
     const target = event.target as HTMLElement
     const bellButton = target.closest('.bell-button')
@@ -497,11 +611,36 @@ export function useWarningViewLogic() {
     }
   }
 
+  // ===== INPUT MANAGER =====
+  const inputManager = useInputManager({
+    onSelect: (event) => {
+      console.log('WarningView: Input detected', {
+        type: event.type,
+        source: event.source,
+        state: currentState.value
+      })
+      handleUserInput()
+    },
+    enabledInputs: ['blink', 'click'],
+    cooldown: 300
+  })
+
   const setupWarningSystem = async () => {
     console.log('WarningView: Setting up warning system')
     
-    const cleanupEventListeners = setupEventListeners(handleUserInput)
+    // Stelle sicher, dass Face Recognition läuft (für Blink Detection)
+    if (!faceRecognition.isActive.value) {
+      console.log('Face Recognition nicht aktiv - starte sie')
+      await faceRecognition.start()
+    } else {
+      console.log('Face Recognition bereits aktiv')
+    }
     
+    // Starte Input Manager ZUERST (wichtig für Event-Listener)
+    inputManager.start()
+    console.log('InputManager started, status:', inputManager.getStatus())
+    
+    // Touch Events für Mobile (separat, da InputManager Touch nicht für Buttons verwendet)
     document.addEventListener('touchstart', handleTouchStart, { passive: false })
     document.addEventListener('touchend', handleTouchEnd, { passive: false })
     
@@ -509,7 +648,7 @@ export function useWarningViewLogic() {
     await start()
     
     return () => {
-      cleanupEventListeners()
+      inputManager.stop()
       document.removeEventListener('touchstart', handleTouchStart)
       document.removeEventListener('touchend', handleTouchEnd)
     }

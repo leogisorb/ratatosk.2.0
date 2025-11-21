@@ -1,5 +1,6 @@
 import { ref } from 'vue'
 import { useFaceRecognition } from '../../face-recognition/composables/useFaceRecognition'
+import { EVENTS } from '../../../shared/constants/events'
 
 /**
  * Composable für Blinzelerkennung und User-Input-Handling
@@ -54,7 +55,7 @@ export function useBlinkInput() {
     
     // Event Listener für Face Blinzel-Erkennung (wie in HomeView)
     const blinkHandler = (event: any) => handleBlink(event, onUserInput)
-    window.addEventListener('faceBlinkDetected', blinkHandler)
+    window.addEventListener(EVENTS.FACE_BLINK_DETECTED, blinkHandler)
     console.log('UnterhaltenView: Face Recognition Event Listener registriert')
     
     // Starte Face Recognition (wie in HomeView)
@@ -68,7 +69,7 @@ export function useBlinkInput() {
     // Cleanup-Funktion zurückgeben
     return () => {
       document.removeEventListener('contextmenu', rightClickHandler, { capture: true })
-      window.removeEventListener('faceBlinkDetected', blinkHandler)
+      window.removeEventListener(EVENTS.FACE_BLINK_DETECTED, blinkHandler)
     }
   }
 

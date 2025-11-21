@@ -1,537 +1,212 @@
 /* CommunicationView Styles */
 
-/* Spezifische UnterhaltenView Styles - Vertikales Layout */
+/* BaseLayout.css wird global in main.ts importiert - Variablen sind verfügbar */
+
+/* ===== ROOT VARIABLES ===== */
+:root {
+  /* Spacing */
+  --comm-spacing-xs: 0.25rem;
+  --comm-spacing-sm: 0.5rem;
+  --comm-spacing-md: 1rem;
+  --comm-spacing-lg: 1.5rem;
+  --comm-spacing-xl: 2rem;
+  
+  /* Typography */
+  --comm-font-mono: 'Source Code Pro', monospace;
+  --comm-font-size-status-base: clamp(1.875rem, 4.6875vw, 6rem);
+  --comm-font-size-status-mobile: clamp(2.25rem, 6vw, 5rem);
+  --comm-font-size-key: clamp(0.8rem, 2.5vw, 1.4rem);
+  --comm-font-size-key-single: clamp(1.2rem, 3.5vw, 2rem);
+  
+  /* Layout */
+  --comm-status-height-base: clamp(8rem, 20vh, 24rem);
+  --comm-status-height-mobile: clamp(7rem, 15vh, 14rem);
+  --comm-status-max-height-base: clamp(12rem, 25vh, 32rem);
+  --comm-status-max-height-mobile: clamp(10rem, 25vh, 20rem);
+  
+  /* Transitions */
+  --comm-transition-default: all 0.3s ease;
+  --comm-transition-fast: all 0.2s ease;
+  --comm-transition-smooth: all 0.5s ease-in-out;
+}
+
+/* ===== MAIN CONTENT LAYOUT ===== */
 .main-content {
   display: flex;
   flex-direction: column;
   align-items: center;
   gap: 0.75rem;
-  padding: 2rem;
-}
-
-/* Satz-für-Satz Anzeige Styles */
-.sentence-display-container {
-  width: 100%;
-  max-width: 100%;
-  height: 7.5rem;
-  overflow: hidden;
-  background-color: transparent;
-  border: none;
-  margin: 0 auto 1.5rem auto;
-  padding: 0 1rem;
-  position: relative;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.sentence-display {
-  width: 100%;
-  height: 100%;
-  position: relative;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.sentence-item {
-  position: absolute;
-  width: 100%;
-  text-align: center;
-  font-size: 3rem;
-  color: #1f2937; /* Dunkle Farbe für Light Mode */
-  font-family: 'Source Code Pro', monospace;
-  font-weight: 600;
-  opacity: 0;
-  transform: translateY(20px);
-  transition: all 0.5s ease-in-out;
-  padding: 0 1rem;
-  line-height: 1.4;
-}
-
-.sentence-item.sentence-active {
-  opacity: 1;
-  transform: translateY(0);
-  color: #1f2937; /* Dunkle Farbe für Light Mode */
-}
-
-.sentence-display.sentence-paused .sentence-item {
-  transition: none;
-}
-
-.text-display-container {
+  padding: var(--comm-spacing-xl);
+  min-height: 0;
   width: 100%;
   max-width: 100%;
   margin: 0 auto;
-  padding: 0 1rem;
 }
 
-.text-display-box {
-  background-color: #f3f4f6;
-  border-radius: 0.5rem;
-  padding: 1.5rem;
-  border: 2px solid #d1d5db;
-  min-height: 104px !important;
-  height: 104px !important;
+/* ===== STATUS DISPLAY (H1) ===== */
+.status-display {
+  width: 100%;
+  max-width: 100%;
+  min-height: var(--comm-status-height-base);
+  max-height: var(--comm-status-max-height-base);
+  height: auto;
+  overflow: hidden; /* WICHTIG: Verstecke Overflow */
+  background-color: transparent;
+  border: none;
+  margin: 0 0 var(--comm-spacing-md) 0;
+  padding: var(--comm-spacing-md);
   display: flex;
   align-items: center;
   justify-content: center;
+  flex: 0 0 auto;
+  box-sizing: border-box;
+}
+
+.status-text {
+  width: 100%;
+  max-width: 100%;
+  text-align: center;
+  font-size: var(--comm-font-size-status-base);
+  color: var(--color-text-primary);
+  font-family: var(--comm-font-mono);
+  font-weight: 600;
+  line-height: 1.3;
+  word-wrap: break-word;
+  overflow-wrap: break-word;
+  hyphens: auto;
+  box-sizing: border-box;
+  padding: 0;
+  overflow: hidden; /* WICHTIG: Verstecke Overflow */
+  text-overflow: ellipsis; /* Bei sehr langem Text: Ellipsis */
+  display: -webkit-box;
+  -webkit-line-clamp: 4; /* Maximal 4 Zeilen */
+  line-clamp: 4; /* Standard-Eigenschaft für Kompatibilität */
+  -webkit-box-orient: vertical;
+}
+
+.status-text.letter-display {
+  color: var(--color-text-primary);
+  font-size: 2.5em;
+  font-weight: bold;
+  text-shadow: none;
+  -webkit-line-clamp: 1; /* Nur 1 Zeile für Buchstaben */
+  line-clamp: 1; /* Standard-Eigenschaft für Kompatibilität */
+}
+
+/* ===== TEXT DISPLAY ===== */
+.text-display {
+  width: 95%;
+  max-width: 95%;
+  margin: 0 auto var(--comm-spacing-md) auto;
+  padding: 0;
+  flex: 0 0 auto;
+  position: relative;
+}
+
+.text-display-box {
+  background-color: var(--color-bg-secondary);
+  border-radius: 0.5rem;
+  padding: 0.75rem var(--comm-spacing-lg);
+  border: 2px solid var(--color-border-secondary);
+  min-height: auto;
+  height: auto;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-sizing: border-box;
+  overflow: hidden; /* WICHTIG: Verstecke Overflow */
 }
 
 .text-display-text {
-  font-size: 2.15625rem;
-  color: #1f2937;
-  font-family: 'Source Code Pro', monospace;
-  font-weight: bold;
+  font-size: var(--comm-font-size-status-base);
+  color: var(--color-text-primary);
+  font-family: var(--comm-font-mono);
+  font-weight: 600;
   margin: 0;
   word-break: break-word;
   text-align: center;
+  line-height: 1.3;
+  padding: 0;
+  overflow: hidden; /* WICHTIG: Verstecke Overflow */
+  text-overflow: ellipsis;
+  display: -webkit-box;
+  -webkit-line-clamp: 3; /* Maximal 3 Zeilen */
+  line-clamp: 3; /* Standard-Eigenschaft für Kompatibilität */
+  -webkit-box-orient: vertical;
 }
 
-/* Zusätzliche spezifische Regel für Textfeld-Höhe */
-.main-content .text-display-container .text-display-box {
-  min-height: 104px !important;
-  height: 104px !important;
-  background-color: #f3f4f6 !important; /* Normale Farbe zurück */
-}
-
-.instructions-section {
-  text-align: center;
-  width: 100%;
-  max-width: 600px;
-}
-
-.instructions-text {
-  font-size: 1.25rem;
-  color: #4b5563;
-  font-family: 'Source Code Pro', monospace;
-  font-weight: 300;
-  margin: 0;
-}
-
+/* ===== SPACER ===== */
 .spacer {
-  height: 2rem;
+  height: var(--comm-spacing-xl);
   width: 100%;
+  flex: 0 0 auto;
 }
 
+/* ===== KEYBOARD CONTAINER ===== */
 .keyboard-container {
-  margin: 0;
+  margin: 0 auto;
+  width: 95%;
+  max-width: 95%;
+  padding: 0;
+  flex: 1 1 auto;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+/* ===== DESKTOP KEYBOARD LAYOUT (Standard über 800px) ===== */
+.keyboard-desktop {
+  display: flex;
+  flex-direction: column;
+  gap: var(--comm-spacing-sm);
+  align-items: center;
   width: 100%;
   max-width: 100%;
-  margin-left: auto;
-  margin-right: auto;
-  padding: 0 1rem;
 }
 
 .keyboard-vertical {
   display: flex;
   flex-direction: column;
-  gap: 0.5rem;
+  gap: var(--comm-spacing-sm);
   align-items: center;
   width: 100%;
+  max-width: 100%;
 }
 
 .keyboard-row {
   display: flex;
   justify-content: center;
-  gap: 0.5rem;
+  gap: var(--comm-spacing-sm);
   flex-wrap: wrap;
   width: 100%;
   max-width: 100%;
-  overflow-x: auto;
-  /* Rahmen-Abstand immer reservieren, um Zucken zu vermeiden */
   border: 3px solid transparent;
   border-radius: 8px;
   box-sizing: border-box;
+  min-width: 0;
+  padding: var(--comm-spacing-sm);
 }
 
 .keyboard-key {
   display: flex;
   align-items: center;
   justify-content: center;
-  transition: all 0.3s ease;
+  transition: var(--comm-transition-default);
   cursor: pointer;
-  border: 2px solid #d1d5db;
-  font-family: 'Source Code Pro', monospace;
+  border: 2px solid var(--color-border-secondary);
+  font-family: var(--comm-font-mono);
   font-weight: bold;
   box-sizing: border-box;
-  flex: 1;
+  flex: 1 1 auto;
   min-width: 0;
-  min-height: 45px;
+  min-height: 50px;
   flex-shrink: 1;
-  flex-basis: 0;
-  width: 100%;
-}
-
-/* Alle Tasten gleich groß - keine speziellen Regeln für die letzte Zeile */
-
-
-.keyboard-key-active {
-  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
-}
-
-.keyboard-key-inactive {
-  background-color: white;
-  color: #374151;
-}
-
-.keyboard-key-text {
-  font-family: 'Source Code Pro', monospace;
-  font-weight: bold;
-}
-
-
-.instructions-box {
-  background-color: transparent;
-  color: #374151;
-  padding: 1rem;
-  max-width: 600px;
-  width: 100%;
-  text-align: center;
-}
-
-.instructions-title {
-  font-size: 1.25rem;
-  font-weight: bold;
-  margin: 0 0 1rem 0;
-  color: #1f2937;
-}
-
-.instructions-text {
-  margin: 0;
-  line-height: 1.6;
-  color: #374151;
-  font-size: 1rem;
-}
-
-.instructions-text strong {
-  font-weight: bold;
-  color: #1f2937;
-}
-
-/* Custom animations */
-@keyframes pulse {
-  0%, 100% {
-    opacity: 1;
-  }
-  50% {
-    opacity: 0.5;
-  }
-}
-
-/* Responsive Design */
-@media (max-width: 768px) {
-  .main-content {
-    padding: 1rem;
-  }
-  
-  .sentence-display-container {
-    height: 5.625rem;
-    margin: 0 auto 1rem auto;
-    padding: 0 0.5rem;
-  }
-  
-  .sentence-item {
-    font-size: 2.4rem;
-    color: #1f2937; /* Dunkle Farbe für Light Mode */
-  }
-  
-  .letter-display {
-    font-size: 4rem;
-  }
-  
-  .keyboard-row {
-    gap: 0.5rem;
-  }
-  
-  .keyboard-key {
-    min-width: 40px;
-    min-height: 40px;
-  }
-  
-  /* Tastatur responsive - Tasten proportional verkleinern */
-  .keyboard-key {
-    flex: 1 !important;
-    min-width: 50px !important;
-    min-height: 35px !important;
-    max-width: 80px !important;
-    width: auto !important;
-    height: auto !important;
-  }
-  
-  .keyboard-key-text {
-    font-size: 12px !important;
-  }
-  
-  .keyboard-container {
-    max-width: 100%;
-    overflow-x: auto;
-    padding: 0 0.5rem;
-  }
-  
-  .text-display-container {
-    max-width: 100%;
-    padding: 0 0.5rem;
-  }
-  
-  .keyboard-vertical {
-    gap: 0.25rem;
-  }
-  
-  .keyboard-row {
-    gap: 0.25rem;
-    flex-wrap: wrap;
-    justify-content: center;
-  }
-  
-}
-
-/* iPhone 14 und ähnliche Geräte (430px) */
-@media (max-width: 430px) {
-  .sentence-display-container {
-    height: 5rem;
-    margin: 0 auto 0.75rem auto;
-    padding: 0 1rem;
-  }
-  
-  .sentence-item {
-    font-size: 2rem;
-    color: #1f2937; /* Dunkle Farbe für Light Mode */
-  }
-  
-  .keyboard-key {
-    flex: 1 !important;
-    min-width: 70px !important;
-    min-height: 55px !important;
-    max-width: 120px !important;
-    width: auto !important;
-    height: auto !important;
-  }
-  
-  .keyboard-key-text {
-    font-size: 16px !important;
-  }
-  
-  .keyboard-row {
-    gap: 0.75rem;
-    flex-wrap: wrap;
-    justify-content: center;
-  }
-  
-  .keyboard-container {
-    padding: 0 1rem;
-  }
-  
-  .text-display-container {
-    padding: 0 1rem;
-  }
-  
-}
-
-@media (max-width: 320px) {
-  .sentence-display-container {
-    height: 4.375rem;
-    margin: 0 auto 0.5rem auto;
-    padding: 0 0.125rem;
-  }
-  
-  .sentence-item {
-    font-size: 1.8rem;
-    color: #1f2937; /* Dunkle Farbe für Light Mode */
-  }
-  
-  .keyboard-key {
-    flex: 1 !important;
-    min-width: 25px !important;
-    min-height: 20px !important;
-    max-width: 40px !important;
-    width: auto !important;
-    height: auto !important;
-  }
-  
-  .keyboard-key-text {
-    font-size: 8px !important;
-  }
-  
-  .keyboard-row {
-    gap: 0.0625rem;
-    flex-wrap: wrap;
-    justify-content: center;
-  }
-  
-  .keyboard-container {
-    padding: 0 0.125rem;
-  }
-  
-  .text-display-container {
-    padding: 0 0.125rem;
-  }
-}
-
-/* Virtuelle Tastatur State-Machine CSS-Klassen */
-
-/* TTS-Indikator */
-.tts-indicator {
-  position: absolute;
-  top: 1rem;
-  right: 1rem;
-  font-size: 1.5rem;
-  opacity: 0;
-  transition: opacity 0.3s ease;
-}
-
-.tts-indicator.tts-active {
-  opacity: 1;
-  animation: tts-pulse 1s infinite;
-}
-
-@keyframes tts-pulse {
-  0%, 100% { transform: scale(1); }
-  50% { transform: scale(1.1); }
-}
-
-/* Zeilen-Hervorhebung - türkise Farbe #00B098 */
-/* Rahmen-Abstand ist bereits in .keyboard-row reserviert, hier nur Farbe ändern */
-.keyboard-row.row-active {
-  border-color: #00B098; /* Türkiser Rahmen #00B098 - nur Farbe ändern, nicht Dicke */
-  background-color: rgba(0, 176, 152, 0.1); /* Türkise Hintergrundfarbe mit Transparenz */
-  box-shadow: 0 4px 12px rgba(0, 176, 152, 0.3); /* Türkiser Glow-Effekt */
-  transition: all 0.3s ease;
-}
-
-.keyboard-row.row-selected {
-  border-color: #10b981; /* Grün für ausgewählte Zeile - nur Farbe ändern */
-  background-color: rgba(16, 185, 129, 0.1);
-  transition: all 0.3s ease;
-}
-
-.keyboard-row.row-inactive {
-  border-color: transparent; /* Transparenter Rahmen - Abstand bleibt erhalten */
-  transition: all 0.3s ease;
-}
-
-/* Buchstaben-Hervorhebung - türkise Farbe #00B098 */
-.keyboard-key.letter-active {
-  border: 3px solid #f97316 !important; /* Orange Rahmen */
-  background-color: #00B098 !important; /* Türkise Farbe #00B098 */
-  color: #ffffff !important; /* Weiße Schrift für besseren Kontrast */
-  box-shadow: 0 4px 12px rgba(0, 176, 152, 0.3);
-  transition: all 0.3s ease;
-}
-
-.keyboard-key.letter-inactive {
-  transition: all 0.3s ease;
-}
-
-/* Verbesserte Hervorhebung für aktive Elemente */
-.keyboard-key.keyboard-key-active {
-  border: 3px solid #f97316 !important;
-  background-color: rgba(249, 115, 22, 0.2) !important;
-  box-shadow: 0 4px 12px rgba(249, 115, 22, 0.3);
-  transition: all 0.3s ease;
-}
-
-.keyboard-key.keyboard-key-inactive {
-  transition: all 0.3s ease;
-}
-
-/* Textfeld-Container für TTS-Indikator */
-.text-display-container {
-  position: relative;
-}
-
-/* Dark Mode Styles für Begrüßungstext */
-.dark .sentence-item {
-  color: #f9fafb; /* Helle Farbe für Dark Mode */
-}
-
-.dark .sentence-item.sentence-active {
-  color: #f9fafb; /* Helle Farbe für Dark Mode */
-}
-
-/* Dark Mode Styles für Tasten */
-.dark .keyboard-key {
-  background-color: #374151 !important; /* Dunkler Hintergrund */
-  border-color: #4b5563 !important; /* Dunkler Border */
-  color: #f9fafb !important; /* Weiße Schrift */
-}
-
-.dark .keyboard-key:hover {
-  background-color: #4b5563 !important; /* Hellerer Hintergrund beim Hover */
-  border-color: #6b7280 !important; /* Hellerer Border beim Hover */
-  color: #ffffff !important; /* Weiße Schrift */
-}
-
-.dark .keyboard-key:active {
-  background-color: #1f2937 !important; /* Noch dunklerer Hintergrund beim Klicken */
-  border-color: #374151 !important; /* Dunklerer Border beim Klicken */
-  color: #ffffff !important; /* Weiße Schrift */
-}
-
-.dark .keyboard-key.keyboard-key-inactive {
-  background-color: #374151 !important; /* Dunkler Hintergrund */
-  border-color: #4b5563 !important; /* Dunkler Border */
-  color: #f9fafb !important; /* Weiße Schrift */
-}
-
-.dark .keyboard-key.keyboard-key-active {
-  background-color: #00B098 !important; /* Türkise Farbe für aktive Tasten */
-  border-color: #00B098 !important; /* Türkiser Border */
-  color: #ffffff !important; /* Weiße Schrift */
-}
-
-/* Dark Mode Styles für letter-active (aktive Buchstaben-Taste) */
-.dark .keyboard-key.letter-active {
-  background-color: #00B098 !important; /* Türkise Farbe #00B098 */
-  border-color: #00B098 !important; /* Türkiser Border */
-  color: #ffffff !important; /* Weiße Schrift für besseren Kontrast */
-  box-shadow: 0 4px 12px rgba(0, 176, 152, 0.5); /* Stärkerer Glow-Effekt für Dark Mode */
-  transition: all 0.3s ease;
-}
-
-/* Dark Mode Styles für row-active (aktive Zeile im Zeilenauswahl-Modus) */
-/* Rahmen-Abstand ist bereits in .keyboard-row reserviert, hier nur Farbe ändern */
-.dark .keyboard-row.row-active {
-  border-color: #00B098 !important; /* Türkiser Rahmen #00B098 - nur Farbe ändern */
-  background-color: rgba(0, 176, 152, 0.3) !important; /* Türkise Hintergrundfarbe mit mehr Transparenz im Dark Mode */
-  box-shadow: 0 4px 12px rgba(0, 176, 152, 0.5) !important; /* Stärkerer türkiser Glow-Effekt für Dark Mode */
-  transition: all 0.3s ease !important;
-}
-
-/* Responsive Dark Mode Styles */
-@media (max-width: 768px) {
-  .dark .sentence-item {
-    color: #f9fafb; /* Helle Farbe für Dark Mode */
-  }
-}
-
-@media (max-width: 430px) {
-  .dark .sentence-item {
-    color: #f9fafb; /* Helle Farbe für Dark Mode */
-  }
-}
-
-@media (max-width: 320px) {
-  .dark .sentence-item {
-    color: #f9fafb; /* Helle Farbe für Dark Mode */
-  }
-}
-
-/* ===== ENHANCED KEYBOARD STYLING ===== */
-
-/* Enhanced keyboard key styling */
-.keyboard-key {
-  background-color: #ffffff;
-  border: 2px solid #d1d5db;
-  color: #374151;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  transition: all 0.15s ease;
+  background-color: var(--color-bg-primary);
+  color: var(--color-text-primary);
   user-select: none;
   position: relative;
   overflow: hidden;
+  border-radius: 8px;
 }
 
 .keyboard-key:hover {
@@ -548,10 +223,23 @@
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 
+.keyboard-key:focus {
+  outline: 2px solid #3b82f6;
+  outline-offset: 2px;
+}
+
 .keyboard-key-text {
-  font-weight: 600;
+  font-family: var(--comm-font-mono);
+  font-weight: 700;
   text-align: center;
-  line-height: 1;
+  line-height: 1.2;
+  word-wrap: break-word;
+  overflow-wrap: break-word;
+  hyphens: auto;
+  max-width: 100%;
+  box-sizing: border-box;
+  padding: 0.5rem;
+  font-size: calc(var(--comm-font-size-key) * 1.2);
 }
 
 /* Press animation effect */
@@ -572,48 +260,589 @@
   opacity: 1;
 }
 
-/* Smooth scrolling for keyboard container */
-.keyboard-container {
-  scroll-behavior: smooth;
-  overflow-x: auto;
-  padding: 0 1rem;
+/* ===== MOBILE CAROUSEL LAYOUT (unter 800px Hochformat) ===== */
+.keyboard-carousel-wrapper {
+  display: none;
+  width: 100%;
+  flex: 1 1 auto;
+  position: relative;
+  overflow: hidden;
 }
 
-/* Focus styles for accessibility */
-.keyboard-key:focus {
-  outline: 2px solid #3b82f6;
-  outline-offset: 2px;
+.keyboard-carousel-container {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transform-style: preserve-3d;
+  perspective: 200vh;
+  overflow: visible;
 }
 
-/* Status text improvements */
-.sentence-item {
-  transition: all 0.3s ease;
+.keyboard-carousel-item {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform-origin: center center;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  
+  --offset-value: var(--offset, 0);
+  --distance: calc(var(--offset-value) * 100vw);
+  --scale: calc(1 - abs(var(--offset-value)) * 0.2);
+  --opacity: calc(1 - abs(var(--offset-value)) * 0.8);
+  
+  transform: translate(-50%, -50%) 
+              translateX(var(--distance))
+              scale(var(--scale));
+  opacity: var(--opacity);
+  pointer-events: none;
+  
+  transition: transform 0.5s cubic-bezier(0.4, 0, 0.2, 1), 
+              opacity 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+  will-change: transform, opacity;
+  z-index: calc(10 - abs(var(--offset-value)) * 2);
+  
+  backface-visibility: hidden;
+  width: 100%;
+  max-width: 100%;
+  padding: 0 var(--comm-spacing-md);
+  box-sizing: border-box;
 }
 
-.sentence-item.sentence-active {
-  /* Animation entfernt - Text soll nicht blinken */
+.keyboard-carousel-item[style*="--offset: 0"] {
+  opacity: 1;
+  transform: translate(-50%, -50%) scale(1);
+  z-index: 10;
+  pointer-events: auto;
 }
 
-@keyframes pulse {
-  0%, 100% {
-    opacity: 1;
+.keyboard-carousel-item[style*="--offset: 1"],
+.keyboard-carousel-item[style*="--offset: 2"],
+.keyboard-carousel-item[style*="--offset: -1"],
+.keyboard-carousel-item[style*="--offset: -2"] {
+  opacity: 0;
+  pointer-events: none;
+}
+
+.keyboard-carousel-item .keyboard-row {
+  width: 100%;
+  max-width: 100%;
+  display: flex;
+  justify-content: center;
+  align-items: stretch;
+  gap: var(--comm-spacing-sm);
+  flex-wrap: wrap;
+  border: 3px solid transparent;
+  border-radius: 8px;
+  box-sizing: border-box;
+  min-width: 0;
+  padding: var(--comm-spacing-md);
+}
+
+/* ===== TTS INDICATOR ===== */
+.tts-indicator {
+  position: absolute;
+  top: 1rem;
+  right: 1rem;
+  font-size: 1.5rem;
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+
+.tts-indicator.tts-active {
+  opacity: 1;
+  animation: tts-pulse 1s infinite;
+}
+
+@keyframes tts-pulse {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.1); }
+}
+
+/* ===== KEYBOARD STATE CLASSES ===== */
+.keyboard-row.row-active {
+  border-color: var(--color-primary);
+  background-color: rgba(0, 176, 152, 0.1);
+  box-shadow: 0 4px 12px rgba(0, 176, 152, 0.3);
+  transition: var(--comm-transition-default);
+}
+
+.keyboard-row.row-selected {
+  border-color: var(--color-success);
+  background-color: rgba(16, 185, 129, 0.1);
+  transition: var(--comm-transition-default);
+}
+
+.keyboard-row.row-inactive {
+  border-color: transparent;
+  transition: var(--comm-transition-default);
+}
+
+.keyboard-key.letter-active {
+  border: 3px solid var(--color-warning) !important;
+  background-color: var(--color-primary) !important;
+  color: #ffffff !important;
+  box-shadow: 0 4px 12px rgba(0, 176, 152, 0.3);
+  transition: var(--comm-transition-default);
+}
+
+.keyboard-key.keyboard-key-active {
+  border: 3px solid var(--color-warning) !important;
+  background-color: rgba(249, 115, 22, 0.2) !important;
+  box-shadow: 0 4px 12px rgba(249, 115, 22, 0.3);
+  transition: var(--comm-transition-default);
+}
+
+/* ===== DARK MODE ===== */
+.dark .keyboard-key {
+  background-color: var(--color-bg-primary);
+  border-color: var(--color-border-secondary);
+  color: var(--color-text-primary);
+}
+
+.dark .keyboard-key:hover {
+  background-color: #4b5563;
+  border-color: #6b7280;
+  color: #ffffff;
+}
+
+.dark .keyboard-key:active {
+  background-color: #1f2937;
+  border-color: #374151;
+  color: #ffffff;
+}
+
+.dark .keyboard-key.keyboard-key-active,
+.dark .keyboard-key.letter-active {
+  background-color: var(--color-primary) !important;
+  border-color: var(--color-primary) !important;
+  color: #ffffff !important;
+  box-shadow: 0 4px 12px rgba(0, 176, 152, 0.5);
+}
+
+.dark .keyboard-row.row-active {
+  border-color: var(--color-primary) !important;
+  background-color: rgba(0, 176, 152, 0.3) !important;
+  box-shadow: 0 4px 12px rgba(0, 176, 152, 0.5) !important;
+}
+
+/* ===== RESPONSIVE DESIGN ===== */
+
+/* Mobile Portrait: unter 800px Breite - Karussell aktivieren */
+@media (max-width: 800px) and (orientation: portrait) {
+  .main-content {
+    padding: var(--comm-spacing-md);
+    height: calc(100vh - var(--header-height, 80px));
+    min-height: calc(100vh - var(--header-height, 80px));
+    max-height: calc(100vh - var(--header-height, 80px));
+    justify-content: space-between;
+    align-items: center;
+    gap: var(--comm-spacing-sm);
   }
-  50% {
-    opacity: 0.7;
+  
+  /* Während des Intros: Nur Status-Display sichtbar, andere Elemente versteckt */
+  .main-content.intro-active {
+    justify-content: center;
+    align-items: center;
+    padding: var(--comm-spacing-md);
+  }
+  
+  .main-content.intro-active .text-display,
+  .main-content.intro-active .spacer,
+  .main-content.intro-active .keyboard-container {
+    display: none !important;
+  }
+  
+  .main-content.intro-active .status-display {
+    width: 100%;
+    max-width: 100%;
+    min-height: auto;
+    max-height: none;
+    height: auto;
+    flex: 1 1 auto;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: var(--comm-spacing-lg);
+    margin: 0;
+    overflow: visible; /* Erlaube sichtbaren Overflow für Text */
+  }
+  
+  .main-content.intro-active .status-display .status-text {
+    overflow: visible; /* Erlaube sichtbaren Overflow */
+    text-overflow: clip; /* Kein Ellipsis während Intro */
+    display: block; /* Block statt -webkit-box für bessere Kontrolle */
+    -webkit-line-clamp: none; /* Keine Zeilenbegrenzung während Intro */
+    line-clamp: none;
+    -webkit-box-orient: unset;
+    max-height: none;
+    height: auto;
+  }
+  
+  .keyboard-desktop {
+    display: none !important;
+  }
+  
+  .keyboard-carousel-wrapper {
+    display: flex !important;
+    flex: 1 1 auto;
+    min-height: 0;
+    flex-direction: column;
+    width: 100%;
+  }
+  
+  .keyboard-carousel-container {
+    flex: 1;
+    min-height: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+  }
+  
+  .status-display {
+    min-height: clamp(10rem, 20vh, 20rem);
+    max-height: clamp(15rem, 30vh, 30rem);
+    height: auto;
+    flex: 0 0 auto;
+    margin: 0 auto var(--comm-spacing-sm) auto;
+    padding: var(--comm-spacing-md);
+    width: 100%;
+    max-width: 100%;
+    overflow: hidden;
+    box-sizing: border-box;
+  }
+  
+  .status-display .status-text {
+    max-width: 100%;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    display: -webkit-box;
+    -webkit-line-clamp: 5; /* Mobile: 5 Zeilen erlaubt */
+    line-clamp: 5; /* Standard-Eigenschaft für Kompatibilität */
+    -webkit-box-orient: vertical;
+    font-size: clamp(2.187rem, 5.832vw, 5.832rem);
+    font-weight: 500;
+    line-height: 1.3;
+    padding: 0;
+  }
+  
+  .text-display {
+    padding: 0;
+    flex: 0 0 auto;
+    margin: 0 auto var(--comm-spacing-sm) auto;
+    width: 95%;
+    max-width: 95%;
+  }
+  
+  .text-display-box {
+    padding: var(--comm-spacing-sm) var(--comm-spacing-md);
+    min-height: clamp(4rem, 10vh, 10rem);
+    overflow: hidden;
+  }
+  
+  .text-display-text {
+    font-size: clamp(2.025rem, 4.86vw, 4.86rem);
+    font-weight: 600;
+    line-height: 1.3;
+    -webkit-line-clamp: 4;
+    line-clamp: 4; /* Standard-Eigenschaft für Kompatibilität */ /* Mobile: 4 Zeilen für Text */
+    line-clamp: 4; /* Standard-Eigenschaft für Kompatibilität */
+  }
+  
+  .keyboard-container {
+    padding: 0;
+    flex: 1 1 auto;
+    display: flex;
+    flex-direction: column;
+    min-height: 0;
+    margin: 0 auto;
+    overflow: hidden;
+    width: 95%;
+    max-width: 95%;
+    align-items: center;
+  }
+  
+  .keyboard-carousel-item .keyboard-row {
+    min-height: clamp(60px, 12vh, 120px);
+    height: auto;
+    padding: var(--comm-spacing-md);
+    gap: var(--comm-spacing-sm);
+    align-items: stretch;
+    justify-content: center;
+    flex-wrap: wrap;
+  }
+  
+  .keyboard-carousel-item .keyboard-key {
+    min-height: clamp(6rem, 12vh, 12rem);
+    height: auto;
+    padding: var(--comm-spacing-md) var(--comm-spacing-sm);
+    overflow: hidden;
+    width: auto !important;
+    height: auto !important;
+    min-width: clamp(80px, 15vw, 120px);
+    max-width: 100%;
+    flex: 1 1 auto;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  
+  .keyboard-carousel-item .keyboard-key-text {
+    font-size: clamp(2rem, 5vw, 5rem) !important;
+    font-weight: 400 !important;
+    line-height: 1.2;
+    word-wrap: break-word;
+    overflow-wrap: break-word;
+    hyphens: auto;
+    max-width: 100%;
+    display: block;
+    width: 100%;
+    box-sizing: border-box;
+    padding: var(--comm-spacing-sm);
+  }
+  
+  .keyboard-carousel-item .keyboard-key:has(.keyboard-key-text:only-child) .keyboard-key-text {
+    font-size: clamp(3rem, 7vw, 7rem) !important;
+    font-weight: 400 !important;
+  }
+  
+  .spacer {
+    flex: 0 0 var(--comm-spacing-sm);
+    min-height: var(--comm-spacing-sm);
+    height: var(--comm-spacing-sm);
+    margin: 0;
   }
 }
 
-/* ===== Buchstabenanzeige oben ===== */
-.sentence-item.letter-display {
-  color: #f97316; /* Orange */
-  font-size: 2.5em; /* doppelt so groß wie normaler Text */
-  font-weight: bold;
-  text-align: center;
-  transition: all 0.3s ease;
-  text-shadow: 2px 2px 4px rgba(249, 115, 22, 0.3); /* Orange Schatten */
+/* Desktop: über 800px - Normales Layout (NUR Querformat) */
+@media (min-width: 801px) and (orientation: landscape) {
+  .keyboard-desktop {
+    display: flex !important;
+  }
+  
+  .keyboard-carousel-wrapper {
+    display: none !important;
+  }
+  
+  .status-text {
+    font-size: var(--comm-font-size-status-base);
+    -webkit-line-clamp: 4;
+    line-clamp: 4; /* Standard-Eigenschaft für Kompatibilität */ /* Desktop: 4 Zeilen */
+    line-clamp: 4; /* Standard-Eigenschaft für Kompatibilität */
+  }
+  
+  .text-display-text {
+    font-size: var(--comm-font-size-status-base);
+    -webkit-line-clamp: 3;
+    line-clamp: 3; /* Standard-Eigenschaft für Kompatibilität */ /* Desktop: 3 Zeilen */
+    line-clamp: 3; /* Standard-Eigenschaft für Kompatibilität */
+  }
 }
 
-/* Sanfte Übergänge für alle sentence-items */
-.sentence-item {
-  transition: all 0.3s ease;
+/* Desktop: über 800px Portrait - Mobile-Regeln gelten (Karussell) */
+@media (min-width: 801px) and (orientation: portrait) {
+  .keyboard-desktop {
+    display: none !important;
+  }
+  
+  .keyboard-carousel-wrapper {
+    display: flex !important;
+  }
+  
+  .status-display .status-text {
+    font-size: clamp(2.187rem, 5.832vw, 5.832rem);
+    font-weight: 500;
+    line-height: 1.3;
+    padding: var(--comm-spacing-sm);
+    -webkit-line-clamp: 5;
+    line-clamp: 5; /* Standard-Eigenschaft für Kompatibilität */ /* Portrait: 5 Zeilen */
+    line-clamp: 5; /* Standard-Eigenschaft für Kompatibilität */
+  }
+}
+
+/* Querformat: Immer Desktop-Layout */
+@media (orientation: landscape) {
+  .keyboard-desktop {
+    display: flex !important;
+  }
+  
+  .keyboard-carousel-wrapper {
+    display: none !important;
+  }
+  
+  .status-display {
+    min-height: clamp(8rem, 20vh, 24rem);
+    max-height: clamp(12rem, 25vh, 32rem);
+    padding: var(--comm-spacing-lg) var(--comm-spacing-xl);
+    width: 100%;
+    max-width: 100%;
+  }
+  
+  .main-content .status-display .status-text {
+    font-size: clamp(0.9375rem, 2.34375vw, 3rem);
+    line-height: 1.2;
+    padding: var(--comm-spacing-lg);
+    -webkit-line-clamp: 3;
+    line-clamp: 3; /* Standard-Eigenschaft für Kompatibilität */ /* Querformat: 3 Zeilen */
+    line-clamp: 3; /* Standard-Eigenschaft für Kompatibilität */
+  }
+  
+  .main-content .text-display .text-display-box .text-display-text {
+    font-size: clamp(0.9375rem, 2.34375vw, 3rem);
+    line-height: 1.2;
+    -webkit-line-clamp: 2; /* Querformat: 2 Zeilen für Text */
+    line-clamp: 2; /* Standard-Eigenschaft für Kompatibilität */
+  }
+  
+  .text-display-box {
+    padding: var(--comm-spacing-lg) var(--comm-spacing-xl);
+    min-height: auto;
+  }
+  
+  .keyboard-row {
+    flex-wrap: nowrap !important;
+    overflow-x: visible;
+    justify-content: space-evenly;
+    gap: var(--comm-spacing-xs);
+  }
+  
+  .keyboard-key {
+    flex: 1 1 0 !important;
+    min-width: 0 !important;
+    max-width: none !important;
+    width: auto !important;
+    height: auto !important;
+  }
+  
+  .keyboard-key-text {
+    font-size: calc(clamp(0.6rem, 1.5vw, 1.2rem) * 1.2) !important;
+    font-weight: 700 !important;
+    padding: 0.25rem;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+}
+
+/* Kleine Mobile Geräte */
+@media (max-width: 430px) and (orientation: portrait) {
+  .status-display {
+    min-height: clamp(8rem, 18vh, 16rem);
+    max-height: clamp(12rem, 25vh, 24rem);
+    padding: var(--comm-spacing-sm);
+    margin: 0 auto var(--comm-spacing-sm) auto;
+    width: 100%;
+    max-width: 100%;
+  }
+  
+  .status-text {
+    font-size: clamp(2.5rem, 7vw, 7rem);
+    padding: var(--comm-spacing-xs);
+    -webkit-line-clamp: 5;
+    line-clamp: 5; /* Standard-Eigenschaft für Kompatibilität */
+  }
+  
+  .text-display {
+    margin: 0 auto var(--comm-spacing-sm) auto;
+  }
+  
+  .text-display-box {
+    padding: var(--comm-spacing-xs) var(--comm-spacing-sm);
+    min-height: clamp(3.5rem, 9vh, 9rem);
+  }
+  
+  .text-display-text {
+    font-size: clamp(2rem, 5.5vw, 5.5rem);
+    -webkit-line-clamp: 4;
+    line-clamp: 4; /* Standard-Eigenschaft für Kompatibilität */
+  }
+  
+  .keyboard-container {
+    margin: 0 auto;
+  }
+  
+  .keyboard-carousel-item .keyboard-row {
+    min-height: clamp(55px, 11vh, 110px);
+    padding: var(--comm-spacing-sm);
+    justify-content: center;
+  }
+  
+  .keyboard-carousel-item .keyboard-key {
+    min-height: clamp(5.5rem, 11vh, 11rem);
+    padding: var(--comm-spacing-sm) var(--comm-spacing-xs);
+  }
+  
+  .keyboard-carousel-item .keyboard-key-text {
+    font-size: clamp(1.8rem, 4.5vw, 4.5rem) !important;
+    font-weight: 400 !important;
+    padding: var(--comm-spacing-xs);
+  }
+  
+  .keyboard-carousel-item .keyboard-key:has(.keyboard-key-text:only-child) .keyboard-key-text {
+    font-size: clamp(2.5rem, 6vw, 6rem) !important;
+    font-weight: 400 !important;
+  }
+}
+
+/* Sehr kleine Geräte */
+@media (max-width: 320px) and (orientation: portrait) {
+  .status-display {
+    min-height: clamp(7rem, 15vh, 14rem);
+    max-height: clamp(10rem, 20vh, 20rem);
+    padding: var(--comm-spacing-xs);
+    margin: 0 auto var(--comm-spacing-sm) auto;
+    width: 100%;
+    max-width: 100%;
+  }
+  
+  .status-text {
+    font-size: clamp(2rem, 6vw, 6rem);
+    -webkit-line-clamp: 4;
+    line-clamp: 4; /* Standard-Eigenschaft für Kompatibilität */
+  }
+  
+  .text-display {
+    margin: 0 auto var(--comm-spacing-sm) auto;
+  }
+  
+  .text-display-box {
+    padding: var(--comm-spacing-xs);
+    min-height: clamp(3rem, 8vh, 8rem);
+  }
+  
+  .text-display-text {
+    font-size: clamp(1.8rem, 5vw, 5rem);
+    -webkit-line-clamp: 3;
+    line-clamp: 3; /* Standard-Eigenschaft für Kompatibilität */
+  }
+  
+  .keyboard-container {
+    margin: 0 auto;
+  }
+  
+  .keyboard-carousel-item .keyboard-row {
+    min-height: clamp(50px, 10vh, 100px);
+    padding: var(--comm-spacing-xs);
+    justify-content: center;
+  }
+  
+  .keyboard-carousel-item .keyboard-key {
+    min-height: clamp(5rem, 10vh, 10rem);
+    padding: var(--comm-spacing-xs);
+  }
+  
+  .keyboard-carousel-item .keyboard-key-text {
+    font-size: clamp(1.5rem, 4vw, 4rem) !important;
+    font-weight: 400 !important;
+  }
+  
+  .keyboard-carousel-item .keyboard-key:has(.keyboard-key-text:only-child) .keyboard-key-text {
+    font-size: clamp(2.2rem, 5.5vw, 5.5rem) !important;
+    font-weight: 400 !important;
+  }
 }

@@ -4,9 +4,34 @@ import { simpleFlowController } from '../../../core/application/SimpleFlowContro
 /**
  * Composable für Text-to-Speech (TTS) Funktionalität
  * Enthält alle Sprachsynthese-Funktionen mit Callback-Unterstützung
+ * iOS Safari kompatibel
  */
 export function useSpeech() {
   const isTTSActive = ref(false)
+  const isTTSReady = ref(false)
+
+  /**
+   * Initialisiert TTS für iOS Safari
+   * Muss durch User-Interaktion aufgerufen werden!
+   */
+  const initializeTTS = (): Promise<void> => {
+    return new Promise((resolve) => {
+      // iOS Safari benötigt eine "stille" Utterance in einem User-Event
+      const utterance = new SpeechSynthesisUtterance('')
+      utterance.volume = 0
+      utterance.onend = () => {
+        isTTSReady.value = true
+        console.log('TTS: Initialized for iOS')
+        resolve()
+      }
+      utterance.onerror = () => {
+        isTTSReady.value = true // Auch bei Fehler als "ready" markieren
+        console.log('TTS: Initialization attempted')
+        resolve()
+      }
+      speechSynthesis.speak(utterance)
+    })
+  }
 
   /**
    * Asynchrone TTS-Funktion mit Start/End-Callbacks
@@ -19,14 +44,19 @@ export function useSpeech() {
     return new Promise((resolve, reject) => {
       console.log('TTS: Speaking:', text)
       
-      // Prüfen ob TTS stumm geschaltet ist - dann Volume auf 0 setzen
+      // Prüfen ob TTS stumm geschaltet ist
       const isMuted = simpleFlowController.getTTSMuted()
+      
+      // iOS Safari: Cancel vorherige Utterances
+      if (speechSynthesis.speaking) {
+        speechSynthesis.cancel()
+      }
       
       const utterance = new SpeechSynthesisUtterance(text)
       utterance.lang = 'de-DE'
       utterance.rate = 0.8
       utterance.pitch = 1.0
-      utterance.volume = isMuted ? 0 : 0.8  // Volume basierend auf Mute-Status
+      utterance.volume = isMuted ? 0 : 0.8
 
       utterance.onstart = () => {
         console.log('TTS: Started speaking')
@@ -38,15 +68,15 @@ export function useSpeech() {
         console.log('TTS: Finished speaking')
         isTTSActive.value = false
         if (onEnd) onEnd()
-        resolve() // Promise erfüllt, wenn TTS fertig ist
+        resolve()
       }
 
       utterance.onerror = (e) => {
-        // "canceled" ist kein echter Fehler - TTS wurde absichtlich abgebrochen (z.B. bei Navigation)
+        // "canceled" ist kein echter Fehler
         if (e.error === 'canceled') {
           console.log('TTS canceled')
           isTTSActive.value = false
-          resolve() // Resolve statt reject - canceled ist kein Fehler
+          resolve()
           return
         }
         
@@ -56,7 +86,10 @@ export function useSpeech() {
         reject(e)
       }
 
-      speechSynthesis.speak(utterance)
+      // iOS Safari: Kurze Verzögerung vor speak()
+      setTimeout(() => {
+        speechSynthesis.speak(utterance)
+      }, 100)
     })
   }
 
@@ -69,9 +102,22 @@ export function useSpeech() {
     return new Promise(resolve => setTimeout(resolve, ms))
   }
 
+  /**
+   * Stoppt alle laufenden TTS-Ausgaben
+   */
+  const stopTTS = () => {
+    if (speechSynthesis.speaking) {
+      speechSynthesis.cancel()
+    }
+    isTTSActive.value = false
+  }
+
   return { 
-    isTTSActive, 
+    isTTSActive,
+    isTTSReady,
+    initializeTTS,
     speakText, 
-    delay 
+    delay,
+    stopTTS
   }
 }

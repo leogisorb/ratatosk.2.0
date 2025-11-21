@@ -1,10 +1,11 @@
-import { ref } from 'vue'
+import { ref, computed } from 'vue'
 import { useRouter } from 'vue-router'
 import { keyboardLayout, getOriginalLetter } from '../data/keyboardLayout'
 import { useSpeech } from './useSpeech'
 import { useTimers } from './useTimers'
 import { useBlinkInput } from './useBlinkInput'
 import { simpleFlowController } from '../../../core/application/SimpleFlowController'
+import { useSettingsStore } from '../../settings/stores/settings'
 
 /**
  * Composable für die virtuelle Tastatur mit TTS und Blinzelsteuerung
@@ -12,9 +13,17 @@ import { simpleFlowController } from '../../../core/application/SimpleFlowContro
  */
 export function useVirtualKeyboard() {
   const router = useRouter()
-  const { isTTSActive, speakText, delay } = useSpeech()
+  const { isTTSActive, isTTSReady, initializeTTS, speakText, delay, stopTTS } = useSpeech()
   const { clearAllTimers, setTimer } = useTimers()
   const { isIntroductionActive, startIntroduction, endIntroduction } = useBlinkInput()
+  const settingsStore = useSettingsStore()
+  
+  // Settings-Werte für Anzeigeintervall (leuchtdauer in Sekunden → Millisekunden)
+  const SETTINGS_TO_MS_MULTIPLIER = 1000
+  const displayInterval = computed(() => settingsStore.settings.leuchtdauer * SETTINGS_TO_MS_MULTIPLIER)
+  
+  // TTS Muted State als computed für bessere Performance
+  const isTTSMuted = computed(() => simpleFlowController.getTTSMuted())
 
   // ===== STATE MACHINE =====
   enum VirtualKeyboardPhase {
@@ -36,6 +45,9 @@ export function useVirtualKeyboard() {
   // ===== CONTROL FLOW SAFETY =====
   let scanSessionId = 0
   let isCancelled = false
+  let isProcessingInput = false // Verhindert gleichzeitige Input-Verarbeitung
+  let inputDebounceTimer: ReturnType<typeof setTimeout> | null = null
+  let needsUserGesture = true // iOS Safari: TTS benötigt User-Geste
 
   const newScanSession = () => {
     scanSessionId++
@@ -58,13 +70,19 @@ export function useVirtualKeyboard() {
       clearAllTimers()
       
       // Prüfe ob TTS stumm ist - wenn ja, Begrüßungstexte komplett überspringen
-      const isMuted = simpleFlowController.getTTSMuted()
-      if (isMuted) {
+      if (isTTSMuted.value) {
         console.log('Phase 1: TTS is muted - skipping greeting texts and going directly to Phase 2')
         // Keine Begrüßungstexte anzeigen oder sprechen
         // Direkt zu Phase 2 springen
         startPhase2()
         return
+      }
+      
+      // TTS ist nicht stumm - initialisiere TTS falls noch nicht geschehen
+      if (!isTTSReady.value) {
+        console.log('Phase 1: TTS not ready - initializing TTS')
+        await initializeTTS()
+        needsUserGesture = false // TTS ist jetzt initialisiert
       }
       
       // TTS ist nicht stumm - normale Begrüßung durchführen
@@ -77,34 +95,33 @@ export function useVirtualKeyboard() {
       checkCancelled()
       await speakText("Hallo.", () => { statusText.value = "Hallo." })
       checkCancelled()
-      await delay(3000)
+      await delay(displayInterval.value)
       
       checkCancelled()
       await speakText("Ich helfe Ihnen, Wörter und Sätze zu schreiben.", () => { statusText.value = "Ich helfe Ihnen, Wörter und Sätze zu schreiben." })
       checkCancelled()
-      await delay(3000)
+      await delay(displayInterval.value)
       
       checkCancelled()
       await speakText("Dazu sehen Sie jetzt verschiedene Zeilen mit Buchstaben und Wörtern.", () => { statusText.value = "Dazu sehen Sie jetzt verschiedene Zeilen mit Buchstaben und Wörtern." })
       checkCancelled()
-      await delay(3000)
+      await delay(displayInterval.value)
       
       checkCancelled()
       await speakText("Wenn Sie eine Zeile auswählen möchten, blinzeln oder tippen Sie bitte einmal", () => { statusText.value = "Wenn Sie eine Zeile auswählen möchten, blinzeln oder tippen Sie bitte einmal" })
       checkCancelled()
-      await delay(4000)
+      await delay(displayInterval.value)
       
       checkCancelled()
       await speakText("Wählen Sie jetzt zuerst eine Zeile aus, die einen Buchstaben Ihrer Wahl enthält.", () => { statusText.value = "Wählen Sie jetzt zuerst eine Zeile aus, die einen Buchstaben Ihrer Wahl enthält." })
       
       checkCancelled()
-      // Nach TTS-Ende + 4 Sekunden → Phase 2
-      setTimer(() => {
-        if (!isCancelled) {
-          endIntroduction() // Einführung beendet - Input wieder erlaubt
-          startPhase2()
-        }
-      }, 4000)
+      // Nach TTS-Ende + Anzeigeintervall → Phase 2
+      await delay(displayInterval.value)
+      if (!isCancelled) {
+        endIntroduction() // Einführung beendet - Input wieder erlaubt
+        startPhase2()
+      }
     } catch (error) {
       if (isCancelled) {
         console.log('Phase 1: Cancelled')
@@ -147,14 +164,12 @@ export function useVirtualKeyboard() {
     console.log('🎯 Scanning row:', currentRowIndex.value, rowDescriptions[currentRowIndex.value])
     
     // Prüfe ob TTS stumm ist
-    const isMuted = simpleFlowController.getTTSMuted()
-    
-    if (isMuted) {
+    if (isTTSMuted.value) {
       // TTS ist stumm - nur visuelle Hervorhebung, schneller Durchlauf
       statusText.value = rowDescriptions[currentRowIndex.value]
       console.log('Row highlighted (muted):', currentRowIndex.value, 'Status-Text:', statusText.value)
-      // Wartezeit für visuelle Wahrnehmung (1500ms statt auf TTS zu warten)
-      await delay(1500)
+      // Wartezeit für visuelle Wahrnehmung (Anzeigeintervall aus Settings)
+      await delay(displayInterval.value)
     } else {
       // TTS ist aktiv - normale Logik mit TTS
       checkCancelled()
@@ -171,12 +186,14 @@ export function useVirtualKeyboard() {
         }
       )
       checkCancelled()
-      // Nach TTS-Ende + 3 Sekunden → nächste Zeile
-      await delay(3000)
+      // Nach TTS-Ende + Anzeigeintervall → nächste Zeile
+      await delay(displayInterval.value)
     }
     
-    // Prüfen, ob Session oder Phase sich geändert haben
-    if (sessionId !== scanSessionId || currentPhase.value !== VirtualKeyboardPhase.ROW_SCANNING) return
+    // Prüfen, ob Session, Phase oder Cancellation sich geändert haben
+    if (sessionId !== scanSessionId || 
+        currentPhase.value !== VirtualKeyboardPhase.ROW_SCANNING || 
+        isCancelled) return
     
     currentRowIndex.value = (currentRowIndex.value + 1) % keyboardLayout.length
     scanNextRow(sessionId) // rekursiver Aufruf nur, wenn gültig
@@ -195,9 +212,9 @@ export function useVirtualKeyboard() {
       
       // Anzeige und TTS - angepasst an die ausgewählte Zeile
       const rowDescriptions = [
-        "Wählen Sie jetzt einen Buchstaben aus, um diesen zu schreiben.",
-        "Wählen Sie jetzt einen Buchstaben aus, um diesen zu schreiben.",
-        "Wählen Sie jetzt einen Buchstaben aus, um diesen zu schreiben.",
+        "Wählen Sie jetzt einen Buchstaben aus.",
+        "Wählen Sie jetzt einen Buchstaben aus.",
+        "Wählen Sie jetzt einen Buchstaben aus.",
         "Wählen Sie jetzt eine Silbe aus, um diese zu schreiben.",
         "Wählen Sie jetzt ein Kurzwort aus, um dieses zu schreiben.",
         "Wählen Sie jetzt eine Steuerungstaste aus, um diese zu verwenden."
@@ -209,17 +226,16 @@ export function useVirtualKeyboard() {
       statusText.value = description
       
       // Prüfe ob TTS stumm ist
-      const isMuted = simpleFlowController.getTTSMuted()
-      if (isMuted) {
-        // TTS ist stumm - Wartezeit (1500ms statt 3000ms)
+      if (isTTSMuted.value) {
+        // TTS ist stumm - Wartezeit (Anzeigeintervall aus Settings)
         checkCancelled()
-        await delay(1500)
+        await delay(displayInterval.value)
       } else {
         // TTS ist aktiv - normale Logik
         checkCancelled()
         await speakText(description)
         checkCancelled()
-        await delay(3000)
+        await delay(displayInterval.value)
       }
       
       checkCancelled()
@@ -245,14 +261,12 @@ export function useVirtualKeyboard() {
     console.log('🎯 Scanning letter:', letter)
     
     // Prüfe ob TTS stumm ist
-    const isMuted = simpleFlowController.getTTSMuted()
-    
-    if (isMuted) {
+    if (isTTSMuted.value) {
       // TTS ist stumm - nur visuelle Hervorhebung, schneller Durchlauf
       statusText.value = letter
       console.log('Letter highlighted (muted):', letter)
-      // Wartezeit für visuelle Wahrnehmung (1500ms statt auf TTS zu warten)
-      await delay(1500)
+      // Wartezeit für visuelle Wahrnehmung (Anzeigeintervall aus Settings)
+      await delay(displayInterval.value)
     } else {
       // TTS ist aktiv - normale Logik mit TTS
       checkCancelled()
@@ -269,14 +283,17 @@ export function useVirtualKeyboard() {
         }
       )
       checkCancelled()
-      // Nach TTS-Ende + 2 Sekunden → nächster Buchstabe
-      await delay(2000)
+      // Nach TTS-Ende + Anzeigeintervall → nächster Buchstabe
+      await delay(displayInterval.value)
     }
     
-    // Prüfen, ob Session oder Phase sich geändert haben
-    if (sessionId !== scanSessionId || currentPhase.value !== VirtualKeyboardPhase.LETTER_SCANNING) return
+    // Prüfen, ob Session, Phase oder Cancellation sich geändert haben
+    if (sessionId !== scanSessionId || 
+        currentPhase.value !== VirtualKeyboardPhase.LETTER_SCANNING || 
+        selectedRowIndex.value === null ||
+        isCancelled) return
     
-    const currentRow = keyboardLayout[selectedRowIndex.value!]
+    const currentRow = keyboardLayout[selectedRowIndex.value]
     currentLetterIndex.value = (currentLetterIndex.value + 1) % currentRow.letters.length
     
     // Prüfe ob wir am Ende der Zeile angekommen sind
@@ -285,8 +302,9 @@ export function useVirtualKeyboard() {
       console.log('Completed cycle', letterCycleCount.value, 'for row', selectedRowIndex.value)
       
       // Nach 2 Durchläufen zurück zu Phase 2
-      if (letterCycleCount.value >= 2) {
-        console.log('Reached 2 cycles - returning to row scanning')
+      const MAX_LETTER_CYCLES = 2
+      if (letterCycleCount.value >= MAX_LETTER_CYCLES) {
+        console.log('Reached', MAX_LETTER_CYCLES, 'cycles - returning to row scanning')
         handleNoLetterSelected()
         return
       }
@@ -297,29 +315,65 @@ export function useVirtualKeyboard() {
 
   // ===== USER INTERACTION HANDLING =====
   const handleUserInput = async () => {
+    // iOS Safari: Initialisiere TTS beim ersten User-Input (User-Geste erforderlich)
+    if (needsUserGesture && !isTTSReady.value) {
+      console.log('TTS: Initializing on first user input (iOS Safari requirement)')
+      await initializeTTS()
+      needsUserGesture = false
+    }
+    
     // Ignoriere User Input während der Einführung
     if (isIntroductionActive.value) {
       console.log('User input ignored during introduction phase')
       return
     }
     
-    console.log('User input detected in phase:', currentPhase.value)
-    
-    // Stoppe alle Timer und TTS
-    clearAllTimers()
-    speechSynthesis.cancel()
-    newScanSession() // ⬅️ ALLES sofort stoppen (alte Scans laufen nicht mehr weiter)
-    
-    switch (currentPhase.value) {
-      case VirtualKeyboardPhase.ROW_SCANNING:
-        await handleRowSelection()
-        break
-      case VirtualKeyboardPhase.LETTER_SCANNING:
-        await handleLetterSelection()
-        break
-      default:
-        console.log('User input ignored in phase:', currentPhase.value)
+    // Verhindere gleichzeitige Verarbeitung
+    if (isProcessingInput) {
+      console.log('User input ignored - already processing')
+      return
     }
+    
+    // Debouncing: Lösche vorherigen Timer und setze neuen
+    if (inputDebounceTimer) {
+      clearTimeout(inputDebounceTimer)
+    }
+    
+    // Warte 200ms bevor Input verarbeitet wird (Debouncing)
+    inputDebounceTimer = setTimeout(async () => {
+      // Prüfe nochmal, ob bereits verarbeitet wird
+      if (isProcessingInput) {
+        console.log('User input ignored - already processing (debounced)')
+        return
+      }
+      
+      isProcessingInput = true
+      
+      try {
+        console.log('User input detected in phase:', currentPhase.value)
+        
+        // Stoppe alle Timer und TTS
+        clearAllTimers()
+        stopTTS() // Verwende stopTTS aus useSpeech
+        simpleFlowController.stopTTS()
+        newScanSession() // ⬅️ ALLES sofort stoppen (alte Scans laufen nicht mehr weiter)
+        
+        switch (currentPhase.value) {
+          case VirtualKeyboardPhase.ROW_SCANNING:
+            await handleRowSelection()
+            break
+          case VirtualKeyboardPhase.LETTER_SCANNING:
+            await handleLetterSelection()
+            break
+          default:
+            console.log('User input ignored in phase:', currentPhase.value)
+        }
+      } finally {
+        // Warte zusätzlich 300ms bevor nächster Input verarbeitet werden kann (Throttling)
+        await delay(300)
+        isProcessingInput = false
+      }
+    }, 200)
   }
 
   const handleRowSelection = async () => {
@@ -332,17 +386,16 @@ export function useVirtualKeyboard() {
       statusText.value = `Zeile ${currentRowIndex.value + 1} ausgewählt.`
       
       // Prüfe ob TTS stumm ist
-      const isMuted = simpleFlowController.getTTSMuted()
-      if (isMuted) {
-        // TTS ist stumm - Wartezeit (1500ms statt 5000ms)
+      if (isTTSMuted.value) {
+        // TTS ist stumm - Wartezeit (Anzeigeintervall aus Settings)
         checkCancelled()
-        await delay(1500)
+        await delay(displayInterval.value)
       } else {
         // TTS ist aktiv - normale Logik
         checkCancelled()
         await speakText(`Zeile ${currentRowIndex.value + 1} ausgewählt.`)
         checkCancelled()
-        await delay(5000)
+        await delay(displayInterval.value)
       }
       
       checkCancelled()
@@ -374,17 +427,16 @@ export function useVirtualKeyboard() {
       isLetterDisplay.value = true
       
       // Prüfe ob TTS stumm ist
-      const isMuted = simpleFlowController.getTTSMuted()
-      if (isMuted) {
-        // TTS ist stumm - Wartezeit (1500ms statt 3000ms)
+      if (isTTSMuted.value) {
+        // TTS ist stumm - Wartezeit (Anzeigeintervall aus Settings)
         checkCancelled()
-        await delay(1500)
+        await delay(displayInterval.value)
       } else {
         // TTS ist aktiv - normale Logik
         checkCancelled()
         await speakText(`${letter} gewählt.`)
         checkCancelled()
-        await delay(3000)
+        await delay(displayInterval.value)
       }
       
       checkCancelled()
@@ -409,17 +461,16 @@ export function useVirtualKeyboard() {
       statusText.value = "Keine Eingabe erkannt."
       
       // Prüfe ob TTS stumm ist
-      const isMuted = simpleFlowController.getTTSMuted()
-      if (isMuted) {
-        // TTS ist stumm - Wartezeit (1500ms statt 5000ms)
+      if (isTTSMuted.value) {
+        // TTS ist stumm - Wartezeit (Anzeigeintervall aus Settings)
         checkCancelled()
-        await delay(1500)
+        await delay(displayInterval.value)
       } else {
         // TTS ist aktiv - normale Logik
         checkCancelled()
         await speakText("Keine Eingabe erkannt.")
         checkCancelled()
-        await delay(5000)
+        await delay(displayInterval.value)
       }
       
       checkCancelled()
@@ -501,14 +552,39 @@ export function useVirtualKeyboard() {
     // 2. Stoppe alle Timer
     clearAllTimers()
     
-    // 3. Stoppe alle laufenden TTS (mehrfach für Sicherheit)
+    // 3. Stoppe Debounce-Timer
+    if (inputDebounceTimer) {
+      clearTimeout(inputDebounceTimer)
+      inputDebounceTimer = null
+    }
+    
+    // 4. Reset Input-Processing Flag
+    isProcessingInput = false
+    
+    // 5. Stoppe alle laufenden TTS (mehrfach für Sicherheit)
+    stopTTS() // Verwende stopTTS aus useSpeech
     simpleFlowController.stopTTS()
     if (window.speechSynthesis) {
       window.speechSynthesis.cancel()
     }
     
-    // 4. Neue Session starten (stoppt alle laufenden Scans)
+    // 6. Neue Session starten (stoppt alle laufenden Scans)
     newScanSession()
+    
+    // 7. Reset States für nächsten Start
+    currentPhase.value = VirtualKeyboardPhase.INIT
+    currentRowIndex.value = 0
+    currentLetterIndex.value = 0
+    selectedRowIndex.value = null
+    letterCycleCount.value = 0
+    isLetterDisplay.value = false
+    statusText.value = "Virtuelle Tastatur bereit"
+    needsUserGesture = true // Reset für nächsten Start
+    
+    // 8. End Introduction falls aktiv
+    if (isIntroductionActive.value) {
+      endIntroduction()
+    }
     
     console.log('Virtual keyboard cleanup complete')
   }
