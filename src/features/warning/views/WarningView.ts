@@ -194,18 +194,21 @@ export function useWarningViewLogic() {
       if (audioContext.value.state === 'suspended') {
         await audioContext.value.resume()
         // Wait for context to be running
-        if (audioContext.value.state !== 'running') {
-          await new Promise(resolve => {
-            const checkState = () => {
-              if (audioContext.value?.state === 'running') {
-                resolve(undefined)
-              } else {
-                setTimeout(checkState, 10)
-              }
+        // Note: After resume(), state can still be 'suspended' on some browsers
+        // so we need to wait for it to become 'running'
+        await new Promise<void>(resolve => {
+          const checkState = () => {
+            const state = audioContext.value?.state
+            if (state === 'running') {
+              resolve()
+            } else if (state === 'closed') {
+              resolve() // Context closed, can't proceed
+            } else {
+              setTimeout(checkState, 10)
             }
-            checkState()
-          })
-        }
+          }
+          checkState()
+        })
       }
       return
     }
@@ -224,7 +227,8 @@ export function useWarningViewLogic() {
       }
 
       // Wait for context to be running (iOS Safari needs this)
-      if (ctx.state !== 'running') {
+      const currentState = ctx.state
+      if (currentState !== 'running') {
         await new Promise<void>((resolve) => {
           const checkState = () => {
             if (ctx.state === 'running') {
