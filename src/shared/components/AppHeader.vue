@@ -66,6 +66,22 @@
           </svg>
         </button>
 
+        <!-- PDF Protokoll Button -->
+        <button
+          @click="generatePDF"
+          class="header-button"
+          title="Protokoll als PDF exportieren"
+        >
+          <svg class="header-button-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              stroke-width="2"
+              d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
+            />
+          </svg>
+        </button>
+
         <!-- Zurück Button (Hard Reset) -->
         <button
           @click="goBack"
@@ -84,6 +100,7 @@ import { ref, computed, onMounted, onUnmounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { useSettingsStore } from '../../features/settings/stores/settings'
 import { simpleFlowController } from '../../core/application/SimpleFlowController'
+import { generateProtocolPDF } from '../utils/PDFGenerator'
 
 // Importiere Assets
 import rattenkopfIcon from '@/assets/icons/rattenkopf.svg'
@@ -156,6 +173,17 @@ onUnmounted(() => {
 const toggleDarkMode = () => {
   settingsStore.toggleDarkMode()
   console.log('Dark mode toggled:', isDarkMode.value)
+}
+
+// PDF Protokoll generieren
+const generatePDF = () => {
+  console.log('Header: PDF Protokoll Button geklickt')
+  try {
+    generateProtocolPDF()
+  } catch (error) {
+    console.error('Header: Fehler beim Generieren der PDF:', error)
+    alert('Fehler beim Generieren der PDF. Bitte versuchen Sie es erneut.')
+  }
 }
 
 // Logo/Titel Klick - Navigiert zu /app

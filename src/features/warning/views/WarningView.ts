@@ -9,6 +9,7 @@ import { timerManager } from '../../../shared/utils/TimerManager'
 import type { TimerHandle } from '../../../shared/utils/TimerManager'
 import { ttsService } from '../../../shared/services/TTSService'
 import { CleanupCoordinator } from '../../../shared/utils/CleanupCoordinator'
+import { protocolLogger } from '../../../shared/services/ProtocolLogger'
 
 /**
  * Warnsystem für intubierte Patienten - MIT CANCELLATION TOKEN
@@ -317,6 +318,13 @@ export function useWarningViewLogic() {
     isAlarmActive.value = true
     console.log('Starting continuous alarm')
     
+    // Logge Warngeräusch-Start
+    try {
+      protocolLogger.logWarning('started')
+    } catch (error) {
+      console.warn('WarningView: Failed to log warning start', error)
+    }
+    
     // Ensure audio is unlocked before starting alarm
     await unlockAudioContext()
     await playAlarmSound()
@@ -340,6 +348,13 @@ export function useWarningViewLogic() {
     
     isAlarmActive.value = false
     console.log('Stopping continuous alarm')
+    
+    // Logge Warngeräusch-Stopp
+    try {
+      protocolLogger.logWarning('stopped')
+    } catch (error) {
+      console.warn('WarningView: Failed to log warning stop', error)
+    }
     
     if (alarmInterval.value) {
       alarmInterval.value.cancel()

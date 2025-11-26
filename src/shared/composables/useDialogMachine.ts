@@ -18,6 +18,7 @@ import { simpleFlowController } from '../../core/application/SimpleFlowControlle
 import { useDialogTimerTracking } from './useDialogTimerTracking'
 import { TIMING } from '../constants/timing'
 import { handleError, isCancellationError } from '../utils/errorHandling'
+import { protocolLogger } from '../services/ProtocolLogger'
 
 // ===== CONSTANTS =====
 const TIMER_DELAYS = {
@@ -223,6 +224,13 @@ export function useDialogMachine<TState extends string, TItem>(
       
       // Prüfe ob Bestätigungs-Zustand
       if (config.shouldConfirm(nextState)) {
+        // Logge Confirmation-Text
+        try {
+          protocolLogger.logConfirmation(confirmationText.value, config.dialogName)
+        } catch (error) {
+          console.warn(`${config.dialogName}: Failed to log confirmation`, error)
+        }
+        
         // Bestätigung - plane Zurücksetzen
         scheduleTimer(() => {
           try {
