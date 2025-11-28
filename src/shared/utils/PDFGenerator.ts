@@ -42,7 +42,7 @@ export function generateProtocolPDF(): void {
   // Titel
   doc.setFontSize(18)
   doc.setFont('helvetica', 'bold')
-  doc.text('RATATOSK - Protokoll', pageWidth / 2, yPosition, { align: 'center' })
+  doc.text('VOCA - Protokoll', pageWidth / 2, yPosition, { align: 'center' })
   yPosition += lineHeight * 2
 
   // Erstellungsdatum
@@ -131,7 +131,7 @@ export function generateProtocolPDF(): void {
   })
 
   // Speichere PDF
-  const fileName = `ratatosk-protokoll-${new Date().toISOString().split('T')[0]}.pdf`
+  const fileName = `voca-protokoll-${new Date().toISOString().split('T')[0]}.pdf`
   doc.save(fileName)
   
   console.log('PDF generated:', fileName, 'with', entries.length, 'entries')

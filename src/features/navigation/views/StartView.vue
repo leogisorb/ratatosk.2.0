@@ -3,8 +3,8 @@
     <!-- Header -->
     <header class="start-header">
       <div class="start-header-content">
-        <h1 class="start-title">RATATOSK</h1>
-        <img :src="rattenkopfIcon" alt="Ratatosk Logo" class="start-logo" />
+        <h1 class="start-title">VOCA</h1>
+        <img :src="rattenkopfIcon" alt="VOCA Logo" class="start-logo" />
       </div>
     </header>
 
@@ -190,7 +190,7 @@ import { useAutoMode } from '../../../shared/composables/useAutoMode'
 
 // Keine baseUrl mehr nötig - verwende absolute Pfade direkt
 import { useInputManager } from '../../../shared/composables/useInputManager'
-import rattenkopfIcon from '@/assets/icons/rattenkopf.svg'
+import rattenkopfIcon from '@/assets/icons/logo_VOCA.svg'
 import './StartView.css'
 
 // Router
@@ -304,6 +304,10 @@ function startAutoMode() {
   
   // Start Input Manager für Blink-Erkennung
   inputManager.start()
+  
+  // Aktiviere TTS, damit Auto-Mode TTS verwenden kann
+  // (auch wenn keine Kamera vorhanden ist, sollte TTS funktionieren)
+  simpleFlowController.setUserInteracted(true)
   
   console.log('StartView: Auto-Mode gestartet für Button-Navigation')
 }

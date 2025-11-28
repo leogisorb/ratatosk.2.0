@@ -1,10 +1,10 @@
 <template>
   <header class="global-header">
     <div class="header-content">
-      <!-- Linke Seite - RATATOSK Logo -->
+      <!-- Linke Seite - VOCA Logo -->
       <div class="header-left" @click="goToApp" style="cursor: pointer;">
-        <h1 class="header-title">RATATOSK</h1>
-        <img :src="rattenkopfIcon" alt="Ratatosk Logo" class="header-logo" />
+        <h1 class="header-title">VOCA</h1>
+        <img :src="rattenkopfIcon" alt="VOCA Logo" class="header-logo" />
       </div>
 
       <!-- Rechte Seite - 3 Buttons -->
@@ -103,7 +103,7 @@ import { simpleFlowController } from '../../core/application/SimpleFlowControlle
 import { generateProtocolPDF } from '../utils/PDFGenerator'
 
 // Importiere Assets
-import rattenkopfIcon from '@/assets/icons/rattenkopf.svg'
+import rattenkopfIcon from '@/assets/icons/logo_VOCA.svg'
 import goHomeIcon from '@/assets/icons/GoHome.svg'
 
 // Router
